@@ -34,3 +34,9 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-026 | 2026-10-20 | Tipografía: Manrope. | Vigente | — |
 | D-027 | 2026-10-20 | Lista de leads: lista compacta (filas separadas por línea fina, sin tarjeta). | Vigente | — |
 | D-028 | 2026-10-20 | Modo: automático, sigue el modo claro u oscuro del teléfono. | Vigente | — |
+| D-029 | 2026-10-20 | Navegación: barra inferior solo iconos (4 iconos, sin texto). | Vigente | — |
+| D-030 | 2026-10-20 | Campos de formulario: con contorno (borde de 1px). | Vigente | — |
+| D-031 | 2026-10-20 | Estados (chips): con contorno, en el color del estado. | Vigente | — |
+| D-032 | 2026-10-20 | Alertas: tarjeta con borde en el color de la alerta, con icono. | Vigente | — |
+| D-033 | 2026-10-20 | Grises y fondo (Neutro). Claro: fondo `#FFFFFF`, superficie `#F4F4F4`, texto `#1A1A1A`, borde `#E2E2E2`, secundario `#6B6B6B`. Oscuro: fondo `#121212`, superficie `#1C1C1C`, texto `#F2F2F2`, borde `#333333`, secundario `#A0A0A0`. | Vigente | — |
+| D-034 | 2026-10-20 | Colores de estado suaves: éxito `#3F8F5F`, advertencia `#B7791F`, error `#C0504D`. | Vigente | — |

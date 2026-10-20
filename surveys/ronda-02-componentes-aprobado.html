@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cid Clean, ronda 2 aprobada</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Aprobado por el dueño (2026-10-20), rondas 1 y 2: marca #0F766E, botones 12px, Manrope, lista compacta, modo automático, navegación inferior solo iconos, campos con contorno, estados con contorno, alertas en tarjeta con borde, neutros y estados suaves. */
+/* Los iconos son provisionales: el set de iconos no se ha elegido. */
+:root{--b:#0F766E;--r:12px;--bg:#FFFFFF;--sf:#F4F4F4;--fg:#1A1A1A;--bd:#E2E2E2;--sc:#6B6B6B;--ok:#3F8F5F;--wn:#B7791F;--er:#C0504D}
+@media (prefers-color-scheme:dark){:root{--bg:#121212;--sf:#1C1C1C;--fg:#F2F2F2;--bd:#333333;--sc:#A0A0A0}}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Manrope',system-ui,sans-serif}
+.app{max-width:420px;margin:0 auto;border:0.5px solid var(--bd);border-radius:16px;overflow:hidden;background:var(--bg)}
+.top{background:var(--b);color:#fff;padding:14px 16px;font-weight:500;font-size:16px}
+.body{padding:16px}
+h1{font-size:18px;font-weight:500;margin:0 0 12px}
+.f{margin-bottom:12px}
+.f label{display:block;font-size:12px;color:var(--sc);margin-bottom:4px}
+.f div{border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:var(--r);padding:10px 12px;font-size:15px}
+.al{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4;padding:10px 12px;border:1px solid var(--wn);border-radius:var(--r);background:var(--bg);margin:4px 0 12px}
+.al svg{flex:none}
+.lead{border-bottom:0.5px solid var(--bd);padding:10px 0}
+.lead b{font-size:15px;font-weight:500;display:block}
+.lead .d{font-size:13px;color:var(--sc);display:block;margin:2px 0 8px}
+.chip{display:inline-block;font-size:12px;padding:2px 10px;border-radius:6px;border:1px solid var(--c);color:var(--fg)}
+.btn{background:var(--b);color:#fff;border-radius:var(--r);padding:10px 12px;font:500 13px 'Manrope',system-ui,sans-serif;text-align:center;margin-top:14px}
+.nav{display:flex;justify-content:space-around;border-top:0.5px solid var(--bd);background:var(--sf);padding:10px 0}
+.nav svg{width:22px;height:22px;stroke:var(--sc);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nav svg.on{stroke:var(--b)}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top">Cid Clean</div>
+<div class="body">
+<h1>Aprobar trabajo</h1>
+<div class="f"><label>Supervisor en sitio</label><div>Carla M.</div></div>
+<div class="f"><label>Horas trabajadas</label><div>3.5 h</div></div>
+<div class="al"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B7791F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 16h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg><span>Ana R. lleva 31 h esta semana. La alerta salta a las 32 h.</span></div>
+<div class="lead"><b>Gulf Coast Dental</b><span class="d">Mar 22 oct · 5:00 PM</span><span class="chip" style="--c:var(--wn)">Pendiente de aprobar</span></div>
+<div class="lead"><b>Marco Island Offices</b><span class="d">Lun 21 oct · 6:30 PM</span><span class="chip" style="--c:var(--ok)">Aprobado</span></div>
+<div class="btn">Aprobar trabajo</div>
+</div>
+<div class="nav">
+<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22V12h6v10"/></svg>
+<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+<svg class="on" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+<svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+</div>
+</div>
+</body>
+</html>
