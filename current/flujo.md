@@ -140,7 +140,7 @@ Solo hay un **Super Admin**, con todos los permisos. Nadie puede dar un permiso 
 | Empleados | Ver lista · invitar y crear · editar y desactivar · ver pagos y tarifas · asignar a jobsites y definir su pago · gestionar permisos |
 | Schedule y Work | Ver y editar el schedule completo · registrar trabajo por otros · editar registros de trabajo · aprobar trabajo · revisar alertas de GPS |
 | Accounting | Ver y registrar ingresos y marcarlos como recibidos · ver costo de personal · ver, registrar y editar gastos · gestionar gastos recurrentes · ver dashboard global · ver dashboard por cuenta · exportar reportes |
-| Sistema | Configuración general (vigencia de quotes, categorías) · ver historial de cambios · transferir el rol de Super Admin (solo el Super Admin) |
+| Sistema | Configuración general (vigencia de quotes, categorías de gastos, motivos de lead perdido) · ver historial de cambios · transferir el rol de Super Admin (solo el Super Admin) |
 
 Todo empleado puede ver su propio horario (semana actual y siguiente) y hacer su clock in y clock out, sin necesitar permisos adicionales.
 

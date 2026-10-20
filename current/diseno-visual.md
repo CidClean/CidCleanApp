@@ -68,12 +68,20 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Staff: términos al primer ingreso | Tres puntos con icono, enlace Leer los términos completos, casilla y botón sólido Aceptar | D-086 | ronda 10 |
 | Idioma | Control segmentado English / Español en Mi perfil | D-087 | ronda 10 |
 | Historial de cambios | Filas con quién hizo qué y cuándo (título y hora en gris) | D-088 | ronda 10 |
-| Ajustes del sistema | Filas con nombre, valor actual y flecha: Vigencia de los quotes, Categorías de gastos | D-089 | ronda 10 |
+| Ajustes del sistema | Filas con nombre, valor actual y flecha: Vigencia de los quotes, Categorías de gastos y Motivos de lead perdido (cantidad de motivos, editables) | D-099 | [`ronda-11-pendientes-de-pantallas.md`](../surveys/ronda-11-pendientes-de-pantallas.md) |
 | Transferir Super Admin | Selector Nuevo Super Admin, casilla de confirmación y botón sólido Transferir rol | D-090 | ronda 10 |
 | Aviso sin conexión | Icono de nube con contador "N pendientes" bajo el título del encabezado | D-091 | ronda 10 |
+| Admin: detalle por aprobar | Encabezado con sitio y día, resumen, una fila por empleado (horario, horas y ficha de GPS) y barra fija abajo con Editar y Aprobar | D-092 | ronda 11 |
+| Staff: semana siguiente | Control segmentado Esta semana / Próxima semana arriba de la tira de días | D-093 | ronda 11 |
+| Portal del quote: Más opciones | Menú con Negociar y Rechazar, cada uno con una línea de explicación (`13px`, gris secundario) | D-094 | ronda 11 |
+| Portal del quote: casilla de lectura | Solo al aceptar | D-095 | ronda 11 |
+| Admin: Guardar con salario mínimo | Guardar activo; con tarifa menor a $15.00 no guarda y muestra el error bajo el campo | D-096 | ronda 11 |
+| Admin: margen en la lista | Ficha ámbar "Margen en riesgo" en la fila del jobsite | D-097 | ronda 11 |
+| Accounting: fecha del gasto | Campo Fecha debajo de Categoría y antes de Monto | D-098 | ronda 11 |
 
 Copia visual de lo aprobado, la más reciente primero:
 
+- Ronda 11: [`../surveys/ronda-11-pendientes-de-pantallas-aprobado.html`](../surveys/ronda-11-pendientes-de-pantallas-aprobado.html). Muestra las 8 pantallas de la ronda 11 con los valores de las rondas 1 a 11. Sus datos son de ejemplo.
 - Ronda 10: [`../surveys/ronda-10-notificaciones-y-sistema-aprobado.html`](../surveys/ronda-10-notificaciones-y-sistema-aprobado.html). Muestra las 8 pantallas de la ronda 10 con los valores de las rondas 1 a 10. Sus datos son de ejemplo.
 - Ronda 9: [`../surveys/ronda-09-pendientes-y-listas-aprobado.html`](../surveys/ronda-09-pendientes-y-listas-aprobado.html). Muestra las 7 pantallas de la ronda 9 con los valores de las rondas 1 a 9. Sus datos son de ejemplo.
 - Ronda 8: [`../surveys/ronda-08-ventas-aprobado.html`](../surveys/ronda-08-ventas-aprobado.html). Muestra las 7 pantallas de Ventas con los valores de las rondas 1 a 8. Su pantalla del quote la reemplaza D-077 (ronda 9). Sus datos son de ejemplo.

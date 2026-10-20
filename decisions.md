@@ -94,6 +94,14 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-086 | 2026-10-20 | Términos del staff en el primer ingreso (y cuando cambia la versión): pantalla Antes de empezar con tres puntos resumidos (ubicación solo al marcar entrada y salida, fotos del trabajo, datos personales), enlace Leer los términos completos, casilla "He leído y acepto los términos" y botón Aceptar. | Vigente | — |
 | D-087 | 2026-10-20 | Idioma de la app: control segmentado English / Español en Mi perfil. | Vigente | — |
 | D-088 | 2026-10-20 | Historial de cambios: lista cronológica simple, cada fila con quién hizo qué y cuándo. | Vigente | — |
-| D-089 | 2026-10-20 | Ajustes del sistema: lista de ajustes que se abren (Vigencia de los quotes, Categorías de gastos), cada uno con su valor actual y una flecha. | Vigente | — |
+| D-089 | 2026-10-20 | Ajustes del sistema: lista de ajustes que se abren (Vigencia de los quotes, Categorías de gastos), cada uno con su valor actual y una flecha. | Reemplazada (por D-099) | — |
 | D-090 | 2026-10-20 | Transferir el rol de Super Admin: selector Nuevo Super Admin, casilla "Entiendo que dejaré de ser Super Admin" y botón Transferir rol. | Vigente | — |
 | D-091 | 2026-10-20 | Aviso sin conexión: icono de nube con contador de pendientes ("3 pendientes") en el encabezado de la pantalla. | Vigente | — |
+| D-092 | 2026-10-20 | Detalle de un trabajo por aprobar: encabezado con sitio y día, resumen (empleados y horas en total), una fila por empleado con su horario y horas (con ficha ámbar "GPS fuera de rango" si aplica) y, fija abajo, la barra con los botones Editar y Aprobar. | Vigente | — |
+| D-093 | 2026-10-20 | Semana siguiente en el horario del empleado: control segmentado Esta semana / Próxima semana arriba de la tira de días. | Vigente | — |
+| D-094 | 2026-10-20 | Menú Más opciones del portal del quote: menú con Negociar ("Pedir cambios al precio o al alcance") y Rechazar ("No aceptar la cotización"), cada opción con una línea de explicación. | Vigente | — |
+| D-095 | 2026-10-20 | La casilla que confirma la lectura del SOW se pide solo al aceptar; Negociar y Rechazar no la piden. | Vigente | — |
+| D-096 | 2026-10-20 | Salario mínimo al guardar el pago: el botón Guardar queda activo; si la tarifa de un W-2 es menor a $15.00 por hora, al tocarlo no guarda y muestra el error bajo el campo (D-061). | Vigente | — |
+| D-097 | 2026-10-20 | La alerta de margen se ve además en la lista de jobsites, con la ficha ámbar "Margen en riesgo" en la fila del jobsite. | Vigente | — |
+| D-098 | 2026-10-20 | Fecha del gasto: campo de texto Fecha debajo de Categoría y antes de Monto. | Vigente | — |
+| D-099 | 2026-10-20 | Motivos de un lead perdido: lista corta que se edita en Ajustes, con una tercera fila "Motivos de lead perdido" (con la cantidad de motivos) en la lista de Ajustes del sistema. | Vigente | D-089 (Ajustes tenía solo Vigencia de los quotes y Categorías de gastos) |
