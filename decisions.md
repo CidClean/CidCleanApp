@@ -89,3 +89,11 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-081 | 2026-10-20 | Pantalla de inicio del admin: cifras del mes (Ingresos y Profit) arriba y lista de pendientes con contadores debajo. | Vigente | — |
 | D-082 | 2026-10-20 | Lista de jobsites: agrupada por cliente, con tarifa mensual y ficha de estado por jobsite. | Vigente | — |
 | D-083 | 2026-10-20 | Lista de empleados: lista compacta con iniciales, nombre, tipo de trabajador y rol, y ficha de estado. | Vigente | — |
+| D-084 | 2026-10-20 | Bandeja de notificaciones: lista con título, detalle y hora; un punto de color de marca marca las no leídas. | Vigente | — |
+| D-085 | 2026-10-20 | Canales de notificación por persona: pantalla Mis notificaciones con tres interruptores globales (Push, Email, En la app) que valen para todas las áreas. | Vigente | — |
+| D-086 | 2026-10-20 | Términos del staff en el primer ingreso (y cuando cambia la versión): pantalla Antes de empezar con tres puntos resumidos (ubicación solo al marcar entrada y salida, fotos del trabajo, datos personales), enlace Leer los términos completos, casilla "He leído y acepto los términos" y botón Aceptar. | Vigente | — |
+| D-087 | 2026-10-20 | Idioma de la app: control segmentado English / Español en Mi perfil. | Vigente | — |
+| D-088 | 2026-10-20 | Historial de cambios: lista cronológica simple, cada fila con quién hizo qué y cuándo. | Vigente | — |
+| D-089 | 2026-10-20 | Ajustes del sistema: lista de ajustes que se abren (Vigencia de los quotes, Categorías de gastos), cada uno con su valor actual y una flecha. | Vigente | — |
+| D-090 | 2026-10-20 | Transferir el rol de Super Admin: selector Nuevo Super Admin, casilla "Entiendo que dejaré de ser Super Admin" y botón Transferir rol. | Vigente | — |
+| D-091 | 2026-10-20 | Aviso sin conexión: icono de nube con contador de pendientes ("3 pendientes") en el encabezado de la pantalla. | Vigente | — |

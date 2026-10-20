@@ -63,9 +63,18 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Inicio del admin | Cifras del mes (Ingresos y Profit, `18px`) y lista de pendientes con contadores en fichas de marca | D-081 | ronda 9 |
 | Lista de jobsites | Agrupada por cliente; cada jobsite con tarifa mensual y ficha de estado | D-082 | ronda 9 |
 | Lista de empleados | Lista compacta con iniciales (círculo de 36px), nombre, tipo y rol, y ficha de estado | D-083 | ronda 9 |
+| Notificaciones: bandeja | Filas con título, detalle y hora; punto de 8px en color de marca en las no leídas | D-084 | [`ronda-10-notificaciones-y-sistema.md`](../surveys/ronda-10-notificaciones-y-sistema.md) |
+| Notificaciones: canales | Pantalla Mis notificaciones con tres interruptores de 40px (Push, Email, En la app), cada uno con su descripción | D-085 | ronda 10 |
+| Staff: términos al primer ingreso | Tres puntos con icono, enlace Leer los términos completos, casilla y botón sólido Aceptar | D-086 | ronda 10 |
+| Idioma | Control segmentado English / Español en Mi perfil | D-087 | ronda 10 |
+| Historial de cambios | Filas con quién hizo qué y cuándo (título y hora en gris) | D-088 | ronda 10 |
+| Ajustes del sistema | Filas con nombre, valor actual y flecha: Vigencia de los quotes, Categorías de gastos | D-089 | ronda 10 |
+| Transferir Super Admin | Selector Nuevo Super Admin, casilla de confirmación y botón sólido Transferir rol | D-090 | ronda 10 |
+| Aviso sin conexión | Icono de nube con contador "N pendientes" bajo el título del encabezado | D-091 | ronda 10 |
 
 Copia visual de lo aprobado, la más reciente primero:
 
+- Ronda 10: [`../surveys/ronda-10-notificaciones-y-sistema-aprobado.html`](../surveys/ronda-10-notificaciones-y-sistema-aprobado.html). Muestra las 8 pantallas de la ronda 10 con los valores de las rondas 1 a 10. Sus datos son de ejemplo.
 - Ronda 9: [`../surveys/ronda-09-pendientes-y-listas-aprobado.html`](../surveys/ronda-09-pendientes-y-listas-aprobado.html). Muestra las 7 pantallas de la ronda 9 con los valores de las rondas 1 a 9. Sus datos son de ejemplo.
 - Ronda 8: [`../surveys/ronda-08-ventas-aprobado.html`](../surveys/ronda-08-ventas-aprobado.html). Muestra las 7 pantallas de Ventas con los valores de las rondas 1 a 8. Su pantalla del quote la reemplaza D-077 (ronda 9). Sus datos son de ejemplo.
 - Ronda 7: [`../surveys/ronda-07-accounting-aprobado.html`](../surveys/ronda-07-accounting-aprobado.html). Muestra las 7 pantallas de Accounting con los valores de las rondas 1 a 7. Sus datos son de ejemplo.
