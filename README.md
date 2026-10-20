@@ -17,4 +17,4 @@ Las reglas del repositorio, obligatorias para toda persona o AI, están en [`AGE
 
 ## Estado
 
-Flujo completo definido (`current/flujo.md`). Siguiente: survey visual, survey de seguridad y, al final, arquitectura.
+Flujo completo definido (`current/flujo.md`). Survey visual: ronda 1 (identidad) aprobada, ver `current/diseno-visual.md`. Siguiente: más rondas del survey visual, survey de seguridad y, al final, arquitectura.

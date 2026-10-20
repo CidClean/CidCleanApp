@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cid Clean, ronda 1 aprobada</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Aprobado por el dueño (2026-10-20): --b color de marca, --r esquinas de botones, fuente Manrope, lista compacta, modo automático. */
+/* Los neutros (--bg, --fg, --bd, --sc) son los de la vista previa y no están aprobados todavía. */
+:root{--b:#0F766E;--r:12px;--bg:#FFFFFF;--fg:#1A1A1A;--bd:#E2E2E2;--sc:#6B6B6B}
+@media (prefers-color-scheme:dark){:root{--bg:#16181D;--fg:#F2F2F2;--bd:#33363D;--sc:#A0A4AD}}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Manrope',system-ui,sans-serif}
+.app{max-width:420px;margin:0 auto;border:0.5px solid var(--bd);border-radius:16px;overflow:hidden}
+.top{background:var(--b);color:#fff;padding:14px 16px;font-weight:500;font-size:16px}
+.body{padding:16px}
+h1{font-size:18px;font-weight:500;margin:0 0 12px}
+.lead{border-bottom:0.5px solid var(--bd);padding:10px 0}
+.lead b{font-size:15px;font-weight:500;display:block}
+.lead span.d{font-size:13px;color:var(--sc);display:block;margin:2px 0 8px}
+.chip{display:inline-block;font-size:12px;padding:3px 10px;border-radius:6px;background:color-mix(in srgb,var(--b) 18%,transparent)}
+.btns{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.btn{background:var(--b);color:#fff;border-radius:var(--r);padding:9px 12px;font:500 13px 'Manrope',system-ui,sans-serif;text-align:center}
+.btn2{border:1px solid var(--b);color:var(--fg);border-radius:var(--r);padding:8px 12px;font:500 13px 'Manrope',system-ui,sans-serif;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top">Cid Clean</div>
+<div class="body">
+<h1>Leads</h1>
+<div class="lead"><b>Gulf Coast Dental</b><span class="d">Mar 22 oct · 10:00 AM</span><span class="chip">Walkthrough agendado</span></div>
+<div class="lead"><b>Marco Island Offices</b><span class="d">$1,850 / mes · vence en 12 días</span><span class="chip">Quote enviado</span></div>
+<div class="btns"><div class="btn">Agendar walkthrough</div><div class="btn2">Ver quote</div></div>
+</div>
+</div>
+</body>
+</html>

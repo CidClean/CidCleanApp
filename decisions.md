@@ -29,3 +29,8 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-021 | 2026-10-20 | Orden de trabajo: survey visual, survey de seguridad, y al final la arquitectura. | Vigente | — |
 | D-022 | 2026-10-20 | Las reglas del repositorio (lo vigente manda, lo reemplazado nunca se aplica, cambiar es reemplazar) son obligatorias para toda persona o AI y viven en `AGENTS.md`. | Vigente | — |
 | D-023 | 2026-10-20 | Toda elección aprobada se registra en el mismo turno con valores exactos y copia visual HTML, y no se construye nada que no esté registrado (reglas 8 y 9 de `AGENTS.md`). | Vigente | — |
+| D-024 | 2026-10-20 | Color de marca: verde azulado `#0F766E`. | Vigente | — |
+| D-025 | 2026-10-20 | Esquinas de botones: redondeadas, `12px`. | Vigente | — |
+| D-026 | 2026-10-20 | Tipografía: Manrope. | Vigente | — |
+| D-027 | 2026-10-20 | Lista de leads: lista compacta (filas separadas por línea fina, sin tarjeta). | Vigente | — |
+| D-028 | 2026-10-20 | Modo: automático, sigue el modo claro u oscuro del teléfono. | Vigente | — |
