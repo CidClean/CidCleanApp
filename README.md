@@ -13,10 +13,7 @@ App para Cid Clean, compañía de limpieza comercial en Naples, Florida. Este re
 
 ## Reglas
 
-1. **Lo vigente manda.** Si algo en `archive/` o en una decisión reemplazada contradice `current/`, gana `current/`.
-2. **Cambiar es reemplazar.** Cuando una decisión cambia, en un mismo cambio: se registra la decisión nueva en `decisions.md` (indicando cuál reemplaza), se marca la anterior como reemplazada, se actualiza `current/` y la versión vieja pasa a `archive/`.
-3. **Lo reemplazado nunca se aplica.** Una decisión reemplazada no se vuelve a usar, aunque aparezca en documentos o conversaciones antiguas.
-4. **Una sola fuente por tema.** No se duplica el mismo contenido en dos archivos de `current/`.
+Las reglas del repositorio, obligatorias para toda persona o AI, están en [`AGENTS.md`](AGENTS.md). Léelas antes de leer o cambiar cualquier cosa.
 
 ## Estado
 

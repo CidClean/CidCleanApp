@@ -27,3 +27,4 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-019 | 2026-10-20 | Idioma: inglés y español, inglés por defecto. | Vigente | — |
 | D-020 | 2026-10-20 | Fuera de esta versión: acceso físico al jobsite, checklist por visita, renovaciones de contrato. | Vigente | — |
 | D-021 | 2026-10-20 | Orden de trabajo: survey visual, survey de seguridad, y al final la arquitectura. | Vigente | — |
+| D-022 | 2026-10-20 | Las reglas del repositorio (lo vigente manda, lo reemplazado nunca se aplica, cambiar es reemplazar) son obligatorias para toda persona o AI y viven en `AGENTS.md`. | Vigente | — |
