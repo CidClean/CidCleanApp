@@ -60,3 +60,10 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-052 | 2026-10-20 | Registro del trabajo por supervisor o admin: una fila por empleado con hora de entrada y de salida editables, y botón Guardar. | Vigente | — |
 | D-053 | 2026-10-20 | Trabajos por aprobar: lista con ficha de estado; al tocar una fila se abre el detalle. | Vigente | — |
 | D-054 | 2026-10-20 | GPS fuera de rango visto por el admin: ficha ámbar "GPS fuera de rango" en la fila del trabajo. | Vigente | — |
+| D-055 | 2026-10-20 | Detalle del jobsite: encabezado con nombre, ciudad, tarifa mensual y estado, y pestañas Resumen, Documentos, Personal y Horario. | Vigente | — |
+| D-056 | 2026-10-20 | Estado del jobsite (activo, pausado, terminado): campo con lista desplegable. | Vigente | — |
+| D-057 | 2026-10-20 | Perfil del empleado: encabezado con iniciales, nombre, tipo de trabajador y rol, y pestañas Datos, Permisos y Pagos. | Vigente | — |
+| D-058 | 2026-10-20 | Permisos del empleado: campo Plantilla de partida y áreas desplegables con un interruptor por permiso. | Vigente | — |
+| D-059 | 2026-10-20 | Pago por jobsite: control segmentado Por hora / Tarifa fija con los campos debajo (tarifa por hora y horas garantizadas opcionales). | Vigente | — |
+| D-060 | 2026-10-20 | Alerta de margen del jobsite: barra de costo del personal contra tarifa al cliente, en ámbar, con ficha "Margen en riesgo". | Vigente | — |
+| D-061 | 2026-10-20 | Aviso del salario mínimo: error bajo el campo (borde y texto en rojo `#C0504D`). | Vigente | — |

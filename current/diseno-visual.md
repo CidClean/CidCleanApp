@@ -36,9 +36,17 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Staff: registro por otros | Una fila por empleado con campos de entrada y salida editables y botón Guardar | D-052 | ronda 5 |
 | Admin: por aprobar | Lista con ficha de estado Pendiente; al tocar se abre el detalle | D-053 | ronda 5 |
 | Admin: GPS fuera de rango | Ficha con contorno ámbar `#B7791F` en la fila | D-054 | ronda 5 |
+| Admin: detalle del jobsite | Encabezado (nombre, ciudad, tarifa mensual, ficha de estado) y pestañas Resumen, Documentos, Personal y Horario con subrayado de 2px en la activa | D-055 | [`ronda-06-gestion-admin.md`](../surveys/ronda-06-gestion-admin.md) |
+| Admin: estado del jobsite | Campo con contorno y flecha; opciones Activo, Pausado y Terminado | D-056 | ronda 6 |
+| Admin: perfil del empleado | Círculo de 48px con iniciales, nombre, tipo y rol; pestañas Datos, Permisos y Pagos | D-057 | ronda 6 |
+| Admin: permisos | Campo Plantilla de partida; áreas desplegables con interruptor de 40px por permiso | D-058 | ronda 6 |
+| Admin: pago por jobsite | Control segmentado Por hora / Tarifa fija; campos Tarifa por hora y Horas garantizadas (opcional) | D-059 | ronda 6 |
+| Admin: alerta de margen | Barra de 8px en ámbar `#B7791F` con cifras de costo y tarifa, y ficha "Margen en riesgo" | D-060 | ronda 6 |
+| Admin: salario mínimo | Campo con borde rojo `#C0504D` y texto de error debajo | D-061 | ronda 6 |
 
 Copia visual de lo aprobado, la más reciente primero:
 
+- Ronda 6: [`../surveys/ronda-06-gestion-admin-aprobado.html`](../surveys/ronda-06-gestion-admin-aprobado.html). Muestra las 7 pantallas de gestión del admin con los valores de las rondas 1 a 6. Sus datos son de ejemplo.
 - Ronda 5: [`../surveys/ronda-05-operaciones-staff-aprobado.html`](../surveys/ronda-05-operaciones-staff-aprobado.html). Muestra las 7 pantallas del staff con los valores de las rondas 1 a 5. Sus datos son de ejemplo.
 - Ronda 4: [`../surveys/ronda-04-portal-quote-aprobado.html`](../surveys/ronda-04-portal-quote-aprobado.html). Muestra las 8 pantallas del portal del quote con los valores de las rondas 1 a 4. Sus textos son de ejemplo.
 - Ronda 3: [`../surveys/ronda-03-walkthrough-aprobado.html`](../surveys/ronda-03-walkthrough-aprobado.html). Muestra las pantallas nuevas (captura de áreas, días, fotos) con los valores de las rondas 1 a 3 y los iconos en el estilo aprobado (D-035).

@@ -17,4 +17,4 @@ Las reglas del repositorio, obligatorias para toda persona o AI, están en [`AGE
 
 ## Estado
 
-Flujo completo definido (`current/flujo.md`). Survey visual: rondas 1 (identidad), 2 (componentes), 3 (iconos, densidad y pantallas del walkthrough), 4 (portal del quote) y 5 (pantallas del staff en Operaciones) aprobadas, ver `current/diseno-visual.md`. Siguiente: más rondas del survey visual, survey de seguridad y, al final, arquitectura.
+Flujo completo definido (`current/flujo.md`). Survey visual: rondas 1 (identidad), 2 (componentes), 3 (iconos, densidad y pantallas del walkthrough), 4 (portal del quote), 5 (pantallas del staff en Operaciones) y 6 (gestión del admin) aprobadas, ver `current/diseno-visual.md`. Siguiente: más rondas del survey visual, survey de seguridad y, al final, arquitectura.
