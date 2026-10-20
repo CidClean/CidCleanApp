@@ -29,9 +29,17 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Portal: aceptación | Tarjeta de resumen, campos Nombre completo y Cargo, casilla de confirmación de lectura, botón Aceptar cotización | D-045 | ronda 4 |
 | Portal: rechazo o negociación | Fichas de motivos rápidos y campo Nota opcional | D-046 | ronda 4 |
 | Portal: pantalla final | Marca de éxito de 56px y tarjeta de resumen con sitio, versión, fecha y hora, y nombre | D-047 | ronda 4 |
+| Staff: horario | Tira de 7 días (esquinas de 8px, con visita en fondo de marca) y lista de visitas del día elegido | D-048 | [`ronda-05-operaciones-staff.md`](../surveys/ronda-05-operaciones-staff.md) |
+| Staff: marcar entrada | Pista deslizable de 48px con perilla de marca y texto "Desliza para marcar entrada"; muestra "Ubicación lista" | D-049 | ronda 5 |
+| Staff: durante el turno | Hora de entrada, cronómetro de `34px` y botón sólido Marcar salida | D-050 | ronda 5 |
+| Staff: GPS no coincide | "Estás a X m del sitio", botón con contorno Reintentar ubicación y botón sólido Marcar de todos modos | D-051 | ronda 5 |
+| Staff: registro por otros | Una fila por empleado con campos de entrada y salida editables y botón Guardar | D-052 | ronda 5 |
+| Admin: por aprobar | Lista con ficha de estado Pendiente; al tocar se abre el detalle | D-053 | ronda 5 |
+| Admin: GPS fuera de rango | Ficha con contorno ámbar `#B7791F` en la fila | D-054 | ronda 5 |
 
 Copia visual de lo aprobado, la más reciente primero:
 
+- Ronda 5: [`../surveys/ronda-05-operaciones-staff-aprobado.html`](../surveys/ronda-05-operaciones-staff-aprobado.html). Muestra las 7 pantallas del staff con los valores de las rondas 1 a 5. Sus datos son de ejemplo.
 - Ronda 4: [`../surveys/ronda-04-portal-quote-aprobado.html`](../surveys/ronda-04-portal-quote-aprobado.html). Muestra las 8 pantallas del portal del quote con los valores de las rondas 1 a 4. Sus textos son de ejemplo.
 - Ronda 3: [`../surveys/ronda-03-walkthrough-aprobado.html`](../surveys/ronda-03-walkthrough-aprobado.html). Muestra las pantallas nuevas (captura de áreas, días, fotos) con los valores de las rondas 1 a 3 y los iconos en el estilo aprobado (D-035).
 - Rondas 1 y 2 juntas: [`../surveys/ronda-02-componentes-aprobado.html`](../surveys/ronda-02-componentes-aprobado.html). Sus iconos eran provisionales (trazo 2px) y el estilo vigente es D-035.

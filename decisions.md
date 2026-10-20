@@ -53,3 +53,10 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-045 | 2026-10-20 | Portal del quote, aceptación: resumen de lo que acepta (sitio y total mensual), campos Nombre completo y Cargo, casilla de confirmación de lectura del SOW y términos, y botón Aceptar cotización. | Vigente | — |
 | D-046 | 2026-10-20 | Portal del quote, rechazo o negociación: motivos rápidos en fichas y campo Nota opcional. | Vigente | — |
 | D-047 | 2026-10-20 | Portal del quote, pantalla final: marca de éxito y tarjeta de resumen con sitio, versión, fecha y hora, y nombre de quien aceptó. | Vigente | — |
+| D-048 | 2026-10-20 | Horario del empleado: tira de 7 días con la lista de visitas del día elegido. | Vigente | — |
+| D-049 | 2026-10-20 | Marcar entrada (clock in): deslizar para marcar, con "Ubicación lista" visible. | Vigente | — |
+| D-050 | 2026-10-20 | Pantalla durante el turno: cronómetro grande (34px), hora de entrada y botón Marcar salida. | Vigente | — |
+| D-051 | 2026-10-20 | Si el GPS no coincide con el sitio: se muestra la distancia al sitio y los botones Reintentar ubicación y Marcar de todos modos. | Vigente | — |
+| D-052 | 2026-10-20 | Registro del trabajo por supervisor o admin: una fila por empleado con hora de entrada y de salida editables, y botón Guardar. | Vigente | — |
+| D-053 | 2026-10-20 | Trabajos por aprobar: lista con ficha de estado; al tocar una fila se abre el detalle. | Vigente | — |
+| D-054 | 2026-10-20 | GPS fuera de rango visto por el admin: ficha ámbar "GPS fuera de rango" en la fila del trabajo. | Vigente | — |
