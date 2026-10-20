@@ -67,3 +67,11 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-059 | 2026-10-20 | Pago por jobsite: control segmentado Por hora / Tarifa fija con los campos debajo (tarifa por hora y horas garantizadas opcionales). | Vigente | — |
 | D-060 | 2026-10-20 | Alerta de margen del jobsite: barra de costo del personal contra tarifa al cliente, en ámbar, con ficha "Margen en riesgo". | Vigente | — |
 | D-061 | 2026-10-20 | Aviso del salario mínimo: error bajo el campo (borde y texto en rojo `#C0504D`). | Vigente | — |
+| D-062 | 2026-10-20 | Los gastos de Accounting no llevan foto del recibo: solo categoría, fecha y monto. | Vigente | Texto de gastos en `current/flujo.md` (incluía foto del recibo; no tenía decisión propia, ver `archive/flujo-2026-10-20-con-foto-de-recibo.md`) |
+| D-063 | 2026-10-20 | Accounting, ingresos del mes: resumen arriba (Esperado y Recibido con barra de avance) y lista de ingresos con ficha de estado debajo. | Vigente | — |
+| D-064 | 2026-10-20 | Marcar un ingreso como recibido: interruptor Recibido en la fila, con el campo Fecha de cobro. | Vigente | — |
+| D-065 | 2026-10-20 | Registro de un gasto: control Global / Jobsite al inicio, con selector de jobsite, categoría y monto. | Vigente | — |
+| D-066 | 2026-10-20 | Gastos recurrentes: lista con nombre, frecuencia y monto. | Vigente | — |
+| D-067 | 2026-10-20 | Costo de personal: control Por empleado / Por jobsite con lista de horas y monto. | Vigente | — |
+| D-068 | 2026-10-20 | Dashboard: cuatro tarjetas de cifras (Ingresos, Personal, Gastos, Profit) y línea de Recibido y Pendiente. | Vigente | — |
+| D-069 | 2026-10-20 | Filtros del dashboard: control Global / Por cuenta y selector de mes con flechas. | Vigente | — |

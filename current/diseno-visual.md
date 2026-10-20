@@ -43,9 +43,17 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Admin: pago por jobsite | Control segmentado Por hora / Tarifa fija; campos Tarifa por hora y Horas garantizadas (opcional) | D-059 | ronda 6 |
 | Admin: alerta de margen | Barra de 8px en ámbar `#B7791F` con cifras de costo y tarifa, y ficha "Margen en riesgo" | D-060 | ronda 6 |
 | Admin: salario mínimo | Campo con borde rojo `#C0504D` y texto de error debajo | D-061 | ronda 6 |
+| Accounting: ingresos | Arriba Esperado y Recibido (`18px`) con barra de avance de 6px; debajo, filas con sitio, monto y ficha de estado | D-063 | [`ronda-07-accounting.md`](../surveys/ronda-07-accounting.md) |
+| Accounting: marcar recibido | Interruptor Recibido en la fila y campo Fecha de cobro debajo | D-064 | ronda 7 |
+| Accounting: gasto | Control Global / Jobsite, selector de jobsite, Categoría y Monto; sin foto del recibo | D-065 | ronda 7 |
+| Accounting: recurrentes | Filas con nombre, frecuencia y monto | D-066 | ronda 7 |
+| Accounting: personal | Control Por empleado / Por jobsite; filas con nombre, horas y monto | D-067 | ronda 7 |
+| Accounting: dashboard | Cuadrícula de 2 columnas con tarjetas Ingresos, Personal, Gastos y Profit (cifra de `20px`) y línea Recibido y Pendiente | D-068 | ronda 7 |
+| Accounting: filtros | Control Global / Por cuenta y selector de mes con flechas | D-069 | ronda 7 |
 
 Copia visual de lo aprobado, la más reciente primero:
 
+- Ronda 7: [`../surveys/ronda-07-accounting-aprobado.html`](../surveys/ronda-07-accounting-aprobado.html). Muestra las 7 pantallas de Accounting con los valores de las rondas 1 a 7. Sus datos son de ejemplo.
 - Ronda 6: [`../surveys/ronda-06-gestion-admin-aprobado.html`](../surveys/ronda-06-gestion-admin-aprobado.html). Muestra las 7 pantallas de gestión del admin con los valores de las rondas 1 a 6. Sus datos son de ejemplo.
 - Ronda 5: [`../surveys/ronda-05-operaciones-staff-aprobado.html`](../surveys/ronda-05-operaciones-staff-aprobado.html). Muestra las 7 pantallas del staff con los valores de las rondas 1 a 5. Sus datos son de ejemplo.
 - Ronda 4: [`../surveys/ronda-04-portal-quote-aprobado.html`](../surveys/ronda-04-portal-quote-aprobado.html). Muestra las 8 pantallas del portal del quote con los valores de las rondas 1 a 4. Sus textos son de ejemplo.

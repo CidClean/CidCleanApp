@@ -121,7 +121,7 @@ Accounting registra ingresos, costo de personal y gastos, globales y por cuenta,
 
 - **Ingresos:** cada mes se registra el ingreso esperado de cada jobsite. Al recibirlo se marca como recibido con la fecha real. El ingreso cuenta en el mes en que se registra, no en el que se cobra, y el dashboard muestra lo recibido y lo pendiente.
 - **Personal:** el costo sale automático del trabajo aprobado (horas reales, garantizadas o tarifa fija), agrupado por mes, empleado y jobsite. La app calcula lo que se debe y no registra si ya se pagó.
-- **Gastos:** categoría, fecha, monto y foto del recibo. Pueden ser de un jobsite o globales de Cid Clean. Los registra quien tenga el permiso, por defecto el dueño y los administradores.
+- **Gastos:** categoría, fecha y monto. Pueden ser de un jobsite o globales de Cid Clean. Los registra quien tenga el permiso, por defecto el dueño y los administradores.
 - **Gastos recurrentes:** seguro, vehículos y software se configuran una vez y se generan solos cada mes.
 - **Dashboard:** ingresos, personal, gastos y profit, vistos de forma global, por cuenta y por periodo.
 
