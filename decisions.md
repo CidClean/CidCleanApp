@@ -40,3 +40,8 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-032 | 2026-10-20 | Alertas: tarjeta con borde en el color de la alerta, con icono. | Vigente | — |
 | D-033 | 2026-10-20 | Grises y fondo (Neutro). Claro: fondo `#FFFFFF`, superficie `#F4F4F4`, texto `#1A1A1A`, borde `#E2E2E2`, secundario `#6B6B6B`. Oscuro: fondo `#121212`, superficie `#1C1C1C`, texto `#F2F2F2`, borde `#333333`, secundario `#A0A0A0`. | Vigente | — |
 | D-034 | 2026-10-20 | Colores de estado suaves: éxito `#3F8F5F`, advertencia `#B7791F`, error `#C0504D`. | Vigente | — |
+| D-035 | 2026-10-20 | Estilo de iconos: línea fina (trazo 1.5px, sin relleno). | Vigente | — |
+| D-036 | 2026-10-20 | Densidad estándar: texto 15px, filas 48px, relleno vertical de campos 10px. | Vigente | — |
+| D-037 | 2026-10-20 | Captura de áreas del walkthrough: formulario rápido en pantalla (Tipo, Nombre, Tamaño, condición Buena / Regular / Mala, botones Foto y Guardar y otra). | Vigente | — |
+| D-038 | 2026-10-20 | Selector de días de la frecuencia semanal: botones con nombre corto (Lun, Mar, Mié, Jue, Vie, Sáb, Dom). | Vigente | — |
+| D-039 | 2026-10-20 | Fotos de cada área: carrusel de miniaturas de 96px con nota por foto y botón Tomar foto. | Vigente | — |

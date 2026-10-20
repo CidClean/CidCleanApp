@@ -16,10 +16,16 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Grises y fondo, claro | fondo `#FFFFFF`, superficie `#F4F4F4`, texto `#1A1A1A`, borde `#E2E2E2`, secundario `#6B6B6B` | D-033 | ronda 2 |
 | Grises y fondo, oscuro | fondo `#121212`, superficie `#1C1C1C`, texto `#F2F2F2`, borde `#333333`, secundario `#A0A0A0` | D-033 | ronda 2 |
 | Colores de estado | éxito `#3F8F5F`, advertencia `#B7791F`, error `#C0504D` | D-034 | ronda 2 |
+| Iconos | Línea fina: trazo `1.5px`, sin relleno (la librería de iconos no se ha elegido) | D-035 | [`ronda-03-walkthrough.md`](../surveys/ronda-03-walkthrough.md) |
+| Densidad | Estándar: texto `15px`, filas `48px`, relleno vertical de campos `10px` | D-036 | ronda 3 |
+| Captura de áreas | Formulario rápido en pantalla: Tipo, Nombre, Tamaño, condición Buena / Regular / Mala (control segmentado, esquinas de 12px), botones Foto y Guardar y otra | D-037 | ronda 3 |
+| Selector de días | 7 botones con nombre corto (Lun, Mar, Mié, Jue, Vie, Sáb, Dom), esquinas de 8px, seleccionado con fondo `#0F766E` | D-038 | ronda 3 |
+| Fotos de un área | Carrusel de miniaturas de 96px con nota por foto (esquinas de 8px) y botón Tomar foto | D-039 | ronda 3 |
 
 Copia visual de lo aprobado, la más reciente primero:
 
-- Rondas 1 y 2 juntas: [`../surveys/ronda-02-componentes-aprobado.html`](../surveys/ronda-02-componentes-aprobado.html). Sus iconos son provisionales: el set de iconos no se ha elegido.
+- Ronda 3: [`../surveys/ronda-03-walkthrough-aprobado.html`](../surveys/ronda-03-walkthrough-aprobado.html). Muestra las pantallas nuevas (captura de áreas, días, fotos) con los valores de las rondas 1 a 3 y los iconos en el estilo aprobado (D-035).
+- Rondas 1 y 2 juntas: [`../surveys/ronda-02-componentes-aprobado.html`](../surveys/ronda-02-componentes-aprobado.html). Sus iconos eran provisionales (trazo 2px) y el estilo vigente es D-035.
 - Solo ronda 1: [`../surveys/ronda-01-identidad-aprobado.html`](../surveys/ronda-01-identidad-aprobado.html). Sus grises eran provisionales y los reemplaza la ronda 2 (D-033).
 
 Todo lo que no está en esta tabla no se ha decidido todavía. No se construye hasta que el dueño lo elija.
