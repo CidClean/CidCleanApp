@@ -44,12 +44,32 @@ Los valores exactos de cada pantalla (campos, textos, tamaños) están en `../de
 
 Notas de lo que las muestras no definieron y queda pendiente:
 
-- **Por confirmar con el dueño:** que el lápiz por fila reemplaza al botón Editar del detalle de un trabajo por aprobar (D-109) y que las cifras del mes se mantienen arriba en el inicio (D-111). Se registró así porque las muestras elegidas no mostraban esos elementos.
+- **Confirmado por el dueño (D-121):** el lápiz por fila reemplaza al botón Editar (D-109) y las cifras del mes se mantienen arriba en el inicio (D-111).
 - Las categorías de gastos concretas no están decididas (las muestras usaban Suministros, Seguro y Vehículos solo de ejemplo). Falta también el formulario al tocar Agregar o el lápiz en una lista de Ajustes.
 - Qué hace que un pendiente del inicio sea Urgente (por ejemplo, un quote a pocos días de vencer).
 - Cuáles son los cuatro iconos de la barra inferior y qué icono de Tabler va en cada función (se eligen al construir).
 - Qué cambios exactos cuentan como "importantes" en el historial más allá de tarifas, permisos, estados y aprobaciones.
 - Los nombres, textos y cifras son de ejemplo.
+
+## Confirmaciones del dueño después de la ronda
+
+Mismo día, 19:09. Respuesta del dueño, textual:
+
+> 1. Si
+> 2. Correcto
+>
+> * ponlas en settings yambien
+> * no se dímelo tu
+> * pipieline, cuantas, inicio y menú
+> * nos e a que te refieres pero es simple deja la casilla de marcar si es Tax o no
+
+Registrado: "Si" y "Correcto" a las dos cosas por confirmar (D-121). La última línea, sobre el Tax, se registra como "se queda como está" (D-122), porque el quote ya lleva la tasa de 6% editable y la marca Gravable por renglón.
+
+Sin registrar, por falta de claridad o porque son propuestas (se preguntó al dueño):
+
+- "ponlas en settings y también" (sobre las categorías de gastos concretas): la frase quedó cortada. Las categorías ya se editan en Ajustes (D-113 y D-114); falta saber qué sigue después de "y también".
+- "no sé, dímelo tú" (sobre qué hace Urgente a un pendiente del inicio): es una propuesta pendiente de aprobación; no entra a `current/` hasta que el dueño la confirme.
+- "pipeline, cuantas, inicio y menú" (cuatro iconos de la barra inferior): falta confirmar si "cuantas" se refiere a Cuentas y qué abre cada una, además del orden.
 
 Copia visual de lo aprobado: [`ronda-12-pendientes-restantes-aprobado.html`](ronda-12-pendientes-restantes-aprobado.html).
 

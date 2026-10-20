@@ -126,3 +126,5 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-118 | 2026-10-20 | Tocar una notificación abre directamente la pantalla relacionada; la fila lleva una flecha. | Vigente | — |
 | D-119 | 2026-10-20 | Aviso al terminar de sincronizar: en el encabezado, una nube con marca de verificación y la palabra "Sincronizado", que se queda. | Vigente | — |
 | D-120 | 2026-10-20 | Librería de iconos: Tabler Icons, en línea fina de 1.5px (D-035). | Vigente | — |
+| D-121 | 2026-10-20 | Confirmado por el dueño: el lápiz de cada fila reemplaza al botón Editar en el detalle de un trabajo por aprobar (D-109), y las cifras del mes (Ingresos y Profit) se mantienen arriba en el inicio del admin (D-111). | Vigente | — |
+| D-122 | 2026-10-20 | Tax del quote: se queda como está, con la tasa de 6% editable y la marca Gravable en cada renglón de servicio o add-on (D-077). No hay cambios. | Vigente | — |
