@@ -28,3 +28,4 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-020 | 2026-10-20 | Fuera de esta versión: acceso físico al jobsite, checklist por visita, renovaciones de contrato. | Vigente | — |
 | D-021 | 2026-10-20 | Orden de trabajo: survey visual, survey de seguridad, y al final la arquitectura. | Vigente | — |
 | D-022 | 2026-10-20 | Las reglas del repositorio (lo vigente manda, lo reemplazado nunca se aplica, cambiar es reemplazar) son obligatorias para toda persona o AI y viven en `AGENTS.md`. | Vigente | — |
+| D-023 | 2026-10-20 | Toda elección aprobada se registra en el mismo turno con valores exactos y copia visual HTML, y no se construye nada que no esté registrado (reglas 8 y 9 de `AGENTS.md`). | Vigente | — |
