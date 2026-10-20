@@ -45,3 +45,11 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-037 | 2026-10-20 | Captura de áreas del walkthrough: formulario rápido en pantalla (Tipo, Nombre, Tamaño, condición Buena / Regular / Mala, botones Foto y Guardar y otra). | Vigente | — |
 | D-038 | 2026-10-20 | Selector de días de la frecuencia semanal: botones con nombre corto (Lun, Mar, Mié, Jue, Vie, Sáb, Dom). | Vigente | — |
 | D-039 | 2026-10-20 | Fotos de cada área: carrusel de miniaturas de 96px con nota por foto y botón Tomar foto. | Vigente | — |
+| D-040 | 2026-10-20 | Portal del quote, código de verificación: 6 casillas con teclado numérico propio en pantalla (teclas Reenviar y Borrar). | Vigente | — |
+| D-041 | 2026-10-20 | Portal del quote, SOW: documento adjunto que se abre con un botón de texto "Leer SOW (PDF)". No se dibuja dentro de la app. | Vigente | — |
+| D-042 | 2026-10-20 | Portal del quote: el botón Continuar aparece bloqueado (con candado) y un aviso "Abre el SOW para poder continuar"; se activa al abrir el SOW. | Vigente | — |
+| D-043 | 2026-10-20 | Portal del quote, precio: cuota mensual grande arriba (26px), vigencia debajo y desglose Subtotal, Tax y Total mensual abajo. | Vigente | — |
+| D-044 | 2026-10-20 | Portal del quote, decisión: barra inferior fija con botón Aceptar cotización y menú Más opciones (Negociar, Rechazar). | Vigente | — |
+| D-045 | 2026-10-20 | Portal del quote, aceptación: resumen de lo que acepta (sitio y total mensual), campos Nombre completo y Cargo, casilla de confirmación de lectura del SOW y términos, y botón Aceptar cotización. | Vigente | — |
+| D-046 | 2026-10-20 | Portal del quote, rechazo o negociación: motivos rápidos en fichas y campo Nota opcional. | Vigente | — |
+| D-047 | 2026-10-20 | Portal del quote, pantalla final: marca de éxito y tarjeta de resumen con sitio, versión, fecha y hora, y nombre de quien aceptó. | Vigente | — |

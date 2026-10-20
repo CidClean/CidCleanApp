@@ -21,9 +21,18 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Captura de áreas | Formulario rápido en pantalla: Tipo, Nombre, Tamaño, condición Buena / Regular / Mala (control segmentado, esquinas de 12px), botones Foto y Guardar y otra | D-037 | ronda 3 |
 | Selector de días | 7 botones con nombre corto (Lun, Mar, Mié, Jue, Vie, Sáb, Dom), esquinas de 8px, seleccionado con fondo `#0F766E` | D-038 | ronda 3 |
 | Fotos de un área | Carrusel de miniaturas de 96px con nota por foto (esquinas de 8px) y botón Tomar foto | D-039 | ronda 3 |
+| Portal: código | 6 casillas de 48px con teclado numérico propio (teclas Reenviar y Borrar) | D-040 | [`ronda-04-portal-quote.md`](../surveys/ronda-04-portal-quote.md) |
+| Portal: SOW | Documento adjunto, botón de texto "Leer SOW (PDF)" con contorno | D-041 | ronda 4 |
+| Portal: Continuar bloqueado | Botón de superficie con candado y aviso "Abre el SOW para poder continuar"; se activa al abrir el SOW | D-042 | ronda 4 |
+| Portal: precio | Cuota mensual `26px` arriba, vigencia debajo, desglose Subtotal, Tax y Total mensual | D-043 | ronda 4 |
+| Portal: decisión | Barra inferior fija: botón de tres puntos con contorno y botón sólido Aceptar cotización | D-044 | ronda 4 |
+| Portal: aceptación | Tarjeta de resumen, campos Nombre completo y Cargo, casilla de confirmación de lectura, botón Aceptar cotización | D-045 | ronda 4 |
+| Portal: rechazo o negociación | Fichas de motivos rápidos y campo Nota opcional | D-046 | ronda 4 |
+| Portal: pantalla final | Marca de éxito de 56px y tarjeta de resumen con sitio, versión, fecha y hora, y nombre | D-047 | ronda 4 |
 
 Copia visual de lo aprobado, la más reciente primero:
 
+- Ronda 4: [`../surveys/ronda-04-portal-quote-aprobado.html`](../surveys/ronda-04-portal-quote-aprobado.html). Muestra las 8 pantallas del portal del quote con los valores de las rondas 1 a 4. Sus textos son de ejemplo.
 - Ronda 3: [`../surveys/ronda-03-walkthrough-aprobado.html`](../surveys/ronda-03-walkthrough-aprobado.html). Muestra las pantallas nuevas (captura de áreas, días, fotos) con los valores de las rondas 1 a 3 y los iconos en el estilo aprobado (D-035).
 - Rondas 1 y 2 juntas: [`../surveys/ronda-02-componentes-aprobado.html`](../surveys/ronda-02-componentes-aprobado.html). Sus iconos eran provisionales (trazo 2px) y el estilo vigente es D-035.
 - Solo ronda 1: [`../surveys/ronda-01-identidad-aprobado.html`](../surveys/ronda-01-identidad-aprobado.html). Sus grises eran provisionales y los reemplaza la ronda 2 (D-033).
