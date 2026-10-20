@@ -86,7 +86,7 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-078 | 2026-10-20 | Elegir el sitio al agendar un walkthrough: campo desplegable de sitio arriba, y después el calendario y la hora. | Vigente | — |
 | D-079 | 2026-10-20 | Marcar un lead como perdido: campo desplegable de motivo, nota opcional y botón Marcar como perdido. | Vigente | — |
 | D-080 | 2026-10-20 | Frecuencia más abierta: en el campo desplegable de tipo se elige Otra y se describe en un campo de texto libre (por ejemplo, "Días 1 y 15 de cada mes"). | Vigente | — |
-| D-081 | 2026-10-20 | Pantalla de inicio del admin: cifras del mes (Ingresos y Profit) arriba y lista de pendientes con contadores debajo. | Vigente | — |
+| D-081 | 2026-10-20 | Pantalla de inicio del admin: cifras del mes (Ingresos y Profit) arriba y lista de pendientes con contadores debajo. | Reemplazada (por D-111) | — |
 | D-082 | 2026-10-20 | Lista de jobsites: agrupada por cliente, con tarifa mensual y ficha de estado por jobsite. | Vigente | — |
 | D-083 | 2026-10-20 | Lista de empleados: lista compacta con iniciales, nombre, tipo de trabajador y rol, y ficha de estado. | Vigente | — |
 | D-084 | 2026-10-20 | Bandeja de notificaciones: lista con título, detalle y hora; un punto de color de marca marca las no leídas. | Vigente | — |
@@ -97,11 +97,32 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-089 | 2026-10-20 | Ajustes del sistema: lista de ajustes que se abren (Vigencia de los quotes, Categorías de gastos), cada uno con su valor actual y una flecha. | Reemplazada (por D-099) | — |
 | D-090 | 2026-10-20 | Transferir el rol de Super Admin: selector Nuevo Super Admin, casilla "Entiendo que dejaré de ser Super Admin" y botón Transferir rol. | Vigente | — |
 | D-091 | 2026-10-20 | Aviso sin conexión: icono de nube con contador de pendientes ("3 pendientes") en el encabezado de la pantalla. | Vigente | — |
-| D-092 | 2026-10-20 | Detalle de un trabajo por aprobar: encabezado con sitio y día, resumen (empleados y horas en total), una fila por empleado con su horario y horas (con ficha ámbar "GPS fuera de rango" si aplica) y, fija abajo, la barra con los botones Editar y Aprobar. | Vigente | — |
+| D-092 | 2026-10-20 | Detalle de un trabajo por aprobar: encabezado con sitio y día, resumen (empleados y horas en total), una fila por empleado con su horario y horas (con ficha ámbar "GPS fuera de rango" si aplica) y, fija abajo, la barra con los botones Editar y Aprobar. | Reemplazada (por D-109) | — |
 | D-093 | 2026-10-20 | Semana siguiente en el horario del empleado: control segmentado Esta semana / Próxima semana arriba de la tira de días. | Vigente | — |
 | D-094 | 2026-10-20 | Menú Más opciones del portal del quote: menú con Negociar ("Pedir cambios al precio o al alcance") y Rechazar ("No aceptar la cotización"), cada opción con una línea de explicación. | Vigente | — |
 | D-095 | 2026-10-20 | La casilla que confirma la lectura del SOW se pide solo al aceptar; Negociar y Rechazar no la piden. | Vigente | — |
 | D-096 | 2026-10-20 | Salario mínimo al guardar el pago: el botón Guardar queda activo; si la tarifa de un W-2 es menor a $15.00 por hora, al tocarlo no guarda y muestra el error bajo el campo (D-061). | Vigente | — |
 | D-097 | 2026-10-20 | La alerta de margen se ve además en la lista de jobsites, con la ficha ámbar "Margen en riesgo" en la fila del jobsite. | Vigente | — |
 | D-098 | 2026-10-20 | Fecha del gasto: campo de texto Fecha debajo de Categoría y antes de Monto. | Vigente | — |
-| D-099 | 2026-10-20 | Motivos de un lead perdido: lista corta que se edita en Ajustes, con una tercera fila "Motivos de lead perdido" (con la cantidad de motivos) en la lista de Ajustes del sistema. | Vigente | D-089 (Ajustes tenía solo Vigencia de los quotes y Categorías de gastos) |
+| D-099 | 2026-10-20 | Motivos de un lead perdido: lista corta que se edita en Ajustes, con una tercera fila "Motivos de lead perdido" (con la cantidad de motivos) en la lista de Ajustes del sistema. | Reemplazada (por D-107) | D-089 (Ajustes tenía solo Vigencia de los quotes y Categorías de gastos) |
+| D-100 | 2026-10-20 | Pago con tarifa fija: con el control Tarifa fija elegido, campo desplegable Cobra (Por visita, Por semana o Por mes), campo Monto y una línea que explica el pago (por ejemplo, "Se pagan $120.00 por cada visita trabajada."). | Vigente | — |
+| D-101 | 2026-10-20 | En Accounting, una cuenta es un jobsite: Por cuenta muestra un jobsite a la vez. | Vigente | — |
+| D-102 | 2026-10-20 | Dashboard por cuenta: con Por cuenta elegido, selector de cuenta (jobsite), las mismas cuatro tarjetas (Ingresos, Personal, Gastos, Profit) y la línea de Recibido y Pendiente. | Vigente | — |
+| D-103 | 2026-10-20 | Gasto recurrente: formulario en pantalla con Nombre, Categoría, control Global / Jobsite, Monto, "Se genera el día" (1 de cada mes), interruptor Activo para pausarlo y botón Guardar. | Vigente | — |
+| D-104 | 2026-10-20 | Calendario del walkthrough: mes completo con flechas para cambiar de mes, puntos en los días que ya tienen citas y el día elegido resaltado, campo Hora y botón Agendar. | Vigente | — |
+| D-105 | 2026-10-20 | Frecuencia Diaria: tipo Diaria con los siete botones de día marcados y la línea "7 veces por semana". | Vigente | — |
+| D-106 | 2026-10-20 | Tipos de área del walkthrough: Baño, Oficina, Lobby, Cocina, Sala de juntas, Pasillo, Recepción, Escaleras, Almacén y Otro. | Vigente | — |
+| D-107 | 2026-10-20 | Motivos de lead perdido: ocho de partida (Precio, Eligió a otra compañía, Sin respuesta, Ya no necesita el servicio, Cambió el alcance, Trabajo muy grande o muy pequeño, Fuera de la zona de servicio y Otro), que se editan en Ajustes; la lista de Ajustes del sistema lleva la tercera fila "Motivos de lead perdido" con la cantidad de motivos. | Vigente | D-099 (decía "lista corta" de "5 motivos"; ahora son ocho) |
+| D-108 | 2026-10-20 | Motivos de rechazo del quote: la misma lista que los motivos de lead perdido, con nota opcional. | Vigente | — |
+| D-109 | 2026-10-20 | Detalle de un trabajo por aprobar: encabezado con sitio y día, resumen (empleados y horas en total), una fila por empleado con su horario y horas, un lápiz en cada fila que abre las horas de ese empleado (y la ficha ámbar "GPS fuera de rango" si aplica) y, fija abajo, la barra con el botón Aprobar. | Vigente | D-092 (tenía un botón Editar para todo el trabajo; ahora se edita con el lápiz de cada fila) |
+| D-110 | 2026-10-20 | Áreas de permisos cerradas: cada fila con el nombre del área y una ficha Todo (en color de marca), Parcial (verde) o Sin acceso (gris). | Vigente | — |
+| D-111 | 2026-10-20 | Pantalla de inicio del admin: cifras del mes (Ingresos y Profit) arriba y debajo una sola lista de pendientes, ordenada por lo más urgente, solo con las áreas donde la persona tiene permiso; cada fila con título y detalle, y ficha ámbar Urgente o flecha. | Vigente | D-081 (los pendientes eran filas con contador) |
+| D-112 | 2026-10-20 | Vigencia de los quotes en Ajustes: botones − y + de 44px con el número de días en el centro (por ejemplo, "30 días") y botón Guardar. | Vigente | — |
+| D-113 | 2026-10-20 | Editar las listas de Ajustes (categorías de gastos y motivos): lista con lápiz y papelera en cada fila y botón Agregar. | Vigente | — |
+| D-114 | 2026-10-20 | Ajustes del sistema (vigencia de los quotes, categorías de gastos y motivos): solo el Super Admin los edita. | Vigente | — |
+| D-115 | 2026-10-20 | Historial de cambios: registra solo los cambios importantes (tarifas, permisos, estados y aprobaciones). | Vigente | — |
+| D-116 | 2026-10-20 | Transferir el rol de Super Admin: sin confirmación extra, solo la casilla de confirmación y el botón (D-090). | Vigente | — |
+| D-117 | 2026-10-20 | Una notificación pasa a leída al tocarla; el punto desaparece. | Vigente | — |
+| D-118 | 2026-10-20 | Tocar una notificación abre directamente la pantalla relacionada; la fila lleva una flecha. | Vigente | — |
+| D-119 | 2026-10-20 | Aviso al terminar de sincronizar: en el encabezado, una nube con marca de verificación y la palabra "Sincronizado", que se queda. | Vigente | — |
+| D-120 | 2026-10-20 | Librería de iconos: Tabler Icons, en línea fina de 1.5px (D-035). | Vigente | — |

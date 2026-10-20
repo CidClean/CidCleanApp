@@ -19,7 +19,7 @@ Un lead es una empresa con datos justos para hacer contacto, y su meta es conseg
 
 - **Fuentes:** web, campañas de marketing y registro manual.
 - **Datos:** empresa, persona de contacto, teléfono, email, fuente y notas. Nada más específico en esta etapa.
-- **Estados:** Nuevo → Contactado → Walkthrough agendado → Walkthrough hecho → Quote enviado → Negociación → Ganado o Perdido (con motivo).
+- **Estados:** Nuevo → Contactado → Walkthrough agendado → Walkthrough hecho → Quote enviado → Negociación → Ganado o Perdido (con motivo de la lista de partida, ver "Listas de partida").
 - **Walkthrough agendado:** se registra como cita, no solo como estado.
 - **Seguimiento:** el lead genera recordatorios de seguimiento.
 - **Varios sitios:** un lead puede tener varios sitios, cada uno con su propio walkthrough y su propio quote.
@@ -50,7 +50,7 @@ El quote se arma desde el walkthrough y se envía por email a un portal seguro d
 - **SOW:** se crea fuera de la app, y la app lo guarda y lo adjunta al portal. El cliente está obligado a leerlo antes de poder decidir.
 - **Descargas:** el cliente puede descargar el quote y el SOW.
 - **Acepta:** se registran nombre y cargo de quien acepta.
-- **Rechaza:** se pide el motivo.
+- **Rechaza:** se pide el motivo, de la misma lista que los motivos de lead perdido, y una nota opcional.
 - **Negociación:** se envía una nueva versión (1.1, 1.2...) y las anteriores quedan guardadas.
 - **Vigencia:** 30 días por defecto, editable en cada quote. Al vencer pasa a Expirado, y el lead recuerda el seguimiento antes de que venza.
 - **Contrato:** documento aparte, creado fuera de la app. La app lo retiene y lo guarda.
@@ -117,12 +117,12 @@ El Schedule es lo planificado y el Work es lo realmente trabajado. Son independi
 
 ## Operaciones 4: Accounting
 
-Accounting registra ingresos, costo de personal y gastos, globales y por cuenta, y los resume en un dashboard.
+Accounting registra ingresos, costo de personal y gastos, globales y por cuenta (una cuenta es un jobsite), y los resume en un dashboard.
 
 - **Ingresos:** cada mes se registra el ingreso esperado de cada jobsite. Al recibirlo se marca como recibido con la fecha real. El ingreso cuenta en el mes en que se registra, no en el que se cobra, y el dashboard muestra lo recibido y lo pendiente.
 - **Personal:** el costo sale automático del trabajo aprobado (horas reales, garantizadas o tarifa fija), agrupado por mes, empleado y jobsite. La app calcula lo que se debe y no registra si ya se pagó.
 - **Gastos:** categoría, fecha y monto. Pueden ser de un jobsite o globales de Cid Clean. Los registra quien tenga el permiso, por defecto el dueño y los administradores.
-- **Gastos recurrentes:** seguro, vehículos y software se configuran una vez y se generan solos cada mes.
+- **Gastos recurrentes:** seguro, vehículos y software se configuran una vez y se generan solos cada mes. Cada uno se puede pausar.
 - **Dashboard:** ingresos, personal, gastos y profit, vistos de forma global, por cuenta y por periodo.
 
 La facturación al cliente se maneja fuera de la app.
@@ -140,7 +140,7 @@ Solo hay un **Super Admin**, con todos los permisos. Nadie puede dar un permiso 
 | Empleados | Ver lista · invitar y crear · editar y desactivar · ver pagos y tarifas · asignar a jobsites y definir su pago · gestionar permisos |
 | Schedule y Work | Ver y editar el schedule completo · registrar trabajo por otros · editar registros de trabajo · aprobar trabajo · revisar alertas de GPS |
 | Accounting | Ver y registrar ingresos y marcarlos como recibidos · ver costo de personal · ver, registrar y editar gastos · gestionar gastos recurrentes · ver dashboard global · ver dashboard por cuenta · exportar reportes |
-| Sistema | Configuración general (vigencia de quotes, categorías de gastos, motivos de lead perdido) · ver historial de cambios · transferir el rol de Super Admin (solo el Super Admin) |
+| Sistema | Configuración general (vigencia de quotes, categorías de gastos, motivos de lead perdido; solo el Super Admin) · ver historial de cambios · transferir el rol de Super Admin (solo el Super Admin) |
 
 Todo empleado puede ver su propio horario (semana actual y siguiente) y hacer su clock in y clock out, sin necesitar permisos adicionales.
 
@@ -175,6 +175,11 @@ Los redacta un abogado fuera de la app. La app los guarda versionados y registra
 
 Sources: [FL DOR, sales tax on cleaning services](https://floridarevenue.com/forms_library/current/gt800015.pdf) · [Rule 12A-1.0091](https://floridasalestax.com/florida-sales-tax-rules/12a-1-0091) · [Florida county surtax rates 2026](https://www.floridasalestax.com/florida-tax-law-blog/2026/august/florida-county-surtax-rates-for-2026-the-complet/) · [Florida minimum wage $15](https://www.hrmorning.com/news/florida-minimum-wage/) · [Worker classification in Florida](https://www.epgdlaw.com/?p=598)
 
+## Listas de partida
+
+- **Tipos de área del walkthrough:** Baño, Oficina, Lobby, Cocina, Sala de juntas, Pasillo, Recepción, Escaleras, Almacén y Otro.
+- **Motivos de lead perdido:** Precio, Eligió a otra compañía, Sin respuesta, Ya no necesita el servicio, Cambió el alcance, Trabajo muy grande o muy pequeño, Fuera de la zona de servicio y Otro. Se editan en Ajustes y la misma lista sirve para el rechazo del quote.
+
 ## Reglas transversales y alcance
 
 **Reglas que aplican a toda la app**
@@ -182,7 +187,7 @@ Sources: [FL DOR, sales tax on cleaning services](https://floridarevenue.com/for
 - **Idioma:** inglés y español, con inglés por defecto.
 - **Sin internet:** el walkthrough funciona sin conexión y sincroniza después.
 - **Versionado:** walkthrough, SOW, quotes y términos y condiciones guardan sus versiones anteriores.
-- **Auditoría:** historial de cambios visible para quien tenga el permiso.
+- **Auditoría:** historial de cambios visible para quien tenga el permiso. Registra solo los cambios importantes: tarifas, permisos, estados y aprobaciones.
 - **Permisos:** todo acceso y toda notificación dependen de los permisos del perfil.
 
 **Fuera de esta versión**

@@ -60,7 +60,7 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Ventas: sitio al agendar | Campo desplegable de sitio arriba; después calendario y hora | D-078 | ronda 9 |
 | Ventas: lead perdido | Campo desplegable de motivo, nota opcional y botón Marcar como perdido | D-079 | ronda 9 |
 | Ventas: frecuencia más abierta | Tipo Otra con campo de texto libre "Describe la frecuencia" | D-080 | ronda 9 |
-| Inicio del admin | Cifras del mes (Ingresos y Profit, `18px`) y lista de pendientes con contadores en fichas de marca | D-081 | ronda 9 |
+| Inicio del admin | Cifras del mes (Ingresos y Profit, `18px`) y debajo una sola lista de pendientes por urgencia, con ficha ámbar Urgente o flecha | D-111 | ronda 12 |
 | Lista de jobsites | Agrupada por cliente; cada jobsite con tarifa mensual y ficha de estado | D-082 | ronda 9 |
 | Lista de empleados | Lista compacta con iniciales (círculo de 36px), nombre, tipo y rol, y ficha de estado | D-083 | ronda 9 |
 | Notificaciones: bandeja | Filas con título, detalle y hora; punto de 8px en color de marca en las no leídas | D-084 | [`ronda-10-notificaciones-y-sistema.md`](../surveys/ronda-10-notificaciones-y-sistema.md) |
@@ -68,19 +68,39 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Staff: términos al primer ingreso | Tres puntos con icono, enlace Leer los términos completos, casilla y botón sólido Aceptar | D-086 | ronda 10 |
 | Idioma | Control segmentado English / Español en Mi perfil | D-087 | ronda 10 |
 | Historial de cambios | Filas con quién hizo qué y cuándo (título y hora en gris) | D-088 | ronda 10 |
-| Ajustes del sistema | Filas con nombre, valor actual y flecha: Vigencia de los quotes, Categorías de gastos y Motivos de lead perdido (cantidad de motivos, editables) | D-099 | [`ronda-11-pendientes-de-pantallas.md`](../surveys/ronda-11-pendientes-de-pantallas.md) |
+| Ajustes del sistema | Filas con nombre, valor actual y flecha: Vigencia de los quotes, Categorías de gastos y Motivos de lead perdido (8 motivos, editables); solo el Super Admin | D-107 | ronda 12 |
 | Transferir Super Admin | Selector Nuevo Super Admin, casilla de confirmación y botón sólido Transferir rol | D-090 | ronda 10 |
 | Aviso sin conexión | Icono de nube con contador "N pendientes" bajo el título del encabezado | D-091 | ronda 10 |
-| Admin: detalle por aprobar | Encabezado con sitio y día, resumen, una fila por empleado (horario, horas y ficha de GPS) y barra fija abajo con Editar y Aprobar | D-092 | ronda 11 |
+| Admin: detalle por aprobar | Encabezado con sitio y día, resumen, una fila por empleado (horario, horas, lápiz y ficha de GPS) y barra fija abajo con Aprobar | D-109 | ronda 12 |
 | Staff: semana siguiente | Control segmentado Esta semana / Próxima semana arriba de la tira de días | D-093 | ronda 11 |
 | Portal del quote: Más opciones | Menú con Negociar y Rechazar, cada uno con una línea de explicación (`13px`, gris secundario) | D-094 | ronda 11 |
 | Portal del quote: casilla de lectura | Solo al aceptar | D-095 | ronda 11 |
 | Admin: Guardar con salario mínimo | Guardar activo; con tarifa menor a $15.00 no guarda y muestra el error bajo el campo | D-096 | ronda 11 |
 | Admin: margen en la lista | Ficha ámbar "Margen en riesgo" en la fila del jobsite | D-097 | ronda 11 |
 | Accounting: fecha del gasto | Campo Fecha debajo de Categoría y antes de Monto | D-098 | ronda 11 |
+| Admin: pago con tarifa fija | Control Tarifa fija; campo desplegable Cobra (Por visita, Por semana, Por mes), campo Monto y línea de explicación | D-100 | [`ronda-12-pendientes-restantes.md`](../surveys/ronda-12-pendientes-restantes.md) |
+| Accounting: cuenta | Una cuenta es un jobsite | D-101 | ronda 12 |
+| Accounting: dashboard por cuenta | Control Por cuenta, selector de cuenta (jobsite), las cuatro tarjetas y la línea Recibido y Pendiente | D-102 | ronda 12 |
+| Accounting: gasto recurrente | Formulario: Nombre, Categoría, Global / Jobsite, Monto, "Se genera el día", interruptor Activo y Guardar | D-103 | ronda 12 |
+| Ventas: calendario | Mes completo con flechas, puntos de `4px` en días con citas, día elegido con fondo de marca, campo Hora y Agendar | D-104 | ronda 12 |
+| Ventas: frecuencia Diaria | Tipo Diaria, siete botones de día marcados y línea "7 veces por semana" | D-105 | ronda 12 |
+| Ventas: tipos de área | Baño, Oficina, Lobby, Cocina, Sala de juntas, Pasillo, Recepción, Escaleras, Almacén y Otro | D-106 | ronda 12 |
+| Ventas: motivos de lead perdido | Ocho motivos de partida, editables en Ajustes (lista en `current/flujo.md`, "Listas de partida") | D-107 | ronda 12 |
+| Portal del quote: motivos de rechazo | La misma lista que los motivos de lead perdido, con nota opcional | D-108 | ronda 12 |
+| Admin: permisos cerrados | Fila con nombre del área y ficha Todo (marca), Parcial (verde) o Sin acceso (gris) | D-110 | ronda 12 |
+| Ajustes: vigencia de los quotes | Botones − y + de 44px con el número de días en el centro y Guardar | D-112 | ronda 12 |
+| Ajustes: editar listas | Filas con lápiz y papelera, y botón Agregar de contorno | D-113 | ronda 12 |
+| Ajustes: quién edita | Solo el Super Admin | D-114 | ronda 12 |
+| Historial: qué registra | Solo cambios importantes (tarifas, permisos, estados y aprobaciones) | D-115 | ronda 12 |
+| Transferir Super Admin: confirmación | Solo la casilla y el botón, sin paso extra | D-116 | ronda 12 |
+| Notificaciones: leída | Pasa a leída al tocarla; el punto de `8px` desaparece | D-117 | ronda 12 |
+| Notificaciones: tocar una fila | Abre directamente la pantalla relacionada; la fila lleva flecha | D-118 | ronda 12 |
+| Aviso sin conexión: terminado | Nube con marca de verificación y "Sincronizado", fija en el encabezado | D-119 | ronda 12 |
+| Librería de iconos | Tabler Icons, trazo `1.5px` | D-120 | ronda 12 |
 
 Copia visual de lo aprobado, la más reciente primero:
 
+- Ronda 12: [`../surveys/ronda-12-pendientes-restantes-aprobado.html`](../surveys/ronda-12-pendientes-restantes-aprobado.html). Muestra las 21 pantallas de la ronda 12 con los valores de las rondas 1 a 12. Sus datos son de ejemplo.
 - Ronda 11: [`../surveys/ronda-11-pendientes-de-pantallas-aprobado.html`](../surveys/ronda-11-pendientes-de-pantallas-aprobado.html). Muestra las 8 pantallas de la ronda 11 con los valores de las rondas 1 a 11. Sus datos son de ejemplo.
 - Ronda 10: [`../surveys/ronda-10-notificaciones-y-sistema-aprobado.html`](../surveys/ronda-10-notificaciones-y-sistema-aprobado.html). Muestra las 8 pantallas de la ronda 10 con los valores de las rondas 1 a 10. Sus datos son de ejemplo.
 - Ronda 9: [`../surveys/ronda-09-pendientes-y-listas-aprobado.html`](../surveys/ronda-09-pendientes-y-listas-aprobado.html). Muestra las 7 pantallas de la ronda 9 con los valores de las rondas 1 a 9. Sus datos son de ejemplo.
