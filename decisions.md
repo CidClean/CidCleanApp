@@ -75,3 +75,10 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-067 | 2026-10-20 | Costo de personal: control Por empleado / Por jobsite con lista de horas y monto. | Vigente | — |
 | D-068 | 2026-10-20 | Dashboard: cuatro tarjetas de cifras (Ingresos, Personal, Gastos, Profit) y línea de Recibido y Pendiente. | Vigente | — |
 | D-069 | 2026-10-20 | Filtros del dashboard: control Global / Por cuenta y selector de mes con flechas. | Vigente | — |
+| D-070 | 2026-10-20 | Detalle del lead: encabezado con empresa, fuente y estado, y pestañas Datos, Sitios y Notas. | Vigente | — |
+| D-071 | 2026-10-20 | Estado del lead: campo con lista desplegable con los estados del flujo. | Vigente | — |
+| D-072 | 2026-10-20 | Agendar el walkthrough: calendario del mes con el día elegido resaltado, campo de hora y botón Agendar. | Vigente | — |
+| D-073 | 2026-10-20 | Walkthrough: se recorre por pasos con barra de progreso (Sitio y contacto, Áreas, Frecuencia, Notas internas, Resumen) y botones Atrás y Siguiente. | Vigente | — |
+| D-074 | 2026-10-20 | Datos de cada área: campo desplegable Tipo y campos de texto visibles Nombre, Pedido especial y Notas. | Vigente | — |
+| D-075 | 2026-10-20 | Frecuencia del servicio: campo desplegable de tipo con los botones de día debajo y la línea de veces por semana. | Vigente | — |
+| D-076 | 2026-10-20 | Armado del quote: secciones Servicios, Add-ons y Descuentos con renglones (nombre, Gravable y monto) y Total mensual al final. | Vigente | — |

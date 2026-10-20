@@ -50,9 +50,17 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Accounting: personal | Control Por empleado / Por jobsite; filas con nombre, horas y monto | D-067 | ronda 7 |
 | Accounting: dashboard | Cuadrícula de 2 columnas con tarjetas Ingresos, Personal, Gastos y Profit (cifra de `20px`) y línea Recibido y Pendiente | D-068 | ronda 7 |
 | Accounting: filtros | Control Global / Por cuenta y selector de mes con flechas | D-069 | ronda 7 |
+| Ventas: detalle del lead | Encabezado (empresa, fuente, ficha de estado) y pestañas Datos, Sitios y Notas | D-070 | [`ronda-08-ventas.md`](../surveys/ronda-08-ventas.md) |
+| Ventas: estado del lead | Campo con contorno y flecha; opciones = estados del flujo | D-071 | ronda 8 |
+| Ventas: agendar walkthrough | Calendario del mes (día elegido con fondo de marca, esquinas de 8px), campo Hora y botón Agendar | D-072 | ronda 8 |
+| Ventas: pasos del walkthrough | "Paso N de 5 · nombre", barra de progreso de 4px, botones Atrás y Siguiente | D-073 | ronda 8 |
+| Ventas: datos del área | Campo desplegable Tipo y campos de texto Nombre, Pedido especial y Notas | D-074 | ronda 8 |
+| Ventas: frecuencia | Campo desplegable de tipo y debajo los 7 botones de día y la línea de veces por semana | D-075 | ronda 8 |
+| Ventas: armado del quote | Secciones Servicios, Add-ons y Descuentos; renglón con nombre, Gravable y monto; Total mensual | D-076 | ronda 8 |
 
 Copia visual de lo aprobado, la más reciente primero:
 
+- Ronda 8: [`../surveys/ronda-08-ventas-aprobado.html`](../surveys/ronda-08-ventas-aprobado.html). Muestra las 7 pantallas de Ventas con los valores de las rondas 1 a 8. Sus datos son de ejemplo.
 - Ronda 7: [`../surveys/ronda-07-accounting-aprobado.html`](../surveys/ronda-07-accounting-aprobado.html). Muestra las 7 pantallas de Accounting con los valores de las rondas 1 a 7. Sus datos son de ejemplo.
 - Ronda 6: [`../surveys/ronda-06-gestion-admin-aprobado.html`](../surveys/ronda-06-gestion-admin-aprobado.html). Muestra las 7 pantallas de gestión del admin con los valores de las rondas 1 a 6. Sus datos son de ejemplo.
 - Ronda 5: [`../surveys/ronda-05-operaciones-staff-aprobado.html`](../surveys/ronda-05-operaciones-staff-aprobado.html). Muestra las 7 pantallas del staff con los valores de las rondas 1 a 5. Sus datos son de ejemplo.
