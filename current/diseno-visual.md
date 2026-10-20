@@ -56,11 +56,18 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Ventas: pasos del walkthrough | "Paso N de 5 · nombre", barra de progreso de 4px, botones Atrás y Siguiente | D-073 | ronda 8 |
 | Ventas: datos del área | Campo desplegable Tipo y campos de texto Nombre, Pedido especial y Notas | D-074 | ronda 8 |
 | Ventas: frecuencia | Campo desplegable de tipo y debajo los 7 botones de día y la línea de veces por semana | D-075 | ronda 8 |
-| Ventas: armado del quote | Secciones Servicios, Add-ons y Descuentos; renglón con nombre, Gravable y monto; Total mensual | D-076 | ronda 8 |
+| Ventas: armado del quote | Secciones Servicios, Add-ons y Descuentos; renglón con nombre, monto e interruptor Gravable; al final Subtotal, Tax (sobre lo gravable) y Total mensual | D-077 | [`ronda-09-pendientes-y-listas.md`](../surveys/ronda-09-pendientes-y-listas.md) |
+| Ventas: sitio al agendar | Campo desplegable de sitio arriba; después calendario y hora | D-078 | ronda 9 |
+| Ventas: lead perdido | Campo desplegable de motivo, nota opcional y botón Marcar como perdido | D-079 | ronda 9 |
+| Ventas: frecuencia más abierta | Tipo Otra con campo de texto libre "Describe la frecuencia" | D-080 | ronda 9 |
+| Inicio del admin | Cifras del mes (Ingresos y Profit, `18px`) y lista de pendientes con contadores en fichas de marca | D-081 | ronda 9 |
+| Lista de jobsites | Agrupada por cliente; cada jobsite con tarifa mensual y ficha de estado | D-082 | ronda 9 |
+| Lista de empleados | Lista compacta con iniciales (círculo de 36px), nombre, tipo y rol, y ficha de estado | D-083 | ronda 9 |
 
 Copia visual de lo aprobado, la más reciente primero:
 
-- Ronda 8: [`../surveys/ronda-08-ventas-aprobado.html`](../surveys/ronda-08-ventas-aprobado.html). Muestra las 7 pantallas de Ventas con los valores de las rondas 1 a 8. Sus datos son de ejemplo.
+- Ronda 9: [`../surveys/ronda-09-pendientes-y-listas-aprobado.html`](../surveys/ronda-09-pendientes-y-listas-aprobado.html). Muestra las 7 pantallas de la ronda 9 con los valores de las rondas 1 a 9. Sus datos son de ejemplo.
+- Ronda 8: [`../surveys/ronda-08-ventas-aprobado.html`](../surveys/ronda-08-ventas-aprobado.html). Muestra las 7 pantallas de Ventas con los valores de las rondas 1 a 8. Su pantalla del quote la reemplaza D-077 (ronda 9). Sus datos son de ejemplo.
 - Ronda 7: [`../surveys/ronda-07-accounting-aprobado.html`](../surveys/ronda-07-accounting-aprobado.html). Muestra las 7 pantallas de Accounting con los valores de las rondas 1 a 7. Sus datos son de ejemplo.
 - Ronda 6: [`../surveys/ronda-06-gestion-admin-aprobado.html`](../surveys/ronda-06-gestion-admin-aprobado.html). Muestra las 7 pantallas de gestión del admin con los valores de las rondas 1 a 6. Sus datos son de ejemplo.
 - Ronda 5: [`../surveys/ronda-05-operaciones-staff-aprobado.html`](../surveys/ronda-05-operaciones-staff-aprobado.html). Muestra las 7 pantallas del staff con los valores de las rondas 1 a 5. Sus datos son de ejemplo.

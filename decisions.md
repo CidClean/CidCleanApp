@@ -81,4 +81,11 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-073 | 2026-10-20 | Walkthrough: se recorre por pasos con barra de progreso (Sitio y contacto, Áreas, Frecuencia, Notas internas, Resumen) y botones Atrás y Siguiente. | Vigente | — |
 | D-074 | 2026-10-20 | Datos de cada área: campo desplegable Tipo y campos de texto visibles Nombre, Pedido especial y Notas. | Vigente | — |
 | D-075 | 2026-10-20 | Frecuencia del servicio: campo desplegable de tipo con los botones de día debajo y la línea de veces por semana. | Vigente | — |
-| D-076 | 2026-10-20 | Armado del quote: secciones Servicios, Add-ons y Descuentos con renglones (nombre, Gravable y monto) y Total mensual al final. | Vigente | — |
+| D-076 | 2026-10-20 | Armado del quote: secciones Servicios, Add-ons y Descuentos con renglones (nombre, Gravable y monto) y Total mensual al final. | Reemplazada (por D-077) | — |
+| D-077 | 2026-10-20 | Armado del quote: secciones Servicios, Add-ons y Descuentos; cada renglón de servicio o add-on con su nombre, el monto y un interruptor Gravable; al final Subtotal, Tax (sobre lo gravable) y Total mensual. | Vigente | D-076 (el renglón mostraba "Gravable" solo como texto y no había líneas de Subtotal y Tax) |
+| D-078 | 2026-10-20 | Elegir el sitio al agendar un walkthrough: campo desplegable de sitio arriba, y después el calendario y la hora. | Vigente | — |
+| D-079 | 2026-10-20 | Marcar un lead como perdido: campo desplegable de motivo, nota opcional y botón Marcar como perdido. | Vigente | — |
+| D-080 | 2026-10-20 | Frecuencia más abierta: en el campo desplegable de tipo se elige Otra y se describe en un campo de texto libre (por ejemplo, "Días 1 y 15 de cada mes"). | Vigente | — |
+| D-081 | 2026-10-20 | Pantalla de inicio del admin: cifras del mes (Ingresos y Profit) arriba y lista de pendientes con contadores debajo. | Vigente | — |
+| D-082 | 2026-10-20 | Lista de jobsites: agrupada por cliente, con tarifa mensual y ficha de estado por jobsite. | Vigente | — |
+| D-083 | 2026-10-20 | Lista de empleados: lista compacta con iniciales, nombre, tipo de trabajador y rol, y ficha de estado. | Vigente | — |
