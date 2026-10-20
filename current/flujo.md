@@ -187,7 +187,7 @@ Sources: [FL DOR, sales tax on cleaning services](https://floridarevenue.com/for
 - **Idioma:** inglés y español, con inglés por defecto.
 - **Sin internet:** el walkthrough funciona sin conexión y sincroniza después.
 - **Versionado:** walkthrough, SOW, quotes y términos y condiciones guardan sus versiones anteriores.
-- **Auditoría:** historial de cambios visible para quien tenga el permiso. Registra solo los cambios importantes: tarifas, permisos, estados y aprobaciones.
+- **Auditoría:** historial de cambios visible para quien tenga el permiso. Registra los cambios importantes (tarifas, permisos, estados y aprobaciones) y cada vez que alguien abre tarifas o documentos sensibles.
 - **Permisos:** todo acceso y toda notificación dependen de los permisos del perfil.
 
 **Fuera de esta versión**

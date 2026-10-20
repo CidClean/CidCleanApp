@@ -91,7 +91,7 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Ajustes: vigencia de los quotes | Botones − y + de 44px con el número de días en el centro y Guardar | D-112 | ronda 12 |
 | Ajustes: editar listas | Filas con lápiz y papelera, y botón Agregar de contorno | D-113 | ronda 12 |
 | Ajustes: quién edita | Solo el Super Admin | D-114 | ronda 12 |
-| Historial: qué registra | Solo cambios importantes (tarifas, permisos, estados y aprobaciones) | D-115 | ronda 12 |
+| Historial: qué registra | Cambios importantes (tarifas, permisos, estados y aprobaciones) y cada apertura de tarifas o documentos sensibles | D-125 | ronda 12 y [`seguridad-01.md`](../surveys/seguridad-01.md) |
 | Transferir Super Admin: confirmación | Solo la casilla y el botón, sin paso extra | D-116 | ronda 12 |
 | Notificaciones: leída | Pasa a leída al tocarla; el punto de `8px` desaparece | D-117 | ronda 12 |
 | Notificaciones: tocar una fila | Abre directamente la pantalla relacionada; la fila lleva flecha | D-118 | ronda 12 |

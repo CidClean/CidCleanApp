@@ -120,7 +120,7 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-112 | 2026-10-20 | Vigencia de los quotes en Ajustes: botones − y + de 44px con el número de días en el centro (por ejemplo, "30 días") y botón Guardar. | Vigente | — |
 | D-113 | 2026-10-20 | Editar las listas de Ajustes (categorías de gastos y motivos): lista con lápiz y papelera en cada fila y botón Agregar. | Vigente | — |
 | D-114 | 2026-10-20 | Ajustes del sistema (vigencia de los quotes, categorías de gastos y motivos): solo el Super Admin los edita. | Vigente | — |
-| D-115 | 2026-10-20 | Historial de cambios: registra solo los cambios importantes (tarifas, permisos, estados y aprobaciones). | Vigente | — |
+| D-115 | 2026-10-20 | Historial de cambios: registra solo los cambios importantes (tarifas, permisos, estados y aprobaciones). | Reemplazada (por D-125) | — |
 | D-116 | 2026-10-20 | Transferir el rol de Super Admin: sin confirmación extra, solo la casilla de confirmación y el botón (D-090). | Vigente | — |
 | D-117 | 2026-10-20 | Una notificación pasa a leída al tocarla; el punto desaparece. | Vigente | — |
 | D-118 | 2026-10-20 | Tocar una notificación abre directamente la pantalla relacionada; la fila lleva una flecha. | Vigente | — |
@@ -128,3 +128,10 @@ Fechas en formato AAAA-MM-DD. Si se decide otro formato, se registra aquí como 
 | D-120 | 2026-10-20 | Librería de iconos: Tabler Icons, en línea fina de 1.5px (D-035). | Vigente | — |
 | D-121 | 2026-10-20 | Confirmado por el dueño: el lápiz de cada fila reemplaza al botón Editar en el detalle de un trabajo por aprobar (D-109), y las cifras del mes (Ingresos y Profit) se mantienen arriba en el inicio del admin (D-111). | Vigente | — |
 | D-122 | 2026-10-20 | Tax del quote: se queda como está, con la tasa de 6% editable y la marca Gravable en cada renglón de servicio o add-on (D-077). No hay cambios. | Vigente | — |
+| D-123 | 2026-10-20 | Acceso del staff: correo y código de un solo uso, sin contraseñas. Es el mismo mecanismo del portal del quote. | Vigente | — |
+| D-124 | 2026-10-20 | Duración de la sesión: 30 días en el teléfono del staff y 7 días para admins y Super Admin; después piden el código otra vez. | Vigente | — |
+| D-125 | 2026-10-20 | Tarifas y documentos sensibles (tarifas y pagos, y W-9 y certificado de seguro de los 1099): solo los ve quien tenga el permiso de ver pagos. Cada vez que alguien los abre queda registrado en el historial, además de los cambios importantes (tarifas, permisos, estados y aprobaciones). | Vigente | D-115 (el historial registraba solo los cambios importantes) |
+| D-126 | 2026-10-20 | Teléfono perdido o empleado que se va: al desactivar a alguien se cierra su sesión al instante y sus datos se conservan; un admin puede cerrar la sesión de cualquier dispositivo. | Vigente | — |
+| D-127 | 2026-10-20 | Conservación de fotos y datos de GPS: mientras el cliente esté activo y 3 años después. Queda por confirmar con el contador o el abogado del dueño. | Vigente | — |
+| D-128 | 2026-10-20 | Si el Super Admin pierde el acceso: se recupera con una verificación de identidad a través de quien administre la app; nadie más dentro de la app puede reclamar el rol. | Vigente | — |
+| D-129 | 2026-10-20 | Portal del quote: el código del cliente vale 10 minutos y se bloquea tras 5 intentos fallidos; el enlace deja de funcionar cuando vence el quote. | Vigente | — |
