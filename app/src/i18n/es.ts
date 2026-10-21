@@ -1,8 +1,7 @@
 /**
  * Todas las cadenas visibles de la app, en español.
  * Estructura lista para en.ts (D-087): cuando exista, tendrá el mismo tipo `Strings`.
- * Las marcas "APROBADO" salen literalmente de decisiones o muestras aprobadas;
- * las marcas "SIN APROBAR" las escribió el ejecutor y esperan al dueño.
+ * Cada cadena sale literalmente de decisiones o muestras aprobadas (D-149 a D-151, D-156).
  */
 export const es = {
   appName: 'Cid Clean', // APROBADO (D-149)
@@ -12,9 +11,9 @@ export const es = {
     label: 'Correo', // APROBADO (muestra ronda 13)
     send: 'Enviar código', // APROBADO (D-149)
     sessionEnded: 'Tu sesión terminó. Escribe tu correo para entrar otra vez.', // APROBADO (D-151)
-    invalid: 'Escribe un correo válido.', // SIN APROBAR
-    errorNetwork: 'No pudimos enviar el código. Revisa tu conexión e inténtalo otra vez.', // SIN APROBAR
-    errorRateLimit: 'Pediste demasiados códigos. Espera un momento e inténtalo otra vez.', // SIN APROBAR
+    invalid: 'Escribe un correo válido.', // APROBADO (D-156)
+    errorNetwork: 'No pudimos enviar el código. Revisa tu conexión e inténtalo otra vez.', // APROBADO (D-156)
+    errorRateLimit: 'Pediste demasiados códigos. Espera un momento e inténtalo otra vez.', // APROBADO (D-156)
   },
 
   code: {
@@ -22,11 +21,11 @@ export const es = {
     title: 'Revisa tu correo', // APROBADO (D-150)
     note: 'Si tu correo tiene acceso, recibirás un código de 6 dígitos. Vale 10 minutos.', // APROBADO (D-150)
     resend: 'Reenviar código', // APROBADO (D-150)
-    keyResend: 'Reenviar', // APROBADO (D-040, muestra ronda 4)
+    keyResend: 'Reenviar', // APROBADO (D-040): solo para el teclado del portal del quote; el del staff ya no la usa (D-155)
     keyDelete: 'Borrar', // APROBADO (D-040, muestra ronda 4)
-    errorWrong: 'El código es incorrecto o ya venció. Revisa tu correo e inténtalo otra vez.', // SIN APROBAR
-    errorNetwork: 'No pudimos verificar el código. Revisa tu conexión e inténtalo otra vez.', // SIN APROBAR
-    errorRateLimit: 'Pediste demasiados códigos. Espera un momento e inténtalo otra vez.', // SIN APROBAR
+    errorWrong: 'El código es incorrecto o ya venció. Revisa tu correo e inténtalo otra vez.', // APROBADO (D-156)
+    errorNetwork: 'No pudimos verificar el código. Revisa tu conexión e inténtalo otra vez.', // APROBADO (D-156)
+    errorRateLimit: 'Pediste demasiados códigos. Espera un momento e inténtalo otra vez.', // APROBADO (D-156)
   },
 
   home: {

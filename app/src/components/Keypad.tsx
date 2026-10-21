@@ -6,9 +6,14 @@ import { sample, useTheme } from '@/theme';
 type Props = {
   onDigit: (digit: string) => void;
   onDelete: () => void;
-  onResend: () => void;
-  resendLabel: string;
   deleteLabel: string;
+  /**
+   * true (por defecto): la tecla de abajo a la izquierda es "Reenviar" (D-040, portal del quote).
+   * false: queda vacía, sin texto ni acción (D-155, staff). Con true hacen falta onResend y resendLabel.
+   */
+  showResend?: boolean;
+  onResend?: () => void;
+  resendLabel?: string;
   resendDisabled?: boolean;
 };
 
@@ -34,7 +39,16 @@ function Key({ label, onPress, muted }: { label: string; onPress: () => void; mu
 }
 
 /** Teclado numérico propio con teclas Reenviar y Borrar (D-040). */
-export function Keypad({ onDigit, onDelete, onResend, resendLabel, deleteLabel, resendDisabled }: Props) {
+export function Keypad({
+  onDigit,
+  onDelete,
+  deleteLabel,
+  showResend = true,
+  onResend,
+  resendLabel,
+  resendDisabled,
+}: Props) {
+  const { colors } = useTheme();
   return (
     <View style={styles.grid}>
       {DIGIT_ROWS.map((row) => (
@@ -45,7 +59,21 @@ export function Keypad({ onDigit, onDelete, onResend, resendLabel, deleteLabel, 
         </View>
       ))}
       <View style={styles.row}>
-        <Key label={resendLabel} onPress={resendDisabled ? () => {} : onResend} muted={resendDisabled} />
+        {showResend ? (
+          <Key
+            label={resendLabel ?? ''}
+            onPress={resendDisabled || !onResend ? () => {} : onResend}
+            muted={resendDisabled}
+          />
+        ) : (
+          // Tecla vacía: misma forma y tamaño que las demás, sin texto ni acción (D-155).
+          <View
+            testID="keypad-empty-key"
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+            style={[styles.key, { backgroundColor: colors.surface }]}
+          />
+        )}
         <Key label="0" onPress={() => onDigit('0')} />
         <Key label={deleteLabel} onPress={onDelete} />
       </View>

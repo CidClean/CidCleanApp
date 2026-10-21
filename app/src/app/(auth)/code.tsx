@@ -119,10 +119,8 @@ export default function CodeScreen() {
           <Keypad
             onDigit={onDigit}
             onDelete={onDelete}
-            onResend={onResend}
-            resendLabel={strings.code.keyResend}
             deleteLabel={strings.code.keyDelete}
-            resendDisabled={cooldown > 0}
+            showResend={false}
           />
         </View>
       </ScrollView>
