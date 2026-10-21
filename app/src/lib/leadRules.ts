@@ -34,7 +34,7 @@ export type LeadSite = {
   scheduled: Appointment | null;
 };
 
-export type LostReason = { id: string; labelEs: string; labelEn: string; sort: number };
+export type LostReason = { id: string; labelEs: string; labelEn: string; sort: number; active: boolean };
 
 export type Lead = {
   id: string;
@@ -83,6 +83,11 @@ export function canSeeLeads(access: Access): boolean {
 /** Crear, editar, cambiar estado, sitios, citas y seguimientos: `leads_editar` (y ver, para poder abrirlos). */
 export function canEditLeads(access: Access): boolean {
   return can(access, 'leads_ver') && can(access, 'leads_editar');
+}
+
+/** Eliminar un lead (D-201): `leads_eliminar` (y ver, para poder abrirlo). */
+export function canDeleteLeads(access: Access): boolean {
+  return can(access, 'leads_ver') && can(access, 'leads_eliminar');
 }
 
 /** Los pendientes de Ventas del Inicio salen solo con `leads_ver` (D-111: solo las áreas con permiso). */
@@ -407,4 +412,27 @@ export function sortPending<T extends { urgent: boolean }>(rows: readonly T[]): 
 /** Etiqueta del motivo según el idioma. */
 export function reasonLabel(r: Pick<LostReason, 'labelEs' | 'labelEn'>, locale: 'es' | 'en'): string {
   return locale === 'es' ? r.labelEs : r.labelEn;
+}
+
+// --- Motivos de lead perdido en Ajustes (D-107, D-113, D-114, D-203) ----------------------------------
+
+/** Motivos que se ofrecen y se cuentan: los activos, en su orden. Los desactivados solo siguen en los leads que los usan. */
+export function activeReasons(reasons: readonly LostReason[]): LostReason[] {
+  return reasons.filter((r) => r.active).sort((a, b) => a.sort - b.sort);
+}
+
+/** Lugar de un motivo nuevo: al final de la lista (D-200). */
+export function nextReasonSort(reasons: readonly LostReason[]): number {
+  return reasons.reduce((max, r) => Math.max(max, r.sort), 0) + 1;
+}
+
+export type ReasonForm = { labelEs: string; labelEn: string };
+export type ReasonFormErrors = { labelEs?: true; labelEn?: true };
+
+/** Cada motivo lleva texto en español y en inglés (D-203). */
+export function validateReasonForm(f: ReasonForm): ReasonFormErrors {
+  const errors: ReasonFormErrors = {};
+  if (f.labelEs.trim() === '') errors.labelEs = true;
+  if (f.labelEn.trim() === '') errors.labelEn = true;
+  return errors;
 }

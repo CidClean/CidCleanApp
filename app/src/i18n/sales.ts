@@ -67,6 +67,11 @@ export const salesEs = {
     noNotes: 'Sin notas.', // D-200
     errorLoad: 'No se pudo cargar el lead. Inténtalo otra vez.', // D-200 (mismo estilo de D-195)
     errorStatus: 'No se pudo cambiar el estado. Inténtalo otra vez.', // APROBADO (D-195)
+    deleteLead: 'Eliminar lead', // APROBADO (D-201)
+    deleteTitle: (company: string) => `¿Eliminar ${company}?`, // APROBADO (D-201)
+    deleteBody: 'Se borran también sus sitios, citas y seguimientos.', // D-200
+    delete: 'Eliminar', // APROBADO (D-201)
+    errorDelete: 'No se pudo eliminar el lead. Inténtalo otra vez.', // D-200 (mismo estilo de D-195)
   },
 
   sites: {
@@ -81,6 +86,13 @@ export const salesEs = {
     address: 'Dirección', // APROBADO (flujo: sitio y contacto)
     errorAddress: 'Escribe la dirección.', // D-200
     errorAdd: 'No se pudo agregar el sitio. Inténtalo otra vez.', // D-200
+    editTitle: 'Editar sitio', // D-200 (D-202: el lápiz abre el formulario del sitio)
+    editLabel: (site: string) => `Editar ${site}`, // D-200: solo lo lee el lector de pantalla
+    deleteLabel: (site: string) => `Eliminar ${site}`, // D-200: solo lo lee el lector de pantalla
+    deleteTitle: (site: string) => `¿Eliminar ${site}?`, // APROBADO (orden H2b, D-202)
+    errorDone: 'Este sitio ya tiene un walkthrough hecho y no se puede eliminar.', // D-200 (D-202)
+    errorDelete: 'No se pudo eliminar el sitio. Inténtalo otra vez.', // D-200 (mismo estilo de D-195)
+    errorLoad: 'No se pudo cargar el sitio. Inténtalo otra vez.', // D-200
   },
 
   schedule: {
@@ -110,6 +122,26 @@ export const salesEs = {
     submit: 'Marcar como perdido', // APROBADO (D-079)
     errorLoad: 'No se pudieron cargar los motivos. Inténtalo otra vez.', // D-200
     errorSave: 'No se pudo marcar como perdido. Inténtalo otra vez.', // D-200
+  },
+
+  // Menú → Ajustes → Motivos de lead perdido (D-107, D-113, D-114, D-203).
+  reasons: {
+    row: 'Motivos de lead perdido', // APROBADO (D-107)
+    count: (n: number) => (n === 1 ? '1 motivo' : `${n} motivos`), // D-200 (D-107: "con la cantidad de motivos")
+    add: 'Agregar', // APROBADO (orden H2b, D-113)
+    newTitle: 'Nuevo motivo', // D-200
+    editTitle: 'Editar motivo', // D-200
+    labelEs: 'En español', // D-200
+    labelEn: 'En inglés', // D-200
+    errorEs: 'Escribe el motivo en español.', // D-200
+    errorEn: 'Escribe el motivo en inglés.', // D-200
+    errorLoad: 'No se pudieron cargar los motivos. Inténtalo otra vez.', // D-200
+    errorSave: 'No se pudo guardar. Inténtalo otra vez.', // APROBADO (D-195)
+    errorDelete: 'No se pudo eliminar el motivo. Inténtalo otra vez.', // D-200
+    deleteTitle: (reason: string) => `¿Eliminar ${reason}?`, // D-200 (mismo patrón de D-201 y D-202)
+    deactivated: 'Algún lead ya usa este motivo: se quitó de la lista y esos leads lo conservan.', // D-200
+    editLabel: (reason: string) => `Editar ${reason}`, // D-200: solo lo lee el lector de pantalla
+    deleteLabel: (reason: string) => `Eliminar ${reason}`, // D-200: solo lo lee el lector de pantalla
   },
 
   home: {
@@ -190,6 +222,11 @@ export const salesEn: SalesStrings = {
     noNotes: 'No notes.',
     errorLoad: "Couldn't load the lead. Try again.",
     errorStatus: "Couldn't change the status. Try again.",
+    deleteLead: 'Delete lead', // Details tab: red text button at the end
+    deleteTitle: (company: string) => `Delete ${company}?`, // confirmation sheet title
+    deleteBody: 'Its sites, appointments and follow-ups are deleted too.',
+    delete: 'Delete', // solid button of the sheet
+    errorDelete: "Couldn't delete the lead. Try again.",
   },
 
   sites: {
@@ -204,6 +241,13 @@ export const salesEn: SalesStrings = {
     address: 'Address',
     errorAddress: 'Enter the address.',
     errorAdd: "Couldn't add the site. Try again.",
+    editTitle: 'Edit site',
+    editLabel: (site: string) => `Edit ${site}`,
+    deleteLabel: (site: string) => `Delete ${site}`,
+    deleteTitle: (site: string) => `Delete ${site}?`,
+    errorDone: 'This site already has a completed walkthrough and cannot be deleted.',
+    errorDelete: "Couldn't delete the site. Try again.",
+    errorLoad: "Couldn't load the site. Try again.",
   },
 
   schedule: {
@@ -233,6 +277,25 @@ export const salesEn: SalesStrings = {
     submit: 'Mark as lost',
     errorLoad: "Couldn't load the reasons. Try again.",
     errorSave: "Couldn't mark the lead as lost. Try again.",
+  },
+
+  reasons: {
+    row: 'Lost lead reasons', // Settings row and screen title
+    count: (n: number) => (n === 1 ? '1 reason' : `${n} reasons`),
+    add: 'Add', // outline button under the list
+    newTitle: 'New reason',
+    editTitle: 'Edit reason',
+    labelEs: 'In Spanish',
+    labelEn: 'In English',
+    errorEs: 'Enter the reason in Spanish.',
+    errorEn: 'Enter the reason in English.',
+    errorLoad: "Couldn't load the reasons. Try again.",
+    errorSave: "Couldn't save. Try again.",
+    errorDelete: "Couldn't delete the reason. Try again.",
+    deleteTitle: (reason: string) => `Delete ${reason}?`,
+    deactivated: 'A lead already uses this reason: it was removed from the list and those leads keep it.',
+    editLabel: (reason: string) => `Edit ${reason}`,
+    deleteLabel: (reason: string) => `Delete ${reason}`,
   },
 
   home: {

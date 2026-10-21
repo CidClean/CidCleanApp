@@ -34,7 +34,7 @@ export function failureFrom(code: string | undefined): LeadsFailure {
 type AppointmentRow = { id: string; starts_at: string; status: Appointment['status'] };
 type FollowUpRow = { due_on: string; done_at: string | null };
 type SiteRow = { id: string; name: string | null; address: string; created_at: string; walkthrough_appointments: AppointmentRow[] | null };
-type ReasonRow = { id: string; label_es: string; label_en: string; sort: number };
+type ReasonRow = { id: string; label_es: string; label_en: string; sort: number; active: boolean };
 
 function toAppointment(r: AppointmentRow): Appointment {
   return { id: r.id, startsAt: new Date(r.starts_at), status: r.status };
@@ -45,7 +45,7 @@ function openFollowUp(rows: FollowUpRow[] | null | undefined): string | null {
 }
 
 function toReason(r: ReasonRow): LostReason {
-  return { id: r.id, labelEs: r.label_es, labelEn: r.label_en, sort: r.sort };
+  return { id: r.id, labelEs: r.label_es, labelEn: r.label_en, sort: r.sort, active: r.active };
 }
 
 type SummaryRow = {
@@ -132,7 +132,7 @@ export async function fetchLead(id: string): Promise<LeadsResult<Lead>> {
       .from('leads')
       .select(
         'id, company, contact_name, phone, email, source, notes, status, lost_note, created_at, ' +
-          'lost_reasons(id, label_es, label_en, sort), lead_followups(due_on, done_at), ' +
+          'lost_reasons(id, label_es, label_en, sort, active), lead_followups(due_on, done_at), ' +
           'lead_sites(id, name, address, created_at, walkthrough_appointments(id, starts_at, status))',
       )
       .eq('id', id)
@@ -210,10 +210,10 @@ export async function markLeadLost(id: string, reasonId: string, note: string): 
   }
 }
 
-/** Motivos de lead perdido (D-107), en su orden. */
+/** Motivos de lead perdido (D-107), en su orden, activos y desactivados (D-203). */
 export async function fetchLostReasons(): Promise<LeadsResult<LostReason[]>> {
   try {
-    const { data, error } = await supabase.from('lost_reasons').select('id, label_es, label_en, sort').order('sort');
+    const { data, error } = await supabase.from('lost_reasons').select('id, label_es, label_en, sort, active').order('sort');
     if (error) return { ok: false, reason: failureFrom(error.code) };
     return { ok: true, data: (data as ReasonRow[]).map(toReason) };
   } catch {
@@ -275,6 +275,87 @@ export async function fetchSalesPending(): Promise<LeadsResult<SalesPendingCount
       ok: true,
       data: { followUpsDue: row?.followups_due ?? 0, walkthroughsUpcoming: row?.walkthroughs_upcoming ?? 0 },
     };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/** Elimina el lead (D-201, `leads_eliminar`); sus sitios, citas y seguimientos se van con él. */
+export async function deleteLead(id: string): Promise<LeadsResult<null>> {
+  try {
+    const { data, error } = await supabase.from('leads').delete().eq('id', id).select('id');
+    if (error) return { ok: false, reason: failureFrom(error.code) };
+    if (!data || data.length === 0) return { ok: false, reason: 'forbidden' };
+    return { ok: true, data: null };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/** Edita el nombre y la dirección de un sitio (D-202). */
+export async function updateSite(siteId: string, name: string, address: string): Promise<LeadsResult<null>> {
+  try {
+    const { data, error } = await supabase
+      .from('lead_sites')
+      .update({ name: name.trim() === '' ? null : name.trim(), address: address.trim() })
+      .eq('id', siteId)
+      .select('id');
+    if (error) return { ok: false, reason: failureFrom(error.code) };
+    if (!data || data.length === 0) return { ok: false, reason: 'forbidden' };
+    return { ok: true, data: null };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/** Borra un sitio (D-202). 'invalid' = tiene un walkthrough hecho y el servidor no lo deja. */
+export async function deleteSite(siteId: string): Promise<LeadsResult<null>> {
+  try {
+    const { data, error } = await supabase.from('lead_sites').delete().eq('id', siteId).select('id');
+    if (error) return { ok: false, reason: failureFrom(error.code) };
+    if (!data || data.length === 0) return { ok: false, reason: 'forbidden' };
+    return { ok: true, data: null };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/** Crea un motivo con su texto en español y en inglés (D-203, solo el Super Admin). */
+export async function createLostReason(labelEs: string, labelEn: string, sort: number): Promise<LeadsResult<string>> {
+  try {
+    const { data, error } = await supabase
+      .from('lost_reasons')
+      .insert({ label_es: labelEs.trim(), label_en: labelEn.trim(), sort })
+      .select('id')
+      .single();
+    if (error || !data) return { ok: false, reason: failureFrom(error?.code) };
+    return { ok: true, data: (data as { id: string }).id };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+export async function updateLostReason(id: string, labelEs: string, labelEn: string): Promise<LeadsResult<null>> {
+  try {
+    const { data, error } = await supabase
+      .from('lost_reasons')
+      .update({ label_es: labelEs.trim(), label_en: labelEn.trim() })
+      .eq('id', id)
+      .select('id');
+    if (error) return { ok: false, reason: failureFrom(error.code) };
+    if (!data || data.length === 0) return { ok: false, reason: 'forbidden' };
+    return { ok: true, data: null };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/** Papelera de Ajustes: borra el motivo, o lo desactiva si algún lead lo usa (RPC remove_lost_reason). */
+export async function removeLostReason(id: string): Promise<LeadsResult<'deleted' | 'deactivated'>> {
+  try {
+    const { data, error } = await supabase.rpc('remove_lost_reason', { p_id: id });
+    if (error) return { ok: false, reason: failureFrom(error.code) };
+    return { ok: true, data: data === 'deactivated' ? 'deactivated' : 'deleted' };
   } catch {
     return { ok: false, reason: 'network' };
   }

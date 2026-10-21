@@ -1,6 +1,10 @@
 import { salesEn, salesEs } from '@/i18n/sales';
 import {
   LEAD_STATUSES,
+  activeReasons,
+  canDeleteLeads,
+  nextReasonSort,
+  validateReasonForm,
   appointmentDayKeys,
   canEditLeads,
   canGoToPreviousMonth,
@@ -267,5 +271,30 @@ describe('pendientes del Inicio (D-111, D-131)', () => {
       '1 pending',
       '2 scheduled',
     ]);
+  });
+});
+
+describe('eliminar lead y motivos (D-201, D-203)', () => {
+  it('eliminar pide leads_ver y leads_eliminar', () => {
+    expect(canDeleteLeads(access(['leads_ver', 'leads_editar']))).toBe(false);
+    expect(canDeleteLeads(access(['leads_eliminar']))).toBe(false);
+    expect(canDeleteLeads(access(['leads_ver', 'leads_eliminar']))).toBe(true);
+    expect(canDeleteLeads(access([], true))).toBe(true);
+  });
+
+  const r = (id: string, sort: number, active = true) => ({ id, labelEs: id, labelEn: id, sort, active });
+
+  it('se ofrecen y cuentan solo los activos, en su orden', () => {
+    expect(activeReasons([r('b', 2), r('a', 1), r('x', 3, false)]).map((x) => x.id)).toEqual(['a', 'b']);
+  });
+
+  it('un motivo nuevo va al final, también después de los desactivados', () => {
+    expect(nextReasonSort([r('a', 1), r('x', 9, false)])).toBe(10);
+    expect(nextReasonSort([])).toBe(1);
+  });
+
+  it('cada motivo lleva español e inglés', () => {
+    expect(validateReasonForm({ labelEs: ' ', labelEn: '' })).toEqual({ labelEs: true, labelEn: true });
+    expect(validateReasonForm({ labelEs: 'Precio', labelEn: 'Price' })).toEqual({});
   });
 });
