@@ -9,7 +9,8 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.cidclean.app"
+      "bundleIdentifier": "com.cidclean.app",
+      "infoPlist": {}
     },
     "android": {
       "package": "com.cidclean.app",
@@ -41,6 +42,23 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "89b103c3-f85e-41e9-8c01-c3e9823b4fa5"
+      }
+    },
+    "owner": "cidcleanadmin",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/89b103c3-f85e-41e9-8c01-c3e9823b4fa5"
     }
   }
 }
