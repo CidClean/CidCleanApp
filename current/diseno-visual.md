@@ -112,8 +112,20 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Inicio del staff | Visita de hoy en grande arriba, "Desliza para marcar entrada" y la tira de la semana debajo; barra con Inicio y Menú | D-165 | ronda 14 |
 | Mi perfil | Lista de filas: Nombre, Correo, Idioma (con flecha, abre el control de D-087) y Cerrar sesión | D-166 | ronda 14 |
 | Cerrar sesión | Confirmación "¿Cerrar sesión?" con Cancelar y Cerrar sesión sólido | D-167 | ronda 14 |
+| Admin: crear empleado | Pantalla "Nuevo empleado": Nombre, Teléfono, Tipo (W-2 / 1099), Rol de partida, casilla "Tiene acceso a la app", Correo (solo con acceso), Idioma y botón sólido "Crear empleado" | D-171 | [`ronda-15-empleados-y-pendientes.md`](../surveys/ronda-15-empleados-y-pendientes.md) |
+| Admin: invitación | Se envía sola; el perfil muestra "Invitación enviada" con ficha Pendiente y el botón de contorno "Reenviar invitación" | D-172 | ronda 15 |
+| Admin: desactivar empleado | Interruptor Activo en el encabezado del perfil; al apagarlo, hoja "¿Desactivar a {nombre}?" con Cancelar y Desactivar sólido | D-173 | ronda 15 |
+| Admin: pestaña Datos | Filas de solo lectura y botón de texto "Editar" en la barra del título que la vuelve formulario | D-174 | ronda 15 |
+| Admin: documentos 1099 | Filas W-9 y Certificado de seguro con ficha Subido (verde) o Falta (ámbar) y botón de contorno "Subir documento" | D-175 | ronda 15 |
+| Super Admin: publicar términos | Pantalla "Términos del staff": versión vigente, recuadro "Subir PDF", aviso ámbar y botón sólido "Publicar nueva versión"; el staff lo lee como PDF | D-176 | ronda 15 |
+| Alto de filas de lista | 48px (las muestras de las rondas 13 y 14 medían unos 60px por su código de muestra y no mandan) | D-177 | ronda 15 |
+| Textos de error nuevos | Tres textos cortos del idioma, de guardar la aceptación y de cargar los términos, listados en D-178 | D-178 | ronda 15 |
+| Staff: términos sin conexión | Pantalla "Antes de empezar" con icono de alerta, "Necesitas conexión para continuar" y botón sólido "Reintentar"; no deja entrar | D-179 | ronda 15 |
+| Flecha de volver | Flecha a la izquierda en la barra del título de las pantallas a las que se entra desde el Menú, incluida Mi perfil (las muestras anteriores no la llevan) | D-180 | ronda 15 |
 
 Copia visual de lo aprobado, la más reciente primero:
+
+- Ronda 15: [`../surveys/ronda-15-empleados-y-pendientes-aprobado.html`](../surveys/ronda-15-empleados-y-pendientes-aprobado.html). Muestra crear empleado, invitación, desactivar, Datos, documentos de los 1099, publicar términos, alto de filas, textos de error, términos sin conexión y flecha de volver. Sus datos son de ejemplo. Las muestras de la ronda 14 y anteriores con filas de unos 60px o sin flecha de volver quedan corregidas por D-177 y D-180.
 
 - Pantallas deducidas (2026-10-21): [`../surveys/deducido-2026-10-21.html`](../surveys/deducido-2026-10-21.html). Barra inferior, Menú, Cuentas, inicio del staff y categorías. No las eligió el dueño: las dedujo Claude por delegación.
 - Ronda 14: [`../surveys/ronda-14-inicio-y-perfil-aprobado.html`](../surveys/ronda-14-inicio-y-perfil-aprobado.html). Muestra el Inicio del admin sin pendientes, el Inicio del staff, Mi perfil y la confirmación de Cerrar sesión. Sus datos son de ejemplo.

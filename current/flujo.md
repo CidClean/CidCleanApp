@@ -84,6 +84,7 @@ Cada empleado tiene un perfil con su tipo de trabajador, sus permisos y su pago 
 - Si tiene acceso a la app. Si no, un supervisor o admin registra su trabajo.
 - Idioma: inglés por defecto, o español.
 - Los 1099 guardan sus documentos (W-9 y certificado de seguro).
+- Al crear un empleado con acceso a la app se le envía la invitación sola; mientras no entre, su perfil lo muestra y permite reenviarla (D-172). Desactivarlo conserva su historial (D-173).
 
 **Pago por jobsite** (un mismo empleado puede tener pagos distintos en varios jobsites)
 
@@ -170,7 +171,7 @@ Cid Clean opera en Naples, Florida (Collier County). Esta sección no es asesor�
 Los redacta un abogado fuera de la app. La app los guarda versionados y registra quién aceptó qué versión y cuándo. Son tres documentos:
 
 1. **Portal del cliente:** aceptación electrónica y uso del OTP. Se registra junto a cada quote aceptado: nombre, cargo, fecha y hora, IP, versión del quote y confirmación de lectura del SOW.
-2. **Staff:** consentimiento de uso de GPS (solo en clock in y clock out), fotos y datos personales. Se acepta en el primer ingreso y de nuevo si cambia la versión. Las versiones y las aceptaciones se guardan en la base de datos; no se pide aceptar hasta que haya una versión publicada, y no se le pide al Super Admin (D-168).
+2. **Staff:** consentimiento de uso de GPS (solo en clock in y clock out), fotos y datos personales. Se acepta en el primer ingreso y de nuevo si cambia la versión. Las versiones y las aceptaciones se guardan en la base de datos; no se pide aceptar hasta que haya una versión publicada, y no se le pide al Super Admin. Cada versión es un PDF del abogado que sube el Super Admin, y el staff lo lee como PDF (D-176).
 3. **Privacidad y emails:** baja de comunicaciones y dirección física en los emails a leads.
 
 Sources: [FL DOR, sales tax on cleaning services](https://floridarevenue.com/forms_library/current/gt800015.pdf) · [Rule 12A-1.0091](https://floridasalestax.com/florida-sales-tax-rules/12a-1-0091) · [Florida county surtax rates 2026](https://www.floridasalestax.com/florida-tax-law-blog/2026/august/florida-county-surtax-rates-for-2026-the-complet/) · [Florida minimum wage $15](https://www.hrmorning.com/news/florida-minimum-wage/) · [Worker classification in Florida](https://www.epgdlaw.com/?p=598)
