@@ -117,6 +117,10 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Admin: desactivar empleado | Interruptor Activo en el encabezado del perfil; al apagarlo, hoja "¿Desactivar a {nombre}?" con Cancelar y Desactivar sólido | D-173 | ronda 15 |
 | Admin: pestaña Datos | Filas de solo lectura y botón de texto "Editar" en la barra del título que la vuelve formulario | D-174 | ronda 15 |
 | Admin: documentos 1099 | Filas W-9 y Certificado de seguro con ficha Subido (verde) o Falta (ámbar) y botón de contorno "Subir documento" | D-175 | ronda 15 |
+| Admin: después de crear | Se abre el perfil del empleado, pestaña Datos | D-181 | [`ronda-15-empleados-y-pendientes.md`](../surveys/ronda-15-empleados-y-pendientes.md) |
+| Admin: reactivar | Misma hoja que desactivar: "¿Reactivar a {nombre}?" con Cancelar y Reactivar sólido | D-182 | ronda 15 |
+| Admin: subir documento | Elegir entre foto con la cámara o archivo del teléfono (foto o PDF) | D-183 | ronda 15 |
+| Admin: acceso ya usado | Fila "Acceso a la app": "Sí · desde {fecha}", sin ficha Pendiente ni Reenviar | D-184 | ronda 15 |
 | Super Admin: publicar términos | Pantalla "Términos del staff": versión vigente, recuadro "Subir PDF", aviso ámbar y botón sólido "Publicar nueva versión"; el staff lo lee como PDF | D-176 | ronda 15 |
 | Alto de filas de lista | 48px (las muestras de las rondas 13 y 14 medían unos 60px por su código de muestra y no mandan) | D-177 | ronda 15 |
 | Textos de error nuevos | Tres textos cortos del idioma, de guardar la aceptación y de cargar los términos, listados en D-178 | D-178 | ronda 15 |

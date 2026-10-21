@@ -32,13 +32,17 @@ Fecha: 2026-10-21. Respuesta del dueño, textual:
 - Sin conexión: entrar a la app y pedir los términos la próxima vez que haya conexión.
 - Volver: sin flecha, con el botón o el gesto de atrás del teléfono.
 
-## Detalles que el dueño no eligió (por confirmar antes de construir)
+## Detalles confirmados después
 
-Estos puntos no se registran como decisiones hasta que el dueño los diga o los delegue:
+Respuestas del dueño a cuatro preguntas de detalle (2026-10-21):
 
-- Qué pantalla se ve justo después de crear un empleado.
-- Qué pasa al volver a encender el interruptor Activo (reactivar) y si pide confirmación.
-- Cómo se sube un documento (cámara, galería o archivo) y qué tipos de archivo se aceptan.
-- Qué muestra el perfil cuando el empleado ya entró por primera vez (la ficha "Invitación enviada" desaparece).
+| Detalle | Elección | Decisión |
+| --- | --- | --- |
+| Pantalla justo después de crear un empleado | Su perfil, pestaña Datos | D-181 |
+| Volver a encender el interruptor Activo | Pide confirmación como al desactivar | D-182 |
+| Cómo se sube un documento del 1099 | Foto con la cámara o archivo del teléfono | D-183 |
+| Perfil de quien ya entró | Sí, con la fecha de su primer ingreso | D-184 |
+
+No elegido: la lista de empleados después de crear; reactivar directo; solo foto con la cámara; solo "Sí" sin fecha.
 
 Copia visual de lo aprobado: [`ronda-15-empleados-y-pendientes-aprobado.html`](ronda-15-empleados-y-pendientes-aprobado.html).
