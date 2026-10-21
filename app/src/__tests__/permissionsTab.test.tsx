@@ -12,13 +12,15 @@ const mockNavigation = {
   dispatch: jest.fn(),
 };
 
+const mockBack = jest.fn();
+
 // --- Simulaciones --------------------------------------------------------------------------------------------
 let mockAccess: { isSuperAdmin: boolean; permissions: Set<string> } = { isSuperAdmin: true, permissions: new Set() };
 let mockOwnId: string | null = 'yo';
 
 jest.mock('expo-router', () => ({
   useNavigation: () => mockNavigation,
-  useRouter: () => ({ replace: jest.fn(), push: jest.fn(), back: jest.fn(), canGoBack: () => true }),
+  useRouter: () => ({ replace: jest.fn(), push: jest.fn(), back: mockBack, canGoBack: () => true }),
   useLocalSearchParams: () => ({ id: 'e1' }),
   Redirect: () => null,
 }));
@@ -209,6 +211,29 @@ describe('Pestaña Permisos: quien edita con todo (D-058, D-110, D-188)', () => 
     await fireEvent.press(screen.getByText(es.unsaved.leave));
     expect(mockNavigation.dispatch).toHaveBeenCalledWith(action);
     expect(mockSavePermissions).not.toHaveBeenCalled();
+  });
+
+  test('la flecha de volver con cambios sin guardar pide confirmación; Cancelar se queda, Salir vuelve', async () => {
+    await openPermissions();
+    await screen.findByLabelText(es.permissions.template);
+    await fireEvent.press(screen.getByLabelText(es.permissions.areas.empleados));
+    await fireEvent.press(screen.getByLabelText(L.empleados_ver_pagos));
+    await fireEvent.press(screen.getByLabelText(es.common.back));
+    expect(screen.getByText('¿Salir sin guardar?')).toBeTruthy();
+    expect(mockBack).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByText(es.common.cancel));
+    expect(mockBack).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByLabelText(es.common.back));
+    await fireEvent.press(screen.getByText(es.unsaved.leave));
+    expect(mockBack).toHaveBeenCalledTimes(1);
+  });
+
+  test('la flecha de volver sin cambios vuelve directo', async () => {
+    await openPermissions();
+    await screen.findByLabelText(es.permissions.template);
+    await fireEvent.press(screen.getByLabelText(es.common.back));
+    expect(screen.queryByText('¿Salir sin guardar?')).toBeNull();
+    expect(mockBack).toHaveBeenCalledTimes(1);
   });
 
   test('después de guardar ya no pregunta al salir', async () => {

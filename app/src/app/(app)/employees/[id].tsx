@@ -112,8 +112,8 @@ export default function EmployeeProfileScreen() {
   const insets = useSafeAreaInsets();
 
   // Salir de Permisos con cambios sin guardar pide confirmación (decisión del arquitecto bajo D-200, orden 12):
-  // al cambiar de pestaña o al dejar el perfil (flecha, botón atrás del teléfono).
-  type LeaveAsk = { kind: 'tab'; tab: Tab } | { kind: 'screen'; action: unknown } | null;
+  // al cambiar de pestaña, con la flecha de volver y con el botón o gesto de atrás del teléfono (beforeRemove).
+  type LeaveAsk = { kind: 'tab'; tab: Tab } | { kind: 'back' } | { kind: 'screen'; action: unknown } | null;
   const [leaveAsk, setLeaveAsk] = useState<LeaveAsk>(null);
   const dirtyRef = useRef(false);
   type BeforeRemove = { preventDefault: () => void; data: { action: unknown } };
@@ -326,6 +326,7 @@ export default function EmployeeProfileScreen() {
     setPendingRole(null);
     dirtyRef.current = false;
     if (ask.kind === 'tab') setTab(ask.tab);
+    else if (ask.kind === 'back') goBack();
     else navigation.dispatch(ask.action);
   }
 
@@ -342,7 +343,12 @@ export default function EmployeeProfileScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <TopBar title={title} onBack={goBack} backLabel={strings.common.back} action={topAction} />
+      <TopBar
+        title={title}
+        onBack={() => (dirtyRef.current ? setLeaveAsk({ kind: 'back' }) : goBack())}
+        backLabel={strings.common.back}
+        action={topAction}
+      />
       <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
         {loadFailed && !employee ? <AppAlert tone="error" text={strings.employee.errorLoad} /> : null}
         {employee ? (
