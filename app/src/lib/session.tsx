@@ -25,7 +25,7 @@ type SessionState = {
   access: Access;
   /** Falta aceptar los términos del staff (D-168): hasta aceptar no hay otras rutas. */
   termsPending: boolean;
-  /** No se pudieron revisar los términos y quien entra no es Super Admin (D-179): no entra hasta que haya conexión. */
+  /** No se pudieron revisar los términos y quien entra nunca aceptó o no se sabe (D-179, D-197): no entra hasta que haya conexión. */
   termsOffline: boolean;
   /** Cambia el idioma del perfil (RPC set_my_language, D-087). Devuelve false si no se pudo guardar. */
   setLanguage: (locale: Locale) => Promise<boolean>;
@@ -37,6 +37,9 @@ const SessionContext = createContext<SessionState | null>(null);
 
 const NO_ACCESS: Access = { isSuperAdmin: false, permissions: new Set() };
 
+/** Cada cuánto se vuelve a comprobar mientras se entró sin poder consultar al servidor (D-197): al volver la conexión se piden los términos nuevos. */
+export const RECHECK_MS = 30_000;
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<SessionState['status']>('loading');
   const [ended, setEnded] = useState(false);
@@ -44,6 +47,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [terms, setTerms] = useState<TermsGate>('enter');
   const termsRef = useRef<TermsGate | null>(null);
+  /** La última comprobación no pudo consultar al servidor (sin conexión): se reintenta sola hasta que se pueda (D-197). */
+  const [unverified, setUnverified] = useState(false);
   const [profileLanguage, setProfileLanguage] = useState<Locale | null>(null);
   const [remembered, setRemembered] = useState<Locale | null>(null);
   const running = useRef<Promise<void> | null>(null);
@@ -65,16 +70,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             }
             if (result.permissions) setPermissions(result.permissions);
           }
-          // Los términos se revisan al entrar (D-179): sin red al abrir no se entra; ya dentro, se conserva lo sabido.
+          // Los términos se revisan al entrar (D-179, D-197): sin red entra quien el teléfono sabe que ya aceptó; ya dentro,
+          // se conserva lo sabido. Una versión nueva se pide cuando vuelve la conexión.
           const gate = nextTermsGate(termsRef.current, result.terms);
           termsRef.current = gate;
           setTerms(gate);
+          setUnverified(!result.verified);
           setEnded(false);
         } else {
           setProfile(null);
           setPermissions([]);
           termsRef.current = null;
           setTerms('enter');
+          setUnverified(false);
           setProfileLanguage(null);
           // Una comprobación "sin motivo" no borra un aviso que ya se está mostrando.
           setEnded((prev) => prev || result.ended);
@@ -101,6 +109,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     });
     return () => sub.remove();
   }, [refresh]);
+
+  // Entró (o espera la conexión) sin poder consultar al servidor: reintenta cada tanto sin molestar hasta que se pueda.
+  useEffect(() => {
+    if (!unverified || status !== 'in') return;
+    const timer = setInterval(() => void refresh(), RECHECK_MS);
+    return () => clearInterval(timer);
+  }, [unverified, status, refresh]);
 
   // Si la sesión se cierra por otro lado (otra pestaña, Supabase), la pantalla se entera.
   // No se escucha SIGNED_IN a propósito: la fecha de inicio se guarda justo después de verificar el código.
@@ -133,6 +148,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setPermissions([]);
     termsRef.current = null;
     setTerms('enter');
+    setUnverified(false);
     setProfileLanguage(null);
     setStatus('out');
   }, []);

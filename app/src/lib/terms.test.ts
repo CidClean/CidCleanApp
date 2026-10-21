@@ -19,31 +19,38 @@ describe('termsRequired (D-168)', () => {
   });
 });
 
-describe('termsGate: qué pantalla toca antes de entrar (D-168, D-179)', () => {
+describe('termsGate: qué pantalla toca antes de entrar (D-168, D-179, D-197)', () => {
   const ok = (latest: string | null, accepted: string[] = []) => ({ kind: 'ok' as const, latestStaffDocumentId: latest, acceptedDocumentIds: accepted });
   const unknown = { kind: 'unknown' as const };
 
   test('quién debe aceptar: staff con versión publicada sin aceptar', () => {
-    expect(termsGate({ isSuperAdmin: false, lookup: ok('v1') })).toBe('accept');
-    expect(termsGate({ isSuperAdmin: false, lookup: ok('v2', ['v1']) })).toBe('accept');
+    expect(termsGate({ isSuperAdmin: false, lookup: ok('v1'), knownAcceptedDocumentId: null })).toBe('accept');
+    expect(termsGate({ isSuperAdmin: false, lookup: ok('v2', ['v1']), knownAcceptedDocumentId: 'v1' })).toBe('accept');
   });
   test('quien ya aceptó la versión vigente entra', () => {
-    expect(termsGate({ isSuperAdmin: false, lookup: ok('v1', ['v1']) })).toBe('enter');
+    expect(termsGate({ isSuperAdmin: false, lookup: ok('v1', ['v1']), knownAcceptedDocumentId: null })).toBe('enter');
   });
   test('sin versión publicada se entra (no se pide nada)', () => {
-    expect(termsGate({ isSuperAdmin: false, lookup: ok(null) })).toBe('enter');
+    expect(termsGate({ isSuperAdmin: false, lookup: ok(null), knownAcceptedDocumentId: null })).toBe('enter');
   });
   test('el Super Admin siempre entra, con o sin conexión', () => {
-    expect(termsGate({ isSuperAdmin: true, lookup: ok('v1') })).toBe('enter');
-    expect(termsGate({ isSuperAdmin: true, lookup: unknown })).toBe('enter');
+    expect(termsGate({ isSuperAdmin: true, lookup: ok('v1'), knownAcceptedDocumentId: null })).toBe('enter');
+    expect(termsGate({ isSuperAdmin: true, lookup: unknown, knownAcceptedDocumentId: null })).toBe('enter');
   });
-  test('sin conexión para revisar los términos no se entra (D-179), sepa o no quién es', () => {
-    expect(termsGate({ isSuperAdmin: false, lookup: unknown })).toBe('offline');
-    expect(termsGate({ isSuperAdmin: null, lookup: unknown })).toBe('offline');
+  test('sin conexión: entra quien el teléfono sabe que ya aceptó la versión vigente (D-197)', () => {
+    expect(termsGate({ isSuperAdmin: false, lookup: unknown, knownAcceptedDocumentId: 'v1' })).toBe('enter');
+    expect(termsGate({ isSuperAdmin: null, lookup: unknown, knownAcceptedDocumentId: 'v1' })).toBe('enter');
+  });
+  test('sin conexión: quien nunca aceptó o no se sabe no entra (D-197)', () => {
+    expect(termsGate({ isSuperAdmin: false, lookup: unknown, knownAcceptedDocumentId: null })).toBe('offline');
+    expect(termsGate({ isSuperAdmin: null, lookup: unknown, knownAcceptedDocumentId: null })).toBe('offline');
+  });
+  test('con conexión manda lo que dice el servidor, no lo que recuerda el teléfono', () => {
+    expect(termsGate({ isSuperAdmin: false, lookup: ok('v2', ['v1']), knownAcceptedDocumentId: 'v1' })).toBe('accept');
   });
 });
 
-describe('nextTermsGate: los términos se revisan al entrar (D-179)', () => {
+describe('nextTermsGate: los términos se revisan al entrar (D-179, D-197)', () => {
   test('al abrir la app (sin estado previo) un fallo bloquea', () => {
     expect(nextTermsGate(null, 'offline')).toBe('offline');
   });

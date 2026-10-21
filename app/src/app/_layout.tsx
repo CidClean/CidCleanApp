@@ -49,7 +49,7 @@ function Routes() {
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
         {/* D-168: con la aceptación pendiente no hay otra ruta que la pantalla de términos.
-            D-179: sin conexión para revisarlos, la misma ruta muestra "Necesitas conexión para continuar". */}
+            D-179, D-197: sin conexión para revisarlos y sin haber aceptado antes, la misma ruta muestra "Necesitas conexión para continuar". */}
         <Stack.Protected guard={status === 'in' && (termsPending || termsOffline)}>
           <Stack.Screen name="(terms)" />
         </Stack.Protected>

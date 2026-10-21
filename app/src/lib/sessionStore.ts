@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isLocale, type Locale } from '@/i18n';
 import { AUTH_STORAGE_KEY, supabase } from './supabase';
 import { evaluateSession, type ProfileLookup, type SessionVerdict } from './sessionPolicy';
+import { clearAccountMemory, readAccountMemory, rememberAccount } from './accountMemory';
 import { termsGate, type TermsGate, type TermsLookup } from './terms';
 
 const START_KEY = 'cidclean-session-started-at';
@@ -107,39 +108,16 @@ export async function fetchTermsLookup(profileId: string): Promise<TermsLookup> 
   }
 }
 
-/**
- * Sin red no se puede leer el perfil, y no se sabría si es Super Admin (que no acepta términos y no ve la pantalla
- * de conexión). Se guarda el último dato conocido de esta cuenta; sin dato, no se asume que lo sea.
- */
-const SUPER_ADMIN_HINT_KEY = 'cidclean-super-admin-hint';
-
-async function rememberSuperAdmin(authUserId: string, isSuperAdmin: boolean): Promise<void> {
-  try {
-    await AsyncStorage.setItem(SUPER_ADMIN_HINT_KEY, JSON.stringify({ userId: authUserId, isSuperAdmin }));
-  } catch {
-    // sin almacenamiento: solo se pierde la ayuda sin red
-  }
-}
-
-async function readSuperAdminHint(authUserId: string): Promise<boolean | null> {
-  try {
-    const raw = await AsyncStorage.getItem(SUPER_ADMIN_HINT_KEY);
-    if (raw === null) return null;
-    const value = JSON.parse(raw) as { userId?: string; isSuperAdmin?: boolean };
-    return value.userId === authUserId && typeof value.isSuperAdmin === 'boolean' ? value.isSuperAdmin : null;
-  } catch {
-    return null;
-  }
-}
-
 export type SessionCheck =
   | {
       status: 'in';
       /** null si no se pudo leer el perfil (sin red). */
       profile: OwnProfile | null;
       permissions: string[] | null;
-      /** Qué pantalla toca antes de entrar: entrar, aceptar los términos o pedir conexión (D-179). */
+      /** Qué pantalla toca antes de entrar: entrar, aceptar los términos o pedir conexión (D-179, D-197). */
       terms: TermsGate;
+      /** false si no se pudo comprobar con el servidor (sin conexión): quien ya aceptó entró por lo que sabe el teléfono. */
+      verified: boolean;
     }
   | { status: 'out'; ended: boolean };
 
@@ -166,18 +144,51 @@ export async function checkSession(nowMs: number = Date.now()): Promise<SessionC
     return { status: 'out', ended: true };
   }
 
+  const memory = await readAccountMemory(session.user.id);
+
   if (!profile) {
-    // Sin poder leer el perfil (sin red): solo entra quien se sabe que es Super Admin (D-179).
-    const hint = await readSuperAdminHint(session.user.id);
-    return { status: 'in', profile: null, permissions: null, terms: termsGate({ isSuperAdmin: hint, lookup: { kind: 'unknown' } }) };
+    // Sin poder leer el perfil (sin red): entra quien el teléfono sabe que es Super Admin o que ya aceptó los términos (D-197).
+    return {
+      status: 'in',
+      profile: null,
+      permissions: null,
+      verified: false,
+      terms: termsGate({
+        isSuperAdmin: memory.isSuperAdmin,
+        lookup: { kind: 'unknown' },
+        knownAcceptedDocumentId: memory.acceptedTermsId,
+      }),
+    };
   }
 
-  await rememberSuperAdmin(session.user.id, profile.isSuperAdmin);
   const permissions = profile.isSuperAdmin ? [] : await fetchOwnPermissions(profile.id);
   const termsLookup: TermsLookup = profile.isSuperAdmin
     ? { kind: 'ok', latestStaffDocumentId: null, acceptedDocumentIds: [] }
     : await fetchTermsLookup(profile.id);
-  return { status: 'in', profile, permissions, terms: termsGate({ isSuperAdmin: profile.isSuperAdmin, lookup: termsLookup }) };
+  // Lo comprobado con conexión se guarda: si es Super Admin y qué versión vigente ya aceptó (null si no la ha aceptado).
+  await rememberAccount(session.user.id, {
+    isSuperAdmin: profile.isSuperAdmin,
+    ...(termsLookup.kind === 'ok' && !profile.isSuperAdmin
+      ? {
+          acceptedTermsId:
+            termsLookup.latestStaffDocumentId !== null &&
+            termsLookup.acceptedDocumentIds.includes(termsLookup.latestStaffDocumentId)
+              ? termsLookup.latestStaffDocumentId
+              : null,
+        }
+      : {}),
+  });
+  return {
+    status: 'in',
+    profile,
+    permissions,
+    verified: termsLookup.kind === 'ok',
+    terms: termsGate({
+      isSuperAdmin: profile.isSuperAdmin,
+      lookup: termsLookup,
+      knownAcceptedDocumentId: memory.acceptedTermsId,
+    }),
+  };
 }
 
 /** Cierra solo este dispositivo (scope local: no toca las sesiones de otros teléfonos de la misma persona). */
@@ -189,9 +200,5 @@ export async function endSession(): Promise<void> {
     await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
   }
   await clearSessionStart();
-  try {
-    await AsyncStorage.removeItem(SUPER_ADMIN_HINT_KEY);
-  } catch {
-    // nada que borrar
-  }
+  await clearAccountMemory();
 }

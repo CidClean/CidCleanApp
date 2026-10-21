@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { Text, Pressable } from 'react-native';
 
 // Proveedor de sesión real con la comprobación simulada: sin red al abrir la app no se entra (D-179).
@@ -19,14 +19,15 @@ jest.mock('@/i18n/languageStore', () => ({
 }));
 jest.mock('expo-localization', () => ({ getLocales: () => [{ languageCode: 'es' }] }));
 
-import { SessionProvider, useSession } from '@/lib/session';
+import { RECHECK_MS, SessionProvider, useSession } from '@/lib/session';
 
 const profile = { id: 'p1', fullName: 'Ana', email: 'ana@correo.com', role: 'employee', isSuperAdmin: false, language: 'es' };
-const inWith = (terms: 'enter' | 'accept' | 'offline', withProfile = true) => ({
+const inWith = (terms: 'enter' | 'accept' | 'offline', withProfile = true, verified = true) => ({
   status: 'in' as const,
   profile: withProfile ? profile : null,
   permissions: withProfile ? [] : null,
   terms,
+  verified,
 });
 
 function Probe() {
@@ -41,11 +42,12 @@ function Probe() {
   );
 }
 
+const advance = (ms: number) => act(async () => { await jest.advanceTimersByTimeAsync(ms); });
 const estado = () => screen.getByTestId('estado').props.children as string;
 
 beforeEach(() => mockCheckSession.mockReset());
 
-describe('sesión: términos sin conexión (D-179)', () => {
+describe('sesión: términos sin conexión (D-179, D-197)', () => {
   test('al abrir la app sin conexión para revisar los términos queda bloqueado (offline)', async () => {
     mockCheckSession.mockResolvedValue(inWith('offline'));
     await render(<SessionProvider><Probe /></SessionProvider>);
@@ -98,5 +100,52 @@ describe('sesión: términos sin conexión (D-179)', () => {
     mockCheckSession.mockResolvedValue(inWith('offline'));
     await fireEvent.press(screen.getByText('reintentar'));
     expect(estado()).toBe('in|pending=false|offline=true');
+  });
+});
+
+
+describe('sesión: entró sin internet y vuelve la conexión (D-197)', () => {
+  beforeEach(() => jest.useFakeTimers());
+  afterEach(() => jest.useRealTimers());
+
+  test('quien ya había aceptado entra sin internet y la app vuelve a comprobar sola; si hay versión nueva, se la pide', async () => {
+    mockCheckSession.mockResolvedValue(inWith('enter', false, false));
+    await render(<SessionProvider><Probe /></SessionProvider>);
+    expect(estado()).toBe('in|pending=false|offline=false');
+    expect(mockCheckSession).toHaveBeenCalledTimes(1);
+    // Sigue sin conexión: reintenta y sigue dentro, sin sacar a nadie.
+    await advance(RECHECK_MS);
+    expect(mockCheckSession).toHaveBeenCalledTimes(2);
+    expect(estado()).toBe('in|pending=false|offline=false');
+    // Vuelve la conexión y hay una versión nueva: ahora se la pide.
+    mockCheckSession.mockResolvedValue(inWith('accept'));
+    await advance(RECHECK_MS);
+    expect(estado()).toBe('in|pending=true|offline=false');
+  });
+
+  test('con la comprobación hecha con el servidor deja de reintentar solo', async () => {
+    mockCheckSession.mockResolvedValue(inWith('enter', false, false));
+    await render(<SessionProvider><Probe /></SessionProvider>);
+    mockCheckSession.mockResolvedValue(inWith('enter'));
+    await advance(RECHECK_MS);
+    const calls = mockCheckSession.mock.calls.length;
+    await advance(RECHECK_MS * 3);
+    expect(mockCheckSession).toHaveBeenCalledTimes(calls);
+  });
+
+  test('quien nunca aceptó ve la pantalla de conexión y entra solo cuando vuelve la conexión', async () => {
+    mockCheckSession.mockResolvedValue(inWith('offline', false, false));
+    await render(<SessionProvider><Probe /></SessionProvider>);
+    expect(estado()).toBe('in|pending=false|offline=true');
+    mockCheckSession.mockResolvedValue(inWith('enter'));
+    await advance(RECHECK_MS);
+    expect(estado()).toBe('in|pending=false|offline=false');
+  });
+
+  test('con la sesión comprobada en línea no hay reintentos periódicos', async () => {
+    mockCheckSession.mockResolvedValue(inWith('enter'));
+    await render(<SessionProvider><Probe /></SessionProvider>);
+    await advance(RECHECK_MS * 3);
+    expect(mockCheckSession).toHaveBeenCalledTimes(1);
   });
 });

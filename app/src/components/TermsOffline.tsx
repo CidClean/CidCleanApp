@@ -10,7 +10,7 @@ import { useSession } from '@/lib/session';
 import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
 /**
- * "Antes de empezar" sin conexión (D-179, muestra ronda 15): quien debe aceptar los términos y no puede revisarlos
+ * "Antes de empezar" sin conexión (D-179, D-197, muestra ronda 15): quien nunca aceptó los términos o no se sabe, y no puede revisarlos,
  * no entra a la app hasta que haya conexión. "Reintentar" vuelve a comprobar.
  */
 export function TermsOffline() {
