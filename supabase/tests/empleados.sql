@@ -156,13 +156,13 @@ begin
 
   -- Ver
   perform pg_temp.prueba('sin permiso: no se ve ningún documento', '0',
-    pg_temp.valor('sin_permisos', 'select count(*) from profile_documents'));
+    pg_temp.valor('sin_permisos', format('select count(*) from profile_documents where profile_id = %L', obj)));
   perform pg_temp.prueba('con empleados_ver (sin gestionar documentos): tampoco', '0',
-    pg_temp.valor('ver', 'select count(*) from profile_documents'));
+    pg_temp.valor('ver', format('select count(*) from profile_documents where profile_id = %L', obj)));
   perform pg_temp.prueba('con empleados_gestionar_documentos: se ven', '2',
-    pg_temp.valor('docs', 'select count(*) from profile_documents'));
+    pg_temp.valor('docs', format('select count(*) from profile_documents where profile_id = %L', obj)));
   perform pg_temp.prueba('anon: sin acceso a la tabla (42501)', 'ERR:42501',
-    pg_temp.valor('anon', 'select count(*) from profile_documents'));
+    pg_temp.valor('anon', format('select count(*) from profile_documents where profile_id = %L', obj)));
 
   -- Abrir
   perform pg_temp.prueba('sin permiso: no se abre un documento', 'ERR:42501',
@@ -203,7 +203,7 @@ begin
   perform pg_temp.prueba('con empleados_ver_pagos y sin gestionar documentos: no se registra (42501)', 'ERR:42501',
     pg_temp.valor('pagos', format('select register_profile_document(%L, ''w9'', %L)', obj, obj || '/w9/a.pdf')));
   perform pg_temp.prueba('con empleados_ver_pagos y sin gestionar documentos: no se ve ningún documento', '0',
-    pg_temp.valor('pagos', 'select count(*) from profile_documents'));
+    pg_temp.valor('pagos', format('select count(*) from profile_documents where profile_id = %L', obj)));
   perform pg_temp.prueba('con empleados_ver_pagos y sin gestionar documentos: no se abre (42501)', 'ERR:42501',
     pg_temp.valor('pagos', format('select open_profile_document(%L)', doc2)));
   perform pg_temp.prueba('con empleados_ver_pagos y sin gestionar documentos: no sube al bucket (42501)', 'ERR:42501',

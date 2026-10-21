@@ -1,7 +1,7 @@
 -- Pruebas de los términos del staff en PDF (migración 20261021000007).
 -- Repetibles: todo ocurre dentro de una transacción que termina en rollback, no queda nada en la base.
 -- Simulan roles con `set local role` y `request.jwt.claims`, como hace la API.
--- Uso: psql -f supabase/tests/empleados.sql   (la última consulta lista cada prueba con ok = true/false).
+-- Uso: psql -f supabase/tests/terminos.sql   (la última consulta lista cada prueba con ok = true/false).
 
 begin;
 
@@ -37,6 +37,15 @@ create function pg_temp.prueba(nombre text, esperado text, obtenido text) return
   insert into resultados (prueba, ok, detalle) values (nombre, esperado is not distinct from obtenido,
     'esperado=' || coalesce(esperado, 'null') || ' obtenido=' || coalesce(obtenido, 'null'));
 $$;
+
+-- Las pruebas parten de cero versiones. Si el proyecto ya tiene versiones publicadas de verdad, se apartan solo
+-- dentro de esta transacción (termina en rollback: las filas reales vuelven intactas).
+alter table terms_acceptances disable trigger terms_acceptances_no_change;
+alter table terms_documents disable trigger terms_documents_no_change;
+delete from terms_acceptances;
+delete from terms_documents;
+alter table terms_acceptances enable trigger terms_acceptances_no_change;
+alter table terms_documents enable trigger terms_documents_no_change;
 
 -- Personas de prueba -------------------------------------------------------------------------------
 
@@ -122,7 +131,7 @@ select pg_temp.prueba('get_current_terms de un tipo sin versiones no devuelve fi
 select pg_temp.prueba('anon no llama a get_current_terms (42501)', 'ERR:42501',
   pg_temp.valor('anon', $q$ select count(*) from get_current_terms('staff') $q$));
 select pg_temp.prueba('cualquier empleado lee los archivos del bucket terms', '3',
-  pg_temp.valor('empleado', $q$ select count(*) from storage.objects where bucket_id = 'terms' $q$));
+  pg_temp.valor('empleado', $q$ select count(*) from storage.objects where bucket_id = 'terms' and name in ('staff/v1.pdf', 'staff/v2.pdf', 'portal/v1.pdf') $q$));
 select pg_temp.prueba('anon no lee los archivos del bucket terms', '0',
   pg_temp.valor('anon', $q$ select count(*) from storage.objects where bucket_id = 'terms' $q$));
 select pg_temp.prueba('nadie borra archivos de terms desde la API (42501)', 'ERR:42501',
