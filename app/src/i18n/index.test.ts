@@ -4,7 +4,7 @@ import { getStrings, localeFromDevice, selectLocale } from './index';
 
 function keys(obj: Record<string, unknown>, prefix = ''): string[] {
   return Object.entries(obj).flatMap(([k, v]) =>
-    v && typeof v === 'object' ? keys(v as Record<string, unknown>, `${prefix}${k}.`) : [`${prefix}${k}`],
+    v && typeof v === 'object' && !Array.isArray(v) ? keys(v as Record<string, unknown>, `${prefix}${k}.`) : [`${prefix}${k}`],
   );
 }
 
@@ -52,12 +52,19 @@ describe('selectLocale', () => {
 });
 
 describe('textos', () => {
-  test('en.ts tiene exactamente las mismas claves que es.ts y ninguna vacía', () => {
+  test('en.ts tiene exactamente las mismas claves que es.ts y ninguna vacía (la tira de la semana, 7 etiquetas)', () => {
     expect(keys(en)).toEqual(keys(es));
     for (const k of keys(en)) {
       const value = k.split('.').reduce<any>((o, p) => o[p], en);
-      expect(typeof value === 'string' && value.length > 0).toBe(true);
+      if (typeof value === 'function') expect(value('a', 'b').length).toBeGreaterThan(0);
+      else if (Array.isArray(value)) expect(value.every((x: unknown) => typeof x === 'string' && x.length > 0)).toBe(true);
+      else expect(typeof value === 'string' && value.length > 0).toBe(true);
     }
+  });
+
+  test('la tira de la semana: español L M X J V S D, inglés M T W T F S S', () => {
+    expect(es.home.weekDays.join('')).toBe('LMXJVSD');
+    expect(en.home.weekDays.join('')).toBe('MTWTFSS');
   });
 
   test('getStrings devuelve cada idioma', () => {

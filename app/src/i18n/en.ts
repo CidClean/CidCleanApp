@@ -27,8 +27,56 @@ export const en: Strings = {
     errorRateLimit: "You've requested too many codes. Wait a moment and try again.", // code screen: sending limit
   },
 
+  nav: {
+    pipeline: 'Pipeline', // bottom bar destination (icon only) and title of its screen
+    accounts: 'Accounts',
+    home: 'Home',
+    menu: 'Menu',
+    employees: 'Employees',
+    scheduleWork: 'Schedule and Work',
+    accounting: 'Accounting',
+    settings: 'Settings',
+    history: 'Change history',
+    notifications: 'Notifications',
+    profile: 'My profile and language',
+  },
+
+  pending: 'Pending', // TEMPORAL: text of the screens that do not exist yet
+
   home: {
-    // TEMPORAL: reemplazar al construir Inicio
-    placeholder: 'Signed in. Home screen pending.', // temporary screen after signing in
+    income: 'Income this month', // admin home: month figures
+    profit: 'Profit',
+    caughtUp: 'All caught up', // admin home: empty state
+    nothingToReview: 'Nothing to review',
+    today: 'Today', // staff home: today's visit card
+    slideToClockIn: 'Slide to clock in',
+    timeRange: (from: string, to: string) => `${from} to ${to}`, // "6:00 PM to 9:00 PM"
+    weekDays: ['M', 'T', 'W', 'T', 'F', 'S', 'S'], // staff home: week strip, Monday first
+  },
+
+  profile: {
+    title: 'My profile',
+    name: 'Name',
+    email: 'Email',
+    language: 'Language',
+    signOut: 'Sign out',
+    english: 'English',
+    spanish: 'Español',
+    confirmTitle: 'Sign out?', // sign-out confirmation
+    confirmBody: "You'll need to request a code to sign in again.",
+    cancel: 'Cancel',
+    languageError: "We couldn't change the language. Check your connection and try again.",
+  },
+
+  terms: {
+    barTitle: 'Before you start', // first-sign-in terms screen
+    location: 'Location only when you clock in and out',
+    photos: 'Work photos',
+    data: 'Your personal data',
+    readFull: 'Read the full terms',
+    checkbox: 'I have read and accept the terms',
+    accept: 'Accept',
+    errorSave: "We couldn't save your acceptance. Check your connection and try again.",
+    errorLoad: "We couldn't load the terms. Check your connection and try again.",
   },
 };

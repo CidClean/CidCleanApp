@@ -10,7 +10,7 @@ import { brand, useTheme } from '@/theme';
 SplashScreen.preventAutoHideAsync();
 
 function Routes() {
-  const { status } = useSession();
+  const { status, termsPending } = useSession();
   const { scheme, colors } = useTheme();
 
   const [fontsLoaded] = useFonts({ Manrope_400Regular, Manrope_500Medium });
@@ -42,7 +42,11 @@ function Routes() {
         <Stack.Protected guard={status === 'out'}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
-        <Stack.Protected guard={status === 'in'}>
+        {/* D-168: con la aceptación pendiente no hay otra ruta que la pantalla de términos. */}
+        <Stack.Protected guard={status === 'in' && termsPending}>
+          <Stack.Screen name="(terms)" />
+        </Stack.Protected>
+        <Stack.Protected guard={status === 'in' && !termsPending}>
           <Stack.Screen name="(app)" />
         </Stack.Protected>
       </Stack>
@@ -57,4 +61,3 @@ export default function RootLayout() {
     </SessionProvider>
   );
 }
-
