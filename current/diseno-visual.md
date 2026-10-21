@@ -124,6 +124,7 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Admin: subir documento | Elegir entre foto con la cámara o archivo del teléfono (foto o PDF) | D-183 | ronda 15 |
 | Admin: acceso ya usado | Fila "Acceso a la app": "Sí · desde {fecha}", sin ficha Pendiente ni Reenviar | D-184 | ronda 15 |
 | Super Admin: publicar términos | Pantalla "Términos del staff": versión vigente, recuadro "Subir PDF", aviso ámbar y botón sólido "Publicar nueva versión"; el staff lo lee como PDF | D-176 | ronda 15 |
+| Super Admin: dónde publicar | Menú → Ajustes → fila "Términos del staff" con la versión vigente y flecha | D-187 | [`ronda-15-empleados-y-pendientes.md`](../surveys/ronda-15-empleados-y-pendientes.md) |
 | Alto de filas de lista | 48px (las muestras de las rondas 13 y 14 medían unos 60px por su código de muestra y no mandan) | D-177 | ronda 15 |
 | Textos de error nuevos | Tres textos cortos del idioma, de guardar la aceptación y de cargar los términos, listados en D-178 | D-178 | ronda 15 |
 | Staff: términos sin conexión | Pantalla "Antes de empezar" con icono de alerta, "Necesitas conexión para continuar" y botón sólido "Reintentar"; no deja entrar | D-179 | ronda 15 |
