@@ -152,6 +152,21 @@ export const en: Strings = {
     checkbox: 'I have read and accept the terms',
     accept: 'Accept',
     errorSave: "Couldn't save your acceptance. Try again.", // terms screen: red notice above Accept (D-178)
-    errorLoad: "Couldn't load the terms. Try again.", // full terms screen: red notice (D-178)
+    errorLoad: "Couldn't load the terms. Try again.", // "Read the full terms" link on the terms screen: red notice (D-178)
+    offlineTitle: 'You need a connection to continue', // terms screen when the app can't check the terms: no internet (D-179)
+    offlineBody: 'We check the terms when you open the app.', // same screen, line under the title ("al entrar" = when you open the app)
+    retry: 'Try again', // same screen, solid button that checks again
+  },
+
+  // Menu → Settings (Super Admin only) and publishing the staff terms.
+  settings: {
+    termsRow: 'Staff terms', // Settings row and title of the publish screen
+    termsValue: (version: number) => `v${version}`, // value of the Settings row
+    unpublished: 'Not published', // value of the row and of the version line when no version is published yet
+    currentVersion: (version: number, date: string) => `Current version: ${version} · ${date}`, // publish screen, line under the title
+    uploadPdf: 'Upload PDF', // dashed box to pick the lawyer's PDF
+    acceptAgain: 'All staff will have to accept this version again.', // amber notice above the publish button
+    publish: 'Publish new version', // solid button
+    errorPublish: "Couldn't publish. Try again.", // publish screen: red notice if the upload or the publish fails
   },
 };

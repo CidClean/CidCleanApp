@@ -152,6 +152,21 @@ export const es = {
     accept: 'Aceptar', // APROBADO (muestra ronda 10)
     errorSave: 'No se pudo guardar tu aceptación. Inténtalo otra vez.', // APROBADO (D-178)
     errorLoad: 'No se pudieron cargar los términos. Inténtalo otra vez.', // APROBADO (D-178)
+    offlineTitle: 'Necesitas conexión para continuar', // APROBADO (D-179)
+    offlineBody: 'Revisamos los términos al entrar.', // APROBADO (D-179)
+    retry: 'Reintentar', // APROBADO (D-179)
+  },
+
+  // Menú → Ajustes (solo el Super Admin, D-114, D-169) y publicar los términos del staff (D-176, D-187).
+  settings: {
+    termsRow: 'Términos del staff', // APROBADO (D-176, D-187): fila de Ajustes y título de la pantalla
+    termsValue: (version: number) => `v${version}`, // valor de la fila (formato dado por la orden 10, D-187 dice "la versión vigente")
+    unpublished: 'Sin publicar', // SIN APROBAR: valor de la fila y de la línea de versión cuando aún no hay versión publicada
+    currentVersion: (version: number, date: string) => `Versión vigente: ${version} · ${date}`, // APROBADO (D-176)
+    uploadPdf: 'Subir PDF', // APROBADO (D-176)
+    acceptAgain: 'Todo el staff tendrá que aceptar esta versión de nuevo.', // APROBADO (D-176)
+    publish: 'Publicar nueva versión', // APROBADO (D-176)
+    errorPublish: 'No se pudo publicar. Inténtalo otra vez.', // SIN APROBAR: aviso rojo al fallar la subida o la publicación (mismo estilo de D-178)
   },
 };
 
