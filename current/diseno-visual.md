@@ -117,6 +117,8 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Admin: desactivar empleado | Interruptor Activo en el encabezado del perfil; al apagarlo, hoja "¿Desactivar a {nombre}?" con Cancelar y Desactivar sólido | D-173 | ronda 15 |
 | Admin: pestaña Datos | Filas de solo lectura y botón de texto "Editar" en la barra del título que la vuelve formulario | D-174 | ronda 15 |
 | Admin: documentos 1099 | Filas W-9 y Certificado de seguro con ficha Subido (verde) o Falta (ámbar) y botón de contorno "Subir documento" | D-175 | ronda 15 |
+| Historial: cada cambio | Título corto, detalle gris "{a quién} · por {quién}" y hora gris a la derecha ("Hoy 2:35 p. m.", "Ayer 6:02 p. m.", "12 oct 9:15 a. m.") | D-198 | [`ronda-17-historial-y-transferir.md`](../surveys/ronda-17-historial-y-transferir.md) |
+| Transferir: Super Admin anterior | Queda con los 36 permisos, incluido Gestionar permisos, con rol Admin; pierde configuración y transferir el rol | D-199 | ronda 17 |
 | Admin: guardar permisos | Los cambios quedan pendientes; botón sólido "Guardar cambios" fijo abajo | D-188 | [`ronda-16-permisos-y-pendientes.md`](../surveys/ronda-16-permisos-y-pendientes.md) |
 | Admin: cambiar plantilla | Hoja "¿Aplicar la plantilla {plantilla}?" con Cancelar y Aplicar sólido; los permisos de la plantilla quedan pendientes hasta Guardar cambios | D-189 | ronda 16 |
 | Admin: rol bajo el nombre | Cambia al guardar con el de la última plantilla aplicada | D-190 | ronda 16 |
@@ -139,6 +141,8 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Flecha de volver | Flecha a la izquierda en la barra del título de las pantallas a las que se entra desde el Menú, incluida Mi perfil (las muestras anteriores no la llevan) | D-180 | ronda 15 |
 
 Copia visual de lo aprobado, la más reciente primero:
+
+- Ronda 17: [`../surveys/ronda-17-historial-y-transferir-aprobado.html`](../surveys/ronda-17-historial-y-transferir-aprobado.html). Muestra el Historial de cambios y el estado del Super Admin anterior al transferir. Sus datos son de ejemplo.
 
 - Ronda 16: [`../surveys/ronda-16-permisos-y-pendientes-aprobado.html`](../surveys/ronda-16-permisos-y-pendientes-aprobado.html). Muestra el guardado de permisos, la confirmación de plantilla, el rol bajo el nombre, la lista sin los permisos que quien edita no tiene, el Super Admin, el permiso nuevo de documentos y las pestañas. Sus datos son de ejemplo.
 

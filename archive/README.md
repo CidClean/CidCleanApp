@@ -20,3 +20,4 @@ Aquí van las versiones reemplazadas, con su fecha. No se usan: mandan los docum
 | [`seguridad-2026-10-21-antes-de-D-193.md`](seguridad-2026-10-21-antes-de-D-193.md) | 2026-10-21 | D-193 | Los W-9 y certificados se veían con el permiso de ver pagos; ahora con Gestionar documentos de empleados. |
 | [`flujo-2026-10-21-antes-de-D-193.md`](flujo-2026-10-21-antes-de-D-193.md) | 2026-10-21 | D-193 | La lista de permisos de Empleados no incluía gestionar documentos. |
 | [`diseno-visual-2026-10-21-antes-de-D-188.md`](diseno-visual-2026-10-21-antes-de-D-188.md) | 2026-10-21 | D-188 a D-197 | Antes de los detalles de la pestaña Permisos, el permiso de documentos, el visor de PDF y la regla sin conexión. |
+| [`diseno-visual-2026-10-21-antes-de-D-198.md`](diseno-visual-2026-10-21-antes-de-D-198.md) | 2026-10-21 | D-198, D-199 | Antes del formato de cada fila del Historial y del estado del Super Admin anterior. |

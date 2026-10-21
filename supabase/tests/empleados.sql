@@ -46,7 +46,7 @@ declare
   pid uuid;
   aid uuid;
 begin
-  foreach quien in array array['sin_permisos', 'ver', 'crear', 'editar', 'pagos', 'otro_editor'] loop
+  foreach quien in array array['sin_permisos', 'ver', 'crear', 'editar', 'pagos', 'docs', 'otro_editor'] loop
     aid := gen_random_uuid();
     insert into profiles (full_name, worker_type, role, email, has_app_access)
     values ('Prueba ' || quien, 'w2', 'employee', quien || '@prueba.local', true) returning id into pid;
@@ -56,6 +56,7 @@ begin
   insert into profile_permissions (profile_id, permission_key)
     select profile_id, case nombre when 'ver' then 'empleados_ver' when 'crear' then 'empleados_invitar_crear'
       when 'editar' then 'empleados_editar_desactivar' when 'pagos' then 'empleados_ver_pagos'
+      when 'docs' then 'empleados_gestionar_documentos'
       when 'otro_editor' then 'empleados_editar_desactivar' end
     from actores where nombre <> 'sin_permisos';
   -- El Super Admin real se usa solo para leer su identidad; no se modifica nada suyo salvo dentro de esta transacción.
@@ -91,7 +92,7 @@ begin
 end $$;
 
 -- El enlace con Auth se hizo por correo al crear los usuarios de prueba.
-select pg_temp.prueba('el usuario de Auth quedó enlazado al perfil', '6',
+select pg_temp.prueba('el usuario de Auth quedó enlazado al perfil', '7',
   (select count(*)::text from profiles p join actores a on a.profile_id = p.id where p.auth_user_id = a.auth_id and a.nombre <> 'super'));
 
 -- Primer ingreso -------------------------------------------------------------------------------------
@@ -121,20 +122,20 @@ begin
 
   perform pg_temp.prueba('sin permiso: no se registra un documento', 'ERR:42501',
     pg_temp.valor('sin_permisos', format('select register_profile_document(%L, ''w9'', %L)', obj, obj || '/w9/a.pdf')));
-  perform pg_temp.prueba('con empleados_ver y editar pero sin pagos: tampoco', 'ERR:42501',
+  perform pg_temp.prueba('con empleados_ver y editar pero sin gestionar documentos: tampoco', 'ERR:42501',
     pg_temp.valor('editar', format('select register_profile_document(%L, ''w9'', %L)', obj, obj || '/w9/a.pdf')));
-  perform pg_temp.prueba('con permiso de pagos: se registra', 'ok',
-    case when pg_temp.valor('pagos', format('select register_profile_document(%L, ''w9'', %L)', obj, obj || '/w9/a.pdf')) like 'ERR%'
+  perform pg_temp.prueba('con empleados_gestionar_documentos: se registra', 'ok',
+    case when pg_temp.valor('docs', format('select register_profile_document(%L, ''w9'', %L)', obj, obj || '/w9/a.pdf')) like 'ERR%'
       then 'fallo' else 'ok' end);
   select id into doc1 from profile_documents where profile_id = obj::uuid and kind = 'w9' and replaced_at is null;
   perform pg_temp.prueba('queda un documento vigente', '1',
     (select count(*)::text from profile_documents where profile_id = obj::uuid and kind = 'w9' and replaced_at is null));
   perform pg_temp.prueba('el cambio quedó en el historial (documento_subido)', '1',
     (select count(*)::text from change_log where action = 'documento_subido' and entity_id = doc1
-        and actor_id = (select profile_id from actores where nombre = 'pagos')));
+        and actor_id = (select profile_id from actores where nombre = 'docs')));
 
   perform pg_temp.prueba('reemplazar: se registra el nuevo', 'ok',
-    case when pg_temp.valor('pagos', format('select register_profile_document(%L, ''w9'', %L)', obj, obj || '/w9/b.pdf')) like 'ERR%'
+    case when pg_temp.valor('docs', format('select register_profile_document(%L, ''w9'', %L)', obj, obj || '/w9/b.pdf')) like 'ERR%'
       then 'fallo' else 'ok' end);
   perform pg_temp.prueba('sigue habiendo un solo vigente', '1',
     (select count(*)::text from profile_documents where profile_id = obj::uuid and kind = 'w9' and replaced_at is null));
@@ -145,21 +146,21 @@ begin
   select id into doc2 from profile_documents where profile_id = obj::uuid and kind = 'w9' and replaced_at is null;
 
   perform pg_temp.prueba('ruta de otro empleado: rechazada', 'ERR:22023',
-    pg_temp.valor('pagos', format('select register_profile_document(%L, ''w9'', %L)', obj, w2 || '/w9/a.pdf')));
+    pg_temp.valor('docs', format('select register_profile_document(%L, ''w9'', %L)', obj, w2 || '/w9/a.pdf')));
   perform pg_temp.prueba('empleado W-2: no lleva documentos', 'ERR:22023',
-    pg_temp.valor('pagos', format('select register_profile_document(%L, ''w9'', %L)', w2, w2 || '/w9/a.pdf')));
+    pg_temp.valor('docs', format('select register_profile_document(%L, ''w9'', %L)', w2, w2 || '/w9/a.pdf')));
   perform pg_temp.prueba('archivo que no existe en el bucket: rechazado', 'ERR:22023',
-    pg_temp.valor('pagos', format('select register_profile_document(%L, ''w9'', %L)', obj, obj || '/w9/no-existe.pdf')));
+    pg_temp.valor('docs', format('select register_profile_document(%L, ''w9'', %L)', obj, obj || '/w9/no-existe.pdf')));
   perform pg_temp.prueba('tipo de documento inválido: rechazado', 'ERR:22023',
-    pg_temp.valor('pagos', format('select register_profile_document(%L, ''otro'', %L)', obj, obj || '/otro/a.pdf')));
+    pg_temp.valor('docs', format('select register_profile_document(%L, ''otro'', %L)', obj, obj || '/otro/a.pdf')));
 
   -- Ver
-  perform pg_temp.prueba('sin permiso de pagos: no se ve ningún documento', '0',
+  perform pg_temp.prueba('sin permiso: no se ve ningún documento', '0',
     pg_temp.valor('sin_permisos', 'select count(*) from profile_documents'));
-  perform pg_temp.prueba('con empleados_ver (sin pagos): tampoco', '0',
+  perform pg_temp.prueba('con empleados_ver (sin gestionar documentos): tampoco', '0',
     pg_temp.valor('ver', 'select count(*) from profile_documents'));
-  perform pg_temp.prueba('con permiso de pagos: se ven', '2',
-    pg_temp.valor('pagos', 'select count(*) from profile_documents'));
+  perform pg_temp.prueba('con empleados_gestionar_documentos: se ven', '2',
+    pg_temp.valor('docs', 'select count(*) from profile_documents'));
   perform pg_temp.prueba('anon: sin acceso a la tabla (42501)', 'ERR:42501',
     pg_temp.valor('anon', 'select count(*) from profile_documents'));
 
@@ -167,11 +168,11 @@ begin
   perform pg_temp.prueba('sin permiso: no se abre un documento', 'ERR:42501',
     pg_temp.valor('ver', format('select open_profile_document(%L)', doc2)));
   perform pg_temp.prueba('con permiso: devuelve la ruta', obj || '/w9/b.pdf',
-    pg_temp.valor('pagos', format('select open_profile_document(%L)', doc2)));
-  perform pg_temp.valor('pagos', format('select open_profile_document(%L)', doc2));
+    pg_temp.valor('docs', format('select open_profile_document(%L)', doc2)));
+  perform pg_temp.valor('docs', format('select open_profile_document(%L)', doc2));
   perform pg_temp.prueba('cada apertura queda en el historial (2 aperturas)', '2',
     (select count(*)::text from change_log where action = 'documento_abierto' and entity_id = doc2
-        and actor_id = (select profile_id from actores where nombre = 'pagos')));
+        and actor_id = (select profile_id from actores where nombre = 'docs')));
   perform pg_temp.prueba('la apertura guarda el empleado y el tipo', 'w9',
     (select detail->>'kind' from change_log where action = 'documento_abierto' and entity_id = doc2 limit 1));
   perform pg_temp.prueba('anon: no abre documentos (42501)', 'ERR:42501',
@@ -180,13 +181,13 @@ begin
   -- Almacenamiento: subir y leer solo con el permiso
   perform pg_temp.prueba('storage: sin permiso no se sube (42501)', 'ERR:42501',
     pg_temp.valor('sin_permisos', format('insert into storage.objects (bucket_id, name) values (''employee-docs'', %L) returning 1', obj || '/w9/x.pdf')));
-  perform pg_temp.prueba('storage: con permiso de pagos se sube', '1',
-    pg_temp.valor('pagos', format('insert into storage.objects (bucket_id, name) values (''employee-docs'', %L) returning 1', obj || '/insurance_certificate/x.pdf')));
+  perform pg_temp.prueba('storage: con empleados_gestionar_documentos se sube', '1',
+    pg_temp.valor('docs', format('insert into storage.objects (bucket_id, name) values (''employee-docs'', %L) returning 1', obj || '/insurance_certificate/x.pdf')));
   -- D-125 (migración 20261021000006): nadie lee employee-docs directo; los documentos se abren solo con open-document.
   perform pg_temp.prueba('storage: sin permiso no se listan archivos', '0',
     pg_temp.valor('ver', 'select count(*) from storage.objects where bucket_id = ''employee-docs'''));
-  perform pg_temp.prueba('storage: ni con empleados_ver_pagos se leen archivos directo (no hay política de lectura)', '0',
-    pg_temp.valor('pagos', 'select count(*) from storage.objects where bucket_id = ''employee-docs'''));
+  perform pg_temp.prueba('storage: ni con empleados_gestionar_documentos se leen archivos directo (no hay política de lectura)', '0',
+    pg_temp.valor('docs', 'select count(*) from storage.objects where bucket_id = ''employee-docs'''));
   perform pg_temp.prueba('storage: ni el Super Admin lee archivos directo', '0',
     pg_temp.valor('super', 'select count(*) from storage.objects where bucket_id = ''employee-docs'''));
   perform pg_temp.prueba('storage: employee-docs no tiene ninguna política de lectura para usuarios autenticados', '0',
@@ -195,9 +196,20 @@ begin
   perform pg_temp.prueba('storage: la política de subir se conserva', '1',
     (select count(*)::text from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'employee_docs_insert'));
   perform pg_temp.prueba('storage: nadie borra archivos desde la API (42501)', 'ERR:42501',
-    pg_temp.valor('pagos', 'with d as (delete from storage.objects where bucket_id = ''employee-docs'' returning 1) select count(*) from d'));
+    pg_temp.valor('docs', 'with d as (delete from storage.objects where bucket_id = ''employee-docs'' returning 1) select count(*) from d'));
   perform pg_temp.prueba('storage: el bucket es privado', 'false',
     (select public::text from storage.buckets where id = 'employee-docs'));
+  -- D-193: los pagos no abren los documentos; quien tiene empleados_ver_pagos sin gestionar documentos no ve ni sube.
+  perform pg_temp.prueba('con empleados_ver_pagos y sin gestionar documentos: no se registra (42501)', 'ERR:42501',
+    pg_temp.valor('pagos', format('select register_profile_document(%L, ''w9'', %L)', obj, obj || '/w9/a.pdf')));
+  perform pg_temp.prueba('con empleados_ver_pagos y sin gestionar documentos: no se ve ningún documento', '0',
+    pg_temp.valor('pagos', 'select count(*) from profile_documents'));
+  perform pg_temp.prueba('con empleados_ver_pagos y sin gestionar documentos: no se abre (42501)', 'ERR:42501',
+    pg_temp.valor('pagos', format('select open_profile_document(%L)', doc2)));
+  perform pg_temp.prueba('con empleados_ver_pagos y sin gestionar documentos: no sube al bucket (42501)', 'ERR:42501',
+    pg_temp.valor('pagos', format('insert into storage.objects (bucket_id, name) values (''employee-docs'', %L) returning 1', obj || '/w9/y.pdf')));
+  perform pg_temp.prueba('el permiso nuevo está en el catálogo (área empleados, orden 7)', 'empleados|7',
+    (select area || '|' || sort from permissions where key = 'empleados_gestionar_documentos'));
 end $$;
 
 -- A3. Crear empleado ---------------------------------------------------------------------------------
@@ -238,7 +250,7 @@ begin
   perform pg_temp.prueba('plantilla Supervisor por el Super Admin: 8 permisos', '8',
     (select count(*)::text from profile_permissions pp join profiles p on p.id = pp.profile_id where p.full_name = 'Sup por Super'));
   perform pg_temp.valor('super', $q$ select create_employee('Admin por Super', null, 'w2', 'admin', 'en', false, null) $q$);
-  perform pg_temp.prueba('plantilla Admin por el Super Admin: 34 permisos', '34',
+  perform pg_temp.prueba('plantilla Admin por el Super Admin: 35 permisos', '35',
     (select count(*)::text from profile_permissions pp join profiles p on p.id = pp.profile_id where p.full_name = 'Admin por Super'));
   perform pg_temp.prueba('plantilla Admin: sin empleados_gestionar_permisos', '0',
     (select count(*)::text from profile_permissions pp join profiles p on p.id = pp.profile_id
