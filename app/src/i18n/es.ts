@@ -21,8 +21,6 @@ export const es = {
     title: 'Revisa tu correo', // APROBADO (D-150)
     note: 'Si tu correo tiene acceso, recibirás un código de 6 dígitos. Vale 10 minutos.', // APROBADO (D-150)
     resend: 'Reenviar código', // APROBADO (D-150)
-    keyResend: 'Reenviar', // APROBADO (D-040): solo para el teclado del portal del quote; el del staff ya no la usa (D-155)
-    keyDelete: 'Borrar', // APROBADO (D-040, muestra ronda 4)
     errorWrong: 'El código es incorrecto o ya venció. Revisa tu correo e inténtalo otra vez.', // APROBADO (D-156)
     errorNetwork: 'No pudimos verificar el código. Revisa tu conexión e inténtalo otra vez.', // APROBADO (D-156)
     errorRateLimit: 'Pediste demasiados códigos. Espera un momento e inténtalo otra vez.', // APROBADO (D-156)

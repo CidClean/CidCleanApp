@@ -22,8 +22,6 @@ export const en: Strings = {
     title: 'Check your email', // code screen: heading
     note: "If your email has access, you'll receive a 6-digit code. It's valid for 10 minutes.", // code screen: neutral message (D-150)
     resend: 'Resend code', // code screen: text button under the boxes
-    keyResend: 'Resend', // keypad key (quote portal only, D-040)
-    keyDelete: 'Delete', // keypad key: removes the last digit
     errorWrong: 'The code is incorrect or has expired. Check your email and try again.', // code screen: wrong or expired code
     errorNetwork: "We couldn't verify the code. Check your connection and try again.", // code screen: no connection
     errorRateLimit: "You've requested too many codes. Wait a moment and try again.", // code screen: sending limit
