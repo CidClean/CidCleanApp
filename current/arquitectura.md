@@ -31,14 +31,14 @@ Principio: una sola base de código, servicios administrados y nada de servidore
 
 | Servicio | Estado al 2026-10-21 |
 | --- | --- |
-| Supabase | Proyecto "CidClean App", ref `noammaqhtdfgbheeiugo`, us-east-1, plan gratis (D-141). El proyecto anterior "CidClean's Project" (ref `scovsbtomhywstpfmoah`) está pausado y no se usa. |
+| Supabase | Proyecto "CidClean App", ref `noammaqhtdfgbheeiugo`, us-east-1, plan gratis (D-141). Token de acceso entregado por el dueño, no guardado (D-148). El proyecto anterior "CidClean's Project" (ref `scovsbtomhywstpfmoah`) está pausado y no se usa. |
 | Expo | Cuenta `cidcleanadmin`. Acceso por token, que no se guarda en el repositorio (D-143). |
 | Cloudflare | Dominio `cidclean.com` ya en Cloudflare (D-142). |
 | GitHub | Repositorio `CidClean/CidCleanApp`; el push funciona. |
 | Resend | Pendiente: la conexión actual da "Forbidden" al listar dominios y llaves; falta una llave con acceso completo o el dominio de envío. |
 | Apple Developer y Google Play | Pendientes; se abren antes de la primera build de iOS y antes de publicar en Android. |
 
-Super Admin: `admin@cidclean.com` (D-144). La migración de la etapa 1 (`supabase/migrations/`) está escrita pero **no aplicada** en Supabase al 2026-10-21: la operación se canceló dos veces.
+Super Admin: `admin@cidclean.com` (D-144). Las tres migraciones de `supabase/migrations/` (perfiles, permisos e historial; Super Admin; endurecer funciones) están aplicadas en el proyecto "CidClean App" desde el 2026-10-21. La configuración de Auth quedó así: solo entra quien recibió invitación (registro abierto desactivado), código de 6 dígitos que vale 10 minutos (D-040, D-123, D-129). El correo de Supabase por defecto envía muy pocos mensajes por hora; para que lleguen los códigos del staff falta conectar Resend (pendiente).
 
 Permisos: catálogo en `permisos.md` (D-145). Forma de trabajo (D-147): Claude ordena, Claude Code ejecuta, el dueño aprueba.
 
