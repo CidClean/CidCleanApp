@@ -9,6 +9,7 @@ Lo técnico (cifrado, hosting, copias de seguridad y protección contra ataques)
 - **Entrada del staff (D-123):** correo y código de un solo uso, sin contraseñas. Es el mismo mecanismo del portal del quote.
 - **Duración de la sesión (D-124):** 30 días en el teléfono del staff y 7 días para admins y Super Admin. Después piden el código otra vez.
 - **Teléfono perdido o baja de un empleado (D-126):** al desactivar a alguien se cierra su sesión al instante y sus datos se conservan. Un admin puede cerrar la sesión de cualquier dispositivo.
+- **Quién controla la duración (D-146):** en el plan gratis de Supabase la duración la controla la app, no Supabase.
 - **Quién cuenta como admin (D-136):** para la sesión de 7 días, los perfiles con rol de partida Admin y el Super Admin.
 - **Cerrar la sesión de otro dispositivo (D-137):** lo hace quien tenga el permiso de editar y desactivar empleados.
 - **Super Admin sin acceso (D-128):** se recupera con una verificación de identidad a través de quien administre la app. Nadie más dentro de la app puede reclamar el rol.

@@ -40,4 +40,6 @@ Principio: una sola base de código, servicios administrados y nada de servidore
 
 Super Admin: `admin@cidclean.com` (D-144). La migración de la etapa 1 (`supabase/migrations/`) está escrita pero **no aplicada** en Supabase al 2026-10-21: la operación se canceló dos veces.
 
+Permisos: catálogo en `permisos.md` (D-145). Forma de trabajo (D-147): Claude ordena, Claude Code ejecuta, el dueño aprueba.
+
 Regla: ninguna llave, token ni contraseña se escribe en este repositorio.
