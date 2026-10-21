@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
 import { SessionProvider, useSession } from '@/lib/session';
+import { clearViewerCache } from '@/lib/viewerFile';
 import { brand, useTheme } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -19,6 +20,11 @@ function Routes() {
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
   }, [ready]);
+
+  // D-196: lo que haya quedado en la caché del visor (por ejemplo si la app se cerró con un archivo abierto) se borra al abrir.
+  useEffect(() => {
+    clearViewerCache();
+  }, []);
 
   if (!ready) return null;
 
@@ -49,6 +55,10 @@ function Routes() {
         </Stack.Protected>
         <Stack.Protected guard={status === 'in' && !termsPending && !termsOffline}>
           <Stack.Screen name="(app)" />
+        </Stack.Protected>
+        {/* D-196: el visor de PDF se abre desde los términos (antes de entrar) y desde el perfil del empleado. */}
+        <Stack.Protected guard={status === 'in'}>
+          <Stack.Screen name="viewer" />
         </Stack.Protected>
       </Stack>
     </ThemeProvider>

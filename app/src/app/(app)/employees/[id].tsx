@@ -1,4 +1,4 @@
-import { Redirect, useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -19,7 +19,7 @@ import { Tabs } from '@/components/Tabs';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
 import type { Strings } from '@/i18n/es';
-import { chooseFile, fetchDocuments, openDocument, takePhoto, uploadDocument, type PickResult } from '@/lib/documents';
+import { chooseFile, fetchDocuments, takePhoto, uploadDocument, type PickResult } from '@/lib/documents';
 import { roleLabel, subtitle, typeLabel } from '@/lib/employeeLabels';
 import {
   accessState,
@@ -50,6 +50,7 @@ type UploadStep = { step: 'kind' } | { step: 'source'; kind: DocumentKind } | nu
 export default function EmployeeProfileScreen() {
   const { id, invitation } = useLocalSearchParams<{ id: string; invitation?: string }>();
   const goBack = useGoBack();
+  const router = useRouter();
   const { colors } = useTheme();
   const strings = useStrings();
   const { locale, profile } = useSession();
@@ -74,7 +75,7 @@ export default function EmployeeProfileScreen() {
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [upload, setUpload] = useState<UploadStep>(null);
   const [uploading, setUploading] = useState(false);
-  const [documentError, setDocumentError] = useState<'upload' | 'open' | 'camera' | null>(null);
+  const [documentError, setDocumentError] = useState<'upload' | 'camera' | null>(null);
 
   const load = useCallback(async () => {
     const result = await fetchEmployee(id);
@@ -185,10 +186,17 @@ export default function EmployeeProfileScreen() {
     }
   }
 
-  async function open(documentId: string) {
+  /** Abre el documento en el visor de la app (D-196); open-document deja la apertura en el historial (D-125). */
+  function open(documentId: string, kind: DocumentKind) {
     setDocumentError(null);
-    const result = await openDocument(documentId);
-    if (!result.ok) setDocumentError('open');
+    router.push({
+      pathname: '/viewer',
+      params: {
+        source: 'document',
+        documentId,
+        title: kind === 'w9' ? strings.employee.w9 : strings.employee.insuranceCertificate,
+      },
+    });
   }
 
   const title = employee?.fullName ?? '';
@@ -332,7 +340,7 @@ export default function EmployeeProfileScreen() {
                         : strings.employee.noFile
                     }
                     last={i === rows.length - 1}
-                    onPress={row.documentId ? () => void open(row.documentId as string) : undefined}
+                    onPress={row.documentId ? () => open(row.documentId as string, row.kind) : undefined}
                     right={
                       <Chip
                         label={row.state === 'uploaded' ? strings.employee.uploadedChip : strings.employee.missingChip}
@@ -346,11 +354,7 @@ export default function EmployeeProfileScreen() {
                   <AppAlert
                     tone="error"
                     text={
-                      documentError === 'camera'
-                        ? strings.employee.errorCamera
-                        : documentError === 'open'
-                          ? strings.employee.errorOpen
-                          : strings.employee.errorUpload
+                      documentError === 'camera' ? strings.employee.errorCamera : strings.employee.errorUpload
                     }
                   />
                 ) : null}

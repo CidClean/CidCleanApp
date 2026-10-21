@@ -32,12 +32,10 @@ jest.mock('@/lib/supabase', () => ({ supabase: { rpc: jest.fn() } }));
 const mockFetchCurrent = jest.fn();
 const mockPublish = jest.fn();
 const mockChoosePdf = jest.fn();
-const mockOpenPdf = jest.fn();
 jest.mock('@/lib/termsApi', () => ({
   fetchCurrentTerms: (...a: unknown[]) => mockFetchCurrent(...a),
   publishTerms: (...a: unknown[]) => mockPublish(...a),
   choosePdf: (...a: unknown[]) => mockChoosePdf(...a),
-  openCurrentTermsPdf: (...a: unknown[]) => mockOpenPdf(...a),
 }));
 
 import SettingsScreen from '@/app/(app)/settings/index';
@@ -146,19 +144,10 @@ describe('Términos del staff: publicar (D-176)', () => {
 });
 
 describe('Staff: Antes de empezar (D-086, D-176, D-179)', () => {
-  test('"Leer los términos completos" abre el PDF vigente', async () => {
-    mockOpenPdf.mockResolvedValue({ ok: true, data: null });
+  test('"Leer los términos completos" abre el visor de PDF de la app con el nombre del documento (D-196)', async () => {
     await render(<TermsScreen />);
     await fireEvent.press(screen.getByText(es.terms.readFull));
-    expect(mockOpenPdf).toHaveBeenCalledTimes(1);
-    expect(screen.queryByText(es.terms.errorLoad)).toBeNull();
-  });
-
-  test('si el PDF no se puede abrir avisa con el texto de D-178', async () => {
-    mockOpenPdf.mockResolvedValue({ ok: false, reason: 'network' });
-    await render(<TermsScreen />);
-    await fireEvent.press(screen.getByText(es.terms.readFull));
-    await waitFor(() => expect(screen.getByText(es.terms.errorLoad)).toBeTruthy());
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/viewer', params: { source: 'terms', title: es.settings.termsRow } });
   });
 
   test('con conexión muestra los tres puntos, la casilla y Aceptar; no la pantalla de conexión', async () => {

@@ -1,5 +1,4 @@
 import * as DocumentPicker from 'expo-document-picker';
-import * as WebBrowser from 'expo-web-browser';
 
 import { failureFromCode, type ApiResult } from './employeesApi';
 import { supabase } from './supabase';
@@ -28,18 +27,17 @@ export async function fetchCurrentTerms(): Promise<ApiResult<CurrentTerms | null
 }
 
 /**
- * "Leer los términos completos" (D-176): firma una URL de 60 s del PDF vigente y la abre en el navegador del sistema
- * (expo-web-browser: pestaña de Chrome en Android, Safari en iPhone).
+ * "Leer los términos completos" (D-176, D-196): firma una URL de 60 s del PDF vigente en el bucket terms.
+ * El visor de la app la descarga a la caché privada y la lee ahí.
  */
-export async function openCurrentTermsPdf(): Promise<ApiResult<null>> {
+export async function fetchTermsUrl(): Promise<ApiResult<{ url: string }>> {
   try {
     const current = await fetchCurrentTerms();
     if (!current.ok) return current;
     if (current.data === null) return { ok: false, reason: 'not_found' };
     const signed = await supabase.storage.from(BUCKET).createSignedUrl(current.data.filePath, SIGNED_URL_SECONDS);
     if (signed.error || !signed.data) return { ok: false, reason: 'server' };
-    await WebBrowser.openBrowserAsync(signed.data.signedUrl);
-    return { ok: true, data: null };
+    return { ok: true, data: { url: signed.data.signedUrl } };
   } catch {
     return { ok: false, reason: 'network' };
   }

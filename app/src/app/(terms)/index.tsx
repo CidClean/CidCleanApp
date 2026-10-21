@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppButton } from '@/components/AppButton';
@@ -10,7 +11,6 @@ import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { openCurrentTermsPdf } from '@/lib/termsApi';
 import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
 /**
@@ -29,13 +29,7 @@ function AcceptTerms() {
   const [checked, setChecked] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
-  const [loadError, setLoadError] = useState(false);
-
-  async function readFull() {
-    setLoadError(false);
-    const result = await openCurrentTermsPdf();
-    if (!result.ok) setLoadError(true);
-  }
+  const router = useRouter();
 
   async function accept() {
     if (!checked || saving) return;
@@ -72,16 +66,11 @@ function AcceptTerms() {
             <AppText>{text}</AppText>
           </View>
         ))}
-        <Pressable accessibilityRole="link" onPress={() => void readFull()}>
+        <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/viewer', params: { source: 'terms', title: strings.settings.termsRow } })}>
           <AppText size={sample.noteSize} color={colors.secondary} style={styles.link}>
             {strings.terms.readFull}
           </AppText>
         </Pressable>
-        {loadError ? (
-          <AppText size={sample.noteSize} color={status.error} style={{ marginBottom: 8 }}>
-            {strings.terms.errorLoad}
-          </AppText>
-        ) : null}
         <Checkbox label={strings.terms.checkbox} checked={checked} onChange={setChecked} />
         {error ? (
           <AppText size={sample.noteSize} color={status.error} style={{ marginBottom: 8 }}>

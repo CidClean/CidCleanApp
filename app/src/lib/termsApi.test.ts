@@ -1,7 +1,6 @@
 const mockRpc = jest.fn();
 const mockUpload = jest.fn();
 const mockCreateSignedUrl = jest.fn();
-const mockOpenBrowserAsync = jest.fn();
 const mockGetDocument = jest.fn();
 
 jest.mock('./supabase', () => ({
@@ -15,10 +14,9 @@ jest.mock('./supabase', () => ({
     },
   },
 }));
-jest.mock('expo-web-browser', () => ({ openBrowserAsync: (...a: unknown[]) => mockOpenBrowserAsync(...a) }));
 jest.mock('expo-document-picker', () => ({ getDocumentAsync: (...a: unknown[]) => mockGetDocument(...a) }));
 
-import { choosePdf, fetchCurrentTerms, openCurrentTermsPdf, publishTerms, termsPath } from './termsApi';
+import { choosePdf, fetchCurrentTerms, fetchTermsUrl, publishTerms, termsPath } from './termsApi';
 
 const row = { version: 2, published_at: '2026-10-05T15:00:00Z', file_path: 'staff/abc.pdf' };
 
@@ -26,7 +24,6 @@ beforeEach(() => {
   mockRpc.mockReset();
   mockUpload.mockReset();
   mockCreateSignedUrl.mockReset();
-  mockOpenBrowserAsync.mockReset();
   mockGetDocument.mockReset();
   (global as any).fetch = jest.fn().mockResolvedValue({ arrayBuffer: async () => new ArrayBuffer(4) });
 });
@@ -47,26 +44,23 @@ describe('versión vigente (get_current_terms)', () => {
   });
 });
 
-describe('leer los términos completos (D-176)', () => {
-  test('firma una URL de 60 s del PDF vigente en el bucket terms y la abre en el navegador', async () => {
+describe('leer los términos completos (D-176, D-196)', () => {
+  test('firma una URL de 60 s del PDF vigente en el bucket terms', async () => {
     mockRpc.mockResolvedValue({ data: [row], error: null });
     mockCreateSignedUrl.mockResolvedValue({ data: { signedUrl: 'https://x/terms-firmada' }, error: null });
-    expect(await openCurrentTermsPdf()).toEqual({ ok: true, data: null });
+    expect(await fetchTermsUrl()).toEqual({ ok: true, data: { url: 'https://x/terms-firmada' } });
     expect(mockCreateSignedUrl).toHaveBeenCalledWith('terms', 'staff/abc.pdf', 60);
-    expect(mockOpenBrowserAsync).toHaveBeenCalledWith('https://x/terms-firmada');
   });
-  test('sin versión publicada no abre nada', async () => {
+  test('sin versión publicada no devuelve nada', async () => {
     mockRpc.mockResolvedValue({ data: [], error: null });
-    expect(await openCurrentTermsPdf()).toEqual({ ok: false, reason: 'not_found' });
-    expect(mockOpenBrowserAsync).not.toHaveBeenCalled();
+    expect(await fetchTermsUrl()).toEqual({ ok: false, reason: 'not_found' });
   });
-  test('si no se puede firmar o no hay conexión no abre nada', async () => {
+  test('si no se puede firmar o no hay conexión no devuelve nada', async () => {
     mockRpc.mockResolvedValue({ data: [row], error: null });
     mockCreateSignedUrl.mockResolvedValue({ data: null, error: { message: 'x' } });
-    expect((await openCurrentTermsPdf()).ok).toBe(false);
+    expect((await fetchTermsUrl()).ok).toBe(false);
     mockCreateSignedUrl.mockRejectedValue(new Error('Network request failed'));
-    expect(await openCurrentTermsPdf()).toEqual({ ok: false, reason: 'network' });
-    expect(mockOpenBrowserAsync).not.toHaveBeenCalled();
+    expect(await fetchTermsUrl()).toEqual({ ok: false, reason: 'network' });
   });
 });
 
