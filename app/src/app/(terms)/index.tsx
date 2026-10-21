@@ -1,10 +1,10 @@
-import { IconCamera, IconCheck, IconFileText, IconMapPin } from '@tabler/icons-react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppButton } from '@/components/AppButton';
 import { AppText } from '@/components/AppText';
+import { Icon } from '@/components/Icon';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
 import { useSession } from '@/lib/session';
@@ -35,16 +35,16 @@ export default function TermsScreen() {
   }
 
   const points = [
-    { Icon: IconMapPin, text: strings.terms.location },
-    { Icon: IconCamera, text: strings.terms.photos },
-    { Icon: IconFileText, text: strings.terms.data },
+    { icon: 'map-pin' as const, text: strings.terms.location },
+    { icon: 'camera' as const, text: strings.terms.photos },
+    { icon: 'file-text' as const, text: strings.terms.data },
   ];
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={strings.terms.barTitle} />
       <ScrollView contentContainerStyle={{ padding: 12 }}>
-        {points.map(({ Icon, text }, i) => (
+        {points.map(({ icon, text }, i) => (
           <View
             key={text}
             style={[
@@ -52,7 +52,7 @@ export default function TermsScreen() {
               { borderBottomColor: colors.border, borderBottomWidth: i === points.length - 1 ? 0 : 0.5 },
             ]}
           >
-            <Icon size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
+            <Icon name={icon} size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
             <AppText>{text}</AppText>
           </View>
         ))}
@@ -73,7 +73,7 @@ export default function TermsScreen() {
               checked ? { backgroundColor: brand } : { borderWidth: 1, borderColor: colors.fieldBorder },
             ]}
           >
-            {checked ? <IconCheck size={13} strokeWidth={iconStrokeWidth} color="#FFFFFF" /> : null}
+            {checked ? <Icon name="check" size={13} strokeWidth={iconStrokeWidth} color="#FFFFFF" /> : null}
           </View>
           <AppText size={14}>{strings.terms.checkbox}</AppText>
         </Pressable>

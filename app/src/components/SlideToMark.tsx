@@ -1,4 +1,4 @@
-import { IconLogout } from '@tabler/icons-react-native';
+import { Icon } from './Icon';
 import { useRef, useState } from 'react';
 import { Animated, PanResponder, StyleSheet, View } from 'react-native';
 
@@ -44,7 +44,7 @@ export function SlideToMark({ label, onComplete }: { label: string; onComplete: 
         accessibilityLabel={label}
         style={[styles.knob, { backgroundColor: brand, transform: [{ translateX: x }] }]}
       >
-        <IconLogout size={18} strokeWidth={iconStrokeWidth} color="#FFFFFF" />
+        <Icon name="logout" size={18} strokeWidth={iconStrokeWidth} color="#FFFFFF" />
       </Animated.View>
       <AppText size={14} color={colors.secondary} center style={styles.label} pointerEvents="none">
         {label}

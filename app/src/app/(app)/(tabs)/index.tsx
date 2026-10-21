@@ -1,8 +1,8 @@
-import { IconCircleCheck } from '@tabler/icons-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/AppText';
+import { Icon } from '@/components/Icon';
 import { SlideToMark } from '@/components/SlideToMark';
 import { TodayCard } from '@/components/TodayCard';
 import { TopBar } from '@/components/TopBar';
@@ -51,7 +51,7 @@ function AdminHome() {
         ) : null}
         {/* TEMPORAL: la lista de pendientes por urgencia (D-111, D-131) se conecta cuando existan sus fuentes */}
         <View style={styles.empty}>
-          <IconCircleCheck size={24} strokeWidth={iconStrokeWidth} color={status.success} />
+          <Icon name="circle-check" size={24} strokeWidth={iconStrokeWidth} color={status.success} />
           <AppText weight="medium">{strings.home.caughtUp}</AppText>
           <AppText size={sample.noteSize} color={colors.secondary}>
             {strings.home.nothingToReview}

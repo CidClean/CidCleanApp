@@ -1,9 +1,9 @@
-import { IconChevronRight } from '@tabler/icons-react-native';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppButton } from '@/components/AppButton';
 import { AppText } from '@/components/AppText';
+import { Icon } from '@/components/Icon';
 import { ListRow } from '@/components/ListRow';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
@@ -92,7 +92,7 @@ export default function ProfileScreen() {
         ) : null}
         <Pressable accessibilityRole="button" onPress={() => setConfirming(true)} style={styles.signOutRow}>
           <AppText weight="medium">{strings.profile.signOut}</AppText>
-          <IconChevronRight size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
+          <Icon name="chevron-right" size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
         </Pressable>
       </ScrollView>
     </View>

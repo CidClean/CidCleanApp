@@ -1,7 +1,7 @@
-import { IconChevronRight } from '@tabler/icons-react-native';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from './AppText';
+import { Icon } from './Icon';
 import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
 type Props = {
@@ -27,7 +27,7 @@ export function ListRow({ title, detail, chevron = false, last = false, onPress 
           </AppText>
         ) : null}
       </View>
-      {chevron ? <IconChevronRight size={18} strokeWidth={iconStrokeWidth} color={colors.text} /> : null}
+      {chevron ? <Icon name="chevron-right" size={18} strokeWidth={iconStrokeWidth} color={colors.text} /> : null}
     </>
   );
   const style = [styles.row, { borderBottomColor: colors.border, borderBottomWidth: last ? 0 : 0.5 }];

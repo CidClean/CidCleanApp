@@ -1,25 +1,20 @@
-import {
-  IconBuilding,
-  IconHome,
-  IconLayoutKanban,
-  IconMenu2,
-} from '@tabler/icons-react-native';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Icon, type IconName } from '@/components/Icon';
 import { useStrings } from '@/i18n/useStrings';
 import { usePermissions } from '@/lib/session';
 import { visibleTabs, type TabKey } from '@/lib/visibility';
 import { iconStrokeWidth, useTheme } from '@/theme';
 
 /** Iconos de la barra inferior (D-135, Tabler, trazo 1.5px). */
-const ICONS = {
-  pipeline: IconLayoutKanban, // layout-kanban
-  accounts: IconBuilding, // building
-  home: IconHome, // home
-  menu: IconMenu2, // menu-2
-} as const;
+const ICONS: Record<TabKey, IconName> = {
+  pipeline: 'layout-kanban',
+  accounts: 'building',
+  home: 'home',
+  menu: 'menu-2',
+};
 
 /** Nombre de cada ruta de la barra: coincide con TabKey. */
 const ROUTE_TO_TAB: Record<string, TabKey> = {
@@ -52,8 +47,7 @@ export function BottomBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
         if (index < 0) return null;
         const route = state.routes[index];
         const focused = state.index === index;
-        const Icon = ICONS[tab];
-        return (
+                return (
           <Pressable
             key={route.key}
             accessibilityRole="button"
@@ -65,7 +59,7 @@ export function BottomBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
             }}
             style={styles.item}
           >
-            <Icon size={24} strokeWidth={iconStrokeWidth} color={focused ? brand : colors.secondary} />
+            <Icon name={ICONS[tab]} size={24} strokeWidth={iconStrokeWidth} color={focused ? brand : colors.secondary} />
           </Pressable>
         );
       })}

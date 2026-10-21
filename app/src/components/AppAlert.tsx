@@ -1,4 +1,4 @@
-import { IconAlertTriangle } from '@tabler/icons-react-native';
+import { Icon } from './Icon';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from './AppText';
@@ -12,7 +12,7 @@ export function AppAlert({ text }: { text: string }) {
       accessibilityRole="alert"
       style={[styles.box, { borderColor: status.warning, backgroundColor: colors.background }]}
     >
-      <IconAlertTriangle size={sample.alertIconSize} strokeWidth={iconStrokeWidth} color={status.warning} />
+      <Icon name="alert-triangle" size={sample.alertIconSize} strokeWidth={iconStrokeWidth} color={status.warning} />
       <AppText size={sample.noteSize} style={styles.text}>
         {text}
       </AppText>
