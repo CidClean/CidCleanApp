@@ -77,7 +77,7 @@ export default function HistoryScreen() {
           ) : undefined
         }
         renderItem={({ item, index }) => {
-          const detail = historyDetail(strings, item);
+          const detail = historyDetail(strings, item, locale);
           return (
             <View
               style={[

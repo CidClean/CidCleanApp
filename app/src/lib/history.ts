@@ -16,7 +16,15 @@ export type HistoryEntry = {
   /** Quién lo hizo, o null (el sistema). */
   actor: string | null;
   /** Solo lo que sirve para el título: nunca montos ni archivos. */
-  info: { permiso?: string; kind?: string; version?: number | string; antes?: ProfileState; despues?: ProfileState };
+  info: {
+    permiso?: string;
+    kind?: string;
+    version?: number | string;
+    label_es?: string;
+    label_en?: string;
+    antes?: ProfileState;
+    despues?: ProfileState;
+  };
 };
 
 function permissionName(strings: Strings, key: string | undefined): string {
@@ -91,16 +99,34 @@ export function historyTitle(strings: Strings, e: HistoryEntry): string {
       return h.walkthroughRescheduled;
     case 'walkthrough_estado_cambiado':
       return h.walkthroughStatusChanged;
+    case 'sitio_editado':
+      return h.siteEdited;
+    case 'sitio_eliminado':
+      return h.siteDeleted;
+    case 'motivo_creado':
+      return h.reasonCreated;
+    case 'motivo_editado':
+      return h.reasonEdited;
+    case 'motivo_desactivado':
+      return h.reasonDeactivated;
+    case 'motivo_eliminado':
+      return h.reasonDeleted;
     default:
       return h.unknown;
   }
 }
 
-/** Detalle gris: "{a quién o qué} · por {quién}". Términos aceptados: solo quién (muestra ronda 17). */
-export function historyDetail(strings: Strings, e: HistoryEntry): string {
+/**
+ * Detalle gris: "{a quién o qué} · por {quién}". Términos aceptados: solo quién (muestra ronda 17).
+ * Motivos de lead perdido: la etiqueta en el idioma de la app (D-203).
+ */
+export function historyDetail(strings: Strings, e: HistoryEntry, locale: Locale = 'es'): string {
   const h = strings.history;
   if (e.action === 'terminos_aceptados') return e.actor ?? '';
   let subject = e.subject;
+  if (subject === null && (e.info.label_es || e.info.label_en)) {
+    subject = (locale === 'en' ? e.info.label_en : e.info.label_es) ?? e.info.label_es ?? e.info.label_en ?? null;
+  }
   if (e.action === 'terminos_publicados' || e.action === 'terminos_aceptados') {
     const kinds = h.termsKinds as Record<string, string>;
     subject = subject ? (kinds[subject] ?? subject) : null;

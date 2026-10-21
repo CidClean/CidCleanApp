@@ -243,6 +243,12 @@ export const es = {
     walkthroughScheduled: 'Walkthrough agendado', // SIN APROBAR
     walkthroughRescheduled: 'Walkthrough reagendado', // SIN APROBAR
     walkthroughStatusChanged: 'Estado del walkthrough cambiado', // SIN APROBAR
+    siteEdited: 'Sitio editado', // Delegada por el dueño (D-200; orden 13, patrón de D-198)
+    siteDeleted: 'Sitio eliminado', // Delegada por el dueño (D-200; orden 13)
+    reasonCreated: 'Motivo creado', // Delegada por el dueño (D-200; orden 13)
+    reasonEdited: 'Motivo editado', // Delegada por el dueño (D-200; orden 13)
+    reasonDeactivated: 'Motivo desactivado', // Delegada por el dueño (D-200; orden 13)
+    reasonDeleted: 'Motivo eliminado', // Delegada por el dueño (D-200; orden 13)
     unknown: 'Cambio registrado', // SIN APROBAR: acción que la app aún no conoce
     empty: 'Todavía no hay cambios.', // SIN APROBAR
     errorLoad: 'No se pudo cargar el historial. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
@@ -258,7 +264,6 @@ export const es = {
     noCandidates: 'Nadie más puede recibir el rol todavía: tiene que estar activo y haber entrado a la app.', // SIN APROBAR
     errorLoad: 'No se pudo cargar la lista. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
     errorTransfer: 'No se pudo transferir el rol. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
-    errorNoType: 'Antes de transferir, tu perfil necesita un tipo de trabajador (W-2 o 1099).', // SIN APROBAR (pendiente de decisión)
   },
 
   // Salir de la pestaña Permisos con cambios sin guardar (decisión del arquitecto bajo D-200, orden 12).

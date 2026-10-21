@@ -74,7 +74,9 @@ begin
     (sa, 'documento_abierto', 'profile_documents', doc, jsonb_build_object('profile_id', obj, 'kind', 'w9')),
     (sa, 'terminos_publicados', 'terms_documents', gen_random_uuid(), jsonb_build_object('kind', 'staff', 'version', 2, 'file_path', 'staff/secreto.pdf')),
     (obj, 'terminos_aceptados', 'terms_documents', gen_random_uuid(), jsonb_build_object('kind', 'staff', 'version', 2)),
-    (sa, 'lead_creado', 'leads', gen_random_uuid(), jsonb_build_object('company_name', 'Oficinas Naples', 'monto', 1234)),
+    (sa, 'lead_creado', 'leads', gen_random_uuid(), jsonb_build_object('company', 'Oficinas Naples', 'monto', 1234)),
+    (sa, 'motivo_creado', 'lost_reasons', gen_random_uuid(), jsonb_build_object('label_es', 'Precio', 'label_en', 'Price')),
+    (sa, 'sitio_eliminado', 'lead_sites', gen_random_uuid(), jsonb_build_object('company', 'Oficinas Naples', 'name', 'Sede norte', 'address', 'Calle 1')),
     (sa, 'accion_rara', 'tabla_que_no_existe', gen_random_uuid(), jsonb_build_object('tarifa', 99, 'file_path', 'x/y.pdf'));
   select max(id) into ultimo from change_log;
 
@@ -88,13 +90,17 @@ begin
   perform pg_temp.prueba('el tamaño de página tiene tope de 100', 'ok',
     case when pg_temp.valor('hist', 'select count(*) from list_change_log(null, 1000)')::int <= 100 then 'ok' else 'pasó' end);
   perform pg_temp.prueba('documento abierto: a quién (el empleado) y por quién', 'Prueba candidato|' || (select full_name from profiles where id = sa) || '|w9',
-    pg_temp.valor('hist', format('select subject || ''|'' || actor || ''|'' || (info->>''kind'') from list_change_log(null, 100) where action = ''documento_abierto'' and id > %s', ultimo - 5)));
+    pg_temp.valor('hist', format('select subject || ''|'' || actor || ''|'' || (info->>''kind'') from list_change_log(null, 100) where action = ''documento_abierto'' and id > %s', ultimo - 8)));
   perform pg_temp.prueba('términos publicados: tipo y versión, sin la ruta del archivo', 'staff|2|false',
-    pg_temp.valor('hist', format('select subject || ''|'' || (info->>''version'') || ''|'' || (info ? ''file_path'')::text from list_change_log(null, 100) where action = ''terminos_publicados'' and id > %s', ultimo - 5)));
-  perform pg_temp.prueba('lead (tabla aún inexistente): el nombre sale del detalle y el monto no', 'Oficinas Naples|{}',
-    pg_temp.valor('hist', format('select subject || ''|'' || info::text from list_change_log(null, 100) where action = ''lead_creado'' and id > %s', ultimo - 5)));
+    pg_temp.valor('hist', format('select subject || ''|'' || (info->>''version'') || ''|'' || (info ? ''file_path'')::text from list_change_log(null, 100) where action = ''terminos_publicados'' and id > %s', ultimo - 8)));
+  perform pg_temp.prueba('lead (fila ya borrada): la empresa sale del detalle y el monto no', 'Oficinas Naples|{}',
+    pg_temp.valor('hist', format('select subject || ''|'' || info::text from list_change_log(null, 100) where action = ''lead_creado'' and id > %s', ultimo - 8)));
+  perform pg_temp.prueba('motivo: sin sujeto y con sus etiquetas en los dos idiomas', 'null|Precio|Price',
+    pg_temp.valor('hist', format('select coalesce(subject, ''null'') || ''|'' || (info->>''label_es'') || ''|'' || (info->>''label_en'') from list_change_log(null, 100) where action = ''motivo_creado'' and id > %s', ultimo - 8)));
+  perform pg_temp.prueba('sitio eliminado: por su nombre y sin la dirección', 'Sede norte|false',
+    pg_temp.valor('hist', format('select subject || ''|'' || (info::text like ''%%Calle%%'')::text from list_change_log(null, 100) where action = ''sitio_eliminado'' and id > %s', ultimo - 8)));
   perform pg_temp.prueba('acción desconocida: no falla, sin sujeto y sin datos sensibles', 'null|{}',
-    pg_temp.valor('hist', format('select coalesce(subject, ''null'') || ''|'' || info::text from list_change_log(null, 100) where action = ''accion_rara'' and id > %s', ultimo - 5)));
+    pg_temp.valor('hist', format('select coalesce(subject, ''null'') || ''|'' || info::text from list_change_log(null, 100) where action = ''accion_rara'' and id > %s', ultimo - 8)));
   perform pg_temp.prueba('ningún detalle devuelve rutas de archivos ni montos', '0',
     pg_temp.valor('hist', 'select count(*) from list_change_log(null, 100) where info ?| array[''file_path'', ''monto'', ''tarifa'', ''amount'', ''rate'', ''body'']'));
   perform pg_temp.prueba('las funciones internas no se pueden llamar desde la API (42501)', 'ERR:42501',
@@ -131,20 +137,21 @@ begin
   perform pg_temp.prueba('a un perfil que no existe (P0002)', 'ERR:P0002',
     pg_temp.valor('super', format('select transfer_super_admin(%L)', gen_random_uuid())));
 
-  -- El Super Admin real no tiene tipo de trabajador: hoy no puede dejar de ser Super Admin (regla de profiles).
-  if (select worker_type from profiles where id = sa) is null then
-    perform pg_temp.prueba('quien transfiere sin tipo de trabajador: rechazado (23514)', 'ERR:23514',
-      pg_temp.valor('super', format('select transfer_super_admin(%L)', cand)));
-  end if;
+  -- D-206: sin tipo de trabajador, transferir exige elegirlo (el Super Admin real no lo tiene).
+  update profiles set worker_type = null where id = sa; -- solo dentro de esta transacción
+  perform pg_temp.prueba('quien transfiere sin tipo y sin elegirlo: rechazado (23514)', 'ERR:23514',
+    pg_temp.valor('super', format('select transfer_super_admin(%L)', cand)));
+  perform pg_temp.prueba('pasar un tipo que no existe: rechazado (22P02)', 'ERR:22P02',
+    pg_temp.valor('super', format('select transfer_super_admin(%L, ''contratista'')', cand)));
   perform pg_temp.prueba('atomicidad: tras los rechazos nada cambió', 'true|false|0|0',
     (select (select is_super_admin from profiles where id = sa)::text || '|' || (select is_super_admin from profiles where id = cand)::text
        || '|' || (select count(*) from profile_permissions where profile_id = sa)::text
        || '|' || (select count(*) from change_log where action = 'super_admin_transferido')::text));
 
-  update profiles set worker_type = 'w2' where id = sa; -- solo dentro de esta transacción
   select max(id) into antes from change_log;
-  perform pg_temp.prueba('el Super Admin transfiere a un candidato válido', 'ok',
-    case when pg_temp.valor('super', format('select transfer_super_admin(%L)', cand)) like 'ERR%' then 'fallo' else 'ok' end);
+  perform pg_temp.prueba('el Super Admin sin tipo transfiere eligiendo 1099 (D-206)', 'ok',
+    case when pg_temp.valor('super', format('select transfer_super_admin(%L, ''1099'')', cand)) like 'ERR%' then 'fallo' else 'ok' end);
+  perform pg_temp.prueba('el tipo elegido quedó guardado en la misma transacción', '1099', (select worker_type::text from profiles where id = sa));
   perform pg_temp.prueba('el nuevo es Super Admin', 'true', (select is_super_admin::text from profiles where id = cand));
   perform pg_temp.prueba('el anterior ya no es Super Admin y su rol es Admin', 'false|admin', (select is_super_admin::text || '|' || role from profiles where id = sa));
   perform pg_temp.prueba('el anterior queda con los 36 permisos delegables', '36', (select count(*)::text from profile_permissions where profile_id = sa));
@@ -158,8 +165,9 @@ begin
   perform pg_temp.prueba('el anterior conserva Gestionar permisos (has_permission)', 'true',
     pg_temp.valor('super', 'select has_permission(''empleados_gestionar_permisos'')'));
   perform pg_temp.prueba('el anterior ya no es Super Admin para la base (is_super_admin)', 'false', pg_temp.valor('super', 'select is_super_admin()'));
-  perform pg_temp.prueba('el nuevo sí puede transferir de vuelta', 'ok',
-    case when pg_temp.valor('candidato', format('select transfer_super_admin(%L)', sa)) like 'ERR%' then 'fallo' else 'ok' end);
+  perform pg_temp.prueba('el nuevo sí puede transferir de vuelta (con tipo propio, el tipo enviado se ignora)', 'ok',
+    case when pg_temp.valor('candidato', format('select transfer_super_admin(%L, ''1099'')', sa)) like 'ERR%' then 'fallo' else 'ok' end);
+  perform pg_temp.prueba('quien ya tenía tipo lo conserva', 'w2', (select worker_type::text from profiles where id = cand));
   perform pg_temp.prueba('de vuelta: un solo Super Admin y es el original', 'true|1', (select is_super_admin::text from profiles where id = sa) || '|' || (select count(*)::text from profiles where is_super_admin));
 end $$;
 

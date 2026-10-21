@@ -23,7 +23,8 @@ describe('títulos (D-198)', () => {
       'perfil_creado', 'perfil_cambiado', 'invitacion_enviada', 'invitacion_reenviada', 'invitacion_fallida', 'permiso_dado',
       'permiso_quitado', 'documento_subido', 'documento_reemplazado', 'documento_abierto', 'terminos_publicados',
       'terminos_aceptados', 'super_admin_transferido', 'lead_creado', 'lead_estado_cambiado', 'lead_eliminado',
-      'walkthrough_agendado', 'walkthrough_reagendado', 'walkthrough_estado_cambiado',
+      'walkthrough_agendado', 'walkthrough_reagendado', 'walkthrough_estado_cambiado', 'sitio_editado', 'sitio_eliminado',
+      'motivo_creado', 'motivo_editado', 'motivo_desactivado', 'motivo_eliminado',
     ];
     for (const action of actions) {
       expect(historyTitle(es, e({ action }))).not.toBe(es.history.unknown);
@@ -49,6 +50,22 @@ describe('títulos (D-198)', () => {
   test('permiso desconocido o documento sin tipo no rompen el título', () => {
     expect(historyTitle(es, e({ action: 'permiso_quitado', info: { permiso: 'inventado' } }))).toBe('Permiso quitado: inventado');
     expect(historyTitle(es, e({ action: 'documento_subido', info: {} }))).toBe('Documento subido: ');
+  });
+});
+
+describe('sitios y motivos (orden 13)', () => {
+  test('títulos con el patrón de D-198', () => {
+    expect(historyTitle(es, e({ action: 'sitio_editado' }))).toBe('Sitio editado');
+    expect(historyTitle(es, e({ action: 'sitio_eliminado' }))).toBe('Sitio eliminado');
+    expect(historyTitle(es, e({ action: 'motivo_creado' }))).toBe('Motivo creado');
+    expect(historyTitle(es, e({ action: 'motivo_editado' }))).toBe('Motivo editado');
+    expect(historyTitle(es, e({ action: 'motivo_desactivado' }))).toBe('Motivo desactivado');
+    expect(historyTitle(es, e({ action: 'motivo_eliminado' }))).toBe('Motivo eliminado');
+  });
+  test('el motivo se nombra en el idioma de la app', () => {
+    const m = e({ action: 'motivo_creado', subject: null, info: { label_es: 'Precio', label_en: 'Price' } });
+    expect(historyDetail(es, m, 'es')).toBe('Precio · por Cid Clean');
+    expect(historyDetail(en, m, 'en')).toBe('Price · by Cid Clean');
   });
 });
 

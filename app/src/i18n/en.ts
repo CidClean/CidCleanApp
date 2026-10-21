@@ -243,6 +243,12 @@ export const en: Strings = {
     walkthroughScheduled: 'Walkthrough scheduled',
     walkthroughRescheduled: 'Walkthrough rescheduled',
     walkthroughStatusChanged: 'Walkthrough status changed',
+    siteEdited: 'Site edited',
+    siteDeleted: 'Site deleted',
+    reasonCreated: 'Lost reason created', // lost-lead reason (Settings)
+    reasonEdited: 'Lost reason edited',
+    reasonDeactivated: 'Lost reason deactivated',
+    reasonDeleted: 'Lost reason deleted',
     unknown: 'Change recorded', // an action the app does not know yet
     empty: 'No changes yet.',
     errorLoad: "Couldn't load the history. Try again.",
@@ -258,7 +264,6 @@ export const en: Strings = {
     noCandidates: 'No one else can receive the role yet: they must be active and have signed in to the app.',
     errorLoad: "Couldn't load the list. Try again.",
     errorTransfer: "Couldn't transfer the role. Try again.",
-    errorNoType: 'Before transferring, your profile needs a worker type (W-2 or 1099).',
   },
 
   // Leaving the Permissions tab with unsaved changes.

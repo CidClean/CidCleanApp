@@ -26,7 +26,9 @@ const mockFetchPage = jest.fn();
 jest.mock('@/lib/historyApi', () => ({ fetchHistoryPage: (...a: unknown[]) => mockFetchPage(...a) }));
 const mockCandidates = jest.fn();
 const mockTransfer = jest.fn();
+const mockOwnType = jest.fn();
 jest.mock('@/lib/transferApi', () => ({
+  fetchOwnWorkerType: (...a: unknown[]) => mockOwnType(...a),
   fetchSuperAdminCandidates: (...a: unknown[]) => mockCandidates(...a),
   transferSuperAdmin: (...a: unknown[]) => mockTransfer(...a),
 }));
@@ -44,6 +46,7 @@ beforeEach(() => {
   mockAccess = { isSuperAdmin: true, permissions: new Set() };
   mockCandidates.mockResolvedValue({ ok: true, data: [{ id: 'c1', fullName: 'Carla M.' }, { id: 'c2', fullName: 'Laura Gil' }] });
   mockTransfer.mockResolvedValue({ ok: true, data: null });
+  mockOwnType.mockResolvedValue({ ok: true, data: 'w2' });
   mockRefresh.mockResolvedValue(undefined);
 });
 
@@ -103,9 +106,33 @@ describe('Transferir Super Admin (D-090, D-116, D-199)', () => {
     await fireEvent.press(screen.getByText(es.transfer.understand));
     expect(button().props.accessibilityState.disabled).toBe(false);
     await fireEvent.press(button());
-    await waitFor(() => expect(mockTransfer).toHaveBeenCalledWith('c1'));
+    await waitFor(() => expect(mockTransfer).toHaveBeenCalledWith('c1', null));
     expect(mockRefresh).toHaveBeenCalled();
     expect(mockReplace).toHaveBeenCalledWith('/');
+  });
+
+  test('con tipo de trabajador propio no aparece el control W-2 / 1099', async () => {
+    await render(<TransferScreen />);
+    await waitFor(() => expect(mockOwnType).toHaveBeenCalledWith('yo'));
+    expect(screen.queryByText(es.newEmployee.type)).toBeNull();
+  });
+
+  test('sin tipo de trabajador (D-206): control W-2 / 1099 sin elegir arriba del selector; el botón espera a que lo elija y se envía', async () => {
+    mockOwnType.mockResolvedValue({ ok: true, data: null });
+    await render(<TransferScreen />);
+    expect(await screen.findByText(es.newEmployee.type)).toBeTruthy();
+    const w2 = screen.getByText(es.employees.w2);
+    expect(screen.getByText(es.employees.contractor)).toBeTruthy();
+    void w2;
+    const button = () => screen.getByRole('button', { name: es.transfer.submit });
+    await fireEvent.press(screen.getByLabelText(es.transfer.newSuperAdmin));
+    await fireEvent.press(await screen.findByText('Carla M.'));
+    await fireEvent.press(screen.getByText(es.transfer.understand));
+    expect(button().props.accessibilityState.disabled).toBe(true);
+    await fireEvent.press(screen.getByText(es.employees.contractor));
+    expect(button().props.accessibilityState.disabled).toBe(false);
+    await fireEvent.press(button());
+    await waitFor(() => expect(mockTransfer).toHaveBeenCalledWith('c1', '1099'));
   });
 
   test('sin candidatos lo explica y no deja transferir', async () => {
@@ -116,7 +143,7 @@ describe('Transferir Super Admin (D-090, D-116, D-199)', () => {
     expect(screen.getByRole('button', { name: es.transfer.submit }).props.accessibilityState.disabled).toBe(true);
   });
 
-  test('si falla lo avisa y no recarga; sin tipo de trabajador, su aviso', async () => {
+  test('si falla lo avisa y no recarga', async () => {
     mockTransfer.mockResolvedValue({ ok: false, reason: 'server' });
     await render(<TransferScreen />);
     await fireEvent.press(screen.getByLabelText(es.transfer.newSuperAdmin));
@@ -125,9 +152,6 @@ describe('Transferir Super Admin (D-090, D-116, D-199)', () => {
     await fireEvent.press(screen.getByRole('button', { name: es.transfer.submit }));
     expect(await screen.findByText(es.transfer.errorTransfer)).toBeTruthy();
     expect(mockRefresh).not.toHaveBeenCalled();
-    mockTransfer.mockResolvedValue({ ok: false, reason: 'no_worker_type' });
-    await fireEvent.press(screen.getByRole('button', { name: es.transfer.submit }));
-    expect(await screen.findByText(es.transfer.errorNoType)).toBeTruthy();
   });
 
   test('solo el Super Admin', async () => {

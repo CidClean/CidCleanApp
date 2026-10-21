@@ -1,4 +1,5 @@
-import type { ApiFailure, ApiResult } from './employeesApi';
+import type { ApiResult } from './employeesApi';
+import type { WorkerType } from './employeeRules';
 import { failureFromCode } from './employeesApi';
 import { supabase } from './supabase';
 
@@ -16,14 +17,23 @@ export async function fetchSuperAdminCandidates(): Promise<ApiResult<Candidate[]
 }
 
 /** Transfiere el rol de Super Admin (D-090, D-116, D-199). */
-export async function transferSuperAdmin(
-  profileId: string,
-): Promise<{ ok: true; data: null } | { ok: false; reason: ApiFailure | 'no_worker_type' }> {
+export async function transferSuperAdmin(profileId: string, workerType: WorkerType | null): Promise<ApiResult<null>> {
   try {
-    const { error } = await supabase.rpc('transfer_super_admin', { p_new: profileId });
-    // 23514: quien transfiere no tiene tipo de trabajador y la base no deja un perfil sin tipo fuera del Super Admin.
-    if (error) return { ok: false, reason: error.code === '23514' ? 'no_worker_type' : failureFromCode(error.code) };
+    // D-206: si quien transfiere no tiene tipo de trabajador, el elegido se guarda en la misma transacción.
+    const { error } = await supabase.rpc('transfer_super_admin', { p_new: profileId, p_worker_type: workerType });
+    if (error) return { ok: false, reason: failureFromCode(error.code) };
     return { ok: true, data: null };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/** Tipo de trabajador del propio perfil: el Super Admin puede no tenerlo y debe elegirlo al transferir (D-206). */
+export async function fetchOwnWorkerType(profileId: string): Promise<ApiResult<WorkerType | null>> {
+  try {
+    const { data, error } = await supabase.from('profiles').select('worker_type').eq('id', profileId).maybeSingle();
+    if (error || !data) return { ok: false, reason: 'server' };
+    return { ok: true, data: (data as { worker_type: WorkerType | null }).worker_type };
   } catch {
     return { ok: false, reason: 'network' };
   }
