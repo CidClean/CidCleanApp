@@ -108,10 +108,15 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Staff: posición de la pantalla del correo | Bloque pegado arriba; "centrado" es en horizontal | D-154 | [`entrada-ajustes-2026-10-21.md`](../surveys/entrada-ajustes-2026-10-21.md) |
 | Staff: teclado del código | Teclado del teléfono (numérico, con autocompletar del código del correo); las 6 casillas de 48px arriba; Reenviar solo como botón de texto "Reenviar código" | D-163 | [`entrada-teclado-2026-10-21.md`](../surveys/entrada-teclado-2026-10-21.md) |
 | Staff: mensajes de error de la entrada | Cinco textos aprobados, listados en D-156 | D-156 | ajustes 2026-10-21 |
+| Inicio del admin sin pendientes | Cifras del mes y debajo icono de verificación con "Todo al día" y "No hay pendientes por revisar" | D-164 | [`ronda-14-inicio-y-perfil.md`](../surveys/ronda-14-inicio-y-perfil.md) |
+| Inicio del staff | Visita de hoy en grande arriba, "Desliza para marcar entrada" y la tira de la semana debajo; barra con Inicio y Menú | D-165 | ronda 14 |
+| Mi perfil | Lista de filas: Nombre, Correo, Idioma (con flecha, abre el control de D-087) y Cerrar sesión | D-166 | ronda 14 |
+| Cerrar sesión | Confirmación "¿Cerrar sesión?" con Cancelar y Cerrar sesión sólido | D-167 | ronda 14 |
 
 Copia visual de lo aprobado, la más reciente primero:
 
 - Pantallas deducidas (2026-10-21): [`../surveys/deducido-2026-10-21.html`](../surveys/deducido-2026-10-21.html). Barra inferior, Menú, Cuentas, inicio del staff y categorías. No las eligió el dueño: las dedujo Claude por delegación.
+- Ronda 14: [`../surveys/ronda-14-inicio-y-perfil-aprobado.html`](../surveys/ronda-14-inicio-y-perfil-aprobado.html). Muestra el Inicio del admin sin pendientes, el Inicio del staff, Mi perfil y la confirmación de Cerrar sesión. Sus datos son de ejemplo.
 - Teclado del teléfono (2026-10-21): [`../surveys/entrada-teclado-aprobado.html`](../surveys/entrada-teclado-aprobado.html). Muestra la pantalla del código del staff con el teclado del teléfono. Reemplaza en ese punto a la muestra de los ajustes de la entrada (D-155). Sus datos son de ejemplo.
 - Ajustes de la entrada (2026-10-21): [`../surveys/ronda-13-ajustes-aprobado.html`](../surveys/ronda-13-ajustes-aprobado.html). Muestra la sesión terminada sin barra y el código del staff con el teclado ajustado. Sus datos son de ejemplo. Reemplaza en esos dos puntos a la muestra de la ronda 13.
 - Ronda 13: [`../surveys/ronda-13-pantalla-entrada-aprobado.html`](../surveys/ronda-13-pantalla-entrada-aprobado.html). Muestra las 3 pantallas de la entrada del staff con los valores de las rondas 1 a 13. Sus datos son de ejemplo.
