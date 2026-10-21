@@ -59,7 +59,9 @@ describe('Menú → Ajustes (D-107, D-114, D-187)', () => {
     expect(screen.getByLabelText(es.common.back)).toBeTruthy();
     expect(screen.getByText(es.settings.termsRow)).toBeTruthy();
     await waitFor(() => expect(screen.getByText('v2')).toBeTruthy());
-    expect(screen.getAllByRole('button').filter((b) => b.props.accessibilityLabel !== es.common.back)).toHaveLength(1);
+    // Hito 2b (D-203): la segunda fila es "Motivos de lead perdido".
+    expect(screen.getAllByRole('button').filter((b) => b.props.accessibilityLabel !== es.common.back)).toHaveLength(2);
+    expect(screen.getByText('Motivos de lead perdido')).toBeTruthy();
   });
 
   test('sin versión publicada el valor es "Sin publicar"', async () => {

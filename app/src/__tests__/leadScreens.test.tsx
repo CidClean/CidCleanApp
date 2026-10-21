@@ -48,6 +48,12 @@ const mockSchedule = jest.fn();
 const mockDays = jest.fn();
 const mockPending = jest.fn();
 const mockAddSite = jest.fn();
+const mockDeleteLead = jest.fn();
+const mockDeleteSite = jest.fn();
+const mockUpdateSite = jest.fn();
+const mockCreateReason = jest.fn();
+const mockUpdateReason = jest.fn();
+const mockRemoveReason = jest.fn();
 jest.mock('@/lib/leadsApi', () => ({
   fetchLeads: (...a: unknown[]) => mockFetchLeads(...a),
   fetchLead: (...a: unknown[]) => mockFetchLead(...a),
@@ -60,6 +66,12 @@ jest.mock('@/lib/leadsApi', () => ({
   scheduleWalkthrough: (...a: unknown[]) => mockSchedule(...a),
   fetchAppointmentDays: (...a: unknown[]) => mockDays(...a),
   fetchSalesPending: (...a: unknown[]) => mockPending(...a),
+  deleteLead: (...a: unknown[]) => mockDeleteLead(...a),
+  deleteSite: (...a: unknown[]) => mockDeleteSite(...a),
+  updateSite: (...a: unknown[]) => mockUpdateSite(...a),
+  createLostReason: (...a: unknown[]) => mockCreateReason(...a),
+  updateLostReason: (...a: unknown[]) => mockUpdateReason(...a),
+  removeLostReason: (...a: unknown[]) => mockRemoveReason(...a),
 }));
 
 import HomeScreen from '@/app/(app)/(tabs)/index';
@@ -69,6 +81,8 @@ import MarkLostScreen from '@/app/(app)/leads/[id]/lost';
 import NewSiteScreen from '@/app/(app)/leads/[id]/new-site';
 import ScheduleWalkthroughScreen from '@/app/(app)/leads/[id]/schedule';
 import NewLeadScreen from '@/app/(app)/leads/new';
+import LostReasonFormScreen from '@/app/(app)/settings/lost-reasons/edit';
+import LostReasonsScreen from '@/app/(app)/settings/lost-reasons/index';
 import type { Lead } from '@/lib/leadRules';
 
 const lead: Lead = {
@@ -91,8 +105,9 @@ const lead: Lead = {
 };
 
 const reasons = [
-  { id: 'r1', labelEs: 'Precio', labelEn: 'Price', sort: 1 },
-  { id: 'r2', labelEs: 'Otro', labelEn: 'Other', sort: 8 },
+  { id: 'r1', labelEs: 'Precio', labelEn: 'Price', sort: 1, active: true },
+  { id: 'r2', labelEs: 'Otro', labelEn: 'Other', sort: 8, active: true },
+  { id: 'r3', labelEs: 'Viejo', labelEn: 'Old', sort: 9, active: false },
 ];
 
 beforeEach(() => {
@@ -313,5 +328,129 @@ describe('Inicio del admin: pendientes de Ventas (D-111)', () => {
     await render(<HomeScreen />);
     expect(mockPending).not.toHaveBeenCalled();
     expect(screen.getByText('Todo al día')).toBeTruthy();
+  });
+});
+
+describe('Eliminar lead (D-201)', () => {
+  it('solo con leads_eliminar; la hoja confirma y vuelve al Pipeline', async () => {
+    mockDeleteLead.mockResolvedValue({ ok: true, data: null });
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['leads_ver', 'leads_eliminar']) };
+    await render(<LeadDetailScreen />);
+    await screen.findByText('Gulf Coast Dental');
+    await fireEvent.press(screen.getByText('Eliminar lead'));
+    expect(screen.getByText('¿Eliminar Gulf Coast Dental?')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Eliminar'));
+    await waitFor(() => expect(mockDeleteLead).toHaveBeenCalledWith('l1'));
+    expect(mockNavigate).toHaveBeenCalledWith('/pipeline');
+  });
+
+  it('sin leads_eliminar no aparece', async () => {
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['leads_ver', 'leads_editar']) };
+    await render(<LeadDetailScreen />);
+    await screen.findByText('Gulf Coast Dental');
+    expect(screen.queryByText('Eliminar lead')).toBeNull();
+  });
+});
+
+describe('Sitios: lápiz y papelera (D-202)', () => {
+  it('el lápiz abre el formulario del sitio', async () => {
+    await render(<LeadDetailScreen />);
+    await screen.findByText('Gulf Coast Dental');
+    await fireEvent.press(screen.getByText('Sitios'));
+    await fireEvent.press(screen.getByLabelText('Editar 5th Ave S'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/leads/[id]/new-site', params: { id: 'l1', site: 's1' } });
+  });
+
+  it('la papelera pide confirmación y avisa si el sitio tiene walkthrough hecho', async () => {
+    mockDeleteSite.mockResolvedValue({ ok: false, reason: 'invalid' });
+    await render(<LeadDetailScreen />);
+    await screen.findByText('Gulf Coast Dental');
+    await fireEvent.press(screen.getByText('Sitios'));
+    await fireEvent.press(screen.getByLabelText('Eliminar 5th Ave S'));
+    expect(screen.getByText('¿Eliminar 5th Ave S?')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Eliminar'));
+    await waitFor(() => expect(mockDeleteSite).toHaveBeenCalledWith('s1'));
+    expect(await screen.findByText('Este sitio ya tiene un walkthrough hecho y no se puede eliminar.')).toBeTruthy();
+  });
+
+  it('quien solo ve no tiene lápiz ni papelera', async () => {
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['leads_ver']) };
+    await render(<LeadDetailScreen />);
+    await screen.findByText('Gulf Coast Dental');
+    await fireEvent.press(screen.getByText('Sitios'));
+    expect(screen.queryByLabelText('Editar 5th Ave S')).toBeNull();
+    expect(screen.queryByLabelText('Eliminar 5th Ave S')).toBeNull();
+  });
+
+  it('editar un sitio carga sus datos y guarda', async () => {
+    mockParams = { id: 'l1', site: 's1' };
+    mockUpdateSite.mockResolvedValue({ ok: true, data: null });
+    await render(<NewSiteScreen />);
+    expect(await screen.findByDisplayValue('123 5th Ave S, Naples')).toBeTruthy();
+    expect(screen.getByText('Editar sitio')).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText('Dirección'), '125 5th Ave S');
+    await fireEvent.press(screen.getByText('Guardar'));
+    await waitFor(() => expect(mockUpdateSite).toHaveBeenCalledWith('s1', '5th Ave S', '125 5th Ave S'));
+    expect(mockBack).toHaveBeenCalled();
+  });
+});
+
+describe('Marcar como perdido: solo motivos activos (D-203)', () => {
+  it('no ofrece los motivos desactivados', async () => {
+    await render(<MarkLostScreen />);
+    await screen.findByText('Precio');
+    await fireEvent.press(screen.getByLabelText('Motivo'));
+    expect(screen.getByText('Otro')).toBeTruthy();
+    expect(screen.queryByText('Viejo')).toBeNull();
+  });
+});
+
+describe('Ajustes: motivos de lead perdido (D-113, D-203)', () => {
+  it('solo el Super Admin', async () => {
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['leads_ver', 'leads_editar']) };
+    await render(<LostReasonsScreen />);
+    expect(screen.getByText('REDIRECT /')).toBeTruthy();
+  });
+
+  it('lista los activos en su idioma con el otro en gris; la papelera de uno usado lo desactiva y avisa', async () => {
+    mockRemoveReason.mockResolvedValue({ ok: true, data: 'deactivated' });
+    await render(<LostReasonsScreen />);
+    expect(await screen.findByText('Precio')).toBeTruthy();
+    expect(screen.getByText('Price')).toBeTruthy();
+    expect(screen.queryByText('Viejo')).toBeNull();
+    await fireEvent.press(screen.getByLabelText('Eliminar Precio'));
+    expect(screen.getByText('¿Eliminar Precio?')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Eliminar'));
+    await waitFor(() => expect(mockRemoveReason).toHaveBeenCalledWith('r1'));
+    expect(await screen.findByText('Algún lead ya usa este motivo: se quitó de la lista y esos leads lo conservan.')).toBeTruthy();
+  });
+
+  it('Agregar abre el formulario; pide los dos idiomas y lo pone al final', async () => {
+    mockCreateReason.mockResolvedValue({ ok: true, data: 'r9' });
+    await render(<LostReasonsScreen />);
+    await screen.findByText('Precio');
+    await fireEvent.press(screen.getByText('Agregar'));
+    expect(mockPush).toHaveBeenCalledWith('/settings/lost-reasons/edit');
+
+    mockParams = {};
+    await render(<LostReasonFormScreen />);
+    await waitFor(() => expect(mockReasons).toHaveBeenCalled());
+    await fireEvent.changeText(screen.getByLabelText('En español'), 'Mal momento');
+    await fireEvent.press(screen.getByText('Guardar'));
+    expect(screen.getByText('Escribe el motivo en inglés.')).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText('En inglés'), 'Bad timing');
+    await fireEvent.press(screen.getByText('Guardar'));
+    await waitFor(() => expect(mockCreateReason).toHaveBeenCalledWith('Mal momento', 'Bad timing', 10));
+  });
+
+  it('el lápiz edita el motivo existente', async () => {
+    mockParams = { id: 'r1' };
+    mockUpdateReason.mockResolvedValue({ ok: true, data: null });
+    await render(<LostReasonFormScreen />);
+    expect(await screen.findByDisplayValue('Precio')).toBeTruthy();
+    expect(screen.getByText('Editar motivo')).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText('En inglés'), 'Pricing');
+    await fireEvent.press(screen.getByText('Guardar'));
+    await waitFor(() => expect(mockUpdateReason).toHaveBeenCalledWith('r1', 'Precio', 'Pricing'));
   });
 });
