@@ -138,7 +138,7 @@ Solo hay un **Super Admin**, con todos los permisos. Nadie puede dar un permiso 
 | --- | --- |
 | Ventas | Ver, crear-editar y eliminar leads · hacer walkthroughs · ver, crear-editar y enviar quotes · ver precios de los quotes · subir y ver SOW y contratos |
 | Clientes y jobsites | Ver clientes y jobsites · editar datos y contactos · editar walkthrough y SOW (versionados) · ver tarifa al cliente · cambiar estado |
-| Empleados | Ver lista · invitar y crear · editar y desactivar · ver pagos y tarifas · asignar a jobsites y definir su pago · gestionar permisos |
+| Empleados | Ver lista · invitar y crear · editar y desactivar · ver pagos y tarifas · asignar a jobsites y definir su pago · gestionar permisos · gestionar documentos de empleados |
 | Schedule y Work | Ver y editar el schedule completo · registrar trabajo por otros · editar registros de trabajo · aprobar trabajo · revisar alertas de GPS |
 | Accounting | Ver y registrar ingresos y marcarlos como recibidos · ver costo de personal · ver, registrar y editar gastos · gestionar gastos recurrentes · ver dashboard global · ver dashboard por cuenta · exportar reportes |
 | Sistema | Configuración general (vigencia de quotes, categorías de gastos, motivos de lead perdido; solo el Super Admin) · ver historial de cambios · transferir el rol de Super Admin (solo el Super Admin) |

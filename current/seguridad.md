@@ -16,7 +16,7 @@ Lo técnico (cifrado, hosting, copias de seguridad y protección contra ataques)
 
 ## Datos sensibles
 
-- **Tarifas, pagos y documentos (D-125):** las tarifas y los pagos, y los W-9 y certificados de seguro de los 1099, solo los ve quien tenga el permiso de ver pagos. Cada apertura queda registrada en el historial de cambios (quién y cuándo).
+- **Tarifas, pagos y documentos (D-125, D-193):** las tarifas y los pagos solo los ve quien tenga el permiso de ver pagos. Los W-9 y certificados de seguro de los 1099 solo los ve, sube y reemplaza quien tenga el permiso de gestionar documentos de empleados. Cada apertura queda registrada en el historial de cambios (quién y cuándo).
 - **Conservación (D-127):** las fotos y los datos de GPS se guardan mientras el cliente esté activo y 3 años después. Queda por confirmar con el contador o el abogado del dueño.
 
 ## Portal del quote

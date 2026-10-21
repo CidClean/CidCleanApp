@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cid Clean, ronda 16 aprobada</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Aprobado por el dueño el 2026-10-21 (ronda 16: permisos del perfil y pendientes). Valores de las rondas 1 a 16. Los nombres y datos son de ejemplo. */
+:root{--page-bg:#FFFFFF;--text-primary:#1A1A1A;--text-secondary:#6B6B6B}
+@media (prefers-color-scheme:dark){:root{--page-bg:#121212;--text-primary:#F2F2F2;--text-secondary:#A0A0A0}}
+body{margin:0;background:var(--page-bg);color:var(--text-primary);font-family:'Manrope',system-ui,sans-serif}
+.wrap{max-width:420px;margin:0 auto;padding:16px;--b:#0F766E;--ok:#3F8F5F;--wn:#B7791F;--er:#C0504D;--bg:#FFFFFF;--sf:#F4F4F4;--fg:#1A1A1A;--bd:#E2E2E2;--sc:#6B6B6B}
+@media (prefers-color-scheme:dark){.wrap{--bg:#121212;--sf:#1C1C1C;--fg:#F2F2F2;--bd:#333333;--sc:#A0A0A0}}
+.wrap>div{margin-bottom:22px}
+.cap{font-size:12px;color:var(--text-secondary);margin:0 0 6px}
+/* muestras (valores aprobados: marca #0F766E, 12px, Manrope, texto 15px, filas 48px, iconos de línea fina 1.5px) */
+
+.sc{display:block;background:var(--bg);color:var(--fg);border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;font-size:15px;line-height:1.4}
+.sc .tp{display:flex;align-items:center;justify-content:space-between;background:var(--b);color:#fff;padding:10px 12px;font-weight:500;font-size:14px}
+.sc .bd{display:block;padding:12px}
+.sc .h{display:block;font-weight:500;font-size:16px;margin-bottom:4px}
+.sc .m{display:block;color:var(--sc);font-size:13px;line-height:1.4}
+.sc svg{flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.fld{display:block;margin-bottom:8px}
+.fld .l{display:block;font-size:12px;color:var(--sc);margin-bottom:3px}
+.fld .v{display:block;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;padding:10px 12px}
+.bt{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;min-height:40px;font-weight:500;font-size:14px;box-sizing:border-box}
+.bt.s{background:var(--b);color:#fff}
+.bt.n{border:1px solid var(--b);color:var(--fg)}
+.bt.t{color:var(--sc);min-height:36px}
+.bt.dis{background:var(--sf);color:var(--sc);border:1px solid var(--bd)}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+.otp{display:flex;gap:6px;margin:12px 0}
+.otp span{flex:1;height:48px;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:18px}
+.otp span.cur{border-color:var(--b);border-width:2px}
+.key{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.key span{display:flex;align-items:center;justify-content:center;height:36px;border-radius:10px;background:var(--sf);font-weight:500}
+.ln{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd);font-size:14px}
+.ln b{font-weight:500}
+.ar{display:flex;align-items:center;justify-content:space-between;min-height:48px;border-bottom:0.5px solid var(--bd);font-weight:500}
+.ts{display:block;color:var(--sc);font-size:13px;padding-bottom:10px}
+.ts i{display:block;font-style:normal;padding:2px 0}
+.chip{display:inline-block;font-size:12px;padding:2px 10px;border-radius:6px;border:1px solid var(--c,var(--bd));margin:0 6px 6px 0}
+.chip.on{background:var(--b);border-color:var(--b);color:#fff}
+.card{display:block;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.rad{display:flex;align-items:center;gap:10px;min-height:48px;border-bottom:0.5px solid var(--bd)}
+.rad i{width:18px;height:18px;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--fg) 45%,transparent);display:flex;align-items:center;justify-content:center;flex:none}
+.rad i.on{border-color:var(--b)}
+.rad i.on:after{content:"";width:9px;height:9px;border-radius:50%;background:var(--b)}
+.cb{display:flex;align-items:flex-start;gap:10px;font-size:14px;margin:4px 0 12px}
+.cb i{width:20px;height:20px;border-radius:6px;background:var(--b);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.bar{display:block;height:4px;background:var(--bd);border-radius:2px;overflow:hidden;margin:6px 0 10px}
+.bar i{display:block;height:100%;width:60%;background:var(--b)}
+.big{display:block;font-size:26px;font-weight:500;line-height:1.2}
+.fix{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:0.5px solid var(--bd);background:var(--sf);padding:10px 12px}
+.ok{display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;border:1.5px solid var(--ok);color:var(--ok);margin:8px auto 10px}
+.ce{display:block;text-align:center}
+
+.seg{display:flex;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;overflow:hidden;margin-bottom:8px}
+.seg span{flex:1;text-align:center;padding:8px 0;font-size:14px}
+.seg .on{background:var(--b);color:#fff;font-weight:500}
+.vr{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding:6px 0;border-bottom:0.5px solid var(--bd)}
+.vr b{font-weight:500;display:block}
+.dh{display:block;font-size:12px;color:var(--sc);margin:10px 0 2px}
+.strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:10px}
+.strip span{text-align:center;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:8px;padding:6px 0;font-size:12px;color:var(--sc)}
+.strip span b{display:block;font-size:15px;font-weight:500}
+.strip .on{background:var(--b);border-color:var(--b);color:#fff}
+.circ{display:flex;align-items:center;justify-content:center;width:96px;height:96px;border-radius:50%;background:var(--b);color:#fff;font-weight:500;margin:12px auto 4px}
+.slide{display:flex;align-items:center;height:48px;border-radius:12px;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);padding:3px;margin-top:12px}
+.slide i{width:42px;height:40px;border-radius:9px;background:var(--b);color:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;flex:none}
+.slide span{flex:1;text-align:center;color:var(--sc);font-size:14px;margin-right:42px}
+.timer{display:block;text-align:center;font-size:34px;font-weight:500;margin:6px 0 14px}
+.banner{display:flex;align-items:center;justify-content:space-between;background:var(--b);color:#fff;padding:8px 12px;font-size:13px;font-weight:500}
+.al{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4;padding:10px 12px;border:1px solid var(--wn);border-radius:12px;background:var(--bg);margin-bottom:12px}
+.al svg{color:var(--wn)}
+.tf{border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:10px;padding:6px 8px;font-size:13px;white-space:nowrap}
+.map{display:block;border:1px solid var(--bd);border-radius:12px;background:var(--sf);overflow:hidden;margin-bottom:8px}
+
+.tabs{display:flex;border-bottom:0.5px solid var(--bd);margin:0 -12px 8px;padding:0 12px;overflow:hidden}
+.tabs span{padding:8px 10px;font-size:13px;color:var(--sc);white-space:nowrap}
+.tabs .on{color:var(--fg);font-weight:500;border-bottom:2px solid var(--b)}
+.sw{display:flex;align-items:center;width:40px;height:24px;border-radius:12px;border:1px solid color-mix(in srgb,var(--fg) 40%,transparent);padding:2px;box-sizing:border-box;flex:none}
+.sw i{width:18px;height:18px;border-radius:50%;background:color-mix(in srgb,var(--fg) 40%,transparent)}
+.sw.on{background:var(--b);border-color:var(--b);justify-content:flex-end}
+.sw.on i{background:#fff}
+.ava{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:var(--sf);border:0.5px solid var(--bd);font-weight:500;flex:none}
+
+.stats{display:flex;gap:20px;margin-bottom:6px}
+.stats b{display:block;font-weight:500;font-size:18px}
+.hb{display:block;height:6px;background:var(--bd);border-radius:3px;overflow:hidden;margin:4px 0 10px}
+.hb i{display:block;height:100%;background:var(--b)}
+.sheet{display:block;background:var(--bg);border-top:0.5px solid var(--bd);border-radius:16px 16px 0 0;padding:12px;margin-top:-4px;box-shadow:0 -6px 16px rgba(0,0,0,.08)}
+.photo{display:flex;align-items:center;justify-content:center;gap:8px;border:1px dashed color-mix(in srgb,var(--fg) 40%,transparent);border-radius:12px;color:var(--b);font-size:14px;font-weight:500;min-height:48px;margin-bottom:12px}
+.photo.big{flex-direction:column;min-height:110px;margin-bottom:10px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:8px}
+.grid2 .card{margin:0}
+.mes{display:flex;align-items:center;justify-content:space-between;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;padding:8px 12px}
+
+.steps{display:flex;gap:6px;overflow:hidden;margin-bottom:10px;min-width:0}
+.steps .chip{white-space:nowrap;flex:none}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:10px;text-align:center;font-size:13px}
+.cal span{padding:6px 0;border-radius:8px;color:var(--sc)}
+.cal .on{background:var(--b);color:#fff;font-weight:500}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;font-size:12px}
+.days span{text-align:center;padding:10px 0;border-radius:8px;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);color:var(--sc)}
+.days span.on{background:var(--b);border-color:var(--b);color:#fff;font-weight:500}
+
+.mo{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.mo span{text-align:center;padding:8px 0;border-radius:8px;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);font-size:13px;color:var(--sc)}
+.mo .on{background:var(--b);border-color:var(--b);color:#fff;font-weight:500}
+
+.dot{width:8px;height:8px;border-radius:50%;background:var(--b);margin-top:7px;flex:none}
+.mx{display:grid;grid-template-columns:minmax(0,1fr) 44px 44px 44px;align-items:center;min-height:44px;border-bottom:0.5px solid var(--bd);font-size:14px}
+.mx.hd{min-height:32px;color:var(--sc);font-size:12px;text-align:center}
+
+
+/* muestras de la ronda 15 */
+.sc{display:block;background:var(--bg);color:var(--fg);border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;font-size:15px;line-height:1.4}
+.sc .tp{display:flex;align-items:center;justify-content:space-between;background:var(--b);color:#fff;padding:10px 12px;font-weight:500;font-size:14px}
+.sc .bd{display:block;padding:12px}
+.sc .h{display:block;font-weight:500;font-size:16px;margin-bottom:4px}
+.sc .m{display:block;color:var(--sc);font-size:13px;line-height:1.4}
+.sc svg{flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.fld{display:block;margin-bottom:8px}
+.fld .l{display:block;font-size:12px;color:var(--sc);margin-bottom:3px}
+.fld .v{display:block;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;padding:10px 12px}
+.bt{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;min-height:40px;font-weight:500;font-size:14px;box-sizing:border-box}
+.bt.s{background:var(--b);color:#fff}
+.bt.n{border:1px solid var(--b);color:var(--fg)}
+.bt.t{color:var(--sc);min-height:36px}
+.bt.dis{background:var(--sf);color:var(--sc);border:1px solid var(--bd)}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+.otp{display:flex;gap:6px;margin:12px 0}
+.otp span{flex:1;height:48px;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:18px}
+.otp span.cur{border-color:var(--b);border-width:2px}
+.key{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.key span{display:flex;align-items:center;justify-content:center;height:36px;border-radius:10px;background:var(--sf);font-weight:500}
+.ln{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd);font-size:14px}
+.ln b{font-weight:500}
+.ar{display:flex;align-items:center;justify-content:space-between;min-height:48px;border-bottom:0.5px solid var(--bd);font-weight:500}
+.ts{display:block;color:var(--sc);font-size:13px;padding-bottom:10px}
+.ts i{display:block;font-style:normal;padding:2px 0}
+.chip{display:inline-block;font-size:12px;padding:2px 10px;border-radius:6px;border:1px solid var(--c,var(--bd));margin:0 6px 6px 0}
+.chip.on{background:var(--b);border-color:var(--b);color:#fff}
+.card{display:block;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.rad{display:flex;align-items:center;gap:10px;min-height:48px;border-bottom:0.5px solid var(--bd)}
+.rad i{width:18px;height:18px;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--fg) 45%,transparent);display:flex;align-items:center;justify-content:center;flex:none}
+.rad i.on{border-color:var(--b)}
+.rad i.on:after{content:"";width:9px;height:9px;border-radius:50%;background:var(--b)}
+.cb{display:flex;align-items:flex-start;gap:10px;font-size:14px;margin:4px 0 12px}
+.cb i{width:20px;height:20px;border-radius:6px;background:var(--b);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.bar{display:block;height:4px;background:var(--bd);border-radius:2px;overflow:hidden;margin:6px 0 10px}
+.bar i{display:block;height:100%;width:60%;background:var(--b)}
+.big{display:block;font-size:26px;font-weight:500;line-height:1.2}
+.fix{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:0.5px solid var(--bd);background:var(--sf);padding:10px 12px}
+.ok{display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;border:1.5px solid var(--ok);color:var(--ok);margin:8px auto 10px}
+.ce{display:block;text-align:center}
+
+.seg{display:flex;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;overflow:hidden;margin-bottom:8px}
+.seg span{flex:1;text-align:center;padding:8px 0;font-size:14px}
+.seg .on{background:var(--b);color:#fff;font-weight:500}
+.vr{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding:6px 0;border-bottom:0.5px solid var(--bd)}
+.vr b{font-weight:500;display:block}
+.dh{display:block;font-size:12px;color:var(--sc);margin:10px 0 2px}
+.strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:10px}
+.strip span{text-align:center;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:8px;padding:6px 0;font-size:12px;color:var(--sc)}
+.strip span b{display:block;font-size:15px;font-weight:500}
+.strip .on{background:var(--b);border-color:var(--b);color:#fff}
+.circ{display:flex;align-items:center;justify-content:center;width:96px;height:96px;border-radius:50%;background:var(--b);color:#fff;font-weight:500;margin:12px auto 4px}
+.slide{display:flex;align-items:center;height:48px;border-radius:12px;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);padding:3px;margin-top:12px}
+.slide i{width:42px;height:40px;border-radius:9px;background:var(--b);color:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;flex:none}
+.slide span{flex:1;text-align:center;color:var(--sc);font-size:14px;margin-right:42px}
+.timer{display:block;text-align:center;font-size:34px;font-weight:500;margin:6px 0 14px}
+.banner{display:flex;align-items:center;justify-content:space-between;background:var(--b);color:#fff;padding:8px 12px;font-size:13px;font-weight:500}
+.al{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4;padding:10px 12px;border:1px solid var(--wn);border-radius:12px;background:var(--bg);margin-bottom:12px}
+.al svg{color:var(--wn)}
+.tf{border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:10px;padding:6px 8px;font-size:13px;white-space:nowrap}
+.map{display:block;border:1px solid var(--bd);border-radius:12px;background:var(--sf);overflow:hidden;margin-bottom:8px}
+
+.tabs{display:flex;border-bottom:0.5px solid var(--bd);margin:0 -12px 8px;padding:0 12px;overflow:hidden}
+.tabs span{padding:8px 10px;font-size:13px;color:var(--sc);white-space:nowrap}
+.tabs .on{color:var(--fg);font-weight:500;border-bottom:2px solid var(--b)}
+.sw{display:flex;align-items:center;width:40px;height:24px;border-radius:12px;border:1px solid color-mix(in srgb,var(--fg) 40%,transparent);padding:2px;box-sizing:border-box;flex:none}
+.sw i{width:18px;height:18px;border-radius:50%;background:color-mix(in srgb,var(--fg) 40%,transparent)}
+.sw.on{background:var(--b);border-color:var(--b);justify-content:flex-end}
+.sw.on i{background:#fff}
+.ava{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:var(--sf);border:0.5px solid var(--bd);font-weight:500;flex:none}
+
+.stats{display:flex;gap:20px;margin-bottom:6px}
+.stats b{display:block;font-weight:500;font-size:18px}
+.hb{display:block;height:6px;background:var(--bd);border-radius:3px;overflow:hidden;margin:4px 0 10px}
+.hb i{display:block;height:100%;background:var(--b)}
+.sheet{display:block;background:var(--bg);border-top:0.5px solid var(--bd);border-radius:16px 16px 0 0;padding:12px;margin-top:-4px;box-shadow:0 -6px 16px rgba(0,0,0,.08)}
+.photo{display:flex;align-items:center;justify-content:center;gap:8px;border:1px dashed color-mix(in srgb,var(--fg) 40%,transparent);border-radius:12px;color:var(--b);font-size:14px;font-weight:500;min-height:48px;margin-bottom:12px}
+.photo.big{flex-direction:column;min-height:110px;margin-bottom:10px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:8px}
+.grid2 .card{margin:0}
+.mes{display:flex;align-items:center;justify-content:space-between;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;padding:8px 12px}
+
+.steps{display:flex;gap:6px;overflow:hidden;margin-bottom:10px;min-width:0}
+.steps .chip{white-space:nowrap;flex:none}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:10px;text-align:center;font-size:13px}
+.cal span{padding:6px 0;border-radius:8px;color:var(--sc)}
+.cal .on{background:var(--b);color:#fff;font-weight:500}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;font-size:12px}
+.days span{text-align:center;padding:10px 0;border-radius:8px;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);color:var(--sc)}
+.days span.on{background:var(--b);border-color:var(--b);color:#fff;font-weight:500}
+
+.mo{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.mo span{text-align:center;padding:8px 0;border-radius:8px;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);font-size:13px;color:var(--sc)}
+.mo .on{background:var(--b);border-color:var(--b);color:#fff;font-weight:500}
+
+.dot{width:8px;height:8px;border-radius:50%;background:var(--b);margin-top:7px;flex:none}
+.mx{display:grid;grid-template-columns:minmax(0,1fr) 44px 44px 44px;align-items:center;min-height:44px;border-bottom:0.5px solid var(--bd);font-size:14px}
+.mx.hd{min-height:32px;color:var(--sc);font-size:12px;text-align:center}
+
+
+/* muestras de la ronda 16 */
+.sc{display:block;background:var(--bg);color:var(--fg);border:0.5px solid var(--bd);border-radius:12px;overflow:hidden;font-size:15px;line-height:1.4}
+.sc .tp{display:flex;align-items:center;justify-content:space-between;background:var(--b);color:#fff;padding:10px 12px;font-weight:500;font-size:14px}
+.sc .bd{display:block;padding:12px}
+.sc .h{display:block;font-weight:500;font-size:16px;margin-bottom:4px}
+.sc .m{display:block;color:var(--sc);font-size:13px;line-height:1.4}
+.sc svg{flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.fld{display:block;margin-bottom:8px}
+.fld .l{display:block;font-size:12px;color:var(--sc);margin-bottom:3px}
+.fld .v{display:block;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;padding:10px 12px}
+.bt{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;min-height:40px;font-weight:500;font-size:14px;box-sizing:border-box}
+.bt.s{background:var(--b);color:#fff}
+.bt.n{border:1px solid var(--b);color:var(--fg)}
+.bt.t{color:var(--sc);min-height:36px}
+.bt.dis{background:var(--sf);color:var(--sc);border:1px solid var(--bd)}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+.otp{display:flex;gap:6px;margin:12px 0}
+.otp span{flex:1;height:48px;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:18px}
+.otp span.cur{border-color:var(--b);border-width:2px}
+.key{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.key span{display:flex;align-items:center;justify-content:center;height:36px;border-radius:10px;background:var(--sf);font-weight:500}
+.ln{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd);font-size:14px}
+.ln b{font-weight:500}
+.ar{display:flex;align-items:center;justify-content:space-between;min-height:48px;border-bottom:0.5px solid var(--bd);font-weight:500}
+.ts{display:block;color:var(--sc);font-size:13px;padding-bottom:10px}
+.ts i{display:block;font-style:normal;padding:2px 0}
+.chip{display:inline-block;font-size:12px;padding:2px 10px;border-radius:6px;border:1px solid var(--c,var(--bd));margin:0 6px 6px 0}
+.chip.on{background:var(--b);border-color:var(--b);color:#fff}
+.card{display:block;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.rad{display:flex;align-items:center;gap:10px;min-height:48px;border-bottom:0.5px solid var(--bd)}
+.rad i{width:18px;height:18px;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--fg) 45%,transparent);display:flex;align-items:center;justify-content:center;flex:none}
+.rad i.on{border-color:var(--b)}
+.rad i.on:after{content:"";width:9px;height:9px;border-radius:50%;background:var(--b)}
+.cb{display:flex;align-items:flex-start;gap:10px;font-size:14px;margin:4px 0 12px}
+.cb i{width:20px;height:20px;border-radius:6px;background:var(--b);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.bar{display:block;height:4px;background:var(--bd);border-radius:2px;overflow:hidden;margin:6px 0 10px}
+.bar i{display:block;height:100%;width:60%;background:var(--b)}
+.big{display:block;font-size:26px;font-weight:500;line-height:1.2}
+.fix{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:0.5px solid var(--bd);background:var(--sf);padding:10px 12px}
+.ok{display:flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;border:1.5px solid var(--ok);color:var(--ok);margin:8px auto 10px}
+.ce{display:block;text-align:center}
+
+.seg{display:flex;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;overflow:hidden;margin-bottom:8px}
+.seg span{flex:1;text-align:center;padding:8px 0;font-size:14px}
+.seg .on{background:var(--b);color:#fff;font-weight:500}
+.vr{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding:6px 0;border-bottom:0.5px solid var(--bd)}
+.vr b{font-weight:500;display:block}
+.dh{display:block;font-size:12px;color:var(--sc);margin:10px 0 2px}
+.strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:10px}
+.strip span{text-align:center;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:8px;padding:6px 0;font-size:12px;color:var(--sc)}
+.strip span b{display:block;font-size:15px;font-weight:500}
+.strip .on{background:var(--b);border-color:var(--b);color:#fff}
+.circ{display:flex;align-items:center;justify-content:center;width:96px;height:96px;border-radius:50%;background:var(--b);color:#fff;font-weight:500;margin:12px auto 4px}
+.slide{display:flex;align-items:center;height:48px;border-radius:12px;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);padding:3px;margin-top:12px}
+.slide i{width:42px;height:40px;border-radius:9px;background:var(--b);color:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;flex:none}
+.slide span{flex:1;text-align:center;color:var(--sc);font-size:14px;margin-right:42px}
+.timer{display:block;text-align:center;font-size:34px;font-weight:500;margin:6px 0 14px}
+.banner{display:flex;align-items:center;justify-content:space-between;background:var(--b);color:#fff;padding:8px 12px;font-size:13px;font-weight:500}
+.al{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.4;padding:10px 12px;border:1px solid var(--wn);border-radius:12px;background:var(--bg);margin-bottom:12px}
+.al svg{color:var(--wn)}
+.tf{border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:10px;padding:6px 8px;font-size:13px;white-space:nowrap}
+.map{display:block;border:1px solid var(--bd);border-radius:12px;background:var(--sf);overflow:hidden;margin-bottom:8px}
+
+.tabs{display:flex;border-bottom:0.5px solid var(--bd);margin:0 -12px 8px;padding:0 12px;overflow:hidden}
+.tabs span{padding:8px 10px;font-size:13px;color:var(--sc);white-space:nowrap}
+.tabs .on{color:var(--fg);font-weight:500;border-bottom:2px solid var(--b)}
+.sw{display:flex;align-items:center;width:40px;height:24px;border-radius:12px;border:1px solid color-mix(in srgb,var(--fg) 40%,transparent);padding:2px;box-sizing:border-box;flex:none}
+.sw i{width:18px;height:18px;border-radius:50%;background:color-mix(in srgb,var(--fg) 40%,transparent)}
+.sw.on{background:var(--b);border-color:var(--b);justify-content:flex-end}
+.sw.on i{background:#fff}
+.ava{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:var(--sf);border:0.5px solid var(--bd);font-weight:500;flex:none}
+
+.stats{display:flex;gap:20px;margin-bottom:6px}
+.stats b{display:block;font-weight:500;font-size:18px}
+.hb{display:block;height:6px;background:var(--bd);border-radius:3px;overflow:hidden;margin:4px 0 10px}
+.hb i{display:block;height:100%;background:var(--b)}
+.sheet{display:block;background:var(--bg);border-top:0.5px solid var(--bd);border-radius:16px 16px 0 0;padding:12px;margin-top:-4px;box-shadow:0 -6px 16px rgba(0,0,0,.08)}
+.photo{display:flex;align-items:center;justify-content:center;gap:8px;border:1px dashed color-mix(in srgb,var(--fg) 40%,transparent);border-radius:12px;color:var(--b);font-size:14px;font-weight:500;min-height:48px;margin-bottom:12px}
+.photo.big{flex-direction:column;min-height:110px;margin-bottom:10px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:8px}
+.grid2 .card{margin:0}
+.mes{display:flex;align-items:center;justify-content:space-between;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);border-radius:12px;padding:8px 12px}
+
+.steps{display:flex;gap:6px;overflow:hidden;margin-bottom:10px;min-width:0}
+.steps .chip{white-space:nowrap;flex:none}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin-bottom:10px;text-align:center;font-size:13px}
+.cal span{padding:6px 0;border-radius:8px;color:var(--sc)}
+.cal .on{background:var(--b);color:#fff;font-weight:500}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;font-size:12px}
+.days span{text-align:center;padding:10px 0;border-radius:8px;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);color:var(--sc)}
+.days span.on{background:var(--b);border-color:var(--b);color:#fff;font-weight:500}
+
+.mo{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.mo span{text-align:center;padding:8px 0;border-radius:8px;border:1px solid color-mix(in srgb,var(--fg) 32%,transparent);font-size:13px;color:var(--sc)}
+.mo .on{background:var(--b);border-color:var(--b);color:#fff;font-weight:500}
+
+.dot{width:8px;height:8px;border-radius:50%;background:var(--b);margin-top:7px;flex:none}
+.mx{display:grid;grid-template-columns:minmax(0,1fr) 44px 44px 44px;align-items:center;min-height:44px;border-bottom:0.5px solid var(--bd);font-size:14px}
+.mx.hd{min-height:32px;color:var(--sc);font-size:12px;text-align:center}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<div><p class="cap">Guardar permisos: los cambios quedan pendientes y se guardan juntos con un botón Guardar fijo abajo (D-188)</p><span class="sc"><span class="tp"><span>Ana Ruiz</span></span><span class="bd"><span style="display:flex;align-items:center;gap:12px;margin-bottom:6px"><span class="ava">AR</span><span><b style="font-weight:500;font-size:16px;display:block">Ana Ruiz</b><span class="m">W-2 · Empleado</span></span></span><span class="tabs"><span>Datos</span><span class="on">Permisos</span><span>Pagos</span></span><span class="fld"><span class="l">Plantilla de partida</span><span class="v" style=""><span style="display:flex;justify-content:space-between;align-items:center"><span>Empleado</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span></span><span class="ar"><span>Ventas</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--sc);margin:0">Sin acceso</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span><span class="ar"><span>Clientes y jobsites</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--sc);margin:0">Sin acceso</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span><span class="ar" style="border:0"><b style="font-weight:500">Empleados</b><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--ok);margin:0">Parcial</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span><span class="vr" style="min-height:48px;padding:0"><span>Ver lista</span><span style="display:flex;align-items:center;gap:8px"><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Invitar y crear</span><span style="display:flex;align-items:center;gap:8px"><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Editar y desactivar</span><span style="display:flex;align-items:center;gap:8px"><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Ver pagos y tarifas</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Asignar a jobsites y definir su pago</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Gestionar permisos</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="ar"><span>Schedule y Work</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--sc);margin:0">Sin acceso</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span></span><span class="fix"><span class="bt s" style="flex:1">Guardar cambios</span></span></span></div>
+<div><p class="cap">Cambiar la plantilla de partida: pide confirmación y reemplaza los permisos actuales (D-189)</p><span style="display:flex;flex-direction:column;gap:8px"><span class="sc"><span class="tp"><span>Ana Ruiz</span></span><span class="bd"><span style="display:flex;align-items:center;gap:12px;margin-bottom:6px"><span class="ava">AR</span><span><b style="font-weight:500;font-size:16px;display:block">Ana Ruiz</b><span class="m">W-2 · Empleado</span></span></span><span class="tabs"><span>Datos</span><span class="on">Permisos</span><span>Pagos</span></span><span class="fld"><span class="l">Plantilla de partida</span><span class="v" style=""><span style="display:flex;justify-content:space-between;align-items:center"><span>Supervisor</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span></span><span class="ar"><span>Ventas</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--sc);margin:0">Sin acceso</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span><span class="ar"><span>Clientes y jobsites</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--sc);margin:0">Sin acceso</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span><span class="ar" style="border:0"><b style="font-weight:500">Empleados</b><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--ok);margin:0">Parcial</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span><span class="vr" style="min-height:48px;padding:0"><span>Ver lista</span><span style="display:flex;align-items:center;gap:8px"><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Invitar y crear</span><span style="display:flex;align-items:center;gap:8px"><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Editar y desactivar</span><span style="display:flex;align-items:center;gap:8px"><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Ver pagos y tarifas</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Asignar a jobsites y definir su pago</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Gestionar permisos</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="ar"><span>Schedule y Work</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--sc);margin:0">Sin acceso</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span></span></span><span class="sc sheet" style="border-radius:16px;margin:0;padding:12px"><b style="display:block;font-weight:500;font-size:16px;text-align:center">¿Aplicar la plantilla Supervisor?</b><span class="m" style="text-align:center;margin:4px 0 12px">Reemplaza los permisos actuales de Ana Ruiz.</span><span class="row"><span class="bt n">Cancelar</span><span class="bt s">Aplicar</span></span></span></span></div>
+<div><p class="cap">Al confirmar, los permisos de la plantilla quedan como cambios pendientes hasta Guardar cambios (D-189)</p><span class="sc"><span class="tp"><span>Ana Ruiz</span></span><span class="bd"><span style="display:flex;align-items:center;gap:12px;margin-bottom:6px"><span class="ava">AR</span><span><b style="font-weight:500;font-size:16px;display:block">Ana Ruiz</b><span class="m">W-2 · Empleado</span></span></span><span class="tabs"><span>Datos</span><span class="on">Permisos</span><span>Pagos</span></span><span class="fld"><span class="l">Plantilla de partida</span><span class="v" style=""><span style="display:flex;justify-content:space-between;align-items:center"><span>Supervisor</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></span></span><span class="ar"><span>Ventas</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--sc);margin:0">Sin acceso</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></span><span class="ar"><span>Clientes y jobsites</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--sc);margin:0">Sin acceso</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></span><span class="ar" style="border:0"><b style="font-weight:500">Empleados</b><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--ok);margin:0">Parcial</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></span><span class="vr" style="min-height:48px;padding:0"><span>Ver lista</span><span style="display:flex;align-items:center;gap:8px"><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Invitar y crear</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Editar y desactivar</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Ver pagos y tarifas</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Asignar a jobsites y definir su pago</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Gestionar permisos</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="ar"><span>Schedule y Work</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--sc);margin:0">Sin acceso</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></span></span><span class="fix"><span class="bt s" style="flex:1">Guardar cambios</span></span></span></div>
+<div><p class="cap">Rol bajo el nombre: muestra el rol de la última plantilla aplicada (D-190)</p><span class="sc"><span class="tp"><span>Ana Ruiz · después de aplicar Supervisor</span></span><span class="bd"><span style="display:flex;align-items:center;gap:12px;margin-bottom:6px"><span class="ava">AR</span><span><b style="font-weight:500;font-size:16px;display:block">Ana Ruiz</b><span class="m">W-2 · Supervisor</span></span></span><span class="tabs"><span>Datos</span><span class="on">Permisos</span><span>Pagos</span></span></span></span></div>
+<div><p class="cap">Permisos que quien edita no tiene: no aparecen; solo se listan los que sí tiene (D-191)</p><span class="sc"><span class="tp"><span>Ana Ruiz</span></span><span class="bd"><span style="display:flex;align-items:center;gap:12px;margin-bottom:6px"><span class="ava">AR</span><span><b style="font-weight:500;font-size:16px;display:block">Ana Ruiz</b><span class="m">W-2 · Empleado</span></span></span><span class="tabs"><span>Datos</span><span class="on">Permisos</span><span>Pagos</span></span><span class="fld"><span class="l">Plantilla de partida</span><span class="v" style=""><span style="display:flex;justify-content:space-between;align-items:center"><span>Empleado</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span></span><span class="ar"><span>Ventas</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--sc);margin:0">Sin acceso</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span><span class="ar"><span>Clientes y jobsites</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--sc);margin:0">Sin acceso</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span><span class="ar" style="border:0"><b style="font-weight:500">Empleados</b><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--ok);margin:0">Parcial</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span><span class="vr" style="min-height:48px;padding:0"><span>Ver lista</span><span style="display:flex;align-items:center;gap:8px"><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Invitar y crear</span><span style="display:flex;align-items:center;gap:8px"><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Editar y desactivar</span><span style="display:flex;align-items:center;gap:8px"><span class="sw on"><i></i></span></span></span><span class="ar"><span>Schedule y Work</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--sc);margin:0">Sin acceso</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span></span></span></div>
+<div><p class="cap">Super Admin: todos los interruptores encendidos y bloqueados (D-192)</p><span class="sc"><span class="tp"><span>Cid Clean (Super Admin)</span></span><span class="bd"><span style="display:flex;align-items:center;gap:12px;margin-bottom:6px"><span class="ava">CC</span><span><b style="font-weight:500;font-size:16px;display:block">Cid Clean (Super Admin)</b><span class="m">Super Admin</span></span></span><span class="tabs"><span>Datos</span><span class="on">Permisos</span><span>Pagos</span></span><span class="ar"><span>Ventas</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--b);margin:0">Todo</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span><span class="ar"><span>Clientes y jobsites</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--b);margin:0">Todo</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span><span class="ar" style="border:0"><b style="font-weight:500">Empleados</b><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--b);margin:0">Todo</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span><span class="vr" style="min-height:48px;padding:0;opacity:.45"><span>Ver lista</span><span style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0;opacity:.45"><span>Invitar y crear</span><span style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0;opacity:.45"><span>Editar y desactivar</span><span style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0;opacity:.45"><span>Ver pagos y tarifas</span><span style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0;opacity:.45"><span>Asignar a jobsites y definir su pago</span><span style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0;opacity:.45"><span>Gestionar permisos</span><span style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><span class="sw on"><i></i></span></span></span><span class="ar"><span>Schedule y Work</span><span style="display:flex;align-items:center;gap:8px"><span class="chip" style="--c:var(--b);margin:0">Todo</span><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span></span></span></span></div>
+<div><p class="cap">Permiso nuevo "Gestionar documentos de empleados": el único que ve, sube y reemplaza los documentos de los 1099; 36 permisos (D-193)</p><span class="sc"><span class="tp"><span>Empleados · permisos</span></span><span class="bd"><span class="vr" style="min-height:48px;padding:0"><span>Ver lista</span><span style="display:flex;align-items:center;gap:8px"><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Invitar y crear</span><span style="display:flex;align-items:center;gap:8px"><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Editar y desactivar</span><span style="display:flex;align-items:center;gap:8px"><span class="sw on"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Ver pagos y tarifas</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Asignar a jobsites y definir su pago</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Gestionar permisos</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="vr" style="min-height:48px;padding:0"><span>Gestionar documentos de empleados</span><span style="display:flex;align-items:center;gap:8px"><span class="sw"><i></i></span></span></span><span class="m" style="display:block;margin-top:8px">Este permiso nuevo es el único que ve, sube y reemplaza los documentos.</span></span></span></div>
+<div><p class="cap">Pestañas: quien ve la lista ve las tres; sin permiso, Permisos en solo lectura y Pagos con aviso y sin cifras (D-194)</p><span style="display:flex;flex-direction:column;gap:8px"><span class="sc"><span class="tp"><span>Ana Ruiz · con todos los permisos</span></span><span class="bd"><span style="display:flex;align-items:center;gap:12px;margin-bottom:6px"><span class="ava">AR</span><span><b style="font-weight:500;font-size:16px;display:block">Ana Ruiz</b><span class="m">W-2 · Empleado</span></span></span><span class="tabs"><span class="on">Datos</span><span>Permisos</span><span>Pagos</span></span></span></span><span class="sc"><span class="tp"><span>Ana Ruiz · solo con Ver lista</span></span><span class="bd"><span style="display:flex;align-items:center;gap:12px;margin-bottom:6px"><span class="ava">AR</span><span><b style="font-weight:500;font-size:16px;display:block">Ana Ruiz</b><span class="m">W-2 · Empleado</span></span></span><span class="tabs"><span class="on">Datos</span><span>Permisos</span><span>Pagos</span></span><span class="m" style="display:block;margin-top:6px">Permisos se ve sin poder cambiar nada. Pagos muestra un aviso y ninguna cifra.</span></span></span></span></div>
+<div><p class="cap">Pagos sin el permiso Ver pagos y tarifas (D-194)</p><span class="sc"><span class="tp"><span>Ana Ruiz · Pagos, sin Ver pagos y tarifas</span></span><span class="bd"><span style="display:flex;align-items:center;gap:12px;margin-bottom:6px"><span class="ava">AR</span><span><b style="font-weight:500;font-size:16px;display:block">Ana Ruiz</b><span class="m">W-2 · Empleado</span></span></span><span class="tabs"><span>Datos</span><span>Permisos</span><span class="on">Pagos</span></span><span style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 0;color:var(--sc)"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style="color:var(--fg);font-weight:500">No tienes permiso para ver pagos</span></span></span></span></div>
+<div><p class="cap">Textos en español aprobados de la orden 9 (D-195)</p><span class="sc"><span class="tp"><span>Textos nuevos</span></span><span class="bd"><span class="ts"><i>Volver</i><i>No se pudieron cargar los empleados. Inténtalo otra vez.</i><i>Escribe el nombre.</i><i>Ese correo ya está registrado.</i><i>No se pudo crear el empleado. Inténtalo otra vez.</i><i>No tienes permiso para crear empleados.</i><i>Invitación reenviada.</i><i>El empleado se creó, pero no se pudo enviar la invitación. Toca Reenviar invitación.</i><i>No se pudo guardar. Inténtalo otra vez.</i><i>No se pudo cambiar el estado. Inténtalo otra vez.</i><i>No se pudo reenviar la invitación. Inténtalo otra vez.</i><i>No se pudo cargar el empleado. Inténtalo otra vez.</i><i>Tomar foto · Elegir archivo</i><i>No se pudo subir el documento. Inténtalo otra vez.</i><i>No se pudo abrir el documento. Inténtalo otra vez.</i><i>Permite el acceso a la cámara en los ajustes del teléfono.</i></span></span></span></div>
+</div>
+</body>
+</html>

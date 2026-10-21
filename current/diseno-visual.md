@@ -117,6 +117,14 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Admin: desactivar empleado | Interruptor Activo en el encabezado del perfil; al apagarlo, hoja "¿Desactivar a {nombre}?" con Cancelar y Desactivar sólido | D-173 | ronda 15 |
 | Admin: pestaña Datos | Filas de solo lectura y botón de texto "Editar" en la barra del título que la vuelve formulario | D-174 | ronda 15 |
 | Admin: documentos 1099 | Filas W-9 y Certificado de seguro con ficha Subido (verde) o Falta (ámbar) y botón de contorno "Subir documento" | D-175 | ronda 15 |
+| Admin: guardar permisos | Los cambios quedan pendientes; botón sólido "Guardar cambios" fijo abajo | D-188 | [`ronda-16-permisos-y-pendientes.md`](../surveys/ronda-16-permisos-y-pendientes.md) |
+| Admin: cambiar plantilla | Hoja "¿Aplicar la plantilla {plantilla}?" con Cancelar y Aplicar sólido; los permisos de la plantilla quedan pendientes hasta Guardar cambios | D-189 | ronda 16 |
+| Admin: rol bajo el nombre | Cambia al guardar con el de la última plantilla aplicada | D-190 | ronda 16 |
+| Admin: permisos que quien edita no tiene | No aparecen en la lista | D-191 | ronda 16 |
+| Admin: permisos del Super Admin | Todos los interruptores encendidos y bloqueados con candado; áreas con ficha Todo | D-192 | ronda 16 |
+| Admin: permiso de documentos | Fila "Gestionar documentos de empleados" en el área Empleados (36 permisos) | D-193 | ronda 16 |
+| Admin: pestañas Permisos y Pagos | Las ven todos los que ven la lista; Permisos en solo lectura sin el permiso; Pagos sin el permiso muestra "No tienes permiso para ver pagos" sin cifras | D-194 | ronda 16 |
+| Visor de PDF | Términos y documentos 1099 se leen dentro de la app, sin guardar el archivo en el teléfono | D-196 | ronda 16 |
 | Admin: botón Nuevo empleado | Icono + a la derecha de la barra del título de la lista de Empleados; solo con `empleados_invitar_crear` | D-185 | [`ronda-15-empleados-y-pendientes.md`](../surveys/ronda-15-empleados-y-pendientes.md) |
 | Correo de invitación | Bilingüe, texto en D-186 | D-186 | ronda 15 |
 | Admin: después de crear | Se abre el perfil del empleado, pestaña Datos | D-181 | [`ronda-15-empleados-y-pendientes.md`](../surveys/ronda-15-empleados-y-pendientes.md) |
@@ -127,10 +135,12 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Super Admin: dónde publicar | Menú → Ajustes → fila "Términos del staff" con la versión vigente y flecha | D-187 | [`ronda-15-empleados-y-pendientes.md`](../surveys/ronda-15-empleados-y-pendientes.md) |
 | Alto de filas de lista | 48px (las muestras de las rondas 13 y 14 medían unos 60px por su código de muestra y no mandan) | D-177 | ronda 15 |
 | Textos de error nuevos | Tres textos cortos del idioma, de guardar la aceptación y de cargar los términos, listados en D-178 | D-178 | ronda 15 |
-| Staff: términos sin conexión | Pantalla "Antes de empezar" con icono de alerta, "Necesitas conexión para continuar" y botón sólido "Reintentar"; no deja entrar | D-179 | ronda 15 |
+| Staff: términos sin conexión | Pantalla "Antes de empezar" con icono de alerta, "Necesitas conexión para continuar" y botón sólido "Reintentar"; no deja entrar a quien nunca aceptó o a quien no se sabe; quien ya aceptó la versión vigente que conoce el teléfono entra | D-179, D-197 | ronda 15 y 16 |
 | Flecha de volver | Flecha a la izquierda en la barra del título de las pantallas a las que se entra desde el Menú, incluida Mi perfil (las muestras anteriores no la llevan) | D-180 | ronda 15 |
 
 Copia visual de lo aprobado, la más reciente primero:
+
+- Ronda 16: [`../surveys/ronda-16-permisos-y-pendientes-aprobado.html`](../surveys/ronda-16-permisos-y-pendientes-aprobado.html). Muestra el guardado de permisos, la confirmación de plantilla, el rol bajo el nombre, la lista sin los permisos que quien edita no tiene, el Super Admin, el permiso nuevo de documentos y las pestañas. Sus datos son de ejemplo.
 
 - Ronda 15: [`../surveys/ronda-15-empleados-y-pendientes-aprobado.html`](../surveys/ronda-15-empleados-y-pendientes-aprobado.html). Muestra crear empleado, invitación, desactivar, Datos, documentos de los 1099, publicar términos, alto de filas, textos de error, términos sin conexión y flecha de volver. Sus datos son de ejemplo. Las muestras de la ronda 14 y anteriores con filas de unos 60px o sin flecha de volver quedan corregidas por D-177 y D-180.
 
