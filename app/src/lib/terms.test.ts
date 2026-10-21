@@ -1,4 +1,4 @@
-import { termsRequired } from './terms';
+import { nextTermsGate, termsGate, termsRequired } from './terms';
 
 describe('termsRequired (D-168)', () => {
   test('sin versión publicada del staff no se pide aceptar', () => {
@@ -16,5 +16,48 @@ describe('termsRequired (D-168)', () => {
   });
   test('el Super Admin nunca acepta', () => {
     expect(termsRequired({ isSuperAdmin: true, latestStaffDocumentId: 'v1', acceptedDocumentIds: [] })).toBe(false);
+  });
+});
+
+describe('termsGate: qué pantalla toca antes de entrar (D-168, D-179)', () => {
+  const ok = (latest: string | null, accepted: string[] = []) => ({ kind: 'ok' as const, latestStaffDocumentId: latest, acceptedDocumentIds: accepted });
+  const unknown = { kind: 'unknown' as const };
+
+  test('quién debe aceptar: staff con versión publicada sin aceptar', () => {
+    expect(termsGate({ isSuperAdmin: false, lookup: ok('v1') })).toBe('accept');
+    expect(termsGate({ isSuperAdmin: false, lookup: ok('v2', ['v1']) })).toBe('accept');
+  });
+  test('quien ya aceptó la versión vigente entra', () => {
+    expect(termsGate({ isSuperAdmin: false, lookup: ok('v1', ['v1']) })).toBe('enter');
+  });
+  test('sin versión publicada se entra (no se pide nada)', () => {
+    expect(termsGate({ isSuperAdmin: false, lookup: ok(null) })).toBe('enter');
+  });
+  test('el Super Admin siempre entra, con o sin conexión', () => {
+    expect(termsGate({ isSuperAdmin: true, lookup: ok('v1') })).toBe('enter');
+    expect(termsGate({ isSuperAdmin: true, lookup: unknown })).toBe('enter');
+  });
+  test('sin conexión para revisar los términos no se entra (D-179), sepa o no quién es', () => {
+    expect(termsGate({ isSuperAdmin: false, lookup: unknown })).toBe('offline');
+    expect(termsGate({ isSuperAdmin: null, lookup: unknown })).toBe('offline');
+  });
+});
+
+describe('nextTermsGate: los términos se revisan al entrar (D-179)', () => {
+  test('al abrir la app (sin estado previo) un fallo bloquea', () => {
+    expect(nextTermsGate(null, 'offline')).toBe('offline');
+  });
+  test('ya dentro, un fallo posterior al volver a primer plano conserva lo que se sabía', () => {
+    expect(nextTermsGate('enter', 'offline')).toBe('enter');
+    expect(nextTermsGate('accept', 'offline')).toBe('accept');
+  });
+  test('si ya estaba bloqueado, sigue bloqueado', () => {
+    expect(nextTermsGate('offline', 'offline')).toBe('offline');
+  });
+  test('con conexión el resultado nuevo manda', () => {
+    expect(nextTermsGate('offline', 'enter')).toBe('enter');
+    expect(nextTermsGate('offline', 'accept')).toBe('accept');
+    expect(nextTermsGate('enter', 'accept')).toBe('accept');
+    expect(nextTermsGate('accept', 'enter')).toBe('enter');
   });
 });

@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isLocale, type Locale } from '@/i18n';
 import { AUTH_STORAGE_KEY, supabase } from './supabase';
 import { evaluateSession, type ProfileLookup, type SessionVerdict } from './sessionPolicy';
-import { termsRequired } from './terms';
+import { termsGate, type TermsGate, type TermsLookup } from './terms';
 
 const START_KEY = 'cidclean-session-started-at';
 
@@ -77,11 +77,10 @@ export async function fetchOwnPermissions(profileId: string): Promise<string[] |
 }
 
 /**
- * ¿Hay que pedir aceptar los términos del staff? (D-168)
- * Si no se puede consultar (sin red) no se bloquea: la aceptación se vuelve a comprobar en la siguiente apertura.
+ * Consulta la última versión publicada de los términos del staff y si este perfil ya la aceptó (D-168).
+ * Si no se puede consultar (sin red u otro error) devuelve 'unknown': ya no se deja pasar (D-179).
  */
-export async function fetchTermsPending(profileId: string, isSuperAdmin: boolean): Promise<boolean> {
-  if (isSuperAdmin) return false;
+export async function fetchTermsLookup(profileId: string): Promise<TermsLookup> {
   try {
     const latest = await supabase
       .from('terms_documents')
@@ -89,22 +88,47 @@ export async function fetchTermsPending(profileId: string, isSuperAdmin: boolean
       .eq('kind', 'staff')
       .order('version', { ascending: false })
       .limit(1);
-    if (latest.error) return false;
+    if (latest.error) return { kind: 'unknown' };
     const latestId: string | null = latest.data?.[0]?.id ?? null;
-    if (latestId === null) return false;
+    if (latestId === null) return { kind: 'ok', latestStaffDocumentId: null, acceptedDocumentIds: [] };
     const accepted = await supabase
       .from('terms_acceptances')
       .select('document_id')
       .eq('profile_id', profileId)
       .eq('document_id', latestId);
-    if (accepted.error) return false;
-    return termsRequired({
-      isSuperAdmin,
+    if (accepted.error) return { kind: 'unknown' };
+    return {
+      kind: 'ok',
       latestStaffDocumentId: latestId,
       acceptedDocumentIds: (accepted.data ?? []).map((r: { document_id: string }) => r.document_id),
-    });
+    };
   } catch {
-    return false;
+    return { kind: 'unknown' };
+  }
+}
+
+/**
+ * Sin red no se puede leer el perfil, y no se sabría si es Super Admin (que no acepta términos y no ve la pantalla
+ * de conexión). Se guarda el último dato conocido de esta cuenta; sin dato, no se asume que lo sea.
+ */
+const SUPER_ADMIN_HINT_KEY = 'cidclean-super-admin-hint';
+
+async function rememberSuperAdmin(authUserId: string, isSuperAdmin: boolean): Promise<void> {
+  try {
+    await AsyncStorage.setItem(SUPER_ADMIN_HINT_KEY, JSON.stringify({ userId: authUserId, isSuperAdmin }));
+  } catch {
+    // sin almacenamiento: solo se pierde la ayuda sin red
+  }
+}
+
+async function readSuperAdminHint(authUserId: string): Promise<boolean | null> {
+  try {
+    const raw = await AsyncStorage.getItem(SUPER_ADMIN_HINT_KEY);
+    if (raw === null) return null;
+    const value = JSON.parse(raw) as { userId?: string; isSuperAdmin?: boolean };
+    return value.userId === authUserId && typeof value.isSuperAdmin === 'boolean' ? value.isSuperAdmin : null;
+  } catch {
+    return null;
   }
 }
 
@@ -114,7 +138,8 @@ export type SessionCheck =
       /** null si no se pudo leer el perfil (sin red). */
       profile: OwnProfile | null;
       permissions: string[] | null;
-      termsPending: boolean;
+      /** Qué pantalla toca antes de entrar: entrar, aceptar los términos o pedir conexión (D-179). */
+      terms: TermsGate;
     }
   | { status: 'out'; ended: boolean };
 
@@ -141,11 +166,18 @@ export async function checkSession(nowMs: number = Date.now()): Promise<SessionC
     return { status: 'out', ended: true };
   }
 
-  if (!profile) return { status: 'in', profile: null, permissions: null, termsPending: false };
+  if (!profile) {
+    // Sin poder leer el perfil (sin red): solo entra quien se sabe que es Super Admin (D-179).
+    const hint = await readSuperAdminHint(session.user.id);
+    return { status: 'in', profile: null, permissions: null, terms: termsGate({ isSuperAdmin: hint, lookup: { kind: 'unknown' } }) };
+  }
 
+  await rememberSuperAdmin(session.user.id, profile.isSuperAdmin);
   const permissions = profile.isSuperAdmin ? [] : await fetchOwnPermissions(profile.id);
-  const termsPending = await fetchTermsPending(profile.id, profile.isSuperAdmin);
-  return { status: 'in', profile, permissions, termsPending };
+  const termsLookup: TermsLookup = profile.isSuperAdmin
+    ? { kind: 'ok', latestStaffDocumentId: null, acceptedDocumentIds: [] }
+    : await fetchTermsLookup(profile.id);
+  return { status: 'in', profile, permissions, terms: termsGate({ isSuperAdmin: profile.isSuperAdmin, lookup: termsLookup }) };
 }
 
 /** Cierra solo este dispositivo (scope local: no toca las sesiones de otros teléfonos de la misma persona). */
@@ -157,4 +189,9 @@ export async function endSession(): Promise<void> {
     await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
   }
   await clearSessionStart();
+  try {
+    await AsyncStorage.removeItem(SUPER_ADMIN_HINT_KEY);
+  } catch {
+    // nada que borrar
+  }
 }

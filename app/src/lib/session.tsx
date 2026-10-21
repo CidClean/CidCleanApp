@@ -6,6 +6,7 @@ import { AppState } from 'react-native';
 import { selectLocale, type Locale } from '@/i18n';
 import { readRememberedLanguage, rememberLanguage } from '@/i18n/languageStore';
 import { checkSession, endSession, type OwnProfile } from './sessionStore';
+import { nextTermsGate, type TermsGate } from './terms';
 import { supabase } from './supabase';
 import type { Access } from './visibility';
 
@@ -24,6 +25,8 @@ type SessionState = {
   access: Access;
   /** Falta aceptar los términos del staff (D-168): hasta aceptar no hay otras rutas. */
   termsPending: boolean;
+  /** No se pudieron revisar los términos y quien entra no es Super Admin (D-179): no entra hasta que haya conexión. */
+  termsOffline: boolean;
   /** Cambia el idioma del perfil (RPC set_my_language, D-087). Devuelve false si no se pudo guardar. */
   setLanguage: (locale: Locale) => Promise<boolean>;
   /** Cierra la sesión de este dispositivo a pedido de la persona (D-167): vuelve al correo sin el aviso. */
@@ -39,7 +42,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [ended, setEnded] = useState(false);
   const [profile, setProfile] = useState<OwnProfile | null>(null);
   const [permissions, setPermissions] = useState<string[]>([]);
-  const [termsPending, setTermsPending] = useState(false);
+  const [terms, setTerms] = useState<TermsGate>('enter');
+  const termsRef = useRef<TermsGate | null>(null);
   const [profileLanguage, setProfileLanguage] = useState<Locale | null>(null);
   const [remembered, setRemembered] = useState<Locale | null>(null);
   const running = useRef<Promise<void> | null>(null);
@@ -60,13 +64,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
               void rememberLanguage(result.profile.language);
             }
             if (result.permissions) setPermissions(result.permissions);
-            setTermsPending(result.termsPending);
           }
+          // Los términos se revisan al entrar (D-179): sin red al abrir no se entra; ya dentro, se conserva lo sabido.
+          const gate = nextTermsGate(termsRef.current, result.terms);
+          termsRef.current = gate;
+          setTerms(gate);
           setEnded(false);
         } else {
           setProfile(null);
           setPermissions([]);
-          setTermsPending(false);
+          termsRef.current = null;
+          setTerms('enter');
           setProfileLanguage(null);
           // Una comprobación "sin motivo" no borra un aviso que ya se está mostrando.
           setEnded((prev) => prev || result.ended);
@@ -123,7 +131,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     await endSession(); // borra la sesión y la fecha de inicio: no queda marca de "sesión terminada"
     setProfile(null);
     setPermissions([]);
-    setTermsPending(false);
+    termsRef.current = null;
+    setTerms('enter');
     setProfileLanguage(null);
     setStatus('out');
   }, []);
@@ -141,9 +150,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [profile, permissions],
   );
 
+  const termsPending = terms === 'accept';
+  const termsOffline = terms === 'offline';
   const value = useMemo(
-    () => ({ status, ended, refresh, locale, profile, access, termsPending, setLanguage, signOut }),
-    [status, ended, refresh, locale, profile, access, termsPending, setLanguage, signOut],
+    () => ({ status, ended, refresh, locale, profile, access, termsPending, termsOffline, setLanguage, signOut }),
+    [status, ended, refresh, locale, profile, access, termsPending, termsOffline, setLanguage, signOut],
   );
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
