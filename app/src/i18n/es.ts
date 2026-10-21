@@ -204,6 +204,70 @@ export const es = {
     },
   },
 
+  // Historial de cambios (D-088, D-198). Patrón de títulos de los ejemplos aprobados de la ronda 17.
+  history: {
+    by: (who: string) => `por ${who}`, // APROBADO (D-198): "{a quién o qué} · por {quién}"
+    today: 'Hoy', // APROBADO (D-198)
+    yesterday: 'Ayer', // APROBADO (D-198)
+    am: 'a. m.', // APROBADO (D-198)
+    pm: 'p. m.', // APROBADO (D-198)
+    termsKinds: {
+      staff: 'Staff', // APROBADO (D-198)
+      portal: 'Portal del cliente', // SIN APROBAR (current/flujo.md)
+      privacy: 'Privacidad', // SIN APROBAR
+    },
+    employeeCreated: 'Empleado creado', // APROBADO (D-198)
+    employeeDeactivated: 'Empleado desactivado', // APROBADO (D-198)
+    employeeReactivated: 'Empleado reactivado', // SIN APROBAR
+    employeeEdited: 'Empleado editado', // SIN APROBAR
+    roleChanged: (role: string) => `Rol cambiado: ${role}`, // SIN APROBAR
+    typeChanged: (type: string) => `Tipo cambiado: ${type}`, // SIN APROBAR
+    accessGiven: 'Acceso a la app dado', // SIN APROBAR
+    accessRemoved: 'Acceso a la app quitado', // SIN APROBAR
+    becameSuperAdmin: 'Ahora es Super Admin', // SIN APROBAR
+    leftSuperAdmin: 'Ya no es Super Admin', // SIN APROBAR
+    superAdminTransferred: 'Rol de Super Admin transferido', // SIN APROBAR
+    invitationSent: 'Invitación enviada', // APROBADO (D-172)
+    invitationResent: 'Invitación reenviada', // SIN APROBAR
+    invitationFailed: 'Invitación no enviada', // SIN APROBAR
+    permissionGiven: (name: string) => `Permiso dado: ${name}`, // APROBADO (D-198)
+    permissionRemoved: (name: string) => `Permiso quitado: ${name}`, // SIN APROBAR
+    documentUploaded: (name: string) => `Documento subido: ${name}`, // SIN APROBAR
+    documentReplaced: (name: string) => `Documento reemplazado: ${name}`, // SIN APROBAR
+    documentOpened: (name: string) => `Documento abierto: ${name}`, // APROBADO (D-198)
+    termsPublished: (version: string) => `Términos publicados: versión ${version}`, // APROBADO (D-198)
+    termsAccepted: (version: string) => `Términos aceptados: versión ${version}`, // APROBADO (D-198)
+    leadCreated: 'Lead creado', // SIN APROBAR
+    leadStatusChanged: 'Estado del lead cambiado', // SIN APROBAR
+    leadDeleted: 'Lead eliminado', // SIN APROBAR
+    walkthroughScheduled: 'Walkthrough agendado', // SIN APROBAR
+    walkthroughRescheduled: 'Walkthrough reagendado', // SIN APROBAR
+    walkthroughStatusChanged: 'Estado del walkthrough cambiado', // SIN APROBAR
+    unknown: 'Cambio registrado', // SIN APROBAR: acción que la app aún no conoce
+    empty: 'Todavía no hay cambios.', // SIN APROBAR
+    errorLoad: 'No se pudo cargar el historial. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
+  },
+
+  // Transferir el rol de Super Admin (D-090, D-116, D-199, muestra ronda 10).
+  transfer: {
+    row: 'Transferir rol de Super Admin', // fila de Ajustes (dada por la orden 12)
+    title: 'Transferir Super Admin', // APROBADO (muestra ronda 10): barra superior
+    newSuperAdmin: 'Nuevo Super Admin', // APROBADO (D-090)
+    understand: 'Entiendo que dejaré de ser Super Admin', // APROBADO (D-090)
+    submit: 'Transferir rol', // APROBADO (D-090)
+    noCandidates: 'Nadie más puede recibir el rol todavía: tiene que estar activo y haber entrado a la app.', // SIN APROBAR
+    errorLoad: 'No se pudo cargar la lista. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
+    errorTransfer: 'No se pudo transferir el rol. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
+    errorNoType: 'Antes de transferir, tu perfil necesita un tipo de trabajador (W-2 o 1099).', // SIN APROBAR (pendiente de decisión)
+  },
+
+  // Salir de la pestaña Permisos con cambios sin guardar (decisión del arquitecto bajo D-200, orden 12).
+  unsaved: {
+    title: '¿Salir sin guardar?', // Delegada por el dueño (D-200)
+    body: 'Los cambios se perderán.', // Delegada por el dueño (D-200)
+    leave: 'Salir', // Delegada por el dueño (D-200)
+  },
+
   terms: {
     barTitle: 'Antes de empezar', // APROBADO (muestra ronda 10, D-086)
     location: 'Ubicación solo al marcar entrada y salida', // APROBADO (muestra ronda 10)

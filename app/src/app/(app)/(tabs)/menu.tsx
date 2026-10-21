@@ -20,6 +20,7 @@ export default function MenuScreen() {
     if (key === 'profile') router.push('/profile');
     else if (key === 'employees') router.push('/employees');
     else if (key === 'settings') router.push('/settings');
+    else if (key === 'history') router.push('/history');
     else router.push({ pathname: '/section/[key]', params: { key } });
   }
 

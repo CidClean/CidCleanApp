@@ -2,11 +2,22 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 
 import { getStrings } from '@/i18n';
 
+// Navegación simulada: guarda el oyente de beforeRemove para probar la salida con cambios sin guardar.
+const mockNavigation = {
+  listener: null as null | ((e: { preventDefault: () => void; data: { action: unknown } }) => void),
+  addListener: jest.fn((_: string, l: (e: { preventDefault: () => void; data: { action: unknown } }) => void) => {
+    mockNavigation.listener = l;
+    return () => undefined;
+  }),
+  dispatch: jest.fn(),
+};
+
 // --- Simulaciones --------------------------------------------------------------------------------------------
 let mockAccess: { isSuperAdmin: boolean; permissions: Set<string> } = { isSuperAdmin: true, permissions: new Set() };
 let mockOwnId: string | null = 'yo';
 
 jest.mock('expo-router', () => ({
+  useNavigation: () => mockNavigation,
   useRouter: () => ({ replace: jest.fn(), push: jest.fn(), back: jest.fn(), canGoBack: () => true }),
   useLocalSearchParams: () => ({ id: 'e1' }),
   Redirect: () => null,
@@ -145,16 +156,73 @@ describe('Pestaña Permisos: quien edita con todo (D-058, D-110, D-188)', () => 
     expect(screen.getByRole('button', { name: es.permissions.saveChanges }).props.accessibilityState.disabled).toBe(false);
   });
 
-  test('los cambios pendientes se conservan al cambiar de pestaña dentro del perfil', async () => {
+  test('cambiar de pestaña con cambios sin guardar pide confirmación; Cancelar los conserva', async () => {
     await openPermissions();
     await screen.findByLabelText(es.permissions.template);
     await fireEvent.press(screen.getByLabelText(es.permissions.areas.empleados));
     await fireEvent.press(screen.getByLabelText(L.empleados_ver_pagos));
     await fireEvent.press(screen.getByText(es.employee.tabData));
+    expect(screen.getByText('¿Salir sin guardar?')).toBeTruthy();
+    expect(screen.getByText('Los cambios se perderán.')).toBeTruthy();
+    await fireEvent.press(screen.getByText(es.common.cancel));
+    expect(screen.queryByText('¿Salir sin guardar?')).toBeNull();
+    // Sigue en Permisos con el cambio pendiente.
+    expect(screen.getByLabelText(L.empleados_ver_pagos).props.accessibilityState.checked).toBe(true);
+    expect(screen.getByRole('button', { name: es.permissions.saveChanges }).props.accessibilityState.disabled).toBe(false);
+  });
+
+  test('Salir descarta los cambios y cambia de pestaña', async () => {
+    await openPermissions();
+    await screen.findByLabelText(es.permissions.template);
+    await fireEvent.press(screen.getByLabelText(es.permissions.areas.empleados));
+    await fireEvent.press(screen.getByLabelText(L.empleados_ver_pagos));
+    await fireEvent.press(screen.getByText(es.employee.tabData));
+    await fireEvent.press(screen.getByText(es.unsaved.leave));
     expect(screen.queryByRole('button', { name: es.permissions.saveChanges })).toBeNull();
     await fireEvent.press(screen.getByText(es.employee.tabPermissions));
     await fireEvent.press(screen.getByLabelText(es.permissions.areas.empleados));
-    expect(screen.getByLabelText(L.empleados_ver_pagos).props.accessibilityState.checked).toBe(true);
+    expect(screen.getByLabelText(L.empleados_ver_pagos).props.accessibilityState.checked).toBe(false);
+    expect(mockSavePermissions).not.toHaveBeenCalled();
+  });
+
+  test('sin cambios se cambia de pestaña y se sale del perfil sin preguntar', async () => {
+    await openPermissions();
+    await screen.findByLabelText(es.permissions.template);
+    const prevent = jest.fn();
+    mockNavigation.listener?.({ preventDefault: prevent, data: { action: { type: 'GO_BACK' } } });
+    expect(prevent).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByText(es.employee.tabData));
+    expect(screen.queryByText('¿Salir sin guardar?')).toBeNull();
+  });
+
+  test('dejar el perfil con cambios sin guardar pide confirmación; Salir sigue con la navegación', async () => {
+    await openPermissions();
+    await screen.findByLabelText(es.permissions.template);
+    await fireEvent.press(screen.getByLabelText(es.permissions.areas.empleados));
+    await fireEvent.press(screen.getByLabelText(L.empleados_ver_pagos));
+    const prevent = jest.fn();
+    const action = { type: 'GO_BACK' };
+    const { act } = require('@testing-library/react-native');
+    await act(async () => mockNavigation.listener?.({ preventDefault: prevent, data: { action } }));
+    expect(prevent).toHaveBeenCalled();
+    expect(screen.getByText('¿Salir sin guardar?')).toBeTruthy();
+    await fireEvent.press(screen.getByText(es.unsaved.leave));
+    expect(mockNavigation.dispatch).toHaveBeenCalledWith(action);
+    expect(mockSavePermissions).not.toHaveBeenCalled();
+  });
+
+  test('después de guardar ya no pregunta al salir', async () => {
+    await openPermissions();
+    await screen.findByLabelText(es.permissions.template);
+    await fireEvent.press(screen.getByLabelText(es.permissions.areas.empleados));
+    await fireEvent.press(screen.getByLabelText(L.empleados_ver_pagos));
+    mockFetchPermissions.mockResolvedValue({ ok: true, data: ['empleados_ver', 'empleados_invitar_crear', 'empleados_editar_desactivar', 'empleados_ver_pagos'] });
+    await fireEvent.press(screen.getByRole('button', { name: es.permissions.saveChanges }));
+    await waitFor(() => expect(mockFetchPermissions).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.getByRole('button', { name: es.permissions.saveChanges }).props.accessibilityState.disabled).toBe(true));
+    const prevent = jest.fn();
+    mockNavigation.listener?.({ preventDefault: prevent, data: { action: { type: 'GO_BACK' } } });
+    expect(prevent).not.toHaveBeenCalled();
   });
 });
 

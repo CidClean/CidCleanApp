@@ -53,13 +53,15 @@ beforeEach(() => {
 });
 
 describe('Menú → Ajustes (D-107, D-114, D-187)', () => {
-  test('una sola fila "Términos del staff" con la versión vigente como valor y flecha; el título lleva la flecha de volver', async () => {
+  test('la fila "Términos del staff" con la versión vigente como valor y flecha; el título lleva la flecha de volver', async () => {
     await render(<SettingsScreen />);
     expect(screen.getByText(es.nav.settings)).toBeTruthy();
     expect(screen.getByLabelText(es.common.back)).toBeTruthy();
     expect(screen.getByText(es.settings.termsRow)).toBeTruthy();
     await waitFor(() => expect(screen.getByText('v2')).toBeTruthy());
-    expect(screen.getAllByRole('button').filter((b) => b.props.accessibilityLabel !== es.common.back)).toHaveLength(1);
+    // Dos filas: Términos del staff y Transferir rol de Super Admin (orden 12).
+    expect(screen.getAllByRole('button').filter((b) => b.props.accessibilityLabel !== es.common.back)).toHaveLength(2);
+    expect(screen.getByText(es.transfer.row)).toBeTruthy();
   });
 
   test('sin versión publicada el valor es "Sin publicar"', async () => {

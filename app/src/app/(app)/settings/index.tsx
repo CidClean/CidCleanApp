@@ -13,7 +13,7 @@ import { useTheme } from '@/theme';
 
 /**
  * Menú → Ajustes (D-107, D-114, D-169, D-187): filas con nombre, valor actual y flecha. Solo el Super Admin.
- * Por ahora una sola fila, "Términos del staff"; las demás se agregan cuando existan sus módulos.
+ * Por ahora "Términos del staff" y "Transferir rol de Super Admin" (D-090); las demás se agregan cuando existan sus módulos.
  */
 export default function SettingsScreen() {
   const router = useRouter();
@@ -48,7 +48,8 @@ export default function SettingsScreen() {
       <TopBar title={strings.nav.settings} onBack={goBack} backLabel={strings.common.back} />
       <ScrollView contentContainerStyle={{ padding: 12 }}>
         {failed ? <AppAlert tone="error" text={strings.terms.errorLoad} /> : null}
-        <ListRow title={strings.settings.termsRow} detail={value} chevron last onPress={() => router.push('/settings/terms')} />
+        <ListRow title={strings.settings.termsRow} detail={value} chevron onPress={() => router.push('/settings/terms')} />
+        <ListRow title={strings.transfer.row} chevron last onPress={() => router.push('/settings/transfer')} />
       </ScrollView>
     </View>
   );

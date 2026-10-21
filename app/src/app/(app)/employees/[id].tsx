@@ -1,5 +1,5 @@
-import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { Redirect, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -110,6 +110,25 @@ export default function EmployeeProfileScreen() {
   const [permSaving, setPermSaving] = useState(false);
   const [permError, setPermError] = useState<'load' | 'template' | 'save' | null>(null);
   const insets = useSafeAreaInsets();
+
+  // Salir de Permisos con cambios sin guardar pide confirmación (decisión del arquitecto bajo D-200, orden 12):
+  // al cambiar de pestaña o al dejar el perfil (flecha, botón atrás del teléfono).
+  type LeaveAsk = { kind: 'tab'; tab: Tab } | { kind: 'screen'; action: unknown } | null;
+  const [leaveAsk, setLeaveAsk] = useState<LeaveAsk>(null);
+  const dirtyRef = useRef(false);
+  type BeforeRemove = { preventDefault: () => void; data: { action: unknown } };
+  const navigation = useNavigation() as unknown as {
+    addListener: (event: 'beforeRemove', listener: (e: BeforeRemove) => void) => () => void;
+    dispatch: (action: unknown) => void;
+  };
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      if (!dirtyRef.current) return;
+      e.preventDefault();
+      setLeaveAsk({ kind: 'screen', action: e.data.action });
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const load = useCallback(async () => {
     const result = await fetchEmployee(id);
@@ -291,6 +310,24 @@ export default function EmployeeProfileScreen() {
     ? hasPendingChanges(diffPermissions(savedPerms, wantedPerms), employee.role, shownRole)
     : false;
   const showSaveBar = tab === 'permissions' && mode === 'edit' && permLoad === 'ready';
+  dirtyRef.current = mode === 'edit' && permLoad === 'ready' && pendingChanges && !permSaving;
+
+  function changeTab(next: Tab) {
+    if (tab === 'permissions' && next !== 'permissions' && dirtyRef.current) setLeaveAsk({ kind: 'tab', tab: next });
+    else setTab(next);
+  }
+
+  /** "Salir" en la hoja: se descartan los cambios pendientes y se sigue a donde se iba. */
+  function leaveWithoutSaving() {
+    const ask = leaveAsk;
+    setLeaveAsk(null);
+    if (!ask) return;
+    setWantedPerms(savedPerms);
+    setPendingRole(null);
+    dirtyRef.current = false;
+    if (ask.kind === 'tab') setTab(ask.tab);
+    else navigation.dispatch(ask.action);
+  }
 
   const title = employee?.fullName ?? '';
   const topAction =
@@ -346,7 +383,7 @@ export default function EmployeeProfileScreen() {
 
             <Tabs
               value={tab}
-              onChange={setTab}
+              onChange={changeTab}
               tabs={[
                 { key: 'data', label: strings.employee.tabData },
                 { key: 'permissions', label: strings.employee.tabPermissions },
@@ -508,6 +545,23 @@ export default function EmployeeProfileScreen() {
           />
         </View>
       ) : null}
+
+      <Sheet visible={leaveAsk !== null} onClose={() => setLeaveAsk(null)}>
+        <AppText weight="medium" size={sample.headingSize} center>
+          {strings.unsaved.title}
+        </AppText>
+        <AppText size={sample.noteSize} color={colors.secondary} center style={{ marginTop: 4 }}>
+          {strings.unsaved.body}
+        </AppText>
+        <View style={styles.sheetButtons}>
+          <View style={styles.flex}>
+            <AppButton label={strings.common.cancel} variant="outline" onPress={() => setLeaveAsk(null)} />
+          </View>
+          <View style={styles.flex}>
+            <AppButton label={strings.unsaved.leave} onPress={leaveWithoutSaving} />
+          </View>
+        </View>
+      </Sheet>
 
       <Sheet visible={templateAsk !== null} onClose={() => setTemplateAsk(null)}>
         <AppText weight="medium" size={sample.headingSize} center>

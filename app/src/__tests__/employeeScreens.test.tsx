@@ -2,6 +2,16 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 
 import { getStrings } from '@/i18n';
 
+// Navegación simulada: guarda el oyente de beforeRemove para probar la salida con cambios sin guardar.
+const mockNavigation = {
+  listener: null as null | ((e: { preventDefault: () => void; data: { action: unknown } }) => void),
+  addListener: jest.fn((_: string, l: (e: { preventDefault: () => void; data: { action: unknown } }) => void) => {
+    mockNavigation.listener = l;
+    return () => undefined;
+  }),
+  dispatch: jest.fn(),
+};
+
 // --- Simulaciones --------------------------------------------------------------------------------------------
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
@@ -10,6 +20,7 @@ let mockOwnId: string | null = 'yo';
 let mockParams: Record<string, string> = { id: 'e1' };
 
 jest.mock('expo-router', () => ({
+  useNavigation: () => mockNavigation,
   useRouter: () => ({ replace: mockReplace, push: mockPush, back: jest.fn(), canGoBack: () => true }),
   useLocalSearchParams: () => mockParams,
   useFocusEffect: (effect: () => void | (() => void)) => {

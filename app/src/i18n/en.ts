@@ -204,6 +204,70 @@ export const en: Strings = {
     },
   },
 
+  // Change history (D-088, D-198). Translated with context (D-157).
+  history: {
+    by: (who: string) => `by ${who}`, // history row detail: "{who or what} · by {who}"
+    today: 'Today', // history row time: "Today 2:35 PM"
+    yesterday: 'Yesterday', // history row time
+    am: 'AM',
+    pm: 'PM',
+    termsKinds: {
+      staff: 'Staff', // terms document type
+      portal: 'Client portal', // terms document type
+      privacy: 'Privacy', // terms document type
+    },
+    employeeCreated: 'Employee created',
+    employeeDeactivated: 'Employee deactivated',
+    employeeReactivated: 'Employee reactivated',
+    employeeEdited: 'Employee edited',
+    roleChanged: (role: string) => `Role changed: ${role}`,
+    typeChanged: (type: string) => `Type changed: ${type}`,
+    accessGiven: 'App access given',
+    accessRemoved: 'App access removed',
+    becameSuperAdmin: 'Now Super Admin',
+    leftSuperAdmin: 'No longer Super Admin',
+    superAdminTransferred: 'Super Admin role transferred',
+    invitationSent: 'Invitation sent',
+    invitationResent: 'Invitation resent',
+    invitationFailed: 'Invitation not sent',
+    permissionGiven: (name: string) => `Permission given: ${name}`,
+    permissionRemoved: (name: string) => `Permission removed: ${name}`,
+    documentUploaded: (name: string) => `Document uploaded: ${name}`,
+    documentReplaced: (name: string) => `Document replaced: ${name}`,
+    documentOpened: (name: string) => `Document opened: ${name}`,
+    termsPublished: (version: string) => `Terms published: version ${version}`,
+    termsAccepted: (version: string) => `Terms accepted: version ${version}`,
+    leadCreated: 'Lead created',
+    leadStatusChanged: 'Lead status changed',
+    leadDeleted: 'Lead deleted',
+    walkthroughScheduled: 'Walkthrough scheduled',
+    walkthroughRescheduled: 'Walkthrough rescheduled',
+    walkthroughStatusChanged: 'Walkthrough status changed',
+    unknown: 'Change recorded', // an action the app does not know yet
+    empty: 'No changes yet.',
+    errorLoad: "Couldn't load the history. Try again.",
+  },
+
+  // Transfer the Super Admin role (D-090, D-116, D-199).
+  transfer: {
+    row: 'Transfer Super Admin role', // Settings row
+    title: 'Transfer Super Admin', // top bar
+    newSuperAdmin: 'New Super Admin', // dropdown label
+    understand: "I understand I'll no longer be Super Admin", // checkbox
+    submit: 'Transfer role', // solid button
+    noCandidates: 'No one else can receive the role yet: they must be active and have signed in to the app.',
+    errorLoad: "Couldn't load the list. Try again.",
+    errorTransfer: "Couldn't transfer the role. Try again.",
+    errorNoType: 'Before transferring, your profile needs a worker type (W-2 or 1099).',
+  },
+
+  // Leaving the Permissions tab with unsaved changes.
+  unsaved: {
+    title: 'Leave without saving?', // confirmation sheet
+    body: 'Your changes will be lost.', // confirmation sheet
+    leave: 'Leave', // confirmation sheet: solid button
+  },
+
   terms: {
     barTitle: 'Before you start', // first-sign-in terms screen
     location: 'Location only when you clock in and out',
