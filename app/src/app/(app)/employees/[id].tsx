@@ -1,6 +1,7 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
@@ -9,8 +10,10 @@ import { AppText } from '@/components/AppText';
 import { Avatar } from '@/components/Avatar';
 import { Chip } from '@/components/Chip';
 import { DataRow } from '@/components/DataRow';
+import { Icon } from '@/components/Icon';
 import { ListRow } from '@/components/ListRow';
 import { PendingBody } from '@/components/PendingScreen';
+import { PermissionsTab } from '@/components/PermissionsTab';
 import { Segmented } from '@/components/Segmented';
 import { SelectField } from '@/components/SelectField';
 import { Sheet } from '@/components/Sheet';
@@ -36,11 +39,31 @@ import {
   type EditForm,
   type Employee,
   type EmployeeDocument,
+  type RoleKey,
 } from '@/lib/employeeRules';
-import { fetchEmployee, resendInvitation, setEmployeeActive, updateEmployee } from '@/lib/employeesApi';
+import {
+  fetchEmployee,
+  fetchEmployeePermissions,
+  fetchTemplatePermissions,
+  resendInvitation,
+  saveEmployeePermissions,
+  setEmployeeActive,
+  updateEmployee,
+} from '@/lib/employeesApi';
 import { useGoBack } from '@/lib/navigation';
+import {
+  applyTemplate,
+  canSeePay,
+  diffPermissions,
+  hasPendingChanges,
+  heldKeys,
+  permissionsMode,
+  roleToSave,
+  toggled,
+  visibleAreas,
+} from '@/lib/permissionsRules';
 import { usePermissions, useSession } from '@/lib/session';
-import { sample, useTheme } from '@/theme';
+import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
 type Tab = 'data' | 'permissions' | 'pay';
 type ConfirmSheet = 'deactivate' | 'reactivate' | null;
@@ -77,6 +100,17 @@ export default function EmployeeProfileScreen() {
   const [uploading, setUploading] = useState(false);
   const [documentError, setDocumentError] = useState<'upload' | 'camera' | null>(null);
 
+  // Pestaña Permisos (D-188 a D-192): lo guardado, lo que se quiere guardar y el rol de la última plantilla aplicada.
+  const [permLoad, setPermLoad] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [savedPerms, setSavedPerms] = useState<ReadonlySet<string>>(new Set());
+  const [wantedPerms, setWantedPerms] = useState<ReadonlySet<string>>(new Set());
+  const [pendingRole, setPendingRole] = useState<RoleKey | null>(null);
+  const [templateAsk, setTemplateAsk] = useState<RoleKey | null>(null);
+  const [applying, setApplying] = useState(false);
+  const [permSaving, setPermSaving] = useState(false);
+  const [permError, setPermError] = useState<'load' | 'template' | 'save' | null>(null);
+  const insets = useSafeAreaInsets();
+
   const load = useCallback(async () => {
     const result = await fetchEmployee(id);
     if (result.ok) {
@@ -95,6 +129,25 @@ export default function EmployeeProfileScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const targetIsSuper = employee?.isSuperAdmin ?? false;
+  const loadPermissions = useCallback(async () => {
+    const result = await fetchEmployeePermissions(id);
+    if (!result.ok) {
+      setPermLoad('error');
+      return;
+    }
+    const set = new Set(result.data);
+    setSavedPerms(set);
+    setWantedPerms(set);
+    setPendingRole(null);
+    setPermLoad('ready');
+  }, [id]);
+
+  // El Super Admin no necesita leer nada: tiene todos los permisos (D-192).
+  useEffect(() => {
+    if (employee && !targetIsSuper) void loadPermissions();
+  }, [employee?.id, targetIsSuper, loadPermissions]);
 
   const documentsVisible = employee ? showsDocuments(access, employee) : false;
   useEffect(() => {
@@ -149,6 +202,39 @@ export default function EmployeeProfileScreen() {
     await load();
   }
 
+  /** Cambiar la plantilla pide confirmación (D-189); al confirmar, sus permisos quedan como cambios pendientes. */
+  async function confirmTemplate() {
+    if (!templateAsk || applying) return;
+    setApplying(true);
+    setPermError(null);
+    const result = await fetchTemplatePermissions(templateAsk);
+    setApplying(false);
+    if (!result.ok) {
+      setTemplateAsk(null);
+      setPermError('template');
+      return;
+    }
+    setWantedPerms(applyTemplate(wantedPerms, result.data, heldKeys(access)));
+    setPendingRole(templateAsk);
+    setTemplateAsk(null);
+  }
+
+  /** Guardar cambios (D-188): todos los permisos pendientes juntos y, si se aplicó una plantilla, su rol (D-190). */
+  async function savePermissions() {
+    if (!employee || permSaving) return;
+    const changes = diffPermissions(savedPerms, wantedPerms);
+    const role = roleToSave(employee.role, pendingRole ?? employee.role);
+    setPermSaving(true);
+    setPermError(null);
+    const result = await saveEmployeePermissions(employee.id, changes, role);
+    setPermSaving(false);
+    if (!result.ok) {
+      setPermError('save');
+      return;
+    }
+    await Promise.all([load(), loadPermissions()]);
+  }
+
   async function sendInvitation() {
     if (!employee || resend === 'sending') return;
     setResend('sending');
@@ -198,6 +284,13 @@ export default function EmployeeProfileScreen() {
       },
     });
   }
+
+  const mode = employee ? permissionsMode(access, employee, profile?.id ?? null) : 'readonly';
+  const shownRole: RoleKey = pendingRole ?? employee?.role ?? 'employee';
+  const pendingChanges = employee
+    ? hasPendingChanges(diffPermissions(savedPerms, wantedPerms), employee.role, shownRole)
+    : false;
+  const showSaveBar = tab === 'permissions' && mode === 'edit' && permLoad === 'ready';
 
   const title = employee?.fullName ?? '';
   const topAction =
@@ -261,8 +354,35 @@ export default function EmployeeProfileScreen() {
               ]}
             />
 
-            {/* TEMPORAL: Permisos y Pagos se construyen en órdenes siguientes. */}
-            {tab !== 'data' ? <View style={{ height: 160 }}><PendingBody /></View> : null}
+            {tab === 'permissions' ? (
+              <View>
+                {permError === 'save' ? <AppAlert tone="error" text={strings.employee.errorSave} /> : null}
+                {permError === 'template' ? <AppAlert tone="error" text={strings.permissions.errorTemplate} /> : null}
+                {mode !== 'locked' && permLoad === 'error' ? (
+                  <AppAlert tone="error" text={strings.permissions.errorLoad} />
+                ) : null}
+                {mode === 'locked' || permLoad === 'ready' ? (
+                  <PermissionsTab
+                    strings={strings}
+                    mode={mode}
+                    areas={visibleAreas(access, wantedPerms, mode === 'locked')}
+                    on={wantedPerms}
+                    onToggle={(key, value) => setWantedPerms(toggled(wantedPerms, key, value))}
+                    template={mode === 'edit' ? (templateAsk ?? shownRole) : null}
+                    onTemplate={setTemplateAsk}
+                  />
+                ) : null}
+              </View>
+            ) : null}
+
+            {/* Pagos (D-194): sin empleados_ver_pagos, el aviso y ninguna cifra. Con el permiso sigue "Pendiente": se construye en el hito 5. */}
+            {tab === 'pay' && canSeePay(access) ? <View style={{ height: 160 }}><PendingBody /></View> : null}
+            {tab === 'pay' && !canSeePay(access) ? (
+              <View style={styles.noPay}>
+                <Icon name="lock" size={26} strokeWidth={iconStrokeWidth} color={colors.secondary} />
+                <AppText weight="medium">{strings.permissions.noPayPermission}</AppText>
+              </View>
+            ) : null}
 
             {tab === 'data' && !editing ? (
               <DataSection
@@ -373,6 +493,40 @@ export default function EmployeeProfileScreen() {
           </>
         ) : null}
       </ScrollView>
+
+      {showSaveBar ? (
+        <View
+          style={[
+            styles.saveBar,
+            { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: 10 + insets.bottom },
+          ]}
+        >
+          <AppButton
+            label={strings.permissions.saveChanges}
+            onPress={() => void savePermissions()}
+            disabled={!pendingChanges || permSaving}
+          />
+        </View>
+      ) : null}
+
+      <Sheet visible={templateAsk !== null} onClose={() => setTemplateAsk(null)}>
+        <AppText weight="medium" size={sample.headingSize} center>
+          {strings.permissions.applyTitle(
+            templateAsk ? roleLabel(strings, templateAsk) : '',
+          )}
+        </AppText>
+        <AppText size={sample.noteSize} color={colors.secondary} center style={{ marginTop: 4 }}>
+          {strings.permissions.applyBody(employee?.fullName ?? '')}
+        </AppText>
+        <View style={styles.sheetButtons}>
+          <View style={styles.flex}>
+            <AppButton label={strings.common.cancel} variant="outline" onPress={() => setTemplateAsk(null)} />
+          </View>
+          <View style={styles.flex}>
+            <AppButton label={strings.permissions.apply} onPress={() => void confirmTemplate()} disabled={applying} />
+          </View>
+        </View>
+      </Sheet>
 
       <Sheet visible={sheet !== null} onClose={() => setSheet(null)}>
         <AppText weight="medium" size={sample.headingSize} center>
@@ -499,6 +653,8 @@ const styles = StyleSheet.create({
   who: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
   toggle: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   sectionLabel: { marginTop: 10, marginBottom: 2 },
+  noPay: { alignItems: 'center', gap: 8, paddingVertical: 26 },
+  saveBar: { borderTopWidth: 0.5, paddingTop: 10, paddingHorizontal: 12 },
   sheetButtons: { flexDirection: 'row', gap: 8, marginTop: 12 },
   flex: { flex: 1 },
 });

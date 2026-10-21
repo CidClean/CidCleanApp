@@ -153,9 +153,9 @@ export function canResendInvitation(access: Access, target: Pick<Employee, 'hasA
   return can(access, 'empleados_invitar_crear') && target.active && accessState(target).kind === 'pending';
 }
 
-/** Documentos (D-125, D-175): solo los 1099 y solo quien ve pagos. */
+/** Documentos (D-125, D-175, D-193): solo los 1099 y solo quien gestiona documentos; ver pagos ya no basta. */
 export function showsDocuments(access: Access, target: Pick<Employee, 'workerType'>): boolean {
-  return target.workerType === '1099' && can(access, 'empleados_ver_pagos');
+  return target.workerType === '1099' && can(access, 'empleados_gestionar_documentos');
 }
 
 export type DocumentRow = { kind: DocumentKind; state: 'uploaded' | 'missing'; uploadedAt: string | null; documentId: string | null };

@@ -141,3 +141,45 @@ export async function updateEmployee(profileId: string, form: EditForm): Promise
     return { ok: false, reason: 'network' };
   }
 }
+
+/** Permisos del perfil que quien consulta también tiene (D-191): el servidor no devuelve los demás. */
+export async function fetchEmployeePermissions(profileId: string): Promise<ApiResult<string[]>> {
+  try {
+    const { data, error } = await supabase.rpc('employee_permissions', { p_profile: profileId });
+    if (error) return { ok: false, reason: failureFromCode(error.code) };
+    return { ok: true, data: Array.isArray(data) ? (data as string[]) : [] };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/** Permisos de una plantilla de partida (D-152, D-193); la lista vive en la base, no en la app. */
+export async function fetchTemplatePermissions(role: RoleKey): Promise<ApiResult<string[]>> {
+  try {
+    const { data, error } = await supabase.rpc('role_template_permissions', { p_role: role });
+    if (error) return { ok: false, reason: failureFromCode(error.code) };
+    return { ok: true, data: Array.isArray(data) ? (data as string[]) : [] };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/** Guarda los cambios pendientes de la pestaña Permisos de una vez (D-188): todo o nada, y el rol de la plantilla (D-190). */
+export async function saveEmployeePermissions(
+  profileId: string,
+  changes: { grant: string[]; revoke: string[] },
+  role: RoleKey | null,
+): Promise<ApiResult<null>> {
+  try {
+    const { error } = await supabase.rpc('save_employee_permissions', {
+      p_profile: profileId,
+      p_grant: changes.grant,
+      p_revoke: changes.revoke,
+      p_role: role,
+    });
+    if (error) return { ok: false, reason: failureFromCode(error.code) };
+    return { ok: true, data: null };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}

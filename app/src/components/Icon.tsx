@@ -54,6 +54,8 @@ const paths = {
     'M9 12h12l-3 -3',
     'M18 15l3 -3',
   ],
+  // Candado de la muestra de la ronda 16 (rect x3 y11 18x11 r2 + arco), escrito como trazos.
+  lock: ['M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-7a2 2 0 0 1 2 -2', 'M7 11V7a5 5 0 0 1 10 0v4'],
   'map-pin': [
     'M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0',
     'M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0',

@@ -142,6 +142,68 @@ export const es = {
     errorCamera: 'Permite el acceso a la cámara en los ajustes del teléfono.', // SIN APROBAR
   },
 
+  // Pestañas Permisos y Pagos del perfil (D-058, D-188 a D-194). Los 36 nombres de permisos salen de current/flujo.md
+  // "Roles y permisos"; solo los 7 de Empleados están en la muestra aprobada de la ronda 16.
+  permissions: {
+    template: 'Plantilla de partida', // APROBADO (muestra ronda 16, D-189)
+    areas: {
+      ventas: 'Ventas', // APROBADO (muestra ronda 16)
+      clientes: 'Clientes y jobsites', // APROBADO (muestra ronda 16)
+      empleados: 'Empleados', // APROBADO (muestra ronda 16)
+      schedule_work: 'Schedule y Work', // APROBADO (muestra ronda 16)
+      accounting: 'Accounting', // APROBADO (muestra ronda 16)
+      sistema: 'Sistema', // APROBADO (muestra ronda 16)
+    },
+    chipAll: 'Todo', // APROBADO (D-110, muestra ronda 16)
+    chipPartial: 'Parcial', // APROBADO (D-110, muestra ronda 16)
+    chipNone: 'Sin acceso', // APROBADO (D-110, muestra ronda 16)
+    saveChanges: 'Guardar cambios', // APROBADO (D-188, muestra ronda 16)
+    applyTitle: (template: string) => `¿Aplicar la plantilla ${template}?`, // APROBADO (D-189, muestra ronda 16)
+    applyBody: (name: string) => `Reemplaza los permisos actuales de ${name}.`, // APROBADO (D-189, muestra ronda 16)
+    apply: 'Aplicar', // APROBADO (D-189, muestra ronda 16)
+    noPayPermission: 'No tienes permiso para ver pagos', // APROBADO (D-194, muestra ronda 16)
+    errorLoad: 'No se pudieron cargar los permisos. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
+    errorTemplate: 'No se pudo cargar la plantilla. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
+    labels: {
+      leads_ver: 'Ver leads', // SIN APROBAR (current/flujo.md: "Ver, crear-editar y eliminar leads")
+      leads_editar: 'Crear y editar leads', // SIN APROBAR
+      leads_eliminar: 'Eliminar leads', // SIN APROBAR
+      walkthroughs_hacer: 'Hacer walkthroughs', // SIN APROBAR
+      quotes_ver: 'Ver quotes', // SIN APROBAR
+      quotes_editar: 'Crear y editar quotes', // SIN APROBAR
+      quotes_enviar: 'Enviar quotes', // SIN APROBAR
+      quotes_ver_precios: 'Ver precios de los quotes', // SIN APROBAR
+      sow_contratos_subir_ver: 'Subir y ver SOW y contratos', // SIN APROBAR
+      clientes_ver: 'Ver clientes y jobsites', // SIN APROBAR
+      clientes_editar_datos: 'Editar datos y contactos', // SIN APROBAR
+      clientes_editar_walkthrough_sow: 'Editar walkthrough y SOW', // SIN APROBAR
+      clientes_ver_tarifa: 'Ver tarifa al cliente', // SIN APROBAR
+      clientes_cambiar_estado: 'Cambiar estado', // SIN APROBAR
+      empleados_ver: 'Ver lista', // APROBADO (muestra ronda 16)
+      empleados_invitar_crear: 'Invitar y crear', // APROBADO (muestra ronda 16)
+      empleados_editar_desactivar: 'Editar y desactivar', // APROBADO (muestra ronda 16)
+      empleados_ver_pagos: 'Ver pagos y tarifas', // APROBADO (muestra ronda 16)
+      empleados_asignar_pago: 'Asignar a jobsites y definir su pago', // APROBADO (muestra ronda 16)
+      empleados_gestionar_permisos: 'Gestionar permisos', // APROBADO (muestra ronda 16)
+      empleados_gestionar_documentos: 'Gestionar documentos de empleados', // APROBADO (D-193)
+      schedule_ver_editar: 'Ver y editar el schedule completo', // SIN APROBAR
+      work_registrar_por_otros: 'Registrar trabajo por otros', // SIN APROBAR
+      work_editar: 'Editar registros de trabajo', // SIN APROBAR
+      work_aprobar: 'Aprobar trabajo', // SIN APROBAR
+      work_revisar_gps: 'Revisar alertas de GPS', // SIN APROBAR
+      ingresos_ver_registrar: 'Ver y registrar ingresos', // SIN APROBAR
+      ingresos_marcar_recibidos: 'Marcar ingresos como recibidos', // SIN APROBAR
+      personal_ver_costo: 'Ver costo de personal', // SIN APROBAR
+      gastos_ver: 'Ver gastos', // SIN APROBAR
+      gastos_registrar_editar: 'Registrar y editar gastos', // SIN APROBAR
+      gastos_recurrentes: 'Gestionar gastos recurrentes', // SIN APROBAR
+      dashboard_global: 'Ver dashboard global', // SIN APROBAR
+      dashboard_cuenta: 'Ver dashboard por cuenta', // SIN APROBAR
+      reportes_exportar: 'Exportar reportes', // SIN APROBAR
+      historial_ver: 'Ver historial de cambios', // SIN APROBAR
+    },
+  },
+
   terms: {
     barTitle: 'Antes de empezar', // APROBADO (muestra ronda 10, D-086)
     location: 'Ubicación solo al marcar entrada y salida', // APROBADO (muestra ronda 10)

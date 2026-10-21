@@ -39,7 +39,13 @@ const mockFetchEmployee = jest.fn();
 const mockUpdateEmployee = jest.fn();
 const mockSetActive = jest.fn();
 const mockResend = jest.fn();
+const mockFetchPermissions = jest.fn();
+const mockFetchTemplate = jest.fn();
+const mockSavePermissions = jest.fn();
 jest.mock('@/lib/employeesApi', () => ({
+  fetchEmployeePermissions: (...a: unknown[]) => mockFetchPermissions(...a),
+  fetchTemplatePermissions: (...a: unknown[]) => mockFetchTemplate(...a),
+  saveEmployeePermissions: (...a: unknown[]) => mockSavePermissions(...a),
   createEmployee: (...a: unknown[]) => mockCreateEmployee(...a),
   fetchEmployee: (...a: unknown[]) => mockFetchEmployee(...a),
   updateEmployee: (...a: unknown[]) => mockUpdateEmployee(...a),
@@ -70,6 +76,7 @@ beforeEach(() => {
   mockOwnId = 'yo';
   mockParams = { id: 'e1' };
   mockFetchEmployee.mockResolvedValue({ ok: true, data: employee() });
+  mockFetchPermissions.mockResolvedValue({ ok: true, data: [] });
   mockFetchDocuments.mockResolvedValue({ ok: true, data: [{ id: 'd1', kind: 'w9', uploadedAt: new Date(2026, 9, 12, 12).toISOString() }] });
 });
 
@@ -276,12 +283,22 @@ describe('Perfil del empleado (D-057, D-172 a D-175, D-182 a D-184)', () => {
     expect(mockResend).toHaveBeenCalledWith('e1');
   });
 
-  test('Permisos y Pagos muestran "Pendiente" por ahora', async () => {
+  test('Pagos con el permiso sigue en "Pendiente" (D-194); sin él, el aviso con candado y ninguna cifra', async () => {
     await render(<EmployeeProfileScreen />);
     await screen.findByText(es.employee.invitationSent);
     await fireEvent.press(screen.getByText(es.employee.tabPay));
     expect(screen.getByText(es.pending)).toBeTruthy();
-    await fireEvent.press(screen.getByText(es.employee.tabPermissions));
-    expect(screen.getByText(es.pending)).toBeTruthy();
+    expect(screen.queryByText(es.permissions.noPayPermission)).toBeNull();
+  });
+
+  test('con empleados_ver sin ver pagos: las tres pestañas, y Pagos solo muestra el aviso', async () => {
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['empleados_ver']) };
+    await render(<EmployeeProfileScreen />);
+    await screen.findByText(es.employee.invitationSent);
+    expect(screen.getByText(es.employee.tabData)).toBeTruthy();
+    expect(screen.getByText(es.employee.tabPermissions)).toBeTruthy();
+    await fireEvent.press(screen.getByText(es.employee.tabPay));
+    expect(screen.getByText(es.permissions.noPayPermission)).toBeTruthy();
+    expect(screen.queryByText(es.pending)).toBeNull();
   });
 });

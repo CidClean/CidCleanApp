@@ -143,6 +143,67 @@ export const en: Strings = {
     errorCamera: 'Allow camera access in the phone settings.', // red notice when the camera permission is denied
   },
 
+  // Employee profile, Permissions and Pay tabs (D-058, D-188 to D-194). Translated from the Spanish text with context (D-157).
+  permissions: {
+    template: 'Starting template', // Permissions tab: dropdown label above the areas
+    areas: {
+      ventas: 'Sales', // permission area
+      clientes: 'Clients and jobsites', // permission area
+      empleados: 'Employees', // permission area
+      schedule_work: 'Schedule and Work', // permission area
+      accounting: 'Accounting', // permission area
+      sistema: 'System', // permission area
+    },
+    chipAll: 'All', // area chip: every listed permission is on
+    chipPartial: 'Partial', // area chip: some are on
+    chipNone: 'No access', // area chip: none is on
+    saveChanges: 'Save changes', // fixed solid button at the bottom of the Permissions tab
+    applyTitle: (template: string) => `Apply the ${template} template?`, // confirmation sheet when changing the starting template
+    applyBody: (name: string) => `Replaces ${name}'s current permissions.`, // confirmation sheet
+    apply: 'Apply', // confirmation sheet: solid button
+    noPayPermission: "You don't have permission to view pay", // Pay tab without the "View pay and rates" permission
+    errorLoad: "Couldn't load the permissions. Try again.", // red notice when the tab does not load
+    errorTemplate: "Couldn't load the template. Try again.", // red notice when applying a template fails
+    labels: {
+      leads_ver: 'View leads', // Sales permission
+      leads_editar: 'Create and edit leads', // Sales permission
+      leads_eliminar: 'Delete leads', // Sales permission
+      walkthroughs_hacer: 'Do walkthroughs', // Sales permission
+      quotes_ver: 'View quotes', // Sales permission
+      quotes_editar: 'Create and edit quotes', // Sales permission
+      quotes_enviar: 'Send quotes', // Sales permission
+      quotes_ver_precios: 'View quote prices', // Sales permission
+      sow_contratos_subir_ver: 'Upload and view SOWs and contracts', // Sales permission
+      clientes_ver: 'View clients and jobsites', // Clients permission
+      clientes_editar_datos: 'Edit details and contacts', // Clients permission
+      clientes_editar_walkthrough_sow: 'Edit walkthrough and SOW', // Clients permission
+      clientes_ver_tarifa: 'View client rate', // Clients permission
+      clientes_cambiar_estado: 'Change status', // Clients permission
+      empleados_ver: 'View list', // Employees permission
+      empleados_invitar_crear: 'Invite and create', // Employees permission
+      empleados_editar_desactivar: 'Edit and deactivate', // Employees permission
+      empleados_ver_pagos: 'View pay and rates', // Employees permission
+      empleados_asignar_pago: 'Assign to jobsites and set their pay', // Employees permission
+      empleados_gestionar_permisos: 'Manage permissions', // Employees permission
+      empleados_gestionar_documentos: 'Manage employee documents', // Employees permission: the only one that views, uploads and replaces 1099 documents
+      schedule_ver_editar: 'View and edit the full schedule', // Schedule and Work permission
+      work_registrar_por_otros: 'Log work for others', // Schedule and Work permission
+      work_editar: 'Edit work records', // Schedule and Work permission
+      work_aprobar: 'Approve work', // Schedule and Work permission
+      work_revisar_gps: 'Review GPS alerts', // Schedule and Work permission
+      ingresos_ver_registrar: 'View and record income', // Accounting permission
+      ingresos_marcar_recibidos: 'Mark income as received', // Accounting permission
+      personal_ver_costo: 'View staff cost', // Accounting permission
+      gastos_ver: 'View expenses', // Accounting permission
+      gastos_registrar_editar: 'Record and edit expenses', // Accounting permission
+      gastos_recurrentes: 'Manage recurring expenses', // Accounting permission
+      dashboard_global: 'View global dashboard', // Accounting permission
+      dashboard_cuenta: 'View account dashboard', // Accounting permission
+      reportes_exportar: 'Export reports', // Accounting permission
+      historial_ver: 'View change history', // System permission
+    },
+  },
+
   terms: {
     barTitle: 'Before you start', // first-sign-in terms screen
     location: 'Location only when you clock in and out',

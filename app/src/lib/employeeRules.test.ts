@@ -154,10 +154,11 @@ describe('Quién ve y usa qué según sus permisos (D-169, D-125)', () => {
     expect(canResendInvitation(creator, employee({ active: false }))).toBe(false);
   });
 
-  test('Documentos solo de los 1099 y solo con empleados_ver_pagos', () => {
-    const payer = access(false, ['empleados_ver_pagos']);
-    expect(showsDocuments(payer, employee({ workerType: '1099' }))).toBe(true);
-    expect(showsDocuments(payer, employee({ workerType: 'w2' }))).toBe(false);
+  test('Documentos solo de los 1099 y solo con empleados_gestionar_documentos (D-193): ver pagos ya no basta', () => {
+    const keeper = access(false, ['empleados_gestionar_documentos']);
+    expect(showsDocuments(keeper, employee({ workerType: '1099' }))).toBe(true);
+    expect(showsDocuments(keeper, employee({ workerType: 'w2' }))).toBe(false);
+    expect(showsDocuments(access(false, ['empleados_ver_pagos']), employee({ workerType: '1099' }))).toBe(false);
     expect(showsDocuments(access(false, ['empleados_ver', 'empleados_editar_desactivar']), employee({ workerType: '1099' }))).toBe(false);
     expect(showsDocuments(access(true), employee({ workerType: '1099' }))).toBe(true);
   });

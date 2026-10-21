@@ -187,6 +187,30 @@ begin
     pg_temp.valor('super', $q$ select has_permission('empleados_gestionar_documentos') $q$));
 end $$;
 
+
+-- Leer los permisos de un perfil (migración 20261021000009) -----------------------------------------------
+
+do $$
+declare
+  obj uuid;
+begin
+  insert into profiles (full_name, worker_type, role, has_app_access) values ('Objetivo lectura', 'w2', 'employee', false) returning id into obj;
+  insert into profile_permissions (profile_id, permission_key)
+    select obj, k from unnest(array['empleados_ver', 'leads_ver', 'gastos_ver', 'work_editar']) k;
+  perform pg_temp.prueba('employee_permissions: anon (42501)', 'ERR:42501',
+    pg_temp.valor('anon', format('select employee_permissions(%L)', obj)));
+  perform pg_temp.prueba('employee_permissions: sin empleados_ver (42501)', 'ERR:42501',
+    pg_temp.valor('sin_permisos', format('select employee_permissions(%L)', obj)));
+  perform pg_temp.prueba('employee_permissions: solo con empleados_ver ve únicamente lo que también tiene', '{empleados_ver}',
+    pg_temp.valor('ver', format('select employee_permissions(%L)', obj)));
+  perform pg_temp.prueba('employee_permissions: el gestor ve los 3 que tiene (no gastos_ver)', '{empleados_ver,leads_ver,work_editar}',
+    pg_temp.valor('gestor', format('select employee_permissions(%L)', obj)));
+  perform pg_temp.prueba('employee_permissions: el Super Admin ve todos', '{empleados_ver,gastos_ver,leads_ver,work_editar}',
+    pg_temp.valor('super', format('select employee_permissions(%L)', obj)));
+  perform pg_temp.prueba('employee_permissions: otro gestor: todo lo suyo, el gestor lo tiene', '{clientes_ver,empleados_gestionar_permisos,empleados_ver,leads_ver}',
+    pg_temp.valor('gestor', format('select employee_permissions(%L)', (select profile_id from actores where nombre = 'otro_gestor'))));
+end $$;
+
 -- Resultado ------------------------------------------------------------------------------------------
 
 select prueba, ok, detalle from resultados order by n;
