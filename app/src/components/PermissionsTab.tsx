@@ -76,7 +76,8 @@ export function PermissionsTab({ strings, mode, areas, on, onToggle, template, o
             >
               <AppText weight="medium">{name}</AppText>
               <View style={styles.areaRight}>
-                <Chip label={chipLabel(strings, area.state)} tone={CHIP_TONE[area.state]} />
+                {/* En la muestra la ficha hereda el peso medio de la fila del área. */}
+                <Chip label={chipLabel(strings, area.state)} tone={CHIP_TONE[area.state]} medium />
                 <Icon name="chevron-down" size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
               </View>
             </Pressable>
