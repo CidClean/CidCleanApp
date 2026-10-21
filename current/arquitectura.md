@@ -32,13 +32,13 @@ Principio: una sola base de código, servicios administrados y nada de servidore
 | Servicio | Estado al 2026-10-21 |
 | --- | --- |
 | Supabase | Proyecto "CidClean App", ref `noammaqhtdfgbheeiugo`, us-east-1, plan gratis (D-141). Token de acceso entregado por el dueño, no guardado (D-148). El proyecto anterior "CidClean's Project" (ref `scovsbtomhywstpfmoah`) está pausado y no se usa. |
-| Expo | Cuenta `cidcleanadmin`. Acceso por token, que no se guarda en el repositorio (D-143). |
+| Expo | Cuenta `cidcleanadmin`. Acceso por token, que no se guarda en el repositorio (D-143). Proyecto `@cidcleanadmin/cidclean` (ID `89b103c3-f85e-41e9-8c01-c3e9823b4fa5`), canal y rama `preview` con la entrada del staff publicada, y un build de Android de prueba lanzado el 2026-10-21 (D-159e). Las variables públicas de Supabase están en el entorno de EAS. |
 | Cloudflare | Dominio `cidclean.com` ya en Cloudflare (D-142). |
 | GitHub | Repositorio `CidClean/CidCleanApp`; el push funciona. |
-| Resend | Pendiente: la conexión actual da "Forbidden" al listar dominios y llaves; falta una llave con acceso completo o el dominio de envío. |
+| Resend | Pendiente: la conexión actual da "Forbidden" al listar dominios y llaves; falta una llave con acceso completo. Es lo que bloquea que el correo de entrada muestre el código: en el plan gratis de Supabase con su correo por defecto no se puede cambiar la plantilla (2026-10-21), así que hace falta Resend como correo propio. La plantilla lista está en `supabase/email-templates/magic-link.html`. |
 | Apple Developer y Google Play | Pendientes; se abren antes de la primera build de iOS y antes de publicar en Android. |
 
-Super Admin: `admin@cidclean.com` (D-144). Las tres migraciones de `supabase/migrations/` (perfiles, permisos e historial; Super Admin; endurecer funciones) están aplicadas en el proyecto "CidClean App" desde el 2026-10-21. La configuración de Auth quedó así: solo entra quien recibió invitación (registro abierto desactivado), código de 6 dígitos que vale 10 minutos (D-040, D-123, D-129). El correo de Supabase por defecto envía muy pocos mensajes por hora; para que lleguen los códigos del staff falta conectar Resend (pendiente).
+Super Admin: `admin@cidclean.com` (D-144), con su usuario de Auth creado y enlazado al perfil (procedimiento en `supabase/scripts/bootstrap-super-admin.md`). Las tres migraciones de `supabase/migrations/` (perfiles, permisos e historial; Super Admin; endurecer funciones) están aplicadas en el proyecto "CidClean App" desde el 2026-10-21. La configuración de Auth quedó así: solo entra quien recibió invitación (registro abierto desactivado), código de 6 dígitos que vale 10 minutos (D-040, D-123, D-129). El correo de Supabase por defecto envía muy pocos mensajes por hora; para que lleguen los códigos del staff falta conectar Resend (pendiente).
 
 Permisos: catálogo en `permisos.md` (D-145). Forma de trabajo (D-147): Claude ordena, Claude Code ejecuta, el dueño aprueba.
 
