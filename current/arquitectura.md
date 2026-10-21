@@ -38,4 +38,6 @@ Principio: una sola base de código, servicios administrados y nada de servidore
 | Resend | Pendiente: la conexión actual da "Forbidden" al listar dominios y llaves; falta una llave con acceso completo o el dominio de envío. |
 | Apple Developer y Google Play | Pendientes; se abren antes de la primera build de iOS y antes de publicar en Android. |
 
+Super Admin: `admin@cidclean.com` (D-144). La migración de la etapa 1 (`supabase/migrations/`) está escrita pero **no aplicada** en Supabase al 2026-10-21: la operación se canceló dos veces.
+
 Regla: ninguna llave, token ni contraseña se escribe en este repositorio.
