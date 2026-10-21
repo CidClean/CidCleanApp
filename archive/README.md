@@ -13,3 +13,4 @@ Aquí van las versiones reemplazadas, con su fecha. No se usan: mandan los docum
 | [`diseno-visual-2026-10-20-antes-de-D-125.md`](diseno-visual-2026-10-20-antes-de-D-125.md) | 2026-10-20 | D-125 | El historial registraba solo los cambios importantes; ahora también la apertura de tarifas y documentos sensibles. |
 | [`flujo-2026-10-20-antes-de-D-125.md`](flujo-2026-10-20-antes-de-D-125.md) | 2026-10-20 | D-125 | La regla de Auditoría no incluía la apertura de tarifas y documentos sensibles. |
 | [`arquitectura-2026-10-21-solo-D-138.md`](arquitectura-2026-10-21-solo-D-138.md) | 2026-10-21 | D-139 | Solo estaba decidido probar con Expo y EAS; ahora está aprobada toda la arquitectura. |
+| [`diseno-visual-2026-10-21-antes-de-D-163.md`](diseno-visual-2026-10-21-antes-de-D-163.md) | 2026-10-21 | D-163 | El código del staff se escribía con un teclado numérico propio de la app (Borrar y tecla vacía); ahora usa el teclado del teléfono. |
