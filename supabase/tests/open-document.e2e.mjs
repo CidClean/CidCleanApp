@@ -1,4 +1,5 @@
-// Prueba de extremo a extremo de D-125: los documentos de los 1099 solo se abren con la Edge Function open-document.
+// Prueba de extremo a extremo de D-125 y D-193: los documentos de los 1099 solo se abren con la Edge Function open-document
+// y solo con empleados_gestionar_documentos (empleados_ver_pagos ya no basta).
 // Uso: SUPABASE_ACCESS_TOKEN=... SUPABASE_PROJECT_REF=... NODE_PATH=$(npm root -g) node supabase/tests/open-document.e2e.mjs
 // Lee las llaves de la API con el token en tiempo de ejecución; no guarda ninguna. Borra todo lo que crea (el historial conserva sus filas).
 import { createRequire } from 'node:module';
@@ -33,13 +34,15 @@ const aperturas = async (doc) => Number((await q(`select count(*) as n from chan
 let objetivo = null;
 const creados = [];
 try {
-  await q(`insert into profiles (full_name, worker_type, email) values ('E2E Con Pagos', 'w2', 'e2e-con-pagos@prueba.local'), ('E2E Sin Pagos', 'w2', 'e2e-sin-pagos@prueba.local')`);
+  await q(`insert into profiles (full_name, worker_type, email) values ('E2E Con Documentos', 'w2', 'e2e-con-docs@prueba.local'), ('E2E Con Pagos', 'w2', 'e2e-con-pagos@prueba.local'), ('E2E Sin Permisos', 'w2', 'e2e-sin-pagos@prueba.local')`);
+  await q(`insert into profile_permissions (profile_id, permission_key) select id, 'empleados_gestionar_documentos' from profiles where email = 'e2e-con-docs@prueba.local'`);
   await q(`insert into profile_permissions (profile_id, permission_key) select id, 'empleados_ver_pagos' from profiles where email = 'e2e-con-pagos@prueba.local'`);
-  for (const e of ['e2e-con-pagos@prueba.local', 'e2e-sin-pagos@prueba.local']) await admin.auth.admin.createUser({ email: e, email_confirm: true });
+  for (const e of ['e2e-con-docs@prueba.local', 'e2e-con-pagos@prueba.local', 'e2e-sin-pagos@prueba.local']) await admin.auth.admin.createUser({ email: e, email_confirm: true });
   objetivo = (await q(`insert into profiles (full_name, worker_type, has_app_access) values ('E2E Objetivo 1099', '1099', false) returning id`))[0].id;
 
   const sup = await sesion('admin@cidclean.com');
-  const con = await sesion('e2e-con-pagos@prueba.local');
+  const con = await sesion('e2e-con-docs@prueba.local');
+  const pagos = await sesion('e2e-con-pagos@prueba.local');
   const sin = await sesion('e2e-sin-pagos@prueba.local');
   const ruta = `${objetivo}/w9/e2e.pdf`;
 
@@ -49,18 +52,27 @@ try {
   const reg = await sup.cliente.rpc('register_profile_document', { p_profile: objetivo, p_kind: 'w9', p_path: ruta });
   ok('register_profile_document registra el archivo subido', !reg.error && !!reg.data, reg.error?.message ?? '');
   const doc = reg.data;
-  up = await con.cliente.storage.from('employee-docs').upload(`${objetivo}/w9/e2e-con-pagos.pdf`, PDF, { contentType: 'application/pdf' });
-  ok('subir (empleados_ver_pagos): sigue permitido', !up.error, up.error?.message ?? '');
+  up = await con.cliente.storage.from('employee-docs').upload(`${objetivo}/w9/e2e-con-docs.pdf`, PDF, { contentType: 'application/pdf' });
+  ok('subir (empleados_gestionar_documentos): permitido', !up.error, up.error?.message ?? '');
+  // D-193: empleados_ver_pagos solo no sube, no registra y no ve documentos.
+  up = await pagos.cliente.storage.from('employee-docs').upload(`${objetivo}/w9/e2e-con-pagos.pdf`, PDF, { contentType: 'application/pdf' });
+  ok('subir (solo empleados_ver_pagos): rechazado', !!up.error, up.error?.message ?? 'subió');
+  const regPagos = await pagos.cliente.rpc('register_profile_document', { p_profile: objetivo, p_kind: 'w9', p_path: ruta });
+  ok('register_profile_document (solo empleados_ver_pagos): rechazado', !!regPagos.error, regPagos.error?.message ?? 'registró');
+  const filasPagos = await pagos.cliente.from('profile_documents').select('id');
+  ok('profile_documents (solo empleados_ver_pagos): no ve ninguna fila', !filasPagos.error && (filasPagos.data ?? []).length === 0, JSON.stringify(filasPagos.error ?? filasPagos.data));
+  const filasDocs = await con.cliente.from('profile_documents').select('id');
+  ok('profile_documents (empleados_gestionar_documentos): ve el documento', !filasDocs.error && (filasDocs.data ?? []).length === 1, JSON.stringify(filasDocs.error ?? filasDocs.data));
 
-  // Quien tiene empleados_ver_pagos NO lee ni firma directo desde Storage.
+  // Quien tiene empleados_gestionar_documentos NO lee ni firma directo desde Storage.
   const firma = await con.cliente.storage.from('employee-docs').createSignedUrl(ruta, 60);
-  ok('con empleados_ver_pagos: NO puede firmar una URL directo desde Storage', !!firma.error && !firma.data?.signedUrl, firma.error?.message ?? 'firmó');
+  ok('con empleados_gestionar_documentos: NO puede firmar una URL directo desde Storage', !!firma.error && !firma.data?.signedUrl, firma.error?.message ?? 'firmó');
   const firmas = await con.cliente.storage.from('employee-docs').createSignedUrls([ruta], 60);
-  ok('con empleados_ver_pagos: NO puede firmar varias URLs', !!firmas.error || (firmas.data ?? []).every((f) => !f.signedUrl), JSON.stringify(firmas.error ?? firmas.data));
+  ok('con empleados_gestionar_documentos: NO puede firmar varias URLs', !!firmas.error || (firmas.data ?? []).every((f) => !f.signedUrl), JSON.stringify(firmas.error ?? firmas.data));
   const desc = await con.cliente.storage.from('employee-docs').download(ruta);
-  ok('con empleados_ver_pagos: NO puede descargar directo', !!desc.error && !desc.data, desc.error?.message ?? 'descargó');
+  ok('con empleados_gestionar_documentos: NO puede descargar directo', !!desc.error && !desc.data, desc.error?.message ?? 'descargó');
   const lista = await con.cliente.storage.from('employee-docs').list(`${objetivo}/w9`);
-  ok('con empleados_ver_pagos: NO ve la lista de archivos', !lista.error && (lista.data ?? []).length === 0, JSON.stringify(lista.error ?? lista.data));
+  ok('con empleados_gestionar_documentos: NO ve la lista de archivos', !lista.error && (lista.data ?? []).length === 0, JSON.stringify(lista.error ?? lista.data));
   const firmaSup = await sup.cliente.storage.from('employee-docs').createSignedUrl(ruta, 60);
   ok('el Super Admin tampoco firma directo desde Storage', !!firmaSup.error && !firmaSup.data?.signedUrl, firmaSup.error?.message ?? 'firmó');
   const pub = await fetch(`${base}/storage/v1/object/public/employee-docs/${ruta}`);
@@ -71,7 +83,9 @@ try {
   // open-document
   const antes0 = await aperturas(doc);
   let r = await abrir(sin.jwt, { document_id: doc });
-  ok('open-document: sin empleados_ver_pagos -> 403', r.s === 403 && !r.j.url, JSON.stringify(r.j));
+  ok('open-document: sin permisos -> 403', r.s === 403 && !r.j.url, JSON.stringify(r.j));
+  r = await abrir(pagos.jwt, { document_id: doc });
+  ok('open-document: solo con empleados_ver_pagos -> 403', r.s === 403 && !r.j.url, JSON.stringify(r.j));
   r = await abrir(anon, { document_id: doc });
   ok('open-document: con la llave anónima -> 403', r.s === 403 && !r.j.url, JSON.stringify(r.j));
   r = await fetch(`${base}/functions/v1/open-document`, { method: 'POST', headers: { apikey: anon, 'Content-Type': 'application/json' }, body: JSON.stringify({ document_id: doc }) });
@@ -82,6 +96,8 @@ try {
   ok('open-document: documento inexistente -> 404', r.s === 404, JSON.stringify(r.j));
   ok('los intentos rechazados no dejan aperturas en el historial', (await aperturas(doc)) === antes0);
 
+  // La apertura con éxito la hace el Super Admin: quien abre queda como actor en change_log (solo agregar) y su perfil ya no se podría borrar.
+  // Que el permiso nuevo abre y el de pagos no abre se prueba en supabase/tests/empleados.sql (open_profile_document) y arriba con el 403.
   r = await abrir(sup.jwt, { document_id: doc });
   ok('open-document: con permiso -> 200 con URL firmada de 60 s', r.s === 200 && /\/object\/sign\/employee-docs\//.test(r.j.url ?? '') && r.j.expires_in === 60, JSON.stringify(r.j).slice(0, 120));
   const bytes = r.j.url ? await fetch(r.j.url) : null;
@@ -96,7 +112,7 @@ try {
   // Limpieza: objetos de Storage, documentos, perfiles y usuarios de prueba (change_log, de solo agregar, conserva sus filas).
   try { if (objetivo) { const l = await admin.storage.from('employee-docs').list(`${objetivo}/w9`); await admin.storage.from('employee-docs').remove((l.data ?? []).map((o) => `${objetivo}/w9/${o.name}`)); } } catch {}
   if (objetivo) await q(`delete from profiles where id = '${objetivo}'`);
-  await q(`delete from profiles where email in ('e2e-con-pagos@prueba.local', 'e2e-sin-pagos@prueba.local')`);
+  await q(`delete from profiles where email in ('e2e-con-docs@prueba.local', 'e2e-con-pagos@prueba.local', 'e2e-sin-pagos@prueba.local')`);
   const us = (await admin.auth.admin.listUsers({ perPage: 200 })).data.users.filter((u) => /@prueba\.local$/.test(u.email ?? ''));
   for (const u of us) await admin.auth.admin.deleteUser(u.id);
   const resto = (await q(`select (select count(*) from storage.objects where bucket_id = 'employee-docs') as objetos, (select count(*) from profiles where email like '%@prueba.local') as perfiles, (select count(*) from profile_documents) as docs`))[0];

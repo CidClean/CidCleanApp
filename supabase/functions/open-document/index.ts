@@ -1,6 +1,6 @@
 // Abre un documento sensible de un 1099 (W-9 o certificado de seguro): D-125.
 // verify_jwt activado. Único camino para abrir los archivos de employee-docs: el bucket no tiene política de lectura.
-// 1) open_profile_document, con el JWT de quien llama, exige empleados_ver_pagos y registra quién y cuándo en el historial.
+// 1) open_profile_document, con el JWT de quien llama, exige empleados_gestionar_documentos (D-193) y registra quién y cuándo en el historial.
 // 2) Solo si eso funcionó, la service role firma una URL de 60 segundos.
 import { CORS, clienteDeQuienLlama, clienteDeServicio, errorDeBase, responder } from '../_shared/comun.ts';
 
