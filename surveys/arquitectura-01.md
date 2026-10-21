@@ -4,9 +4,9 @@ Fecha: 2026-10-21. Respuesta del dueño, textual:
 
 > Ok dame tu propuesta lo único que pido es usar expo eas para probar la app lo demas a tu criterios
 
-Registrado: D-138 (Expo con EAS para probar la app). Lo demás es la propuesta de abajo, **sin aprobar**: no entra a `current/` hasta que el dueño la apruebe.
+Registrado: D-138 (Expo con EAS para probar la app). Lo demás es la propuesta de abajo, que el dueño aprobó después (ver el final de este archivo).
 
-## Propuesta de Claude (sin aprobar)
+## Propuesta de Claude (aprobada, D-139)
 
 Una sola base de código, servicios administrados y nada de servidores que mantener. Los permisos por perfil, el historial y las sesiones ya aprobados se hacen cumplir en la base de datos, no solo en la pantalla.
 
@@ -42,3 +42,13 @@ Total de partida: unos $25 al mes, más $99 al año y $25 una vez.
 Lo que necesitaría que abras, porque yo no puedo crear cuentas con pago: cuenta de Expo, Apple Developer, Google Play Console, Supabase, Resend y el dominio.
 
 Primeras etapas de construcción si se aprueba: (1) base: proyecto, entrada, perfiles y permisos; (2) Ventas con walkthrough y quote; (3) portal del quote; (4) Operaciones y Work; (5) Accounting y avisos.
+
+## Respuesta del dueño a la propuesta (2026-10-21, 08:58)
+
+> Nos mantenemos free en desarrollo evaluemos los planes de pagos en produccion. Apruebo tu propuesta te voy a dejar las conexiones listas
+
+Registrado: D-139 (aprobación de la propuesta, reemplaza a D-138) y D-140 (planes gratuitos en desarrollo, evaluar los de pago antes de producción). El contenido vigente está en `../current/arquitectura.md` y la versión anterior en `../archive/arquitectura-2026-10-21-solo-D-138.md`.
+
+Pendiente: el dueño deja listas las conexiones (cuentas de Expo, Apple Developer, Google Play, Supabase, Resend y el dominio). La construcción empieza por la etapa 1.
+
+Recomendación de Claude, sin aprobar: mientras el proyecto de Supabase esté en el plan gratuito, no cargar datos reales sensibles (W-9, tarifas reales), porque ese plan no hace copias y se pausa tras una semana sin uso.

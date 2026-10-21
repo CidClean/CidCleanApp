@@ -1,9 +1,28 @@
 # Arquitectura
 
-Versión vigente de la arquitectura. Solo entra lo que el dueño dijo o aprobó, registrado en `../decisions.md`. Si algo cambia, se edita aquí, se registra y la versión anterior pasa a `../archive/`.
+Versión vigente de la arquitectura. Cada punto viene de una decisión del dueño, registrada en `../decisions.md` y en `../surveys/arquitectura-01.md`. Si algo cambia, se edita aquí, se registra y la versión anterior pasa a `../archive/`.
 
-## Decidido
+Principio: una sola base de código, servicios administrados y nada de servidores que mantener. Los permisos por perfil, el historial y las sesiones aprobados se hacen cumplir en la base de datos, no solo en la pantalla (D-139).
 
-- **Pruebas (D-138):** la app se prueba con Expo y EAS. EAS Build genera los builds de prueba para iOS y Android, y EAS Update lleva los cambios sin reinstalar.
+## Piezas (D-139)
 
-El resto de la arquitectura está en propuesta (`../surveys/arquitectura-01.md`) y no se aplica hasta que el dueño la apruebe.
+| Pieza | Elección |
+| --- | --- |
+| App | Expo (React Native con TypeScript y Expo Router), en el SDK vigente al empezar. Un solo código para iOS, Android y web. |
+| Pruebas y entrega | EAS Build, EAS Update, TestFlight en iPhone y APK de prueba en Android (D-138). |
+| Base de datos y permisos | Supabase (Postgres) con reglas por fila: cada permiso del perfil lo valida el servidor. |
+| Entrada del staff | Supabase Auth con correo y código de un solo uso, con las sesiones de `seguridad.md`. |
+| Portal del quote | Página web del mismo código. El código del cliente se valida en una función del servidor, con los límites de `seguridad.md`. |
+| Archivos | Supabase Storage privado (fotos, SOW, contratos, W-9) con enlaces temporales. |
+| Lógica del servidor | Supabase Edge Functions y tareas programadas: gastos recurrentes, vencimiento de quotes, recordatorios, alerta de 32 h y PDF del walkthrough y del quote. |
+| Notificaciones | Push con Expo Notifications y correo con Resend. |
+| GPS | expo-location en el teléfono; la distancia al sitio se calcula en el servidor con la dirección del jobsite. |
+| Sin conexión | Solo el walkthrough: se guarda en el teléfono y sincroniza con una cola de fotos. Lo demás pide conexión. |
+| Historial | Lo escribe la base de datos con disparadores; nadie lo edita. |
+| Portal en la web | Exportación web alojada en Cloudflare Pages con dominio propio. |
+| Repositorio y CI | El mismo repositorio, con carpetas `app/` y `supabase/`; GitHub Actions con EAS. |
+
+## Planes y costos (D-140)
+
+- **En desarrollo:** planes gratuitos (Expo Free, Supabase Free, Resend y Cloudflare Pages gratis).
+- **Para producción:** los planes de pago se evalúan antes de salir. Referencia verificada el 2026-10-21: Expo Free incluye hasta 15 builds de iOS y 15 de Android al mes con cola lenta (Starter, $19 al mes más uso); Supabase Pro desde $25 al mes, con copias diarias por 7 días y sin pausa por inactividad. Apple Developer (unos $99 al año) y Google Play (unos $25 una vez) se confirman al abrir las cuentas.
