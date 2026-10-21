@@ -43,6 +43,9 @@ Respuestas del dueño a cuatro preguntas de detalle (2026-10-21):
 | Cómo se sube un documento del 1099 | Foto con la cámara o archivo del teléfono | D-183 |
 | Perfil de quien ya entró | Sí, con la fecha de su primer ingreso | D-184 |
 
-No elegido: la lista de empleados después de crear; reactivar directo; solo foto con la cámara; solo "Sí" sin fecha.
+| Botón para crear empleado | Icono + a la derecha de la barra del título | D-185 |
+| Texto del correo de invitación | Aprobado el borrador bilingüe | D-186 |
+
+No elegido: botón de contorno "Nuevo empleado" sobre la lista; la lista de empleados después de crear; reactivar directo; solo foto con la cámara; solo "Sí" sin fecha.
 
 Copia visual de lo aprobado: [`ronda-15-empleados-y-pendientes-aprobado.html`](ronda-15-empleados-y-pendientes-aprobado.html).

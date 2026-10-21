@@ -117,6 +117,8 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Admin: desactivar empleado | Interruptor Activo en el encabezado del perfil; al apagarlo, hoja "¿Desactivar a {nombre}?" con Cancelar y Desactivar sólido | D-173 | ronda 15 |
 | Admin: pestaña Datos | Filas de solo lectura y botón de texto "Editar" en la barra del título que la vuelve formulario | D-174 | ronda 15 |
 | Admin: documentos 1099 | Filas W-9 y Certificado de seguro con ficha Subido (verde) o Falta (ámbar) y botón de contorno "Subir documento" | D-175 | ronda 15 |
+| Admin: botón Nuevo empleado | Icono + a la derecha de la barra del título de la lista de Empleados; solo con `empleados_invitar_crear` | D-185 | [`ronda-15-empleados-y-pendientes.md`](../surveys/ronda-15-empleados-y-pendientes.md) |
+| Correo de invitación | Bilingüe, texto en D-186 | D-186 | ronda 15 |
 | Admin: después de crear | Se abre el perfil del empleado, pestaña Datos | D-181 | [`ronda-15-empleados-y-pendientes.md`](../surveys/ronda-15-empleados-y-pendientes.md) |
 | Admin: reactivar | Misma hoja que desactivar: "¿Reactivar a {nombre}?" con Cancelar y Reactivar sólido | D-182 | ronda 15 |
 | Admin: subir documento | Elegir entre foto con la cámara o archivo del teléfono (foto o PDF) | D-183 | ronda 15 |
