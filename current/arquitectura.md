@@ -26,3 +26,16 @@ Principio: una sola base de código, servicios administrados y nada de servidore
 
 - **En desarrollo:** planes gratuitos (Expo Free, Supabase Free, Resend y Cloudflare Pages gratis).
 - **Para producción:** los planes de pago se evalúan antes de salir. Referencia verificada el 2026-10-21: Expo Free incluye hasta 15 builds de iOS y 15 de Android al mes con cola lenta (Starter, $19 al mes más uso); Supabase Pro desde $25 al mes, con copias diarias por 7 días y sin pausa por inactividad. Apple Developer (unos $99 al año) y Google Play (unos $25 una vez) se confirman al abrir las cuentas.
+
+## Cuentas y conexiones (D-141, D-142, D-143)
+
+| Servicio | Estado al 2026-10-21 |
+| --- | --- |
+| Supabase | Proyecto "CidClean App", ref `noammaqhtdfgbheeiugo`, us-east-1, plan gratis (D-141). El proyecto anterior "CidClean's Project" (ref `scovsbtomhywstpfmoah`) está pausado y no se usa. |
+| Expo | Cuenta `cidcleanadmin`. Acceso por token, que no se guarda en el repositorio (D-143). |
+| Cloudflare | Dominio `cidclean.com` ya en Cloudflare (D-142). |
+| GitHub | Repositorio `CidClean/CidCleanApp`; el push funciona. |
+| Resend | Pendiente: la conexión actual da "Forbidden" al listar dominios y llaves; falta una llave con acceso completo o el dominio de envío. |
+| Apple Developer y Google Play | Pendientes; se abren antes de la primera build de iOS y antes de publicar en Android. |
+
+Regla: ninguna llave, token ni contraseña se escribe en este repositorio.
