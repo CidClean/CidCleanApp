@@ -4,6 +4,7 @@ import { ScrollView, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
+import { useGoBack } from '@/lib/navigation';
 import { supabase } from '@/lib/supabase';
 import { sample, useTheme } from '@/theme';
 
@@ -11,6 +12,7 @@ import { sample, useTheme } from '@/theme';
 export default function ReadTermsScreen() {
   const { colors, status } = useTheme();
   const strings = useStrings();
+  const goBack = useGoBack();
   const [body, setBody] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -34,7 +36,7 @@ export default function ReadTermsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <TopBar title={strings.terms.readFull} />
+      <TopBar title={strings.terms.readFull} onBack={goBack} backLabel={strings.common.back} />
       <ScrollView contentContainerStyle={{ padding: 12 }}>
         {body !== null ? <AppText>{body}</AppText> : null}
         {failed ? (

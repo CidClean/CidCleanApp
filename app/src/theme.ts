@@ -26,6 +26,9 @@ const light = {
   secondary: '#6B6B6B',
   // muestra: borde de campos y casillas = color de texto al 32% de opacidad (D-030)
   fieldBorder: 'rgba(26, 26, 26, 0.32)',
+  // muestra ronda 15: interruptor apagado = texto al 40% (D-173); círculo de opción sin marcar = texto al 45%
+  switchOff: 'rgba(26, 26, 26, 0.4)',
+  radioBorder: 'rgba(26, 26, 26, 0.45)',
 } as const;
 
 const dark = {
@@ -35,6 +38,8 @@ const dark = {
   border: '#333333',
   secondary: '#A0A0A0',
   fieldBorder: 'rgba(242, 242, 242, 0.32)',
+  switchOff: 'rgba(242, 242, 242, 0.4)',
+  radioBorder: 'rgba(242, 242, 242, 0.45)',
 } as const;
 
 export type Palette = { [K in keyof typeof light]: string };

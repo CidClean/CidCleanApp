@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppButton } from '@/components/AppButton';
 import { AppText } from '@/components/AppText';
+import { Checkbox } from '@/components/Checkbox';
 import { Icon } from '@/components/Icon';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
@@ -14,7 +15,7 @@ import { iconStrokeWidth, sample, useTheme } from '@/theme';
 /** "Antes de empezar" (D-086, D-168): tres puntos, enlace a los términos completos, casilla y Aceptar. */
 export default function TermsScreen() {
   const router = useRouter();
-  const { colors, brand, status } = useTheme();
+  const { colors, status } = useTheme();
   const strings = useStrings();
   const { refresh } = useSession();
   const [checked, setChecked] = useState(false);
@@ -61,22 +62,7 @@ export default function TermsScreen() {
             {strings.terms.readFull}
           </AppText>
         </Pressable>
-        <Pressable
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked }}
-          onPress={() => setChecked((v) => !v)}
-          style={styles.check}
-        >
-          <View
-            style={[
-              styles.box,
-              checked ? { backgroundColor: brand } : { borderWidth: 1, borderColor: colors.fieldBorder },
-            ]}
-          >
-            {checked ? <Icon name="check" size={13} strokeWidth={iconStrokeWidth} color="#FFFFFF" /> : null}
-          </View>
-          <AppText size={14}>{strings.terms.checkbox}</AppText>
-        </Pressable>
+        <Checkbox label={strings.terms.checkbox} checked={checked} onChange={setChecked} />
         {error ? (
           <AppText size={sample.noteSize} color={status.error} style={{ marginBottom: 8 }}>
             {strings.terms.errorSave}
@@ -91,6 +77,4 @@ export default function TermsScreen() {
 const styles = StyleSheet.create({
   point: { minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
   link: { marginTop: 6, marginBottom: 10, textDecorationLine: 'underline' },
-  check: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  box: { width: 20, height: 20, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
 });

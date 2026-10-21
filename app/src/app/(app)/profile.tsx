@@ -4,16 +4,19 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AppButton } from '@/components/AppButton';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
-import { ListRow } from '@/components/ListRow';
+import { ListRow, rowStyles } from '@/components/ListRow';
+import { Segmented } from '@/components/Segmented';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
+import { useGoBack } from '@/lib/navigation';
 import type { Locale } from '@/i18n';
 import { useSession } from '@/lib/session';
-import { iconStrokeWidth, radius, sample, useTheme } from '@/theme';
+import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
 /** Mi perfil (D-166): Nombre, Correo (solo lectura), Idioma y Cerrar sesión; con confirmación (D-167). */
 export default function ProfileScreen() {
-  const { colors, brand, status } = useTheme();
+  const { colors, status } = useTheme();
+  const goBack = useGoBack();
   const strings = useStrings();
   const { profile, locale, setLanguage, signOut } = useSession();
   const [confirming, setConfirming] = useState(false);
@@ -30,7 +33,7 @@ export default function ProfileScreen() {
   if (confirming) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
-        <TopBar title={strings.profile.title} />
+        <TopBar title={strings.profile.title} onBack={goBack} backLabel={strings.common.back} />
         <ScrollView contentContainerStyle={{ padding: 12 }}>
           <AppText weight="medium" size={sample.headingSize} style={{ marginBottom: 4 }}>
             {strings.profile.confirmTitle}
@@ -40,7 +43,7 @@ export default function ProfileScreen() {
           </AppText>
           <View style={styles.buttons}>
             <View style={styles.flex}>
-              <OutlineButton label={strings.profile.cancel} onPress={() => setConfirming(false)} />
+              <AppButton label={strings.profile.cancel} variant="outline" onPress={() => setConfirming(false)} />
             </View>
             <View style={styles.flex}>
               <AppButton label={strings.profile.signOut} onPress={() => void signOut()} />
@@ -53,7 +56,7 @@ export default function ProfileScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <TopBar title={strings.profile.title} />
+      <TopBar title={strings.profile.title} onBack={goBack} backLabel={strings.common.back} />
       <ScrollView contentContainerStyle={{ padding: 12 }}>
         <ListRow title={strings.profile.name} detail={profile?.fullName ?? ''} />
         <ListRow title={strings.profile.email} detail={profile?.email ?? ''} />
@@ -65,24 +68,14 @@ export default function ProfileScreen() {
         />
         {pickingLanguage ? (
           <View style={{ paddingVertical: 8 }}>
-            <View style={[styles.seg, { borderColor: colors.fieldBorder }]}>
-              {(['en', 'es'] as const).map((code) => {
-                const on = locale === code;
-                return (
-                  <Pressable
-                    key={code}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: on }}
-                    onPress={() => void chooseLanguage(code)}
-                    style={[styles.segItem, on ? { backgroundColor: brand } : null]}
-                  >
-                    <AppText weight={on ? 'medium' : 'regular'} size={14} color={on ? '#FFFFFF' : colors.text} center>
-                      {code === 'en' ? strings.profile.english : strings.profile.spanish}
-                    </AppText>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <Segmented
+              options={[
+                { value: 'en', label: strings.profile.english },
+                { value: 'es', label: strings.profile.spanish },
+              ]}
+              value={locale}
+              onChange={(code) => void chooseLanguage(code)}
+            />
             {languageError ? (
               <AppText size={sample.noteSize} color={status.error}>
                 {strings.profile.languageError}
@@ -90,7 +83,7 @@ export default function ProfileScreen() {
             ) : null}
           </View>
         ) : null}
-        <Pressable accessibilityRole="button" onPress={() => setConfirming(true)} style={styles.signOutRow}>
+        <Pressable accessibilityRole="button" onPress={() => setConfirming(true)} style={[styles.signOutRow, { borderBottomWidth: 0 }]}>
           <AppText weight="medium">{strings.profile.signOut}</AppText>
           <Icon name="chevron-right" size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
         </Pressable>
@@ -99,39 +92,8 @@ export default function ProfileScreen() {
   );
 }
 
-function OutlineButton({ label, onPress }: { label: string; onPress: () => void }) {
-  const { brand, colors } = useTheme();
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={{
-        minHeight: sample.buttonMinHeight,
-        borderRadius: radius.control,
-        borderWidth: 1,
-        borderColor: brand,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <AppText weight="medium" size={sample.buttonSize} color={colors.text}>
-        {label}
-      </AppText>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   buttons: { flexDirection: 'row', gap: 8 },
   flex: { flex: 1 },
-  seg: { flexDirection: 'row', borderWidth: 1, borderRadius: radius.control, overflow: 'hidden' },
-  segItem: { flex: 1, paddingVertical: 8, alignItems: 'center' },
-  signOutRow: {
-    minHeight: 48,
-    paddingVertical: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
+  signOutRow: rowStyles.base,
 });

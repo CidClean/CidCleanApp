@@ -1,18 +1,16 @@
-import { Icon } from './Icon';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from './AppText';
+import { Icon } from './Icon';
 import { iconStrokeWidth, radius, sample, useTheme } from '@/theme';
 
-/** Alerta ámbar (D-032): tarjeta con borde de 1px en el color de advertencia, con icono. */
-export function AppAlert({ text }: { text: string }) {
+/** Alerta (D-032): tarjeta con borde de 1px y icono. Ámbar por defecto; roja para errores (D-178). */
+export function AppAlert({ text, tone = 'warning' }: { text: string; tone?: 'warning' | 'error' }) {
   const { colors, status } = useTheme();
+  const color = tone === 'error' ? status.error : status.warning;
   return (
-    <View
-      accessibilityRole="alert"
-      style={[styles.box, { borderColor: status.warning, backgroundColor: colors.background }]}
-    >
-      <Icon name="alert-triangle" size={sample.alertIconSize} strokeWidth={iconStrokeWidth} color={status.warning} />
+    <View accessibilityRole="alert" style={[styles.box, { borderColor: color, backgroundColor: colors.background }]}>
+      <Icon name="alert-triangle" size={sample.alertIconSize} strokeWidth={iconStrokeWidth} color={color} />
       <AppText size={sample.noteSize} style={styles.text}>
         {text}
       </AppText>

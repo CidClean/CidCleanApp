@@ -9,11 +9,10 @@ import { AppField } from '@/components/AppField';
 import { AppText } from '@/components/AppText';
 import { useStrings } from '@/i18n/useStrings';
 import { requestCode } from '@/lib/auth';
+import { isValidEmail } from '@/lib/email';
 import { setPendingEmail } from '@/lib/pendingLogin';
 import { useSession } from '@/lib/session';
 import { sample, useTheme } from '@/theme';
-
-const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Pantalla del correo (D-149) y, si la sesión terminó, con el aviso ámbar arriba (D-151). */
 export default function EmailScreen() {
@@ -30,7 +29,7 @@ export default function EmailScreen() {
   async function submit() {
     if (sending) return;
     const normalized = email.trim().toLowerCase();
-    if (!EMAIL_FORMAT.test(normalized)) {
+    if (!isValidEmail(normalized)) {
       setError(strings.email.invalid);
       return;
     }

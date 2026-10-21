@@ -5,7 +5,7 @@ import { useStrings } from '@/i18n/useStrings';
 import { usePermissions } from '@/lib/session';
 import { visibleMenuItems, type MenuKey } from '@/lib/visibility';
 
-// TEMPORAL: Empleados, Schedule y Work, Accounting, Ajustes, Historial y Notificaciones aún no existen.
+// TEMPORAL: Schedule y Work, Accounting, Ajustes, Historial y Notificaciones aún no existen.
 // Reemplazar cada una con su pantalla al construirla.
 export default function SectionScreen() {
   const { key } = useLocalSearchParams<{ key: string }>();
@@ -13,5 +13,5 @@ export default function SectionScreen() {
   const { access } = usePermissions();
   const menuKey = key as MenuKey;
   const allowed = menuKey !== 'profile' && visibleMenuItems(access).includes(menuKey);
-  return <PendingScreen title={allowed ? strings.nav[menuKey] : ''} allowed={allowed} />;
+  return <PendingScreen title={allowed ? strings.nav[menuKey] : ''} allowed={allowed} back />;
 }

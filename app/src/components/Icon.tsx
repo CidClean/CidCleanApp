@@ -27,6 +27,8 @@ const paths = {
     'M9 13a3 3 0 1 0 6 0a3 3 0 0 0 -6 0',
   ],
   check: ['M5 12l5 5l10 -10'],
+  'chevron-down': ['M6 9l6 6l6 -6'],
+  'chevron-left': ['M15 6l-6 6l6 6'],
   'chevron-right': ['M9 6l6 6l-6 6'],
   'circle-check': ['M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0', 'M9 12l2 2l4 -4'],
   'file-text': [
@@ -57,6 +59,8 @@ const paths = {
     'M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0',
   ],
   'menu-2': ['M4 6l16 0', 'M4 12l16 0', 'M4 18l16 0'],
+  plus: ['M12 5l0 14', 'M5 12l14 0'],
+  upload: ['M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2', 'M7 9l5 -5l5 5', 'M12 4l0 12'],
 } as const;
 
 export type IconName = keyof typeof paths;
