@@ -80,7 +80,7 @@ export async function fetchEmployee(id: string): Promise<ApiResult<Employee>> {
 }
 
 /** Lee la razón de error de una Edge Function (el cuerpo trae `{ error }`). */
-async function functionFailure(error: unknown): Promise<ApiFailure> {
+export async function functionFailure(error: unknown): Promise<ApiFailure> {
   if (error instanceof FunctionsHttpError) {
     let code: string | undefined;
     try {

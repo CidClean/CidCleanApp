@@ -2,16 +2,20 @@ const mockUpload = jest.fn();
 const mockCreateSignedUrl = jest.fn();
 const mockRpc = jest.fn();
 const mockOpenBrowserAsync = jest.fn();
+const mockInvoke = jest.fn();
 
 jest.mock('./supabase', () => ({
   supabase: {
     rpc: (...a: unknown[]) => mockRpc(...a),
+    functions: { invoke: (...a: unknown[]) => mockInvoke(...a) },
     storage: { from: () => ({ upload: (...a: unknown[]) => mockUpload(...a), createSignedUrl: (...a: unknown[]) => mockCreateSignedUrl(...a) }) },
   },
 }));
 jest.mock('expo-web-browser', () => ({ openBrowserAsync: (...a: unknown[]) => mockOpenBrowserAsync(...a) }));
 jest.mock('expo-image-picker', () => ({}));
 jest.mock('expo-document-picker', () => ({}));
+
+import { FunctionsHttpError } from '@supabase/supabase-js';
 
 import { documentPath, openDocument, uploadDocument } from './documents';
 
@@ -22,6 +26,7 @@ beforeEach(() => {
   mockCreateSignedUrl.mockReset();
   mockRpc.mockReset();
   mockOpenBrowserAsync.mockReset();
+  mockInvoke.mockReset();
   (global as any).fetch = jest.fn().mockResolvedValue({ arrayBuffer: async () => new ArrayBuffer(4) });
 });
 
@@ -56,23 +61,39 @@ describe('subir un documento (D-183)', () => {
   });
 });
 
-describe('abrir un documento (D-125)', () => {
-  test('primero se registra la apertura, después se firma una URL de 60 s y se abre', async () => {
-    const order: string[] = [];
-    mockRpc.mockImplementation(async () => (order.push('mockRpc'), { data: 'p1/w9/abc.pdf', error: null }));
-    mockCreateSignedUrl.mockImplementation(async () => (order.push('sign'), { data: { signedUrl: 'https://x/firmada' }, error: null }));
-    mockOpenBrowserAsync.mockImplementation(async () => order.push('open'));
+describe('abrir un documento (D-125): solo con la Edge Function open-document', () => {
+  test('llama a open-document con el id y abre la URL firmada que devuelve', async () => {
+    mockInvoke.mockResolvedValue({ data: { url: 'https://x/firmada', expires_in: 60 }, error: null });
+    mockOpenBrowserAsync.mockResolvedValue(undefined);
     expect(await openDocument('d1')).toEqual({ ok: true, data: null });
-    expect(order).toEqual(['mockRpc', 'sign', 'open']);
-    expect(mockRpc).toHaveBeenCalledWith('open_profile_document', { doc_id: 'd1' });
-    expect(mockCreateSignedUrl).toHaveBeenCalledWith('p1/w9/abc.pdf', 60);
+    expect(mockInvoke).toHaveBeenCalledWith('open-document', { body: { document_id: 'd1' } });
     expect(mockOpenBrowserAsync).toHaveBeenCalledWith('https://x/firmada');
   });
 
-  test('sin permiso no se firma nada', async () => {
-    mockRpc.mockResolvedValue({ data: null, error: { code: '42501' } });
-    expect(await openDocument('d1')).toEqual({ ok: false, reason: 'forbidden' });
+  test('no usa open_profile_document ni firma nada desde Storage por su cuenta', async () => {
+    mockInvoke.mockResolvedValue({ data: { url: 'https://x/firmada' }, error: null });
+    await openDocument('d1');
+    expect(mockRpc).not.toHaveBeenCalled();
     expect(mockCreateSignedUrl).not.toHaveBeenCalled();
+  });
+
+  test('sin permiso (403) no se abre nada', async () => {
+    mockInvoke.mockResolvedValue({
+      data: null,
+      error: new FunctionsHttpError(new Response(JSON.stringify({ error: 'forbidden' }), { status: 403 })),
+    });
+    expect(await openDocument('d1')).toEqual({ ok: false, reason: 'forbidden' });
     expect(mockOpenBrowserAsync).not.toHaveBeenCalled();
+  });
+
+  test('sin conexión no se abre nada', async () => {
+    mockInvoke.mockRejectedValue(new Error('Network request failed'));
+    expect(await openDocument('d1')).toEqual({ ok: false, reason: 'network' });
+    expect(mockOpenBrowserAsync).not.toHaveBeenCalled();
+  });
+
+  test('una respuesta sin URL es un error del servidor', async () => {
+    mockInvoke.mockResolvedValue({ data: {}, error: null });
+    expect(await openDocument('d1')).toEqual({ ok: false, reason: 'server' });
   });
 });

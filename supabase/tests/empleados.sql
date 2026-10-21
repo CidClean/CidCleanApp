@@ -182,10 +182,18 @@ begin
     pg_temp.valor('sin_permisos', format('insert into storage.objects (bucket_id, name) values (''employee-docs'', %L) returning 1', obj || '/w9/x.pdf')));
   perform pg_temp.prueba('storage: con permiso de pagos se sube', '1',
     pg_temp.valor('pagos', format('insert into storage.objects (bucket_id, name) values (''employee-docs'', %L) returning 1', obj || '/insurance_certificate/x.pdf')));
+  -- D-125 (migración 20261021000006): nadie lee employee-docs directo; los documentos se abren solo con open-document.
   perform pg_temp.prueba('storage: sin permiso no se listan archivos', '0',
     pg_temp.valor('ver', 'select count(*) from storage.objects where bucket_id = ''employee-docs'''));
-  perform pg_temp.prueba('storage: con permiso se listan', '4',
+  perform pg_temp.prueba('storage: ni con empleados_ver_pagos se leen archivos directo (no hay política de lectura)', '0',
     pg_temp.valor('pagos', 'select count(*) from storage.objects where bucket_id = ''employee-docs'''));
+  perform pg_temp.prueba('storage: ni el Super Admin lee archivos directo', '0',
+    pg_temp.valor('super', 'select count(*) from storage.objects where bucket_id = ''employee-docs'''));
+  perform pg_temp.prueba('storage: employee-docs no tiene ninguna política de lectura para usuarios autenticados', '0',
+    (select count(*)::text from pg_policies where schemaname = 'storage' and tablename = 'objects'
+       and cmd in ('SELECT', 'ALL') and (qual like '%employee-docs%' or with_check like '%employee-docs%')));
+  perform pg_temp.prueba('storage: la política de subir se conserva', '1',
+    (select count(*)::text from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'employee_docs_insert'));
   perform pg_temp.prueba('storage: nadie borra archivos desde la API (42501)', 'ERR:42501',
     pg_temp.valor('pagos', 'with d as (delete from storage.objects where bucket_id = ''employee-docs'' returning 1) select count(*) from d'));
   perform pg_temp.prueba('storage: el bucket es privado', 'false',

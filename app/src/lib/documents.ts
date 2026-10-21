@@ -3,13 +3,12 @@ import * as ImagePicker from 'expo-image-picker';
 import * as WebBrowser from 'expo-web-browser';
 
 import { extensionFor, type DocumentKind, type EmployeeDocument } from './employeeRules';
-import { failureFromCode, type ApiResult } from './employeesApi';
+import { failureFromCode, functionFailure, type ApiResult } from './employeesApi';
 import { supabase } from './supabase';
 
 /** Documentos de los 1099 (D-125, D-175, D-183): bucket privado employee-docs. Solo con `empleados_ver_pagos`. */
 
 const BUCKET = 'employee-docs';
-const SIGNED_URL_SECONDS = 60; // URL firmada de corta duración
 
 export type PickedFile = { uri: string; mimeType: string | null; name: string | null };
 
@@ -60,14 +59,17 @@ export async function uploadDocument(profileId: string, kind: DocumentKind, file
   }
 }
 
-/** Abre un documento: la base registra quién y cuándo (D-125) y devuelve la ruta; se firma un enlace de 60 s. */
+/**
+ * Abre un documento (D-125). El bucket no tiene política de lectura: el único camino es la Edge Function
+ * open-document, que exige empleados_ver_pagos, registra quién y cuándo en el historial y firma una URL de 60 s.
+ */
 export async function openDocument(documentId: string): Promise<ApiResult<null>> {
   try {
-    const { data: path, error } = await supabase.rpc('open_profile_document', { doc_id: documentId });
-    if (error || typeof path !== 'string') return { ok: false, reason: failureFromCode(error?.code) };
-    const signed = await supabase.storage.from(BUCKET).createSignedUrl(path, SIGNED_URL_SECONDS);
-    if (signed.error || !signed.data) return { ok: false, reason: 'server' };
-    await WebBrowser.openBrowserAsync(signed.data.signedUrl);
+    const { data, error } = await supabase.functions.invoke('open-document', { body: { document_id: documentId } });
+    if (error) return { ok: false, reason: await functionFailure(error) };
+    const url: unknown = data?.url;
+    if (typeof url !== 'string') return { ok: false, reason: 'server' };
+    await WebBrowser.openBrowserAsync(url);
     return { ok: true, data: null };
   } catch {
     return { ok: false, reason: 'network' };
