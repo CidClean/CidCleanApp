@@ -89,7 +89,7 @@ export default function PublishTermsScreen() {
           </AppText>
         </Pressable>
         {file ? (
-          <View style={styles.fileRow}>
+          <View style={[styles.fileRow, { borderBottomColor: colors.border }]}>
             <AppText size={sample.noteSize} color={colors.secondary} numberOfLines={1}>
               {file.name}
             </AppText>
@@ -105,7 +105,7 @@ export default function PublishTermsScreen() {
 
 const styles = StyleSheet.create({
   drop: {
-    minHeight: 110,
+    minHeight: 112, // la muestra mide 112px a la vista: 110 de relleno más el borde de 1px por lado
     borderWidth: 1,
     borderStyle: 'dashed',
     borderRadius: radius.control,
@@ -114,5 +114,6 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 10,
   },
-  fileRow: { minHeight: 40, justifyContent: 'center' },
+  // Fila del nombre del archivo (muestra ronda 15): 40px con línea fina debajo.
+  fileRow: { minHeight: 40, justifyContent: 'center', borderBottomWidth: 0.5 },
 });
