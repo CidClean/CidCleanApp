@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { isLocale, type Locale } from '@/i18n';
 import { AUTH_STORAGE_KEY, supabase } from './supabase';
 import { evaluateSession, type ProfileLookup, type SessionVerdict } from './sessionPolicy';
 
@@ -20,27 +21,32 @@ export async function clearSessionStart(): Promise<void> {
   await AsyncStorage.removeItem(START_KEY);
 }
 
-/** Consulta el propio perfil (las reglas por fila permiten leerlo con auth.uid()). */
-export async function fetchOwnProfile(authUserId: string): Promise<ProfileLookup> {
+/** Consulta el propio perfil (las reglas por fila permiten leerlo con auth.uid()). Trae también el idioma (D-087). */
+export async function fetchOwnProfile(
+  authUserId: string,
+): Promise<{ lookup: ProfileLookup; language: Locale | null }> {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('role, is_super_admin, active')
+      .select('role, is_super_admin, active, language')
       .eq('auth_user_id', authUserId)
       .maybeSingle();
-    if (error) return { kind: 'unknown' };
-    if (!data) return { kind: 'missing' };
+    if (error) return { lookup: { kind: 'unknown' }, language: null };
+    if (!data) return { lookup: { kind: 'missing' }, language: null };
     return {
-      kind: 'found',
-      profile: { role: data.role, is_super_admin: data.is_super_admin, active: data.active },
+      lookup: {
+        kind: 'found',
+        profile: { role: data.role, is_super_admin: data.is_super_admin, active: data.active },
+      },
+      language: isLocale(data.language) ? data.language : null,
     };
   } catch {
-    return { kind: 'unknown' };
+    return { lookup: { kind: 'unknown' }, language: null };
   }
 }
 
 export type SessionCheck =
-  | { status: 'in' }
+  | { status: 'in'; language: Locale | null }
   | { status: 'out'; ended: boolean };
 
 /**
@@ -59,9 +65,9 @@ export async function checkSession(nowMs: number = Date.now()): Promise<SessionC
     return { status: 'out', ended };
   }
 
-  const profile = await fetchOwnProfile(session.user.id);
-  const verdict: SessionVerdict = evaluateSession({ startedAtMs, nowMs, profile });
-  if (verdict.valid) return { status: 'in' };
+  const { lookup, language } = await fetchOwnProfile(session.user.id);
+  const verdict: SessionVerdict = evaluateSession({ startedAtMs, nowMs, profile: lookup });
+  if (verdict.valid) return { status: 'in', language };
 
   await endSession();
   return { status: 'out', ended: true };

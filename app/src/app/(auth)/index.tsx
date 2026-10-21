@@ -7,7 +7,7 @@ import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
 import { AppText } from '@/components/AppText';
-import { strings } from '@/i18n';
+import { useStrings } from '@/i18n/useStrings';
 import { requestCode } from '@/lib/auth';
 import { setPendingEmail } from '@/lib/pendingLogin';
 import { useSession } from '@/lib/session';
@@ -21,6 +21,7 @@ export default function EmailScreen() {
   const insets = useSafeAreaInsets();
   const { colors, brand } = useTheme();
   const { ended } = useSession();
+  const strings = useStrings();
 
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);

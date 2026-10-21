@@ -7,7 +7,7 @@ import { AppButton } from '@/components/AppButton';
 import { AppText } from '@/components/AppText';
 import { CODE_LENGTH, CodeBoxes } from '@/components/CodeBoxes';
 import { Keypad } from '@/components/Keypad';
-import { strings } from '@/i18n';
+import { useStrings } from '@/i18n/useStrings';
 import { requestCode, verifyCode } from '@/lib/auth';
 import { getPendingEmail } from '@/lib/pendingLogin';
 import { useSession } from '@/lib/session';
@@ -21,6 +21,7 @@ export default function CodeScreen() {
   const insets = useSafeAreaInsets();
   const { colors, brand, status } = useTheme();
   const { refresh } = useSession();
+  const strings = useStrings();
 
   const email = getPendingEmail();
   const [digits, setDigits] = useState('');
@@ -57,7 +58,7 @@ export default function CodeScreen() {
             : strings.code.errorWrong,
       );
     },
-    [email, refresh],
+    [email, refresh, strings],
   );
 
   function onDigit(d: string) {
