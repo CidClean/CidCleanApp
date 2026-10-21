@@ -104,11 +104,15 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Ajustes: categorías de partida | Suministros, Equipo, Seguro, Vehículos, Software y Otro (6) | D-130 | deducido |
 | Staff: correo de entrada | Todo centrado: "Cid Clean" grande en `#0F766E` (26px), línea "Entra con tu correo", campo Correo y botón sólido Enviar código | D-149 | [`ronda-13-pantalla-entrada.md`](../surveys/ronda-13-pantalla-entrada.md) |
 | Staff: mensaje al pedir el código | Mensaje neutro "Si tu correo tiene acceso, recibirás un código de 6 dígitos. Vale 10 minutos." sobre las 6 casillas (D-040) y Reenviar código | D-150 | ronda 13 |
-| Staff: sesión terminada | Pantalla de entrada con aviso ámbar arriba "Tu sesión terminó. Escribe tu correo para entrar otra vez." | D-151 | ronda 13 |
+| Staff: sesión terminada | Pantalla del correo (D-149) sin barra de marca, con aviso ámbar arriba "Tu sesión terminó. Escribe tu correo para entrar otra vez." | D-151, D-153 | ronda 13 |
+| Staff: posición de la pantalla del correo | Bloque pegado arriba; "centrado" es en horizontal | D-154 | [`entrada-ajustes-2026-10-21.md`](../surveys/entrada-ajustes-2026-10-21.md) |
+| Staff: teclado del código | Dígitos y Borrar; tecla vacía abajo a la izquierda; Reenviar solo como botón de texto "Reenviar código" | D-155 | ajustes 2026-10-21 |
+| Staff: mensajes de error de la entrada | Cinco textos aprobados, listados en D-156 | D-156 | ajustes 2026-10-21 |
 
 Copia visual de lo aprobado, la más reciente primero:
 
 - Pantallas deducidas (2026-10-21): [`../surveys/deducido-2026-10-21.html`](../surveys/deducido-2026-10-21.html). Barra inferior, Menú, Cuentas, inicio del staff y categorías. No las eligió el dueño: las dedujo Claude por delegación.
+- Ajustes de la entrada (2026-10-21): [`../surveys/ronda-13-ajustes-aprobado.html`](../surveys/ronda-13-ajustes-aprobado.html). Muestra la sesión terminada sin barra y el código del staff con el teclado ajustado. Sus datos son de ejemplo. Reemplaza en esos dos puntos a la muestra de la ronda 13.
 - Ronda 13: [`../surveys/ronda-13-pantalla-entrada-aprobado.html`](../surveys/ronda-13-pantalla-entrada-aprobado.html). Muestra las 3 pantallas de la entrada del staff con los valores de las rondas 1 a 13. Sus datos son de ejemplo.
 - Ronda 12: [`../surveys/ronda-12-pendientes-restantes-aprobado.html`](../surveys/ronda-12-pendientes-restantes-aprobado.html). Muestra las 21 pantallas de la ronda 12 con los valores de las rondas 1 a 12. Sus datos son de ejemplo.
 - Ronda 11: [`../surveys/ronda-11-pendientes-de-pantallas-aprobado.html`](../surveys/ronda-11-pendientes-de-pantallas-aprobado.html). Muestra las 8 pantallas de la ronda 11 con los valores de las rondas 1 a 11. Sus datos son de ejemplo.
