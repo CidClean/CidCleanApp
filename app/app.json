@@ -2,7 +2,7 @@
   "expo": {
     "name": "Cid Clean",
     "slug": "cidclean",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "cidclean",
@@ -37,7 +37,15 @@
         }
       ],
       "expo-font",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Cid Clean usa la cámara para tomar la foto de un documento.",
+          "photosPermission": false,
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

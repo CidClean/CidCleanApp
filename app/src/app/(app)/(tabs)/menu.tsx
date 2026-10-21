@@ -18,6 +18,7 @@ export default function MenuScreen() {
 
   function open(key: MenuKey) {
     if (key === 'profile') router.push('/profile');
+    else if (key === 'employees') router.push('/employees');
     else router.push({ pathname: '/section/[key]', params: { key } });
   }
 

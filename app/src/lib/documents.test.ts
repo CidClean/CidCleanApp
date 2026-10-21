@@ -1,0 +1,78 @@
+const mockUpload = jest.fn();
+const mockCreateSignedUrl = jest.fn();
+const mockRpc = jest.fn();
+const mockOpenBrowserAsync = jest.fn();
+
+jest.mock('./supabase', () => ({
+  supabase: {
+    rpc: (...a: unknown[]) => mockRpc(...a),
+    storage: { from: () => ({ upload: (...a: unknown[]) => mockUpload(...a), createSignedUrl: (...a: unknown[]) => mockCreateSignedUrl(...a) }) },
+  },
+}));
+jest.mock('expo-web-browser', () => ({ openBrowserAsync: (...a: unknown[]) => mockOpenBrowserAsync(...a) }));
+jest.mock('expo-image-picker', () => ({}));
+jest.mock('expo-document-picker', () => ({}));
+
+import { documentPath, openDocument, uploadDocument } from './documents';
+
+const file = { uri: 'file:///tmp/a.pdf', mimeType: 'application/pdf', name: 'a.pdf' };
+
+beforeEach(() => {
+  mockUpload.mockReset();
+  mockCreateSignedUrl.mockReset();
+  mockRpc.mockReset();
+  mockOpenBrowserAsync.mockReset();
+  (global as any).fetch = jest.fn().mockResolvedValue({ arrayBuffer: async () => new ArrayBuffer(4) });
+});
+
+describe('subir un documento (D-183)', () => {
+  test('la ruta es <empleado>/<tipo>/<nombre>.<ext>', () => {
+    expect(documentPath('p1', 'w9', file, 'abc')).toBe('p1/w9/abc.pdf');
+    expect(documentPath('p1', 'insurance_certificate', { uri: 'x', mimeType: 'image/jpeg', name: null }, 'abc')).toBe('p1/insurance_certificate/abc.jpg');
+  });
+
+  test('primero sube al bucket y después lo registra como el documento vigente', async () => {
+    const order: string[] = [];
+    mockUpload.mockImplementation(async () => (order.push('mockUpload'), { error: null }));
+    mockRpc.mockImplementation(async () => (order.push('register'), { error: null }));
+    expect(await uploadDocument('p1', 'w9', file)).toEqual({ ok: true, data: null });
+    expect(order).toEqual(['mockUpload', 'register']);
+    const [path, , options] = mockUpload.mock.calls[0];
+    expect(path).toMatch(/^p1\/w9\/[a-z0-9]+\.pdf$/);
+    expect(options).toEqual({ contentType: 'application/pdf' });
+    expect(mockRpc).toHaveBeenCalledWith('register_profile_document', { p_profile: 'p1', p_kind: 'w9', p_path: path });
+  });
+
+  test('si falla la subida no se registra nada', async () => {
+    mockUpload.mockResolvedValue({ error: { message: 'x' } });
+    expect((await uploadDocument('p1', 'w9', file)).ok).toBe(false);
+    expect(mockRpc).not.toHaveBeenCalled();
+  });
+
+  test('sin permiso la base lo rechaza (42501)', async () => {
+    mockUpload.mockResolvedValue({ error: null });
+    mockRpc.mockResolvedValue({ error: { code: '42501' } });
+    expect(await uploadDocument('p1', 'w9', file)).toEqual({ ok: false, reason: 'forbidden' });
+  });
+});
+
+describe('abrir un documento (D-125)', () => {
+  test('primero se registra la apertura, después se firma una URL de 60 s y se abre', async () => {
+    const order: string[] = [];
+    mockRpc.mockImplementation(async () => (order.push('mockRpc'), { data: 'p1/w9/abc.pdf', error: null }));
+    mockCreateSignedUrl.mockImplementation(async () => (order.push('sign'), { data: { signedUrl: 'https://x/firmada' }, error: null }));
+    mockOpenBrowserAsync.mockImplementation(async () => order.push('open'));
+    expect(await openDocument('d1')).toEqual({ ok: true, data: null });
+    expect(order).toEqual(['mockRpc', 'sign', 'open']);
+    expect(mockRpc).toHaveBeenCalledWith('open_profile_document', { doc_id: 'd1' });
+    expect(mockCreateSignedUrl).toHaveBeenCalledWith('p1/w9/abc.pdf', 60);
+    expect(mockOpenBrowserAsync).toHaveBeenCalledWith('https://x/firmada');
+  });
+
+  test('sin permiso no se firma nada', async () => {
+    mockRpc.mockResolvedValue({ data: null, error: { code: '42501' } });
+    expect(await openDocument('d1')).toEqual({ ok: false, reason: 'forbidden' });
+    expect(mockCreateSignedUrl).not.toHaveBeenCalled();
+    expect(mockOpenBrowserAsync).not.toHaveBeenCalled();
+  });
+});
