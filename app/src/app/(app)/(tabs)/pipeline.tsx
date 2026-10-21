@@ -5,7 +5,7 @@ import { ScrollView, View } from 'react-native';
 import { AppAlert } from '@/components/AppAlert';
 import { AppText } from '@/components/AppText';
 import { ListRow } from '@/components/ListRow';
-import { LeadStatusChip } from '@/components/sales/LeadStatusChip';
+import { Chip } from '@/components/Chip';
 import { TopBar } from '@/components/TopBar';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useStrings } from '@/i18n/useStrings';
@@ -79,7 +79,7 @@ export default function PipelineScreen() {
               key={lead.id}
               title={lead.company}
               detail={detail === '' ? undefined : detail}
-              right={<LeadStatusChip label={s.status[lead.status]} tone={statusTone(lead.status)} />}
+              right={<Chip label={s.status[lead.status]} tone={statusTone(lead.status)} />}
               last={i === leads.length - 1}
               onPress={() => router.push({ pathname: '/leads/[id]', params: { id: lead.id } })}
             />

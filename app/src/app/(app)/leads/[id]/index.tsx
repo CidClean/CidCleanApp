@@ -1,14 +1,16 @@
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppText } from '@/components/AppText';
 import { ListRow } from '@/components/ListRow';
 import { LeadFormFields } from '@/components/sales/LeadFormFields';
-import { LeadStatusChip } from '@/components/sales/LeadStatusChip';
+import { Chip } from '@/components/Chip';
+import { Icon } from '@/components/Icon';
 import { SelectField } from '@/components/SelectField';
+import { Sheet } from '@/components/Sheet';
 import { Tabs } from '@/components/Tabs';
 import { TopBar } from '@/components/TopBar';
 import type { SalesStrings } from '@/i18n/sales';
@@ -16,6 +18,7 @@ import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useStrings } from '@/i18n/useStrings';
 import {
   LEAD_STATUSES,
+  canDeleteLeads,
   canEditLeads,
   canSeeLeads,
   dateFromKey,
@@ -31,12 +34,13 @@ import {
   type Lead,
   type LeadForm,
   type LeadFormErrors,
+  type LeadSite,
   type LeadStatus,
 } from '@/lib/leadRules';
-import { fetchLead, setLeadStatus, updateLead } from '@/lib/leadsApi';
+import { deleteLead, deleteSite, fetchLead, setLeadStatus, updateLead } from '@/lib/leadsApi';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions, useSession } from '@/lib/session';
-import { sample, useTheme } from '@/theme';
+import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
 type Tab = 'data' | 'sites' | 'notes';
 
@@ -49,7 +53,7 @@ export default function LeadDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const goBack = useGoBack();
-  const { colors } = useTheme();
+  const { colors, status } = useTheme();
   const strings = useStrings();
   const s = useSalesStrings();
   const { locale } = useSession();
@@ -64,6 +68,10 @@ export default function LeadDetailScreen() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [statusError, setStatusError] = useState(false);
+  // D-201 y D-202: hojas de confirmación para eliminar el lead o un sitio.
+  const [confirm, setConfirm] = useState<{ kind: 'lead' } | { kind: 'site'; site: LeadSite } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<'lead' | 'site' | 'siteDone' | null>(null);
 
   const load = useCallback(async () => {
     const result = await fetchLead(id);
@@ -131,6 +139,32 @@ export default function LeadDetailScreen() {
     await load();
   }
 
+  async function confirmDelete() {
+    if (!lead || !confirm || deleting) return;
+    setDeleting(true);
+    setDeleteError(null);
+    if (confirm.kind === 'lead') {
+      const result = await deleteLead(lead.id);
+      setDeleting(false);
+      setConfirm(null);
+      if (!result.ok) {
+        setDeleteError('lead');
+        return;
+      }
+      // D-201: al eliminar vuelve al Pipeline.
+      router.navigate('/pipeline');
+      return;
+    }
+    const result = await deleteSite(confirm.site.id);
+    setDeleting(false);
+    setConfirm(null);
+    if (!result.ok) {
+      setDeleteError(result.reason === 'invalid' ? 'siteDone' : 'site');
+      return;
+    }
+    await load();
+  }
+
   const topAction =
     lead && canEdit && tab !== 'sites'
       ? editing
@@ -157,7 +191,7 @@ export default function LeadDetailScreen() {
                   {s.detail.sourceLine(s.source[lead.source])}
                 </AppText>
               </View>
-              <LeadStatusChip label={s.status[lead.status]} tone={statusTone(lead.status)} />
+              <Chip label={s.status[lead.status]} tone={statusTone(lead.status)} />
             </View>
 
             <Tabs
@@ -184,15 +218,37 @@ export default function LeadDetailScreen() {
                     />
                   </View>
                 ) : null}
+                {canDeleteLeads(access) ? (
+                  <View style={{ marginTop: 12 }}>
+                    {deleteError === 'lead' ? <AppAlert tone="error" text={s.detail.errorDelete} /> : null}
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => setConfirm({ kind: 'lead' })}
+                      style={styles.dangerText}
+                    >
+                      <AppText weight="medium" size={sample.buttonSize} color={status.error}>
+                        {s.detail.deleteLead}
+                      </AppText>
+                    </Pressable>
+                  </View>
+                ) : null}
               </>
             ) : null}
 
+            {tab === 'sites' && (deleteError === 'site' || deleteError === 'siteDone') ? (
+              <AppAlert tone="error" text={deleteError === 'siteDone' ? s.sites.errorDone : s.sites.errorDelete} />
+            ) : null}
             {tab === 'sites' ? (
               <SitesSection
                 lead={lead}
                 s={s}
                 canEdit={canEdit}
                 onAdd={() => router.push({ pathname: '/leads/[id]/new-site', params: { id: lead.id } })}
+                onEdit={(siteId) => router.push({ pathname: '/leads/[id]/new-site', params: { id: lead.id, site: siteId } })}
+                onDelete={(site) => {
+                  setDeleteError(null);
+                  setConfirm({ kind: 'site', site });
+                }}
                 onSchedule={(siteId) =>
                   router.push({
                     pathname: '/leads/[id]/schedule',
@@ -217,6 +273,29 @@ export default function LeadDetailScreen() {
           </>
         ) : null}
       </ScrollView>
+
+      <Sheet visible={confirm !== null} onClose={() => setConfirm(null)}>
+        <AppText weight="medium" size={sample.headingSize} center>
+          {confirm?.kind === 'lead'
+            ? s.detail.deleteTitle(lead?.company ?? '')
+            : confirm?.kind === 'site'
+              ? s.sites.deleteTitle(siteLabel(confirm.site))
+              : ''}
+        </AppText>
+        {confirm?.kind === 'lead' ? (
+          <AppText size={sample.noteSize} color={colors.secondary} center style={{ marginTop: 4 }}>
+            {s.detail.deleteBody}
+          </AppText>
+        ) : null}
+        <View style={styles.sheetButtons}>
+          <View style={styles.flex}>
+            <AppButton label={strings.common.cancel} variant="outline" onPress={() => setConfirm(null)} />
+          </View>
+          <View style={styles.flex}>
+            <AppButton label={s.detail.delete} onPress={() => void confirmDelete()} disabled={deleting} />
+          </View>
+        </View>
+      </Sheet>
     </KeyboardAvoidingView>
   );
 }
@@ -252,12 +331,16 @@ function SitesSection({
   canEdit,
   onAdd,
   onSchedule,
+  onEdit,
+  onDelete,
 }: {
   lead: Lead;
   s: SalesStrings;
   canEdit: boolean;
   onAdd: () => void;
   onSchedule: (siteId?: string) => void;
+  onEdit: (siteId: string) => void;
+  onDelete: (site: LeadSite) => void;
 }) {
   const { colors } = useTheme();
   const hasSites = lead.sites.length > 0;
@@ -273,7 +356,18 @@ function SitesSection({
           key={site.id}
           title={siteLabel(site)}
           detail={site.scheduled ? s.sites.walkthroughOn(formatDateTime(site.scheduled.startsAt, s)) : s.sites.noWalkthrough}
-          chevron={canEdit}
+          right={
+            canEdit ? (
+              <View style={styles.rowIcons}>
+                <Pressable accessibilityRole="button" accessibilityLabel={s.sites.editLabel(siteLabel(site))} onPress={() => onEdit(site.id)} hitSlop={8}>
+                  <Icon name="pencil" size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
+                </Pressable>
+                <Pressable accessibilityRole="button" accessibilityLabel={s.sites.deleteLabel(siteLabel(site))} onPress={() => onDelete(site)} hitSlop={8}>
+                  <Icon name="trash" size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
+                </Pressable>
+              </View>
+            ) : undefined
+          }
           last={i === lead.sites.length - 1}
           onPress={canEdit ? () => onSchedule(site.id) : undefined}
         />
@@ -290,4 +384,10 @@ function SitesSection({
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 10 },
+  // Lápiz y papelera de 18px con 14px entre ellos (muestra ronda 12, D-113).
+  rowIcons: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  // Botón de texto rojo (D-201): mismo alto que los botones (40px), sin contorno.
+  dangerText: { minHeight: sample.buttonMinHeight, alignItems: 'center', justifyContent: 'center' },
+  sheetButtons: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  flex: { flex: 1 },
 });

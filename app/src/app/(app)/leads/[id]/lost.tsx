@@ -9,7 +9,7 @@ import { SelectField } from '@/components/SelectField';
 import { TopBar } from '@/components/TopBar';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useStrings } from '@/i18n/useStrings';
-import { canEditLeads, reasonLabel, type LostReason } from '@/lib/leadRules';
+import { activeReasons, canEditLeads, reasonLabel, type LostReason } from '@/lib/leadRules';
 import { fetchLostReasons, markLeadLost } from '@/lib/leadsApi';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions, useSession } from '@/lib/session';
@@ -35,9 +35,11 @@ export default function MarkLostScreen() {
     void fetchLostReasons().then((result) => {
       if (cancelled) return;
       if (result.ok) {
-        setReasons(result.data);
+        // Solo los motivos activos se ofrecen (D-203: los desactivados siguen en los leads que ya los usan).
+        const offered = activeReasons(result.data);
+        setReasons(offered);
         // D-200: parte con el primer motivo elegido, como la muestra (Precio).
-        setReasonId((prev) => prev || (result.data[0]?.id ?? ''));
+        setReasonId((prev) => prev || (offered[0]?.id ?? ''));
       } else {
         setError('load');
       }
