@@ -165,8 +165,8 @@ begin
     pg_temp.valor('wt', format('select count(*) from lead_sites where id = %L', sitio)));
   perform pg_temp.prueba('sin permisos no ve sitios', '0',
     pg_temp.valor('sin', 'select count(*) from lead_sites'));
-  perform pg_temp.prueba('un sitio no se borra suelto', 'ERR:42501',
-    pg_temp.valor('editor', format('delete from lead_sites where id = %L', sitio)));
+  perform pg_temp.prueba('quien solo ve no borra sitios (0 filas; borrar sitios: D-202, ver sitios_y_motivos.sql)', '0',
+    pg_temp.valor('ver', format('with d as (delete from lead_sites where id = %L returning 1) select count(*) from d', sitio)));
 
   -- Agendar el walkthrough (D-072, D-078)
   perform pg_temp.prueba('quien solo ve no agenda', 'ERR:42501',
