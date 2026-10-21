@@ -235,6 +235,28 @@ describe('Perfil del empleado (D-057, D-172 a D-175, D-182 a D-184)', () => {
     expect(mockUpdateEmployee).toHaveBeenCalledWith('e1', { fullName: 'Ana María Ruiz', phone: '(239) 555-0142', workerType: '1099', language: 'en' });
   });
 
+  test('mientras se edita el interruptor Activo no se muestra: queda solo la etiqueta con el estado real', async () => {
+    await render(<EmployeeProfileScreen />);
+    await screen.findByText(es.employee.invitationSent);
+    expect(screen.getByRole('switch')).toBeTruthy();
+    await fireEvent.press(screen.getByText(es.common.edit));
+    expect(screen.queryByRole('switch')).toBeNull();
+    expect(screen.getByText(es.employees.active)).toBeTruthy();
+    expect(screen.queryByText(es.employees.inactive)).toBeNull();
+    // Al cancelar vuelve el interruptor.
+    await fireEvent.press(screen.getByText(es.common.cancel));
+    expect(screen.getByRole('switch')).toBeTruthy();
+  });
+
+  test('en la edición de un empleado inactivo la etiqueta dice Inactivo', async () => {
+    mockFetchEmployee.mockResolvedValue({ ok: true, data: employee({ active: false }) });
+    await render(<EmployeeProfileScreen />);
+    await screen.findByText(es.employee.invitationSent);
+    await fireEvent.press(screen.getByText(es.common.edit));
+    expect(screen.queryByRole('switch')).toBeNull();
+    expect(screen.getByText(es.employees.inactive)).toBeTruthy();
+  });
+
   test('en el formulario el nombre no puede quedar vacío', async () => {
     await render(<EmployeeProfileScreen />);
     await screen.findByText(es.employee.invitationSent);

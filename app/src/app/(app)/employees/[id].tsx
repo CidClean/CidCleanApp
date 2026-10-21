@@ -224,7 +224,7 @@ export default function EmployeeProfileScreen() {
                   </AppText>
                 </View>
               </View>
-              {canToggle ? (
+              {canToggle && !editing ? (
                 <View style={styles.toggle}>
                   <AppText size={sample.noteSize} color={colors.secondary}>
                     {strings.employee.activeLabel}
