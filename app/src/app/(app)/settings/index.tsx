@@ -4,6 +4,7 @@ import { ScrollView, View } from 'react-native';
 
 import { AppAlert } from '@/components/AppAlert';
 import { ListRow } from '@/components/ListRow';
+import { LostReasonsSettingsRow } from '@/components/sales/LostReasonsSettingsRow';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
 import { useGoBack } from '@/lib/navigation';
@@ -49,6 +50,7 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={{ padding: 12 }}>
         {failed ? <AppAlert tone="error" text={strings.terms.errorLoad} /> : null}
         <ListRow title={strings.settings.termsRow} detail={value} chevron onPress={() => router.push('/settings/terms')} />
+        <LostReasonsSettingsRow />
         <ListRow title={strings.transfer.row} chevron last onPress={() => router.push('/settings/transfer')} />
       </ScrollView>
     </View>

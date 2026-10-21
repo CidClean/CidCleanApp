@@ -59,9 +59,10 @@ describe('Menú → Ajustes (D-107, D-114, D-187)', () => {
     expect(screen.getByLabelText(es.common.back)).toBeTruthy();
     expect(screen.getByText(es.settings.termsRow)).toBeTruthy();
     await waitFor(() => expect(screen.getByText('v2')).toBeTruthy());
-    // Dos filas: Términos del staff y Transferir rol de Super Admin (orden 12).
-    expect(screen.getAllByRole('button').filter((b) => b.props.accessibilityLabel !== es.common.back)).toHaveLength(2);
+    // Tres filas: Términos del staff, Motivos de lead perdido (D-203) y Transferir rol de Super Admin (orden 12).
+    expect(screen.getAllByRole('button').filter((b) => b.props.accessibilityLabel !== es.common.back)).toHaveLength(3);
     expect(screen.getByText(es.transfer.row)).toBeTruthy();
+    expect(screen.getByText('Motivos de lead perdido')).toBeTruthy();
   });
 
   test('sin versión publicada el valor es "Sin publicar"', async () => {
