@@ -179,6 +179,11 @@ Sources: [FL DOR, sales tax on cleaning services](https://floridarevenue.com/for
 
 - **Tipos de área del walkthrough:** Baño, Oficina, Lobby, Cocina, Sala de juntas, Pasillo, Recepción, Escaleras, Almacén y Otro.
 - **Motivos de lead perdido:** Precio, Eligió a otra compañía, Sin respuesta, Ya no necesita el servicio, Cambió el alcance, Trabajo muy grande o muy pequeño, Fuera de la zona de servicio y Otro. Se editan en Ajustes y la misma lista sirve para el rechazo del quote.
+- **Categorías de gastos (D-130):** Suministros, Equipo, Seguro, Vehículos, Software y Otro. Se editan en Ajustes.
+
+## Pendientes del inicio
+
+El inicio muestra solo los pendientes de las áreas donde la persona tiene permiso, ordenados por lo más urgente. Es Urgente (D-131) un quote que vence en 3 días o menos, un trabajo por aprobar con más de 1 día de espera, un trabajo con GPS fuera de rango y un jobsite con margen en riesgo.
 
 ## Reglas transversales y alcance
 

@@ -97,9 +97,15 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Notificaciones: tocar una fila | Abre directamente la pantalla relacionada; la fila lleva flecha | D-118 | ronda 12 |
 | Aviso sin conexión: terminado | Nube con marca de verificación y "Sincronizado", fija en el encabezado | D-119 | ronda 12 |
 | Librería de iconos | Tabler Icons, trazo `1.5px` | D-120 | ronda 12 |
+| Barra inferior | Cuatro iconos de Tabler sin texto, en este orden: Pipeline, Cuentas, Inicio y Menú; el destino activo en color de marca; solo los destinos con permiso | D-132, D-135 | [`deducciones-2026-10-21.md`](../surveys/deducciones-2026-10-21.md) |
+| Cuentas | Lista de jobsites agrupada por cliente (D-082) | D-133 | deducido |
+| Menú | Lista con Empleados, Schedule y Work, Accounting, Ajustes, Historial, Notificaciones y Mi perfil e idioma, según permisos | D-134 | deducido |
+| Pendiente Urgente | Ficha ámbar Urgente según los criterios de `current/flujo.md`, "Pendientes del inicio" | D-131 | deducido |
+| Ajustes: categorías de partida | Suministros, Equipo, Seguro, Vehículos, Software y Otro (6) | D-130 | deducido |
 
 Copia visual de lo aprobado, la más reciente primero:
 
+- Pantallas deducidas (2026-10-21): [`../surveys/deducido-2026-10-21.html`](../surveys/deducido-2026-10-21.html). Barra inferior, Menú, Cuentas, inicio del staff y categorías. No las eligió el dueño: las dedujo Claude por delegación.
 - Ronda 12: [`../surveys/ronda-12-pendientes-restantes-aprobado.html`](../surveys/ronda-12-pendientes-restantes-aprobado.html). Muestra las 21 pantallas de la ronda 12 con los valores de las rondas 1 a 12. Sus datos son de ejemplo.
 - Ronda 11: [`../surveys/ronda-11-pendientes-de-pantallas-aprobado.html`](../surveys/ronda-11-pendientes-de-pantallas-aprobado.html). Muestra las 8 pantallas de la ronda 11 con los valores de las rondas 1 a 11. Sus datos son de ejemplo.
 - Ronda 10: [`../surveys/ronda-10-notificaciones-y-sistema-aprobado.html`](../surveys/ronda-10-notificaciones-y-sistema-aprobado.html). Muestra las 8 pantallas de la ronda 10 con los valores de las rondas 1 a 10. Sus datos son de ejemplo.
