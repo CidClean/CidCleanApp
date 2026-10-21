@@ -13,4 +13,14 @@ Hay 35 permisos delegables. Dos funciones del Sistema no se delegan y solo las t
 | Accounting (9) | `ingresos_ver_registrar`, `ingresos_marcar_recibidos`, `personal_ver_costo`, `gastos_ver`, `gastos_registrar_editar`, `gastos_recurrentes`, `dashboard_global`, `dashboard_cuenta`, `reportes_exportar` |
 | Sistema (1) | `historial_ver` |
 
-Con qué permisos parte cada plantilla (Admin, Supervisor, Empleado) todavía no está decidido; se propone al dueño en una ronda aparte.
+## Plantillas de partida (D-152)
+
+El rol es solo una plantilla: al crear un perfil se marcan estos permisos y después se ajustan uno por uno (D-014, D-058).
+
+| Plantilla | Permisos de partida |
+| --- | --- |
+| Empleado | Ninguno. Ver su horario y hacer clock in y clock out no necesita permisos. |
+| Supervisor (8) | `leads_ver`, `walkthroughs_hacer`, `clientes_ver`, `empleados_ver`, `schedule_ver_editar`, `work_registrar_por_otros`, `work_editar`, `work_revisar_gps` |
+| Admin (34) | Los 35 permisos menos `empleados_gestionar_permisos`. Incluye `gastos_registrar_editar`. |
+
+El Supervisor parte sin ver tarifas ni pagos y sin Accounting. El Admin no puede dar ni quitar permisos mientras no se le dé `empleados_gestionar_permisos` a mano. El Super Admin tiene todo y no usa plantilla.
