@@ -10,14 +10,16 @@ import { supabase } from './supabase';
 
 const BUCKET = 'terms';
 const KIND = 'staff';
+/** staff (D-176) o portal del cliente (D-209: mismo mecanismo, PDF en Ajustes). */
+export type TermsKind = 'staff' | 'portal';
 const SIGNED_URL_SECONDS = 60; // URL firmada de corta duración
 
 export type CurrentTerms = { version: number; publishedAt: string; filePath: string };
 
 /** Versión vigente de los términos del staff; null si todavía no se publicó ninguna. */
-export async function fetchCurrentTerms(): Promise<ApiResult<CurrentTerms | null>> {
+export async function fetchCurrentTerms(kind: TermsKind = KIND): Promise<ApiResult<CurrentTerms | null>> {
   try {
-    const { data, error } = await supabase.rpc('get_current_terms', { p_kind: KIND });
+    const { data, error } = await supabase.rpc('get_current_terms', { p_kind: kind });
     if (error) return { ok: false, reason: failureFromCode(error.code) };
     const row = (data as { version: number; published_at: string; file_path: string }[] | null)?.[0];
     return { ok: true, data: row ? { version: row.version, publishedAt: row.published_at, filePath: row.file_path } : null };
@@ -59,18 +61,18 @@ function uniqueName(): string {
 }
 
 /** Ruta en el bucket: `staff/<nombre único>.pdf`. */
-export function termsPath(name: string = uniqueName()): string {
-  return `${KIND}/${name}.pdf`;
+export function termsPath(name: string = uniqueName(), kind: TermsKind = KIND): string {
+  return `${kind}/${name}.pdf`;
 }
 
 /** Sube el PDF al bucket y publica la versión siguiente (publish_terms valida que el archivo exista). */
-export async function publishTerms(file: PickedPdf): Promise<ApiResult<null>> {
+export async function publishTerms(file: PickedPdf, kind: TermsKind = KIND): Promise<ApiResult<null>> {
   try {
-    const path = termsPath();
+    const path = termsPath(undefined, kind);
     const bytes = await (await fetch(file.uri)).arrayBuffer();
     const upload = await supabase.storage.from(BUCKET).upload(path, bytes, { contentType: 'application/pdf' });
     if (upload.error) return { ok: false, reason: 'server' };
-    const { error } = await supabase.rpc('publish_terms', { kind: KIND, file_path: path });
+    const { error } = await supabase.rpc('publish_terms', { kind, file_path: path });
     if (error) return { ok: false, reason: failureFromCode(error.code) };
     return { ok: true, data: null };
   } catch {

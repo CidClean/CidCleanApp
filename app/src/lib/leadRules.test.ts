@@ -105,7 +105,12 @@ describe('formulario del lead', () => {
     expect(emptyLeadForm.source).toBe('manual');
     expect(
       leadColumns({ ...emptyLeadForm, company: '  Gulf  ', email: ' Ana@X.com ', phone: ' ', notes: 'n' }),
-    ).toEqual({ company: 'Gulf', contact_name: null, phone: null, email: 'ana@x.com', source: 'manual', notes: 'n' });
+    ).toEqual({ company: 'Gulf', contact_name: null, phone: null, email: 'ana@x.com', source: 'manual', notes: 'n', language: 'en' });
+  });
+
+  it('idioma del cliente: inglés por defecto y se guarda el elegido (D-209)', () => {
+    expect(emptyLeadForm.language).toBe('en');
+    expect(leadColumns({ ...emptyLeadForm, company: 'X', language: 'es' }).language).toBe('es');
   });
 
   it('fechas MM/DD/AAAA', () => {

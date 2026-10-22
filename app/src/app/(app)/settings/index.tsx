@@ -9,6 +9,7 @@ import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions } from '@/lib/session';
+import { useQuoteStrings } from '@/i18n/useQuoteStrings';
 import { fetchCurrentTerms, type CurrentTerms } from '@/lib/termsApi';
 import { useTheme } from '@/theme';
 
@@ -24,6 +25,8 @@ export default function SettingsScreen() {
   const { isSuperAdmin } = usePermissions();
   const [current, setCurrent] = useState<CurrentTerms | null | undefined>(undefined); // undefined: aún no se lee
   const [failed, setFailed] = useState(false);
+  const [portal, setPortal] = useState<CurrentTerms | null | undefined>(undefined); // términos del portal (D-209)
+  const qs = useQuoteStrings();
 
   // Se vuelve a leer al volver de publicar, para mostrar la versión nueva.
   useFocusEffect(
@@ -33,6 +36,9 @@ export default function SettingsScreen() {
         if (cancelled) return;
         setFailed(!result.ok);
         if (result.ok) setCurrent(result.data);
+      });
+      fetchCurrentTerms('portal').then((result) => {
+        if (!cancelled && result.ok) setPortal(result.data);
       });
       return () => {
         cancelled = true;
@@ -50,6 +56,12 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={{ padding: 12 }}>
         {failed ? <AppAlert tone="error" text={strings.terms.errorLoad} /> : null}
         <ListRow title={strings.settings.termsRow} detail={value} chevron onPress={() => router.push('/settings/terms')} />
+        <ListRow
+          title={qs.portalTermsRow}
+          detail={portal === undefined ? '' : portal === null ? strings.settings.unpublished : strings.settings.termsValue(portal.version)}
+          chevron
+          onPress={() => router.push({ pathname: '/settings/terms', params: { kind: 'portal' } })}
+        />
         <LostReasonsSettingsRow />
         <ListRow title={strings.transfer.row} chevron last onPress={() => router.push('/settings/transfer')} />
       </ScrollView>

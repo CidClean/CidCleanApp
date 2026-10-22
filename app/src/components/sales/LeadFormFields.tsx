@@ -58,6 +58,15 @@ export function LeadFormFields({ form, errors, onChange, s, part = 'all' }: Prop
             value={form.source}
             onChange={(v) => set('source', v)}
           />
+          <SelectField
+            label={s.form.language}
+            options={[
+              { value: 'en', label: 'English' },
+              { value: 'es', label: 'Español' },
+            ]}
+            value={form.language}
+            onChange={(v) => set('language', v)}
+          />
           <AppField
             label={s.form.followUp}
             value={form.followUp}

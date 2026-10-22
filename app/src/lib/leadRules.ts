@@ -47,6 +47,8 @@ export type Lead = {
   status: LeadStatus;
   lostReason: LostReason | null;
   lostNote: string | null;
+  /** Idioma del correo y del portal del quote (D-209). */
+  language: 'en' | 'es';
   createdAt: Date;
   /** Fecha del seguimiento abierto (AAAA-MM-DD), si hay. */
   followUpOn: string | null;
@@ -208,6 +210,8 @@ export type LeadForm = {
   source: LeadSource;
   followUp: string; // MM/DD/AAAA
   notes: string;
+  /** Idioma del correo y del portal del quote (D-209): inglés por defecto. */
+  language: 'en' | 'es';
 };
 
 /** Un lead registrado a mano parte con fuente Manual (D-200). */
@@ -219,6 +223,7 @@ export const emptyLeadForm: LeadForm = {
   source: 'manual',
   followUp: '',
   notes: '',
+  language: 'en',
 };
 
 export type LeadFormErrors = { company?: true; email?: true; followUp?: true };
@@ -246,6 +251,7 @@ export function leadFormFrom(lead: Lead): LeadForm {
     source: lead.source,
     followUp: formatUsDate(lead.followUpOn),
     notes: lead.notes ?? '',
+    language: lead.language,
   };
 }
 
@@ -259,6 +265,7 @@ export function leadColumns(f: LeadForm) {
     email: clean(f.email)?.toLowerCase() ?? null,
     source: f.source,
     notes: clean(f.notes),
+    language: f.language,
   };
 }
 

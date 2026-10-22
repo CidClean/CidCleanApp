@@ -35,6 +35,7 @@ export const salesEs = {
     newTitle: 'Nuevo lead', // D-200 (mismo patrón de "Nuevo empleado", D-171)
     company: 'Empresa', // APROBADO (flujo: datos del lead)
     contact: 'Persona de contacto', // APROBADO (flujo)
+    language: 'Idioma del cliente', // D-200, hito 4: idioma del correo y del portal del quote (D-209)
     phone: 'Teléfono', // APROBADO (muestra ronda 8)
     email: 'Email', // APROBADO (muestra ronda 8)
     source: 'Fuente', // APROBADO (flujo)
@@ -190,6 +191,7 @@ export const salesEn: SalesStrings = {
     newTitle: 'New lead', // create lead screen title
     company: 'Company',
     contact: 'Contact person',
+    language: 'Client language', // language of the quote email and portal
     phone: 'Phone',
     email: 'Email',
     source: 'Source',

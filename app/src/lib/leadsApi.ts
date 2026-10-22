@@ -96,6 +96,7 @@ type LeadRow = {
   notes: string | null;
   status: string;
   lost_note: string | null;
+  language?: string | null;
   created_at: string;
   lost_reasons: ReasonRow | null;
   lead_followups: FollowUpRow[] | null;
@@ -120,6 +121,7 @@ export function rowToLead(r: LeadRow): Lead {
     status: isLeadStatus(r.status) ? r.status : 'new',
     lostReason: r.lost_reasons ? toReason(r.lost_reasons) : null,
     lostNote: r.lost_note,
+    language: r.language === 'es' ? 'es' : 'en',
     createdAt: new Date(r.created_at),
     followUpOn: openFollowUp(r.lead_followups),
     sites,
@@ -131,7 +133,7 @@ export async function fetchLead(id: string): Promise<LeadsResult<Lead>> {
     const { data, error } = await supabase
       .from('leads')
       .select(
-        'id, company, contact_name, phone, email, source, notes, status, lost_note, created_at, ' +
+        'id, company, contact_name, phone, email, source, notes, status, lost_note, language, created_at, ' +
           'lost_reasons(id, label_es, label_en, sort, active), lead_followups(due_on, done_at), ' +
           'lead_sites(id, name, address, created_at, walkthrough_appointments(id, starts_at, status))',
       )

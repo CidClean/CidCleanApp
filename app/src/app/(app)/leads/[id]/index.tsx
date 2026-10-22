@@ -12,6 +12,7 @@ import { Icon } from '@/components/Icon';
 import { SelectField } from '@/components/SelectField';
 import { Sheet } from '@/components/Sheet';
 import { Tabs } from '@/components/Tabs';
+import { LeadQuotes } from '@/components/quotes/LeadQuotes';
 import { TopBar } from '@/components/TopBar';
 import type { SalesStrings } from '@/i18n/sales';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
@@ -306,6 +307,7 @@ function DataSection({ lead, s, locale }: { lead: Lead; s: SalesStrings; locale:
     { label: s.detail.contact, value: lead.contactName ?? s.detail.none },
     { label: s.detail.phone, value: lead.phone ?? s.detail.none },
     { label: s.detail.email, value: lead.email ?? s.detail.none },
+    { label: s.form.language, value: lead.language === 'es' ? 'Español' : 'English' },
     {
       label: s.detail.followUp,
       value: lead.followUpOn ? formatShortDate(dateFromKey(lead.followUpOn), s) : s.detail.none,
@@ -378,6 +380,8 @@ function SitesSection({
           <AppButton label={s.sites.add} variant="outline" icon="plus" onPress={onAdd} />
         </View>
       ) : null}
+      {/* Hito 4: el quote de cada sitio (D-208). */}
+      <LeadQuotes leadId={lead.id} sites={lead.sites} />
     </View>
   );
 }

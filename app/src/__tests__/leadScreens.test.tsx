@@ -54,6 +54,10 @@ const mockUpdateSite = jest.fn();
 const mockCreateReason = jest.fn();
 const mockUpdateReason = jest.fn();
 const mockRemoveReason = jest.fn();
+jest.mock('@/lib/quotesApi', () => ({
+  fetchLeadQuotes: jest.fn().mockResolvedValue({ ok: true, data: [] }),
+  fetchQuotePending: jest.fn().mockResolvedValue([]),
+}));
 jest.mock('@/lib/leadsApi', () => ({
   fetchLeads: (...a: unknown[]) => mockFetchLeads(...a),
   fetchLead: (...a: unknown[]) => mockFetchLead(...a),
@@ -98,6 +102,7 @@ const lead: Lead = {
   lostNote: null,
   createdAt: new Date(2026, 9, 20),
   followUpOn: null,
+  language: 'en',
   sites: [
     { id: 's1', name: '5th Ave S', address: '123 5th Ave S, Naples', scheduled: null },
     { id: 's2', name: null, address: '900 Marco Island Blvd', scheduled: null },

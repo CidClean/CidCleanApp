@@ -9,6 +9,7 @@ import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
 import { fetchDocumentUrl } from '@/lib/documents';
 import { useGoBack } from '@/lib/navigation';
+import { fetchQuoteFileUrl } from '@/lib/quotesApi';
 import { fetchTermsUrl } from '@/lib/termsApi';
 import { downloadToCache, kindFromUrl, loadPdfView, removeCachedFile, type ViewerKind } from '@/lib/viewerFile';
 import { useTheme } from '@/theme';
@@ -22,7 +23,13 @@ type State = { status: 'loading' } | { status: 'error' } | { status: 'ready'; ki
  * open-document (documentos; deja la apertura en el historial) o de Storage firmado (términos).
  */
 export default function ViewerScreen() {
-  const { source, documentId, title } = useLocalSearchParams<{ source: 'terms' | 'document'; documentId?: string; title?: string }>();
+  const { source, documentId, title, path } = useLocalSearchParams<{
+    source: 'terms' | 'document' | 'quote-file';
+    documentId?: string;
+    title?: string;
+    /** source 'quote-file': ruta en el bucket quote-files (SOW o PDF del quote, hito 4). */
+    path?: string;
+  }>();
   const goBack = useGoBack();
   const { colors } = useTheme();
   const strings = useStrings();
@@ -33,7 +40,12 @@ export default function ViewerScreen() {
     let file: File | null = null;
 
     async function load() {
-      const result = source === 'terms' ? await fetchTermsUrl() : await fetchDocumentUrl(documentId ?? '');
+      const result =
+        source === 'terms'
+          ? await fetchTermsUrl()
+          : source === 'quote-file'
+            ? await fetchQuoteFileUrl(path ?? '')
+            : await fetchDocumentUrl(documentId ?? '');
       if (cancelled) return;
       if (!result.ok) {
         setState({ status: 'error' });
@@ -67,7 +79,7 @@ export default function ViewerScreen() {
       removeCachedFile(file);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, documentId]);
+  }, [source, documentId, path]);
 
   const PdfView = state.status === 'ready' && state.kind === 'pdf' ? loadPdfView() : null;
 
