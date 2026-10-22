@@ -17,7 +17,7 @@ import { useGoBack } from '@/lib/navigation';
 import { usePermissions } from '@/lib/session';
 import { useWalkthrough } from '@/lib/useWalkthrough';
 import { keepPhotoOnDevice } from '@/lib/walkthroughApi';
-import { canDoWalkthroughs, newId, photoPath, syncBadge, type Photo } from '@/lib/walkthroughRules';
+import { canDoWalkthroughs, isEditable, newId, photoPath, removePhoto, syncBadge, type Photo } from '@/lib/walkthroughRules';
 import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
 /**
@@ -36,8 +36,11 @@ export default function PhotosScreen() {
   const [error, setError] = useState<'camera' | 'photo' | null>(null);
   const [editing, setEditing] = useState<Photo | null>(null);
   const [note, setNote] = useState('');
+  const [removing, setRemoving] = useState<Photo | null>(null);
 
   if (!canDoWalkthroughs(access)) return <Redirect href="/" />;
+  // Cerrado se ve en el Resumen; para cambiar fotos primero se toca Editar (D-212).
+  if (doc && !isEditable(doc)) return <Redirect href={{ pathname: '/walkthrough/[id]', params: { id: params.id } }} />;
   const area = doc?.data.areas.find((a) => a.id === params.area) ?? null;
 
   function setPhotos(change: (photos: Photo[]) => Photo[]) {
@@ -111,9 +114,14 @@ export default function PhotosScreen() {
                         <Icon name="camera" size={37} strokeWidth={iconStrokeWidth} color={colors.secondary} />
                       )}
                     </View>
-                    <AppText size={12} color={colors.secondary} numberOfLines={2} style={{ width: 96 }}>
-                      {p.note}
-                    </AppText>
+                    <View style={styles.caption}>
+                      <AppText size={12} color={colors.secondary} numberOfLines={2} style={{ flex: 1 }}>
+                        {p.note}
+                      </AppText>
+                      <Pressable accessibilityRole="button" accessibilityLabel={w.remove.photoLabel} onPress={() => setRemoving(p)} hitSlop={8}>
+                        <Icon name="trash" size={16} strokeWidth={iconStrokeWidth} color={colors.text} />
+                      </Pressable>
+                    </View>
                   </Pressable>
                 ))}
               </ScrollView>
@@ -139,11 +147,33 @@ export default function PhotosScreen() {
           </View>
         </View>
       </Sheet>
+      <Sheet visible={removing !== null} onClose={() => setRemoving(null)}>
+        <AppText weight="medium" size={sample.headingSize} center>
+          {w.remove.photoTitle}
+        </AppText>
+        <View style={[styles.sheetButtons, { marginTop: 12 }]}>
+          <View style={styles.flex}>
+            <AppButton label={strings.common.cancel} variant="outline" onPress={() => setRemoving(null)} />
+          </View>
+          <View style={styles.flex}>
+            <AppButton
+              label={w.remove.delete}
+              onPress={() => {
+                const target = removing;
+                setRemoving(null);
+                if (target)
+                  void update((d) => ({ ...d, data: { ...d.data, areas: removePhoto(d.data.areas, params.area, target.id) } }));
+              }}
+            />
+          </View>
+        </View>
+      </Sheet>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  caption: { width: 96, flexDirection: 'row', alignItems: 'flex-start', gap: 4 },
   carousel: { gap: 10 },
   item: { gap: 4 },
   thumb: { width: 96, height: 96, borderRadius: 8, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },

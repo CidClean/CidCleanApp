@@ -32,7 +32,7 @@ export default function StartWalkthroughScreen() {
   const { access } = usePermissions();
   const [lead, setLead] = useState<Lead | null>(null);
   const [siteId, setSiteId] = useState(params.site ?? '');
-  const [error, setError] = useState<'closed' | 'start' | null>(null);
+  const [error, setError] = useState<'start' | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function open(l: Lead, site: LeadSite) {
@@ -54,14 +54,18 @@ export default function StartWalkthroughScreen() {
         contact: prefill,
       };
       const server = await fetchServerWalkthrough(site.id);
-      if (server.ok && server.data?.status === 'closed') {
-        setError('closed');
-        return;
-      }
+      // Del servidor (otro teléfono o ya cerrado): se retoma tal cual, sin nada pendiente; cerrado abre su Resumen (D-212).
       const doc =
         server.ok && server.data
-          ? // Borrador empezado en otro teléfono: se retoma tal cual, sin nada pendiente.
-            { ...newDoc({ ...base, id: server.data.id }), data: dataFromServer(server.data.draft, emptyData(prefill)), rev: 0, everSynced: true }
+          ? {
+              ...newDoc({ ...base, id: server.data.id }),
+              data: dataFromServer(server.data.draft, emptyData(prefill)),
+              rev: 0,
+              everSynced: true,
+              status: server.data.status,
+              version: server.data.currentVersion,
+              step: server.data.status === 'closed' ? 5 : 1,
+            }
           : newDoc(base);
       await saveWalkthrough(doc);
       router.replace({ pathname: '/walkthrough/[id]', params: { id: doc.id } });
@@ -99,7 +103,7 @@ export default function StartWalkthroughScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={w.title} onBack={goBack} backLabel={strings.common.back} />
       <ScrollView contentContainerStyle={{ padding: 12 }}>
-        {error ? <AppAlert tone="error" text={error === 'closed' ? w.closedAlready : w.errorStart} /> : null}
+        {error ? <AppAlert tone="error" text={w.errorStart} /> : null}
         {lead && !params.site && lead.sites.length > 0 ? (
           <>
             <SelectField

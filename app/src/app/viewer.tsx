@@ -8,6 +8,7 @@ import { AppAlert } from '@/components/AppAlert';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
 import { fetchDocumentUrl } from '@/lib/documents';
+import { fetchWalkthroughPdfUrl } from '@/lib/walkthroughApi';
 import { useGoBack } from '@/lib/navigation';
 import { fetchTermsUrl } from '@/lib/termsApi';
 import { downloadToCache, kindFromUrl, loadPdfView, removeCachedFile, type ViewerKind } from '@/lib/viewerFile';
@@ -22,7 +23,13 @@ type State = { status: 'loading' } | { status: 'error' } | { status: 'ready'; ki
  * open-document (documentos; deja la apertura en el historial) o de Storage firmado (términos).
  */
 export default function ViewerScreen() {
-  const { source, documentId, title } = useLocalSearchParams<{ source: 'terms' | 'document'; documentId?: string; title?: string }>();
+  const { source, documentId, title, version, language } = useLocalSearchParams<{
+    source: 'terms' | 'document' | 'walkthrough';
+    documentId?: string;
+    title?: string;
+    version?: string;
+    language?: 'es' | 'en';
+  }>();
   const goBack = useGoBack();
   const { colors } = useTheme();
   const strings = useStrings();
@@ -33,7 +40,13 @@ export default function ViewerScreen() {
     let file: File | null = null;
 
     async function load() {
-      const result = source === 'terms' ? await fetchTermsUrl() : await fetchDocumentUrl(documentId ?? '');
+      // Hito 3 (D-212): el PDF del walkthrough usa el mismo visor; documentId es el walkthrough y version su versión.
+      const result =
+        source === 'terms'
+          ? await fetchTermsUrl()
+          : source === 'walkthrough'
+            ? await fetchWalkthroughPdfUrl(documentId ?? '', Number(version), language === 'en' ? 'en' : 'es')
+            : await fetchDocumentUrl(documentId ?? '');
       if (cancelled) return;
       if (!result.ok) {
         setState({ status: 'error' });
@@ -67,7 +80,7 @@ export default function ViewerScreen() {
       removeCachedFile(file);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, documentId]);
+  }, [source, documentId, version]);
 
   const PdfView = state.status === 'ready' && state.kind === 'pdf' ? loadPdfView() : null;
 

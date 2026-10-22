@@ -18,6 +18,7 @@ import {
   AREA_TYPES,
   CONDITIONS,
   canDoWalkthroughs,
+  isEditable,
   isUntouched,
   newArea,
   syncBadge,
@@ -54,6 +55,8 @@ export default function AreaScreen() {
   }, [doc, area, params.area]);
 
   if (!canDoWalkthroughs(access)) return <Redirect href="/" />;
+  // Cerrado se ve en el Resumen; para cambiar un área primero se toca Editar (D-212).
+  if (doc && !isEditable(doc)) return <Redirect href={{ pathname: '/walkthrough/[id]', params: { id: params.id } }} />;
 
   function change(next: Area) {
     setArea(next);
