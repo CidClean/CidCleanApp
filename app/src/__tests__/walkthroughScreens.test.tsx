@@ -12,6 +12,10 @@ let mockParams: Record<string, string> = {};
 jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: mockReplace, push: mockPush, back: jest.fn(), canGoBack: () => true }),
   useLocalSearchParams: () => mockParams,
+  useFocusEffect: (effect: () => void | (() => void)) => {
+    const { useEffect } = require('react');
+    useEffect(effect, []);
+  },
   Redirect: ({ href }: { href: string }) => {
     const { Text } = require('react-native');
     return <Text>REDIRECT {href}</Text>;
@@ -39,9 +43,15 @@ jest.mock('@/lib/walkthroughApi', () => ({
   keepPhotoOnDevice: (uri: string) => uri,
 }));
 const mockFetchLead = jest.fn();
-jest.mock('@/lib/leadsApi', () => ({ fetchLead: (...a: unknown[]) => mockFetchLead(...a) }));
+jest.mock('@/lib/leadsApi', () => ({
+  fetchLead: (...a: unknown[]) => mockFetchLead(...a),
+  fetchSalesPending: async () => ({ ok: false, reason: 'network' }),
+}));
+jest.mock('@/i18n/useSalesStrings', () => ({ useSalesStrings: () => require('@/i18n/sales').salesEs }));
+jest.mock('@/lib/week', () => ({ ...jest.requireActual('@/lib/week'), fetchWeekVisits: () => Promise.resolve([]) }));
 jest.mock('@/lib/documents', () => ({ takePhoto: jest.fn() }));
 
+import HomeScreen from '@/app/(app)/(tabs)/index';
 import WalkthroughAreaScreen from '@/app/(app)/walkthrough/[id]/area';
 import WalkthroughScreen from '@/app/(app)/walkthrough/[id]/index';
 import StartWalkthroughScreen from '@/app/(app)/walkthrough/new';
@@ -101,12 +111,15 @@ describe('Iniciar walkthrough', () => {
     expect(await listWalkthroughs()).toHaveLength(1);
   });
 
-  it('un sitio con walkthrough cerrado en el servidor no abre otro', async () => {
-    mockFetchServer.mockResolvedValue({ ok: true, data: { id: 'w9', status: 'closed', draft: {}, currentVersion: 1 } });
+  it('un sitio con walkthrough cerrado en el servidor abre su Resumen cerrado (D-212)', async () => {
+    mockFetchServer.mockResolvedValue({
+      ok: true,
+      data: { id: 'w9', status: 'closed', draft: { areas: [{ id: 'a', type: 'office', name: 'Oficina 01', photos: [] }] }, currentVersion: 2 },
+    });
     mockParams = { lead: 'l1', site: 's1' };
     await render(<StartWalkthroughScreen />);
-    expect(await screen.findByText('Este sitio ya tiene un walkthrough cerrado.')).toBeTruthy();
-    expect(mockReplace).not.toHaveBeenCalled();
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith({ pathname: '/walkthrough/[id]', params: { id: 'w9' } }));
+    expect(await loadWalkthrough('w9')).toMatchObject({ status: 'closed', version: 2, step: 5, rev: 0 });
   });
 
   it('sin walkthroughs_hacer no se entra', async () => {
@@ -173,7 +186,7 @@ describe('Pasos del walkthrough (D-073)', () => {
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/walkthrough/[id]/area', params: { id: doc.id } });
   });
 
-  it('Notas internas dicen que no salen al cliente; el Resumen está pendiente', async () => {
+  it('Notas internas dicen que no salen al cliente; Siguiente lleva al Resumen', async () => {
     const doc = newDoc({ siteId: 's1', leadId: 'l1', appointmentId: null, company: 'G', siteLabel: 'S', contact: {} });
     await saveWalkthrough({ ...doc, step: 4 });
     mockParams = { id: doc.id };
@@ -182,7 +195,72 @@ describe('Pasos del walkthrough (D-073)', () => {
     expect(screen.getByLabelText('Personal necesario')).toBeTruthy();
     await fireEvent.press(screen.getByText('Siguiente'));
     expect(await screen.findByText('Paso 5 de 5 · Resumen')).toBeTruthy();
-    expect(screen.getByText('Pendiente')).toBeTruthy();
+    expect(screen.getByText('Cerrar walkthrough')).toBeTruthy();
+  });
+});
+
+describe('Resumen (D-212)', () => {
+  async function openSummary(extra: Record<string, unknown> = {}) {
+    const base = newDoc({ siteId: 's1', leadId: 'l1', appointmentId: 'c1', company: 'Gulf Coast Dental', siteLabel: '5th Ave S', contact: { address: '123 5th Ave S', contactName: 'Ana Rivera' } });
+    const area = { ...newArea([], () => 'Baño'), size: '120', condition: 'fair' as const };
+    const doc = {
+      ...base,
+      step: 5,
+      data: { ...base.data, areas: [area], frequency: { kind: 'weekly' as const, days: [0, 2, 4], other: '' }, internal: { staff: '2 personas', time: '3 h', supplies: '' } },
+      ...extra,
+    };
+    await saveWalkthrough(doc);
+    mockParams = { id: doc.id };
+    await render(<WalkthroughScreen />);
+    await screen.findByText('Paso 5 de 5 · Resumen');
+    return doc;
+  }
+
+  it('lista las secciones con sus datos y un lápiz que vuelve a cada paso', async () => {
+    const doc = await openSummary();
+    expect(screen.getByText('123 5th Ave S')).toBeTruthy();
+    expect(screen.getByText('Baño 01')).toBeTruthy();
+    expect(screen.getByText('120 ft² · Regular')).toBeTruthy();
+    expect(screen.getByText('Semanal: Lun, Mié, Vie · 3 veces por semana')).toBeTruthy();
+    expect(screen.getByText('2 personas')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Editar Frecuencia'));
+    await waitFor(async () => expect((await loadWalkthrough(doc.id))!.step).toBe(3));
+  });
+
+  it('Cerrar walkthrough sin red queda en la cola y lo dice', async () => {
+    const doc = await openSummary();
+    await fireEvent.press(screen.getByText('Cerrar walkthrough'));
+    expect(await screen.findByText('Se cerrará cuando haya conexión.')).toBeTruthy();
+    expect((await loadWalkthrough(doc.id))!.closeRequested).toBe(true);
+    expect(screen.queryByLabelText('Editar Frecuencia')).toBeNull();
+  });
+
+  it('cerrado: solo lectura, Ver PDF abre el visor y Editar abre una corrección', async () => {
+    const doc = await openSummary({ status: 'closed', version: 1, syncedRev: 99, everSynced: true });
+    expect(screen.getByText('Versión 1 cerrada.')).toBeTruthy();
+    expect(screen.getByText('Sincronizado')).toBeTruthy();
+    expect(screen.queryByText('Cerrar walkthrough')).toBeNull();
+    expect(screen.queryByLabelText('Editar Áreas')).toBeNull();
+    await fireEvent.press(screen.getByText('Ver PDF'));
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/viewer',
+      params: { source: 'walkthrough', documentId: doc.id, version: '1', language: 'es', title: 'Walkthrough · Gulf Coast Dental' },
+    });
+    await fireEvent.press(screen.getByText('Editar'));
+    expect(await screen.findByText('Corrigiendo la versión 1: al cerrar se guarda la versión 2.')).toBeTruthy();
+    expect(screen.getByText('Cerrar walkthrough')).toBeTruthy();
+  });
+
+  it('papelera del área con confirmación (D-212)', async () => {
+    const base = newDoc({ siteId: 's1', leadId: 'l1', appointmentId: null, company: 'G', siteLabel: 'S', contact: {} });
+    const area = newArea([], () => 'Baño');
+    await saveWalkthrough({ ...base, step: 2, data: { ...base.data, areas: [area] } });
+    mockParams = { id: base.id };
+    await render(<WalkthroughScreen />);
+    await fireEvent.press(await screen.findByLabelText('Eliminar Baño 01'));
+    expect(screen.getByText('¿Eliminar Baño 01?')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Eliminar'));
+    await waitFor(async () => expect((await loadWalkthrough(base.id))!.data.areas).toHaveLength(0));
   });
 });
 
@@ -213,5 +291,36 @@ describe('Área (D-037, D-074, D-106)', () => {
     await render(<WalkthroughAreaScreen />);
     await screen.findByDisplayValue('Baño 01');
     expect((await loadWalkthrough(doc.id))!.data.areas).toHaveLength(0);
+  });
+});
+
+describe('Inicio: Walkthroughs en curso (D-212)', () => {
+  it('sin red muestra la fila armada con lo guardado en el teléfono y abre el walkthrough', async () => {
+    const doc = newDoc({ siteId: 's1', leadId: 'l1', appointmentId: null, company: 'Gulf Coast Dental', siteLabel: '5th Ave S', contact: {} });
+    await saveWalkthrough(doc);
+    await render(<HomeScreen />);
+    expect(await screen.findByText('Walkthroughs en curso')).toBeTruthy();
+    expect(screen.getByText('Gulf Coast Dental · 5th Ave S')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Walkthroughs en curso'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/walkthrough/[id]', params: { id: doc.id } });
+  });
+
+  it('con varios abre la lista; los cerrados no cuentan; sin walkthroughs_hacer no aparece', async () => {
+    const mk = (site: string) => newDoc({ siteId: site, leadId: 'l1', appointmentId: null, company: 'G', siteLabel: site, contact: {} });
+    await saveWalkthrough(mk('a'));
+    await saveWalkthrough(mk('b'));
+    await saveWalkthrough({ ...mk('c'), status: 'closed', version: 1 });
+    await render(<HomeScreen />);
+    expect(await screen.findByText('2 en curso')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Walkthroughs en curso'));
+    expect(mockPush).toHaveBeenCalledWith('/walkthrough');
+  });
+
+  it('sin walkthroughs_hacer no aparece', async () => {
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['leads_ver']) };
+    await saveWalkthrough(newDoc({ siteId: 's', leadId: 'l', appointmentId: null, company: 'G', siteLabel: 'S', contact: {} }));
+    await render(<HomeScreen />);
+    expect(await screen.findByText('Todo al día')).toBeTruthy();
+    expect(screen.queryByText('Walkthroughs en curso')).toBeNull();
   });
 });
