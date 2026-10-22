@@ -69,3 +69,11 @@ CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... npx wrangler pages deploy dis
 
 - `supabase/tests/quotes.sql`: 87 pruebas (totales, armado, permisos, envío, portal, bloqueo del código, límites, decisiones, Cliente y Jobsite, Perdido sin sitios abiertos, versiones, vencimiento).
 - `supabase/tests/quote-portal.e2e.mjs`: 29 comprobaciones contra el proyecto real (enviar con PDF y correo, portal completo y aceptar). Escribe solo a `admin@cidclean.com` y a `delivered@resend.dev`; pone un `PORTAL_CODE_PEPPER` conocido al empezar y uno aleatorio nuevo al terminar; borra lo que crea.
+
+## walkthrough-pdf (hito 3, D-212)
+
+PDF del resumen del walkthrough. `verify_jwt` activado. Recibe `walkthrough_id`, `version` y `language` (`es` o `en`). Con el JWT de quien llama, `walkthrough_pdf_source` (migración `20261023000002`) exige poder ver walkthroughs (`walkthroughs_hacer`, `leads_ver` o `clientes_editar_walkthrough_sow`) y da los datos de esa versión. Si la versión aún no tiene PDF, la service role lo arma (`functions/walkthrough-pdf/pdf.ts`: encabezado "Cid Clean" en `#0F766E`, Sitio y contacto, Áreas en tabla y Frecuencia; las fotos en un anexo; sin notas internas), lo guarda en el bucket privado `walkthrough-pdfs` como `<walkthrough>/v<versión>.pdf` y anota `pdf_path` en `walkthrough_versions`. Devuelve `{ url, expires_in: 60, path }`. Errores: `forbidden` 403, `invalid` 400, `not_found` 404, `server_error` 500; sin JWT, 401. Manrope se baja de jsDelivr (`@expo-google-fonts/manrope@0.4.2`); si no responde, usa Helvetica. La app la llama al cerrar cada versión y al tocar "Ver PDF".
+
+```
+npx supabase@latest functions deploy walkthrough-pdf --project-ref <ref> --use-api
+```

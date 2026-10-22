@@ -104,8 +104,8 @@ const lead: Lead = {
   followUpOn: null,
   language: 'en',
   sites: [
-    { id: 's1', name: '5th Ave S', address: '123 5th Ave S, Naples', scheduled: null },
-    { id: 's2', name: null, address: '900 Marco Island Blvd', scheduled: null },
+    { id: 's1', name: '5th Ave S', address: '123 5th Ave S, Naples', scheduled: null, walkthroughDone: false },
+    { id: 's2', name: null, address: '900 Marco Island Blvd', scheduled: null, walkthroughDone: false },
   ],
 };
 

@@ -20,6 +20,8 @@ jest.mock('@/lib/documents', () => ({ fetchDocumentUrl: (...a: unknown[]) => moc
 jest.mock('@/lib/termsApi', () => ({ fetchTermsUrl: (...a: unknown[]) => mockFetchTermsUrl(...a) }));
 const mockFetchQuoteFileUrl = jest.fn();
 jest.mock('@/lib/quotesApi', () => ({ fetchQuoteFileUrl: (...a: unknown[]) => mockFetchQuoteFileUrl(...a) }));
+const mockFetchWalkthroughPdf = jest.fn();
+jest.mock('@/lib/walkthroughApi', () => ({ fetchWalkthroughPdfUrl: (...a: unknown[]) => mockFetchWalkthroughPdf(...a) }));
 
 const mockOpenBrowser = jest.fn();
 jest.mock('expo-web-browser', () => ({ openBrowserAsync: (...a: unknown[]) => mockOpenBrowser(...a) }));
@@ -75,6 +77,15 @@ describe('visor de PDF dentro de la app (D-196)', () => {
     expect(screen.getByLabelText(es.common.back)).toBeTruthy();
     // El único botón de la pantalla es la flecha de volver.
     expect(screen.getAllByRole('button')).toHaveLength(1);
+  });
+
+  test('walkthrough (D-212): pide el PDF de la versión a walkthrough-pdf, en el idioma de la persona', async () => {
+    mockParams = { source: 'walkthrough', documentId: 'w1', version: '2', language: 'en', title: 'Walkthrough · Gulf' };
+    mockFetchWalkthroughPdf.mockResolvedValue({ ok: true, data: { url: 'https://x/object/sign/walkthrough-pdfs/w1/v2.pdf?token=t' } });
+    await render(<ViewerScreen />);
+    await waitFor(() => expect(screen.getByTestId('pdf-view')).toBeTruthy());
+    expect(mockFetchWalkthroughPdf).toHaveBeenCalledWith('w1', 2, 'en');
+    expect(mockFetchDocumentUrl).not.toHaveBeenCalled();
   });
 
   test('términos: usa el Storage firmado de terms, no open-document', async () => {

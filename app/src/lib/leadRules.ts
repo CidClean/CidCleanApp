@@ -32,6 +32,8 @@ export type LeadSite = {
   address: string;
   /** La cita agendada (una a la vez por sitio), si hay. */
   scheduled: Appointment | null;
+  /** El walkthrough del sitio ya se cerró (hito 3). */
+  walkthroughDone: boolean;
 };
 
 export type LostReason = { id: string; labelEs: string; labelEn: string; sort: number; active: boolean };
