@@ -264,7 +264,8 @@ export async function pdfQuote(d: PdfData): Promise<Uint8Array> {
   }
   y -= 14;
 
-  const sep = () => page.drawLine({ start: { x: M, y: y + 12 }, end: { x: W - M, y: y + 12 }, thickness: 0.5, color: BORDER });
+  // Línea fina bajo cada renglón (muestra ronda 4 `.ln`).
+  const sep = (yy: number) => page.drawLine({ start: { x: M, y: yy }, end: { x: W - M, y: yy }, thickness: 0.5, color: BORDER });
   const section = (title: string, rows: { label: string; value: string }[]) => {
     if (rows.length === 0) return;
     txt(title, M, y, 10, fonts.medium, SECONDARY);
@@ -272,9 +273,8 @@ export async function pdfQuote(d: PdfData): Promise<Uint8Array> {
     for (const r of rows) {
       txt(cut(r.label, 11, fonts.regular, W - 2 * M - 120), M, y, 11, fonts.regular);
       right(r.value, y, 11, fonts.regular);
-      y -= 8;
-      sep();
-      y -= 12;
+      sep(y - 7);
+      y -= 22;
     }
     y -= 8;
   };

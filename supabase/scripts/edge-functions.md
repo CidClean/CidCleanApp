@@ -39,3 +39,30 @@ Es la única forma de abrir un documento sensible de un 1099 (W-9 o certificado 
 - `supabase/tests/open-document.e2e.mjs`: 26 comprobaciones contra el proyecto real. Quien tiene `empleados_gestionar_documentos` no firma, no descarga ni lista archivos desde Storage; `open-document` rechaza sin permiso y con solo `empleados_ver_pagos` (403), con la llave anónima (403) y sin JWT (401); con permiso entrega el PDF y cada apertura deja una fila en `change_log`.
 - `supabase/tests/terms-storage.e2e.mjs`: 9 comprobaciones del bucket `terms` (solo el Super Admin sube, cualquier empleado firma y lee, nadie reemplaza ni borra). No publica versiones: `terms_documents` es de solo agregar.
 - Las dos pruebas e2e crean perfiles y usuarios temporales `@prueba.local` y los borran al terminar; el historial (solo se agrega) conserva sus filas.
+
+## Hito 4: send-quote y quote-portal (D-209)
+
+- `send-quote` (`verify_jwt` activado): con el JWT de quien envía, `prepare_send_quote` valida `quotes_enviar`, el SOW y los destinatarios; la función genera el PDF de una página (pdf-lib con Manrope, que baja de Google Fonts; si no hay red usa Helvetica), lo guarda en `quote-files/<quote>/<versión>/quote-<versión>.pdf`, confirma el envío (`confirm_send_quote`, solo service role) y manda el correo a cada destinatario. `{ resend: true }` reenvía el correo de una versión ya enviada. Devuelve `{ sent, failed }`.
+- `quote-portal` (**sin** `verify_jwt`: lo usa el cliente sin cuenta; desplegar con `--no-verify-jwt`): acciones `state`, `request`, `verify`, `quote`, `file` y `decide`. Solo llama a las funciones `portal_*`, que no puede ejecutar ningún rol de la API. Responde igual a un correo que no es del quote (no revela destinatarios). Al aceptar copia el SOW a `jobsite-docs/<jobsite>/` y avisa por correo a quien envió.
+- Correo: `Cid Clean <quotes@mail.cidclean.com>`, respuesta a `admin@cidclean.com`. Dominio `mail.cidclean.com` creado y verificado en Resend; sus 4 registros (DKIM `resend._domainkey.mail`, MX y TXT `send.mail`, CNAME `rsend.mail`) están en Cloudflare con el comentario "Resend mail.cidclean.com". No se tocaron los de Vercel ni Zoho.
+- Secretos de las funciones: `RESEND_QUOTES_KEY` (llave `cidclean-quotes`, solo envío, limitada a `mail.cidclean.com`), `PORTAL_CODE_PEPPER` (aleatorio; con él se guarda el hash del código del cliente) y `PORTAL_BASE_URL` (`https://quote.cidclean.com`).
+
+```
+npx supabase@latest functions deploy send-quote --project-ref <ref> --use-api
+npx supabase@latest functions deploy quote-portal --project-ref <ref> --use-api --no-verify-jwt
+```
+
+## Portal en quote.cidclean.com (Cloudflare Pages)
+
+Proyecto de Pages `cidclean-quote` con el dominio `quote.cidclean.com` (registro CNAME proxied a `cidclean-quote.pages.dev`). Se publica la exportación web con solo las rutas del portal:
+
+```
+cd app && EXPO_PUBLIC_PORTAL_ONLY=1 npx expo export --platform web --clear --output-dir dist-portal
+printf '/* /index.html 200\n' > dist-portal/_redirects
+CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... npx wrangler pages deploy dist-portal --project-name cidclean-quote --branch main
+```
+
+## Pruebas del hito 4
+
+- `supabase/tests/quotes.sql`: 87 pruebas (totales, armado, permisos, envío, portal, bloqueo del código, límites, decisiones, Cliente y Jobsite, Perdido sin sitios abiertos, versiones, vencimiento).
+- `supabase/tests/quote-portal.e2e.mjs`: 29 comprobaciones contra el proyecto real (enviar con PDF y correo, portal completo y aceptar). Escribe solo a `admin@cidclean.com` y a `delivered@resend.dev`; pone un `PORTAL_CODE_PEPPER` conocido al empezar y uno aleatorio nuevo al terminar; borra lo que crea.
