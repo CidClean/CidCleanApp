@@ -21,3 +21,4 @@ Aquí van las versiones reemplazadas, con su fecha. No se usan: mandan los docum
 | [`flujo-2026-10-21-antes-de-D-193.md`](flujo-2026-10-21-antes-de-D-193.md) | 2026-10-21 | D-193 | La lista de permisos de Empleados no incluía gestionar documentos. |
 | [`diseno-visual-2026-10-21-antes-de-D-188.md`](diseno-visual-2026-10-21-antes-de-D-188.md) | 2026-10-21 | D-188 a D-197 | Antes de los detalles de la pestaña Permisos, el permiso de documentos, el visor de PDF y la regla sin conexión. |
 | [`diseno-visual-2026-10-21-antes-de-D-198.md`](diseno-visual-2026-10-21-antes-de-D-198.md) | 2026-10-21 | D-198, D-199 | Antes del formato de cada fila del Historial y del estado del Super Admin anterior. |
+| [`arquitectura-2026-10-22-antes-de-D-214.md`](arquitectura-2026-10-22-antes-de-D-214.md) | 2026-10-22 | D-214 | Sin conexión funcionaba solo el walkthrough; ahora también marcar entrada y salida. |

@@ -17,7 +17,7 @@ Principio: una sola base de código, servicios administrados y nada de servidore
 | Lógica del servidor | Supabase Edge Functions y tareas programadas: gastos recurrentes, vencimiento de quotes, recordatorios, alerta de 32 h y PDF del walkthrough y del quote. |
 | Notificaciones | Push con Expo Notifications y correo con Resend. |
 | GPS | expo-location en el teléfono; la distancia al sitio se calcula en el servidor con la dirección del jobsite. |
-| Sin conexión | Solo el walkthrough: se guarda en el teléfono y sincroniza con una cola de fotos. Lo demás pide conexión. |
+| Sin conexión | El walkthrough (se guarda en el teléfono y sincroniza con una cola de fotos) y marcar entrada y salida (se guardan con la hora del teléfono, se sincronizan después y quedan marcadas para revisión, D-214). Lo demás pide conexión. |
 | Historial | Lo escribe la base de datos con disparadores; nadie lo edita. |
 | Portal en la web | Exportación web alojada en Cloudflare Pages con dominio propio. |
 | Repositorio y CI | El mismo repositorio, con carpetas `app/` y `supabase/`; GitHub Actions con EAS. |
