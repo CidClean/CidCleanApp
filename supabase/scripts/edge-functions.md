@@ -39,3 +39,11 @@ Es la única forma de abrir un documento sensible de un 1099 (W-9 o certificado 
 - `supabase/tests/open-document.e2e.mjs`: 26 comprobaciones contra el proyecto real. Quien tiene `empleados_gestionar_documentos` no firma, no descarga ni lista archivos desde Storage; `open-document` rechaza sin permiso y con solo `empleados_ver_pagos` (403), con la llave anónima (403) y sin JWT (401); con permiso entrega el PDF y cada apertura deja una fila en `change_log`.
 - `supabase/tests/terms-storage.e2e.mjs`: 9 comprobaciones del bucket `terms` (solo el Super Admin sube, cualquier empleado firma y lee, nadie reemplaza ni borra). No publica versiones: `terms_documents` es de solo agregar.
 - Las dos pruebas e2e crean perfiles y usuarios temporales `@prueba.local` y los borran al terminar; el historial (solo se agrega) conserva sus filas.
+
+## open-jobsite-document (hito 5, D-210)
+
+Abre un documento del jobsite (SOW, contrato u otro). `verify_jwt` activado. Recibe `document_id`; `open_jobsite_document` (migración `20261025000001`), con el JWT de quien llama, exige `clientes_ver` (y `clientes_ver_tarifa` para el contrato) y deja `documento_abierto` en `change_log`; después la service role firma una URL de 60 s del bucket `jobsite-docs`. El contrato no tiene lectura directa en Storage: este es su único camino. Errores: `forbidden` 403, `invalid` 400, `not_found` 404, `server_error` 500; sin JWT, 401.
+
+```
+npx supabase@latest functions deploy open-jobsite-document --project-ref <ref> --use-api
+```
