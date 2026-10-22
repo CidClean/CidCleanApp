@@ -39,3 +39,11 @@ Es la única forma de abrir un documento sensible de un 1099 (W-9 o certificado 
 - `supabase/tests/open-document.e2e.mjs`: 26 comprobaciones contra el proyecto real. Quien tiene `empleados_gestionar_documentos` no firma, no descarga ni lista archivos desde Storage; `open-document` rechaza sin permiso y con solo `empleados_ver_pagos` (403), con la llave anónima (403) y sin JWT (401); con permiso entrega el PDF y cada apertura deja una fila en `change_log`.
 - `supabase/tests/terms-storage.e2e.mjs`: 9 comprobaciones del bucket `terms` (solo el Super Admin sube, cualquier empleado firma y lee, nadie reemplaza ni borra). No publica versiones: `terms_documents` es de solo agregar.
 - Las dos pruebas e2e crean perfiles y usuarios temporales `@prueba.local` y los borran al terminar; el historial (solo se agrega) conserva sus filas.
+
+## walkthrough-pdf (hito 3, D-212)
+
+PDF del resumen del walkthrough. `verify_jwt` activado. Recibe `walkthrough_id`, `version` y `language` (`es` o `en`). Con el JWT de quien llama, `walkthrough_pdf_source` (migración `20261023000002`) exige poder ver walkthroughs (`walkthroughs_hacer`, `leads_ver` o `clientes_editar_walkthrough_sow`) y da los datos de esa versión. Si la versión aún no tiene PDF, la service role lo arma (`functions/walkthrough-pdf/pdf.ts`: encabezado "Cid Clean" en `#0F766E`, Sitio y contacto, Áreas en tabla y Frecuencia; las fotos en un anexo; sin notas internas), lo guarda en el bucket privado `walkthrough-pdfs` como `<walkthrough>/v<versión>.pdf` y anota `pdf_path` en `walkthrough_versions`. Devuelve `{ url, expires_in: 60, path }`. Errores: `forbidden` 403, `invalid` 400, `not_found` 404, `server_error` 500; sin JWT, 401. Manrope se baja de jsDelivr (`@expo-google-fonts/manrope@0.4.2`); si no responde, usa Helvetica. La app la llama al cerrar cada versión y al tocar "Ver PDF".
+
+```
+npx supabase@latest functions deploy walkthrough-pdf --project-ref <ref> --use-api
+```
