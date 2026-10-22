@@ -33,7 +33,14 @@ export function failureFrom(code: string | undefined): LeadsFailure {
 
 type AppointmentRow = { id: string; starts_at: string; status: Appointment['status'] };
 type FollowUpRow = { due_on: string; done_at: string | null };
-type SiteRow = { id: string; name: string | null; address: string; created_at: string; walkthrough_appointments: AppointmentRow[] | null };
+type SiteRow = {
+  id: string;
+  name: string | null;
+  address: string;
+  created_at: string;
+  walkthrough_appointments: AppointmentRow[] | null;
+  walkthroughs?: { current_version: number }[] | { current_version: number } | null;
+};
 type ReasonRow = { id: string; label_es: string; label_en: string; sort: number; active: boolean };
 
 function toAppointment(r: AppointmentRow): Appointment {
@@ -107,7 +114,8 @@ export function rowToLead(r: LeadRow): Lead {
     .sort((a, b) => a.created_at.localeCompare(b.created_at))
     .map((s) => {
       const scheduled = (s.walkthrough_appointments ?? []).map(toAppointment).find((a) => a.status === 'scheduled') ?? null;
-      return { id: s.id, name: s.name, address: s.address, scheduled };
+      const wt = Array.isArray(s.walkthroughs) ? s.walkthroughs[0] : s.walkthroughs;
+      return { id: s.id, name: s.name, address: s.address, scheduled, walkthroughDone: (wt?.current_version ?? 0) > 0 };
     });
   return {
     id: r.id,
@@ -133,7 +141,7 @@ export async function fetchLead(id: string): Promise<LeadsResult<Lead>> {
       .select(
         'id, company, contact_name, phone, email, source, notes, status, lost_note, created_at, ' +
           'lost_reasons(id, label_es, label_en, sort, active), lead_followups(due_on, done_at), ' +
-          'lead_sites(id, name, address, created_at, walkthrough_appointments(id, starts_at, status))',
+          'lead_sites(id, name, address, created_at, walkthrough_appointments(id, starts_at, status), walkthroughs(current_version))',
       )
       .eq('id', id)
       .maybeSingle();

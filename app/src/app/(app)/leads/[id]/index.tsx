@@ -38,6 +38,8 @@ import {
   type LeadStatus,
 } from '@/lib/leadRules';
 import { deleteLead, deleteSite, fetchLead, setLeadStatus, updateLead } from '@/lib/leadsApi';
+import { canDoWalkthroughs } from '@/lib/walkthroughRules';
+import { useWalkthroughStrings } from '@/i18n/useWalkthroughStrings';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions, useSession } from '@/lib/session';
 import { iconStrokeWidth, sample, useTheme } from '@/theme';
@@ -243,6 +245,8 @@ export default function LeadDetailScreen() {
                 lead={lead}
                 s={s}
                 canEdit={canEdit}
+                canWalkthrough={canDoWalkthroughs(access)}
+                onWalkthrough={() => router.push({ pathname: '/walkthrough/new', params: { lead: lead.id } })}
                 onAdd={() => router.push({ pathname: '/leads/[id]/new-site', params: { id: lead.id } })}
                 onEdit={(siteId) => router.push({ pathname: '/leads/[id]/new-site', params: { id: lead.id, site: siteId } })}
                 onDelete={(site) => {
@@ -333,16 +337,21 @@ function SitesSection({
   onSchedule,
   onEdit,
   onDelete,
+  canWalkthrough,
+  onWalkthrough,
 }: {
   lead: Lead;
   s: SalesStrings;
   canEdit: boolean;
+  canWalkthrough: boolean;
+  onWalkthrough: () => void;
   onAdd: () => void;
   onSchedule: (siteId?: string) => void;
   onEdit: (siteId: string) => void;
   onDelete: (site: LeadSite) => void;
 }) {
   const { colors } = useTheme();
+  const w = useWalkthroughStrings();
   const hasSites = lead.sites.length > 0;
   return (
     <View>
@@ -355,7 +364,13 @@ function SitesSection({
         <ListRow
           key={site.id}
           title={siteLabel(site)}
-          detail={site.scheduled ? s.sites.walkthroughOn(formatDateTime(site.scheduled.startsAt, s)) : s.sites.noWalkthrough}
+          detail={
+            site.walkthroughDone
+              ? w.siteDone
+              : site.scheduled
+                ? s.sites.walkthroughOn(formatDateTime(site.scheduled.startsAt, s))
+                : s.sites.noWalkthrough
+          }
           right={
             canEdit ? (
               <View style={styles.rowIcons}>
@@ -372,10 +387,12 @@ function SitesSection({
           onPress={canEdit ? () => onSchedule(site.id) : undefined}
         />
       ))}
-      {canEdit ? (
+      {canEdit || (canWalkthrough && hasSites) ? (
         <View style={{ gap: 8, marginTop: hasSites ? 12 : 0 }}>
-          {hasSites ? <AppButton label={s.sites.schedule} onPress={() => onSchedule()} /> : null}
-          <AppButton label={s.sites.add} variant="outline" icon="plus" onPress={onAdd} />
+          {canEdit && hasSites ? <AppButton label={s.sites.schedule} onPress={() => onSchedule()} /> : null}
+          {/* Hito 3: iniciar o retomar el walkthrough de un sitio (D-200). */}
+          {canWalkthrough && hasSites ? <AppButton label={w.start} variant="outline" onPress={onWalkthrough} /> : null}
+          {canEdit ? <AppButton label={s.sites.add} variant="outline" icon="plus" onPress={onAdd} /> : null}
         </View>
       ) : null}
     </View>
