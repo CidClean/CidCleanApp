@@ -77,6 +77,30 @@ export const walkthroughEs = {
     supplies: 'Suministros', // APROBADO (flujo)
   },
 
+  summary: {
+    close: 'Cerrar walkthrough', // APROBADO (D-212)
+    closePending: 'Se cerrará cuando haya conexión.', // D-200: el cierre quedó en la cola
+    closedLine: (n: number) => `Versión ${n} cerrada.`, // D-200
+    editingLine: (n: number) => `Corrigiendo la versión ${n}: al cerrar se guarda la versión ${n + 1}.`, // D-200
+    viewPdf: 'Ver PDF', // D-200 (D-212: PDF descargable desde el Resumen cerrado)
+    pdfTitle: (company: string) => `Walkthrough · ${company}`, // D-200: título del visor
+    editSection: (section: string) => `Editar ${section}`, // D-200: solo lo lee el lector de pantalla
+    noAreas: 'Sin áreas.', // D-200
+    empty: '—', // D-200
+  },
+  remove: {
+    areaTitle: (area: string) => `¿Eliminar ${area}?`, // D-200 (D-212: papelera con confirmación)
+    areaBody: 'Se borran también sus fotos.', // D-200
+    photoTitle: '¿Eliminar esta foto?', // D-200
+    delete: 'Eliminar', // APROBADO (mismo botón de D-201)
+    areaLabel: (area: string) => `Eliminar ${area}`, // D-200: solo lo lee el lector de pantalla
+    photoLabel: 'Eliminar foto', // D-200: solo lo lee el lector de pantalla
+  },
+  home: {
+    row: 'Walkthroughs en curso', // APROBADO (D-212)
+    count: (n: number) => (n === 1 ? '1 en curso' : `${n} en curso`), // D-200
+  },
+
   types: {
     bathroom: 'Baño',
     office: 'Oficina',
@@ -145,6 +169,29 @@ export const walkthroughEn: WalkthroughStrings = {
     days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
   },
   internal: { note: "Not shared with the client.", staff: 'Staff needed', time: 'Estimated time', supplies: 'Supplies' },
+  summary: {
+    close: 'Close walkthrough',
+    closePending: 'It will close when there is a connection.',
+    closedLine: (n: number) => `Version ${n} closed.`,
+    editingLine: (n: number) => `Correcting version ${n}: closing saves version ${n + 1}.`,
+    viewPdf: 'View PDF',
+    pdfTitle: (company: string) => `Walkthrough · ${company}`,
+    editSection: (section: string) => `Edit ${section}`,
+    noAreas: 'No areas.',
+    empty: '—',
+  },
+  remove: {
+    areaTitle: (area: string) => `Delete ${area}?`,
+    areaBody: 'Its photos are deleted too.',
+    photoTitle: 'Delete this photo?',
+    delete: 'Delete',
+    areaLabel: (area: string) => `Delete ${area}`,
+    photoLabel: 'Delete photo',
+  },
+  home: {
+    row: 'Walkthroughs in progress', // admin home row built from what is saved on the phone
+    count: (n: number) => `${n} in progress`,
+  },
   types: {
     bathroom: 'Bathroom',
     office: 'Office',

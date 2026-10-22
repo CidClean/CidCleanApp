@@ -12,6 +12,10 @@ export type SendResult = 'ok' | 'offline' | 'error';
 export type SyncDeps = {
   saveDraft: (doc: WalkthroughDoc, data: unknown) => Promise<SendResult>;
   uploadPhoto: (path: string, uri: string) => Promise<SendResult>;
+  /** close_walkthrough: la versión creada, o por qué no. */
+  close?: (doc: WalkthroughDoc) => Promise<{ ok: true; version: number } | { ok: false; result: 'offline' | 'error' }>;
+  /** Pide el PDF de la versión (se genera y se guarda con ella, D-212). No bloquea la cola si falla. */
+  generatePdf?: (doc: WalkthroughDoc, version: number) => Promise<void>;
 };
 
 export type SyncOutcome = 'synced' | 'offline' | 'error' | 'missing';
@@ -66,8 +70,22 @@ async function syncOnce(id: string, deps: SyncDeps): Promise<SyncOutcome> {
     }
   }
 
-  const final: WalkthroughDoc = (await loadWalkthrough(id)) ?? doc;
+  let final: WalkthroughDoc = (await loadWalkthrough(id)) ?? doc;
   const clean = final.rev <= final.syncedRev && final.data.areas.every((a) => a.photos.every((p) => p.uploaded));
-  if (clean && !final.everSynced) await saveWalkthrough({ ...final, everSynced: true });
-  return clean ? 'synced' : 'offline';
+  if (!clean) return 'offline';
+  if (!final.everSynced) {
+    final = { ...final, everSynced: true };
+    await saveWalkthrough(final);
+  }
+
+  // Cierre pedido (también sin red): con todo arriba, se cierra y se pide el PDF de la versión.
+  if (final.closeRequested && deps.close) {
+    const closed = await deps.close(final);
+    if (!closed.ok) return closed.result;
+    const latest: WalkthroughDoc = (await loadWalkthrough(id)) ?? final;
+    final = { ...latest, status: 'closed', version: closed.version, closeRequested: false, step: 5 };
+    await saveWalkthrough(final);
+    if (deps.generatePdf) void deps.generatePdf(final, closed.version).catch(() => undefined);
+  }
+  return 'synced';
 }

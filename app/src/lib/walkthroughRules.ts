@@ -74,6 +74,12 @@ export type WalkthroughDoc = {
   /** Ya hubo al menos una sincronización completa (para mostrar "Sincronizado", D-119). */
   everSynced: boolean;
   updatedAt: string;
+  /** draft: en curso (o corrigiendo una versión cerrada); closed: la última versión está cerrada (D-212). */
+  status: 'draft' | 'closed';
+  /** Última versión cerrada (0 si nunca se cerró). */
+  version: number;
+  /** "Cerrar walkthrough" se tocó sin red: se cierra cuando la cola lo mande (D-004). */
+  closeRequested: boolean;
 };
 
 // --- Permisos (current/permisos.md) -----------------------------------------------------------------
@@ -142,6 +148,9 @@ export function newDoc(input: {
     syncedRev: 0,
     everSynced: false,
     updatedAt: (input.now ?? new Date()).toISOString(),
+    status: 'draft',
+    version: 0,
+    closeRequested: false,
   };
 }
 
@@ -238,7 +247,38 @@ export function photoPath(walkthroughId: string, photoId: string, mimeType: stri
 /** Pendientes del aviso "N pendientes": el documento si tiene cambios sin mandar, más cada foto sin subir. */
 export function pendingCount(doc: WalkthroughDoc): number {
   const photos = doc.data.areas.reduce((n, a) => n + a.photos.filter((p) => !p.uploaded).length, 0);
-  return (doc.rev > doc.syncedRev ? 1 : 0) + photos;
+  return (doc.rev > doc.syncedRev ? 1 : 0) + photos + (doc.closeRequested ? 1 : 0);
+}
+
+/** Walkthroughs en curso en este teléfono (fila del Inicio, D-212): sin cerrar o con el cierre aún por mandar. */
+export function inProgress(docs: readonly WalkthroughDoc[]): WalkthroughDoc[] {
+  return docs
+    .filter((d) => d.status === 'draft' || d.closeRequested)
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+/** Se puede editar mientras está en curso; cerrado, solo después de tocar Editar (versión nueva, D-212). */
+export function isEditable(doc: WalkthroughDoc): boolean {
+  return doc.status === 'draft' && !doc.closeRequested;
+}
+
+export function removeArea(areas: readonly Area[], areaId: string): Area[] {
+  return areas.filter((a) => a.id !== areaId);
+}
+
+export function removePhoto(areas: readonly Area[], areaId: string, photoId: string): Area[] {
+  return areas.map((a) => (a.id === areaId ? { ...a, photos: a.photos.filter((p) => p.id !== photoId) } : a));
+}
+
+/** Línea de la frecuencia en el Resumen: "Semanal: Lun, Mié, Vie · 3 veces por semana". */
+export function frequencySummary(
+  f: Frequency,
+  s: { daily: string; weekly: string; other: string; days: readonly string[]; times: (n: number) => string },
+): string {
+  if (f.kind === 'daily') return `${s.daily} · ${s.times(7)}`;
+  if (f.kind === 'other') return f.other.trim() ? `${s.other}: ${f.other.trim()}` : s.other;
+  const days = f.days.map((d) => s.days[d]);
+  return days.length ? `${s.weekly}: ${days.join(', ')} · ${s.times(days.length)}` : s.weekly;
 }
 
 export type SyncBadge = { kind: 'pending'; count: number } | { kind: 'synced' } | { kind: 'none' };

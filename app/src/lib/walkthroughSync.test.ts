@@ -111,3 +111,36 @@ test('un error del servidor (no de red) no marca nada como mandado', async () =>
   expect(await syncWalkthrough(doc.id, { saveDraft: async () => 'error', uploadPhoto: async () => 'ok' })).toBe('error');
   expect(pendingCount((await loadWalkthrough(doc.id))!)).toBe(1);
 });
+
+test('Cerrar walkthrough sin red: al volver la señal manda todo, cierra y pide el PDF de la versión (D-212)', async () => {
+  setWalkthroughStorage(memoryKV());
+  const server = fakeServer();
+  const closed: string[] = [];
+  const pdfs: number[] = [];
+  const deps: SyncDeps = {
+    ...server.deps,
+    close: async (d) => {
+      if (!server.files.has(`${d.id}/f1.jpg`)) return { ok: false, result: 'error' };
+      closed.push(d.id);
+      return { ok: true, version: 1 };
+    },
+    generatePdf: async (_d, version) => void pdfs.push(version),
+  };
+  const doc = newDoc({ siteId: 's', leadId: 'l', appointmentId: null, company: 'c', siteLabel: 's', contact: {} });
+  const photos = [{ id: 'f1', path: `${doc.id}/f1.jpg`, uri: 'file:///f1', note: '', uploaded: false }];
+  await saveWalkthrough({ ...doc, data: { ...doc.data, areas: [{ ...newArea([], label), photos }] } });
+  await updateWalkthrough(doc.id, (d) => ({ ...d, closeRequested: true }));
+
+  expect(await syncWalkthrough(doc.id, deps)).toBe('offline');
+  expect(pendingCount((await loadWalkthrough(doc.id))!)).toBe(3); // documento + foto + cierre
+  expect(closed).toEqual([]);
+
+  server.setOnline(true);
+  expect(await syncWalkthrough(doc.id, deps)).toBe('synced');
+  const local = (await loadWalkthrough(doc.id))!;
+  expect(local).toMatchObject({ status: 'closed', version: 1, closeRequested: false, step: 5 });
+  expect(pendingCount(local)).toBe(0);
+  expect(closed).toEqual([doc.id]);
+  await Promise.resolve();
+  expect(pdfs).toEqual([1]);
+});

@@ -44,7 +44,34 @@ export const supabaseSyncDeps: SyncDeps = {
       return isNetworkError(e) ? 'offline' : 'error';
     }
   },
+  async close(doc) {
+    const result = await closeWalkthrough(doc.id);
+    if (result.ok) return { ok: true, version: result.version };
+    return { ok: false, result: result.reason === 'network' ? 'offline' : 'error' };
+  },
+  async generatePdf(doc, version) {
+    await fetchWalkthroughPdfUrl(doc.id, version);
+  },
 };
+
+/** URL firmada de 60 s del PDF de una versión (Edge Function walkthrough-pdf; lo genera si aún no existe, D-212). */
+export async function fetchWalkthroughPdfUrl(
+  walkthroughId: string,
+  version: number,
+  language: 'es' | 'en' = 'es',
+): Promise<{ ok: true; data: { url: string } } | { ok: false; reason: 'network' | 'server' }> {
+  try {
+    const { data, error } = await supabase.functions.invoke('walkthrough-pdf', {
+      body: { walkthrough_id: walkthroughId, version, language },
+    });
+    if (error) return { ok: false, reason: isNetworkError(error) ? 'network' : 'server' };
+    const url: unknown = data?.url;
+    if (typeof url !== 'string') return { ok: false, reason: 'server' };
+    return { ok: true, data: { url } };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
 
 export type ServerWalkthrough = { id: string; status: 'draft' | 'closed'; draft: unknown; currentVersion: number };
 
@@ -67,12 +94,13 @@ export async function fetchServerWalkthrough(siteId: string): Promise<{ ok: true
 
 /**
  * Cierra el walkthrough (o guarda una corrección como versión nueva). Pide que el documento y las fotos ya estén
- * sincronizados. TEMPORAL: aún no hay botón que lo llame; va en el paso Resumen, que falta decidir.
+ * sincronizados: lo llama la cola cuando "Cerrar walkthrough" (D-212) quedó pedido.
  */
 export async function closeWalkthrough(id: string): Promise<{ ok: true; version: number } | { ok: false; reason: 'photos' | 'forbidden' | 'network' | 'server' }> {
   try {
     const { data, error } = await supabase.rpc('close_walkthrough', { p_id: id });
     if (error) {
+      if (isNetworkError(error)) return { ok: false, reason: 'network' };
       if (error.code === '22023') return { ok: false, reason: 'photos' };
       if (error.code === '42501') return { ok: false, reason: 'forbidden' };
       return { ok: false, reason: 'server' };
