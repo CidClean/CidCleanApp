@@ -139,6 +139,16 @@ begin
   perform pg_temp.prueba('cerrar queda en el historial', '1',
     (select count(*)::text from change_log where entity_id = wt and action = 'walkthrough_cerrado' and detail->>'version' = '1'));
 
+  -- PDF (migración 20261023000002): datos de la versión para quien puede ver walkthroughs
+  perform pg_temp.prueba('quien ve leads lee los datos de la versión para el PDF', 'Prueba WT|1|Baño 01',
+    pg_temp.valor('ver', format($q$ select (r->>'company') || '|' || (r->>'version') || '|' || (r->'data'->'areas'->0->>'name') from walkthrough_pdf_source(%L, 1) r $q$, wt)));
+  perform pg_temp.prueba('sin permisos no lee los datos del PDF', 'ERR:42501',
+    pg_temp.valor('sin', format('select walkthrough_pdf_source(%L, 1)::text', wt)));
+  perform pg_temp.prueba('una versión que no existe', 'ERR:P0002',
+    pg_temp.valor('hacer', format('select walkthrough_pdf_source(%L, 9)::text', wt)));
+  perform pg_temp.prueba('el bucket de los PDF no deja leer a nadie directo', '0',
+    pg_temp.valor('ver', $q$ select count(*) from storage.objects where bucket_id = 'walkthrough-pdfs' $q$));
+
   -- Corrección: versión nueva, la anterior se conserva
   perform pg_temp.valor('sow', format($q$ select save_walkthrough(%L, %L, %L, '{"areas": []}')::text $q$, wt, sitio, cita));
   perform pg_temp.prueba('quien edita walkthrough y SOW corrige un walkthrough cerrado (versión 2)', '2',
