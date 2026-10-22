@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -19,10 +20,12 @@ type Props = {
   onBack?: () => void;
   backLabel?: string;
   action?: TopBarAction;
+  /** Línea bajo el título (aviso de sincronización del walkthrough, D-091, D-119). */
+  subtitle?: ReactNode;
 };
 
 /** Barra superior de marca con el título de la pantalla (muestras aprobadas). */
-export function TopBar({ title, onBack, backLabel, action }: Props) {
+export function TopBar({ title, onBack, backLabel, action, subtitle }: Props) {
   const insets = useSafeAreaInsets();
   const { brand } = useTheme();
   return (
@@ -39,9 +42,12 @@ export function TopBar({ title, onBack, backLabel, action }: Props) {
             <Icon name="chevron-left" size={22} strokeWidth={iconStrokeWidth} color="#FFFFFF" />
           </Pressable>
         ) : null}
-        <AppText weight="medium" size={sample.barTextSize} color="#FFFFFF" accessibilityRole="header" numberOfLines={1} style={styles.title}>
-          {title}
-        </AppText>
+        <View style={styles.title}>
+          <AppText weight="medium" size={sample.barTextSize} color="#FFFFFF" accessibilityRole="header" numberOfLines={1}>
+            {title}
+          </AppText>
+          {subtitle}
+        </View>
       </View>
       {action ? (
         <Pressable accessibilityRole="button" accessibilityLabel={action.accessibilityLabel} onPress={action.onPress} hitSlop={12}>
