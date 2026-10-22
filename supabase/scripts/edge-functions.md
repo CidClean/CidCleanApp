@@ -59,6 +59,9 @@ Proyecto de Pages `cidclean-quote` con el dominio `quote.cidclean.com` (registro
 ```
 cd app && EXPO_PUBLIC_PORTAL_ONLY=1 npx expo export --platform web --clear --output-dir dist-portal
 printf '/* /index.html 200\n' > dist-portal/_redirects
+# Pages no publica carpetas node_modules: las fuentes se mueven y se reescriben sus rutas.
+mv dist-portal/assets/node_modules dist-portal/assets/nm
+grep -rl "assets/node_modules/" dist-portal --include=*.js --include=*.html | xargs sed -i 's#assets/node_modules/#assets/nm/#g'
 CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... npx wrangler pages deploy dist-portal --project-name cidclean-quote --branch main
 ```
 

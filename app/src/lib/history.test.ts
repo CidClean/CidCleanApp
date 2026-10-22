@@ -24,7 +24,8 @@ describe('títulos (D-198)', () => {
       'permiso_quitado', 'documento_subido', 'documento_reemplazado', 'documento_abierto', 'terminos_publicados',
       'terminos_aceptados', 'super_admin_transferido', 'lead_creado', 'lead_estado_cambiado', 'lead_eliminado',
       'walkthrough_agendado', 'walkthrough_reagendado', 'walkthrough_estado_cambiado', 'sitio_editado', 'sitio_eliminado',
-      'motivo_creado', 'motivo_editado', 'motivo_desactivado', 'motivo_eliminado',
+      'motivo_creado', 'motivo_editado', 'motivo_desactivado', 'motivo_eliminado', 'quote_creado', 'quote_version_nueva',
+      'quote_enviado', 'quote_visto', 'quote_aceptado', 'quote_rechazado', 'quote_cambios_pedidos', 'cliente_creado', 'jobsite_creado',
     ];
     for (const action of actions) {
       expect(historyTitle(es, e({ action }))).not.toBe(es.history.unknown);

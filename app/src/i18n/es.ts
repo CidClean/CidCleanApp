@@ -249,6 +249,15 @@ export const es = {
     reasonEdited: 'Motivo editado', // Delegada por el dueño (D-200; orden 13)
     reasonDeactivated: 'Motivo desactivado', // Delegada por el dueño (D-200; orden 13)
     reasonDeleted: 'Motivo eliminado', // Delegada por el dueño (D-200; orden 13)
+    quoteCreated: 'Quote creado', // D-200 (hito 4, patrón de D-198)
+    quoteNewVersion: (v: string) => `Quote: versión ${v}`, // D-200 (hito 4)
+    quoteSent: (v: string) => `Quote enviado: versión ${v}`, // D-200 (hito 4)
+    quoteViewed: (v: string) => `Quote visto: versión ${v}`, // D-200 (hito 4)
+    quoteAccepted: (v: string) => `Quote aceptado: versión ${v}`, // D-200 (hito 4)
+    quoteRejected: (v: string) => `Quote rechazado: versión ${v}`, // D-200 (hito 4)
+    quoteChanges: (v: string) => `Cambios pedidos: versión ${v}`, // D-200 (hito 4)
+    clientCreated: 'Cliente creado', // D-200 (hito 4)
+    jobsiteCreated: 'Jobsite creado', // D-200 (hito 4)
     unknown: 'Cambio registrado', // SIN APROBAR: acción que la app aún no conoce
     empty: 'Todavía no hay cambios.', // SIN APROBAR
     errorLoad: 'No se pudo cargar el historial. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
