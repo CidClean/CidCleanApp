@@ -9,6 +9,7 @@ let mockTermsOffline = false;
 const mockRefresh = jest.fn();
 
 jest.mock('expo-router', () => ({
+  useLocalSearchParams: () => ({}),
   useRouter: () => ({ push: mockPush, replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
   useFocusEffect: (effect: () => void | (() => void)) => {
     const { useEffect } = require('react');
@@ -30,10 +31,11 @@ jest.mock('@/i18n/useStrings', () => ({ useStrings: () => require('@/i18n').getS
 jest.mock('@/lib/supabase', () => ({ supabase: { rpc: jest.fn() } }));
 
 const mockFetchCurrent = jest.fn();
+const mockFetchPortal = jest.fn().mockResolvedValue({ ok: true, data: null });
 const mockPublish = jest.fn();
 const mockChoosePdf = jest.fn();
 jest.mock('@/lib/termsApi', () => ({
-  fetchCurrentTerms: (...a: unknown[]) => mockFetchCurrent(...a),
+  fetchCurrentTerms: (kind?: string) => (kind === 'portal' ? mockFetchPortal() : mockFetchCurrent()),
   publishTerms: (...a: unknown[]) => mockPublish(...a),
   choosePdf: (...a: unknown[]) => mockChoosePdf(...a),
 }));
@@ -59,8 +61,8 @@ describe('Menú → Ajustes (D-107, D-114, D-187)', () => {
     expect(screen.getByLabelText(es.common.back)).toBeTruthy();
     expect(screen.getByText(es.settings.termsRow)).toBeTruthy();
     await waitFor(() => expect(screen.getByText('v2')).toBeTruthy());
-    // Tres filas: Términos del staff, Motivos de lead perdido (D-203) y Transferir rol de Super Admin (orden 12).
-    expect(screen.getAllByRole('button').filter((b) => b.props.accessibilityLabel !== es.common.back)).toHaveLength(3);
+    // Cuatro filas: Términos del staff, Términos del portal (D-209), Motivos de lead perdido (D-203) y Transferir rol (orden 12).
+    expect(screen.getAllByRole('button').filter((b) => b.props.accessibilityLabel !== es.common.back)).toHaveLength(4);
     expect(screen.getByText(es.transfer.row)).toBeTruthy();
     expect(screen.getByText('Motivos de lead perdido')).toBeTruthy();
   });
@@ -68,7 +70,7 @@ describe('Menú → Ajustes (D-107, D-114, D-187)', () => {
   test('sin versión publicada el valor es "Sin publicar"', async () => {
     mockFetchCurrent.mockResolvedValue({ ok: true, data: null });
     await render(<SettingsScreen />);
-    await waitFor(() => expect(screen.getByText(es.settings.unpublished)).toBeTruthy());
+    await waitFor(() => expect(screen.getAllByText(es.settings.unpublished)).toHaveLength(2));
   });
 
   test('al tocar la fila se abre la pantalla de publicar', async () => {
@@ -120,7 +122,7 @@ describe('Términos del staff: publicar (D-176)', () => {
     await waitFor(() => screen.getByText('terminos-staff-v3.pdf'));
     mockFetchCurrent.mockResolvedValue({ ok: true, data: { ...v2, version: 3 } });
     await fireEvent.press(screen.getByText(es.settings.publish));
-    await waitFor(() => expect(mockPublish).toHaveBeenCalledWith({ uri: 'file:///a.pdf', name: 'terminos-staff-v3.pdf' }));
+    await waitFor(() => expect(mockPublish).toHaveBeenCalledWith({ uri: 'file:///a.pdf', name: 'terminos-staff-v3.pdf' }, 'staff'));
     await waitFor(() => expect(screen.getByText(es.settings.currentVersion(3, '5 oct 2026'))).toBeTruthy());
     expect(screen.queryByText('terminos-staff-v3.pdf')).toBeNull();
   });

@@ -10,6 +10,7 @@ import {
   type RoleKey,
   type WorkerType,
 } from './employeeRules';
+import { normalizePhone } from './phone';
 import { supabase } from './supabase';
 
 /** Acceso a empleados: lectura directa (las reglas por fila filtran por permiso), cambios por funciones del servidor. */
@@ -131,7 +132,7 @@ export async function updateEmployee(profileId: string, form: EditForm): Promise
     const { error } = await supabase.rpc('update_employee', {
       p_profile: profileId,
       p_full_name: form.fullName.trim(),
-      p_phone: form.phone.trim() === '' ? null : form.phone.trim(),
+      p_phone: normalizePhone(form.phone) || null,
       p_worker_type: form.workerType,
       p_language: form.language,
     });

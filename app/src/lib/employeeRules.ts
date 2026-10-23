@@ -1,5 +1,6 @@
 import type { Locale } from '@/i18n';
 import { isValidEmail } from './email';
+import { formatPhone, isValidPhone, normalizePhone } from './phone';
 import { can, type Access } from './visibility';
 
 /** Reglas puras de la administración de empleados (D-171 a D-175, D-181 a D-185). Sin React ni red. */
@@ -62,13 +63,15 @@ export function emptyNewEmployee(): NewEmployeeForm {
   return { fullName: '', phone: '', workerType: 'w2', role: 'employee', hasAppAccess: true, email: '', language: 'en' };
 }
 
-export type NewEmployeeErrors = { fullName?: 'required'; email?: 'invalid' };
+export type NewEmployeeErrors = { fullName?: 'required'; email?: 'invalid'; phone?: 'invalid' };
 
 /** Validaciones simples en pantalla: nombre obligatorio y, con acceso a la app, un correo válido. */
 export function validateNewEmployee(form: NewEmployeeForm): NewEmployeeErrors {
   const errors: NewEmployeeErrors = {};
   if (form.fullName.trim() === '') errors.fullName = 'required';
   if (form.hasAppAccess && !isValidEmail(form.email.trim())) errors.email = 'invalid';
+  // D-216: teléfono de EE. UU. de 10 dígitos (opcional).
+  if (!isValidPhone(form.phone)) errors.phone = 'invalid';
   return errors;
 }
 
@@ -80,7 +83,7 @@ export function hasErrors(errors: object): boolean {
 export function createEmployeeBody(form: NewEmployeeForm) {
   return {
     full_name: form.fullName.trim(),
-    phone: form.phone.trim(),
+    phone: normalizePhone(form.phone),
     worker_type: form.workerType,
     role: form.role,
     language: form.language,
@@ -100,11 +103,14 @@ export type EditForm = {
 };
 
 export function editFormFrom(e: Employee): EditForm {
-  return { fullName: e.fullName, phone: e.phone ?? '', workerType: e.workerType, language: e.language };
+  return { fullName: e.fullName, phone: formatPhone(e.phone), workerType: e.workerType, language: e.language };
 }
 
-export function validateEdit(form: EditForm): { fullName?: 'required' } {
-  return form.fullName.trim() === '' ? { fullName: 'required' } : {};
+export function validateEdit(form: EditForm): { fullName?: 'required'; phone?: 'invalid' } {
+  const errors: { fullName?: 'required'; phone?: 'invalid' } = {};
+  if (form.fullName.trim() === '') errors.fullName = 'required';
+  if (!isValidPhone(form.phone)) errors.phone = 'invalid';
+  return errors;
 }
 
 export function editChanged(e: Employee, form: EditForm): boolean {

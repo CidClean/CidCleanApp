@@ -35,6 +35,7 @@ export const salesEs = {
     newTitle: 'Nuevo lead', // D-200 (mismo patrón de "Nuevo empleado", D-171)
     company: 'Empresa', // APROBADO (flujo: datos del lead)
     contact: 'Persona de contacto', // APROBADO (flujo)
+    language: 'Idioma del cliente', // D-200, hito 4: idioma del correo y del portal del quote (D-209)
     phone: 'Teléfono', // APROBADO (muestra ronda 8)
     email: 'Email', // APROBADO (muestra ronda 8)
     source: 'Fuente', // APROBADO (flujo)
@@ -105,7 +106,7 @@ export const salesEs = {
     submit: 'Agendar', // APROBADO (D-072)
     previousMonth: 'Mes anterior', // D-200: solo lo lee el lector de pantalla
     nextMonth: 'Mes siguiente', // D-200: solo lo lee el lector de pantalla
-    errorTime: 'Escribe una hora válida, por ejemplo 10:00 AM.', // D-200
+    errorTime: 'Elige la hora.', // D-216 (delegado D-200): la hora ya no se escribe
     errorPast: 'Elige una fecha y hora futuras.', // D-200
     errorSchedule: 'No se pudo agendar. Inténtalo otra vez.', // D-200 (mismo estilo de D-195)
     weekDays: ['L', 'M', 'X', 'J', 'V', 'S', 'D'], // APROBADO (muestras ronda 8 y 12)
@@ -190,6 +191,7 @@ export const salesEn: SalesStrings = {
     newTitle: 'New lead', // create lead screen title
     company: 'Company',
     contact: 'Contact person',
+    language: 'Client language', // language of the quote email and portal
     phone: 'Phone',
     email: 'Email',
     source: 'Source',
@@ -260,7 +262,7 @@ export const salesEn: SalesStrings = {
     submit: 'Schedule',
     previousMonth: 'Previous month',
     nextMonth: 'Next month',
-    errorTime: 'Enter a valid time, for example 10:00 AM.',
+    errorTime: 'Choose a time.',
     errorPast: 'Choose a future date and time.',
     errorSchedule: "Couldn't schedule. Try again.",
     weekDays: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],

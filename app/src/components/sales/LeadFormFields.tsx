@@ -1,7 +1,10 @@
 import { AppField } from '../AppField';
+import { PhoneField } from '../PhoneField';
+import { DateField } from '../PickerField';
 import { SelectField } from '../SelectField';
 import type { SalesStrings } from '@/i18n/sales';
-import { LEAD_SOURCES, type LeadForm, type LeadFormErrors } from '@/lib/leadRules';
+import { useStrings } from '@/i18n/useStrings';
+import { LEAD_SOURCES, dateFromKey, formatShortDate, formatUsDate, parseUsDate, type LeadForm, type LeadFormErrors } from '@/lib/leadRules';
 
 type Props = {
   form: LeadForm;
@@ -14,6 +17,7 @@ type Props = {
 
 /** Campos del lead (flujo, "Ventas 1: Lead"): empresa, persona de contacto, teléfono, email, fuente, seguimiento y notas. */
 export function LeadFormFields({ form, errors, onChange, s, part = 'all' }: Props) {
+  const strings = useStrings();
   const set = <K extends keyof LeadForm>(key: K, value: LeadForm[K]) => onChange({ ...form, [key]: value });
   const data = part !== 'notes';
   const notes = part !== 'data';
@@ -35,12 +39,11 @@ export function LeadFormFields({ form, errors, onChange, s, part = 'all' }: Prop
             autoCapitalize="words"
             autoComplete="name"
           />
-          <AppField
+          <PhoneField
             label={s.form.phone}
             value={form.phone}
-            onChangeText={(v) => set('phone', v)}
-            keyboardType="phone-pad"
-            autoComplete="tel"
+            onChange={(v) => set('phone', v)}
+            error={errors.phone ? strings.common.phoneError : null}
           />
           <AppField
             label={s.form.email}
@@ -58,12 +61,28 @@ export function LeadFormFields({ form, errors, onChange, s, part = 'all' }: Prop
             value={form.source}
             onChange={(v) => set('source', v)}
           />
-          <AppField
+          <SelectField
+            label={s.form.language}
+            options={[
+              { value: 'en', label: 'English' },
+              { value: 'es', label: 'Español' },
+            ]}
+            value={form.language}
+            onChange={(v) => set('language', v)}
+          />
+          {/* D-216: la fecha se elige en el calendario, no se escribe. */}
+          <DateField
             label={s.form.followUp}
-            value={form.followUp}
-            onChangeText={(v) => set('followUp', v)}
-            placeholder={s.form.followUpPlaceholder}
-            keyboardType="numbers-and-punctuation"
+            value={followUpKey(form.followUp)}
+            onChange={(key) => set('followUp', formatUsDate(key))}
+            format={(key) => {
+              const d = dateFromKey(key);
+              const short = formatShortDate(d, s);
+              return d.getFullYear() === new Date().getFullYear() ? short : `${short} ${d.getFullYear()}`;
+            }}
+            placeholder={strings.common.noDate}
+            calendar={{ months: s.schedule.months, weekDays: s.schedule.weekDays, previousMonth: s.schedule.previousMonth, nextMonth: s.schedule.nextMonth }}
+            clearLabel={strings.common.clearDate}
             error={errors.followUp ? s.form.errorDate : null}
           />
         </>
@@ -80,4 +99,9 @@ export function LeadFormFields({ form, errors, onChange, s, part = 'all' }: Prop
       ) : null}
     </>
   );
+}
+
+function followUpKey(text: string): string | null {
+  const key = parseUsDate(text);
+  return key === 'invalid' ? null : key;
 }

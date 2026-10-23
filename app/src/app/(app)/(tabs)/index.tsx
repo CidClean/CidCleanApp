@@ -14,6 +14,11 @@ import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useStrings } from '@/i18n/useStrings';
 import { salesPendingRows, showsSalesPending, sortPending, type SalesPendingCounts } from '@/lib/leadRules';
 import { fetchSalesPending } from '@/lib/leadsApi';
+import { fetchQuotePending, type QuotePending } from '@/lib/quotesApi';
+import { useQuoteStrings } from '@/i18n/useQuoteStrings';
+import { useWalkthroughStrings } from '@/i18n/useWalkthroughStrings';
+import { canDoWalkthroughs, inProgress, type WalkthroughDoc } from '@/lib/walkthroughRules';
+import { listWalkthroughs } from '@/lib/walkthroughStore';
 import { usePermissions } from '@/lib/session';
 import { homeKind, showsMonthFigures } from '@/lib/visibility';
 import { fetchWeekVisits, formatTime, pickTodayVisit, startOfWeekMonday, weekDays, type Visit } from '@/lib/week';
@@ -37,21 +42,53 @@ function AdminHome() {
   const { access } = usePermissions();
   const [sales, setSales] = useState<SalesPendingCounts | null>(null);
   const salesVisible = showsSalesPending(access);
+  // Hito 4 (D-209, D-131): decisiones del cliente sin ver y quotes por vencer (Urgente).
+  const q = useQuoteStrings();
+  const [quotes, setQuotes] = useState<QuotePending[]>([]);
+  const quotesVisible = access.isSuperAdmin || ['quotes_ver', 'quotes_editar', 'quotes_enviar'].some((k) => access.permissions.has(k));
 
   useFocusEffect(
     useCallback(() => {
-      if (!salesVisible) return;
+      if (!salesVisible && !quotesVisible) return;
       let cancelled = false;
-      void fetchSalesPending().then((result) => {
-        if (!cancelled && result.ok) setSales(result.data);
+      if (quotesVisible) void fetchQuotePending().then((rows) => !cancelled && setQuotes(rows));
+      if (salesVisible) {
+        void fetchSalesPending().then((result) => {
+          if (!cancelled && result.ok) setSales(result.data);
+        });
+      }
+      return () => {
+        cancelled = true;
+      };
+    }, [salesVisible, quotesVisible]),
+  );
+
+  // D-212: "Walkthroughs en curso", armada con lo guardado en el teléfono (sirve sin internet).
+  const wt = useWalkthroughStrings();
+  const [local, setLocal] = useState<WalkthroughDoc[]>([]);
+  const walkthroughsVisible = canDoWalkthroughs(access);
+  useFocusEffect(
+    useCallback(() => {
+      if (!walkthroughsVisible) return;
+      let cancelled = false;
+      void listWalkthroughs().then((all) => {
+        if (!cancelled) setLocal(inProgress(all));
       });
       return () => {
         cancelled = true;
       };
-    }, [salesVisible]),
+    }, [walkthroughsVisible]),
   );
+  const ongoing = walkthroughsVisible ? local : [];
 
-  const pending = sortPending(salesPendingRows(access, sales, s));
+  const quoteRows = quotes.map((r) => ({
+    key: `quote-${r.kind}-${r.versionId}`,
+    title: q.home[r.kind](r.company),
+    detail: q.home.detail(r.site),
+    urgent: r.kind === 'expiring',
+    leadId: r.leadId as string | undefined,
+  }));
+  const pending = sortPending([...quoteRows, ...salesPendingRows(access, sales, s)]);
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={strings.nav.home} />
@@ -78,6 +115,19 @@ function AdminHome() {
           </View>
         ) : null}
         {/* Lista de pendientes por urgencia (D-111, D-131). Las demás áreas se suman en sus hitos. */}
+        {ongoing.length > 0 ? (
+          <ListRow
+            title={wt.home.row}
+            detail={ongoing.length === 1 ? `${ongoing[0].company} · ${ongoing[0].siteLabel}` : wt.home.count(ongoing.length)}
+            chevron
+            last={pending.length === 0}
+            onPress={() =>
+              ongoing.length === 1
+                ? router.push({ pathname: '/walkthrough/[id]', params: { id: ongoing[0].id } })
+                : router.push('/walkthrough')
+            }
+          />
+        ) : null}
         {pending.map((row, i) => (
           <ListRow
             key={row.key}
@@ -86,10 +136,14 @@ function AdminHome() {
             right={row.urgent ? <Chip label={s.home.urgent} tone="warning" /> : undefined}
             chevron={!row.urgent}
             last={i === pending.length - 1}
-            onPress={() => router.navigate('/pipeline')}
+            onPress={() =>
+              'leadId' in row && row.leadId
+                ? router.push({ pathname: '/leads/[id]', params: { id: row.leadId } })
+                : router.navigate('/pipeline')
+            }
           />
         ))}
-        {pending.length === 0 ? (
+        {pending.length === 0 && ongoing.length === 0 ? (
           <View style={styles.empty}>
             <Icon name="circle-check" size={24} strokeWidth={iconStrokeWidth} color={status.success} />
             <AppText weight="medium">{strings.home.caughtUp}</AppText>

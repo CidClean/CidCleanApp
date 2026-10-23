@@ -54,6 +54,10 @@ const mockUpdateSite = jest.fn();
 const mockCreateReason = jest.fn();
 const mockUpdateReason = jest.fn();
 const mockRemoveReason = jest.fn();
+jest.mock('@/lib/quotesApi', () => ({
+  fetchLeadQuotes: jest.fn().mockResolvedValue({ ok: true, data: [] }),
+  fetchQuotePending: jest.fn().mockResolvedValue([]),
+}));
 jest.mock('@/lib/leadsApi', () => ({
   fetchLeads: (...a: unknown[]) => mockFetchLeads(...a),
   fetchLead: (...a: unknown[]) => mockFetchLead(...a),
@@ -98,9 +102,10 @@ const lead: Lead = {
   lostNote: null,
   createdAt: new Date(2026, 9, 20),
   followUpOn: null,
+  language: 'en',
   sites: [
-    { id: 's1', name: '5th Ave S', address: '123 5th Ave S, Naples', scheduled: null },
-    { id: 's2', name: null, address: '900 Marco Island Blvd', scheduled: null },
+    { id: 's1', name: '5th Ave S', address: '123 5th Ave S, Naples', scheduled: null, walkthroughDone: false },
+    { id: 's2', name: null, address: '900 Marco Island Blvd', scheduled: null, walkthroughDone: false },
   ],
 };
 
@@ -280,8 +285,11 @@ describe('Agendar walkthrough (D-072, D-078, D-104)', () => {
     const key = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-10`;
     await fireEvent.press(screen.getByLabelText(key));
     await fireEvent.press(screen.getByText('Agendar'));
-    expect(screen.getByText('Escribe una hora válida, por ejemplo 10:00 AM.')).toBeTruthy();
-    await fireEvent.changeText(screen.getByLabelText('Hora'), '10:00 AM');
+    expect(screen.getByText('Elige la hora.')).toBeTruthy();
+    // D-216: la hora se elige en la hoja; abre en 10:00 AM.
+    await fireEvent.press(screen.getByLabelText('Hora'));
+    await fireEvent.press(screen.getByText('Listo'));
+    expect(screen.getByText('10:00 AM')).toBeTruthy();
     await fireEvent.press(screen.getByText('Agendar'));
     await waitFor(() => expect(mockSchedule).toHaveBeenCalled());
     const [site, startsAt] = mockSchedule.mock.calls[0];

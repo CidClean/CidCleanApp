@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { AppText } from './AppText';
 import { Icon } from './Icon';
+import { Sheet } from './Sheet';
 import { density, iconStrokeWidth, radius, sample, useTheme } from '@/theme';
 
 type Option<T extends string> = { value: T; label: string };
@@ -14,10 +15,14 @@ type Props<T extends string> = {
   onChange: (value: T) => void;
 };
 
-/** Campo desplegable (muestra ronda 15): igual que un campo, con la flecha hacia abajo; las opciones se abren debajo. */
+/**
+ * Campo desplegable (muestra ronda 15): igual que un campo, con la flecha hacia abajo. Las opciones se abren encima de
+ * la pantalla en una hoja desde abajo (D-217), sin empujar el contenido; la hoja lleva el nombre del campo arriba.
+ */
 export function SelectField<T extends string>({ label, options, value, onChange }: Props<T>) {
   const { colors, brand } = useTheme();
   const [open, setOpen] = useState(false);
+  const { height } = useWindowDimensions();
   const current = options.find((o) => o.value === value);
   return (
     <View style={styles.wrap}>
@@ -34,8 +39,11 @@ export function SelectField<T extends string>({ label, options, value, onChange 
         <AppText>{current?.label ?? ''}</AppText>
         <Icon name="chevron-down" size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
       </Pressable>
-      {open ? (
-        <View>
+      <Sheet visible={open} onClose={() => setOpen(false)}>
+        <AppText weight="medium" size={sample.headingSize} style={styles.title}>
+          {label}
+        </AppText>
+        <ScrollView style={{ maxHeight: height * 0.6 }} bounces={false}>
           {options.map((o, i) => {
             const on = o.value === value;
             return (
@@ -59,8 +67,8 @@ export function SelectField<T extends string>({ label, options, value, onChange 
               </Pressable>
             );
           })}
-        </View>
-      ) : null}
+        </ScrollView>
+      </Sheet>
     </View>
   );
 }
@@ -68,6 +76,7 @@ export function SelectField<T extends string>({ label, options, value, onChange 
 const styles = StyleSheet.create({
   wrap: { marginBottom: 8 },
   label: { marginBottom: 3 },
+  title: { marginBottom: 4 },
   box: {
     borderWidth: 1,
     borderRadius: radius.control,

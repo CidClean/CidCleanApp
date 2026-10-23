@@ -1,4 +1,4 @@
-import { Redirect } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -11,7 +11,8 @@ import { useStrings } from '@/i18n/useStrings';
 import { formatDate } from '@/lib/employeeRules';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions, useSession } from '@/lib/session';
-import { choosePdf, fetchCurrentTerms, publishTerms, type CurrentTerms, type PickedPdf } from '@/lib/termsApi';
+import { useQuoteStrings } from '@/i18n/useQuoteStrings';
+import { choosePdf, fetchCurrentTerms, publishTerms, type CurrentTerms, type PickedPdf, type TermsKind } from '@/lib/termsApi';
 import { iconStrokeWidth, radius, sample, useTheme } from '@/theme';
 
 /**
@@ -19,7 +20,12 @@ import { iconStrokeWidth, radius, sample, useTheme } from '@/theme';
  * Línea de versión vigente, recuadro punteado "Subir PDF", nombre del archivo, aviso ámbar y botón sólido.
  */
 export default function PublishTermsScreen() {
+  // ?kind=portal: términos del portal del cliente (D-209), con la misma pantalla.
+  const { kind: kindParam } = useLocalSearchParams<{ kind?: string }>();
+  const kind: TermsKind = kindParam === 'portal' ? 'portal' : 'staff';
+  const qs = useQuoteStrings();
   const goBack = useGoBack();
+  const router = useRouter();
   const { colors, brand } = useTheme();
   const strings = useStrings();
   const { locale } = useSession();
@@ -31,13 +37,13 @@ export default function PublishTermsScreen() {
 
   useEffect(() => {
     let cancelled = false;
-    fetchCurrentTerms().then((result) => {
+    fetchCurrentTerms(kind).then((result) => {
       if (!cancelled && result.ok) setCurrent(result.data);
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [kind]);
 
   if (!isSuperAdmin) return <Redirect href="/" />;
 
@@ -55,13 +61,13 @@ export default function PublishTermsScreen() {
     if (!file || publishing) return;
     setPublishing(true);
     setError(false);
-    const result = await publishTerms(file);
+    const result = await publishTerms(file, kind);
     if (!result.ok) {
       setPublishing(false);
       setError(true);
       return;
     }
-    const refreshed = await fetchCurrentTerms();
+    const refreshed = await fetchCurrentTerms(kind);
     if (refreshed.ok) setCurrent(refreshed.data);
     setFile(null);
     setPublishing(false);
@@ -72,11 +78,22 @@ export default function PublishTermsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <TopBar title={strings.settings.termsRow} onBack={goBack} backLabel={strings.common.back} />
+      <TopBar title={kind === 'portal' ? qs.portalTermsRow : strings.settings.termsRow} onBack={goBack} backLabel={strings.common.back} />
       <ScrollView contentContainerStyle={{ padding: 12 }}>
         <AppText size={sample.noteSize} color={colors.secondary} style={{ marginBottom: 8 }}>
           {versionLine}
         </AppText>
+        {/* D-216: la versión vigente de los términos del staff se ve con el visor de la app (D-196). */}
+        {kind === 'staff' && current !== null ? (
+          <View style={{ marginBottom: 10 }}>
+            <AppButton
+              label={strings.settings.viewPdf}
+              variant="outline"
+              icon="file-text"
+              onPress={() => router.push({ pathname: '/viewer', params: { source: 'terms', title: strings.settings.termsRow } })}
+            />
+          </View>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={strings.settings.uploadPdf}
@@ -95,7 +112,7 @@ export default function PublishTermsScreen() {
             </AppText>
           </View>
         ) : null}
-        <AppAlert text={strings.settings.acceptAgain} />
+        <AppAlert text={(kind === 'portal' ? qs.portalTermsNote : strings.settings.acceptAgain)} />
         {error ? <AppAlert tone="error" text={strings.settings.errorPublish} /> : null}
         <AppButton label={strings.settings.publish} onPress={() => void publish()} disabled={!file || publishing} />
       </ScrollView>

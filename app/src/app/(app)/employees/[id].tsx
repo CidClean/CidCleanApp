@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
+import { PhoneField } from '@/components/PhoneField';
+import { formatPhone } from '@/lib/phone';
 import { AppText } from '@/components/AppText';
 import { Avatar } from '@/components/Avatar';
 import { Chip } from '@/components/Chip';
@@ -86,6 +88,7 @@ export default function EmployeeProfileScreen() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<EditForm | null>(null);
   const [nameError, setNameError] = useState(false);
+  const [phoneError, setPhoneError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
 
@@ -190,7 +193,8 @@ export default function EmployeeProfileScreen() {
     if (!employee || !form || saving) return;
     const errors = validateEdit(form);
     setNameError(Boolean(errors.fullName));
-    if (errors.fullName) return;
+    setPhoneError(Boolean(errors.phone));
+    if (errors.fullName || errors.phone) return;
     if (!editChanged(employee, form)) {
       setEditing(false);
       return;
@@ -447,11 +451,11 @@ export default function EmployeeProfileScreen() {
                   autoCapitalize="words"
                   error={nameError ? strings.newEmployee.errorName : null}
                 />
-                <AppField
+                <PhoneField
                   label={strings.employee.phone}
                   value={form.phone}
-                  onChangeText={(v) => setForm({ ...form, phone: v })}
-                  keyboardType="phone-pad"
+                  onChange={(v) => setForm({ ...form, phone: v })}
+                  error={phoneError ? strings.common.phoneError : null}
                 />
                 <DataRow label={strings.employee.email} value={employee.email ?? '—'} />
                 {employee.workerType !== null ? (
@@ -672,7 +676,7 @@ function DataSection({
   return (
     <View>
       <DataRow label={strings.newEmployee.name} value={employee.fullName} />
-      <DataRow label={strings.employee.phone} value={employee.phone ?? '—'} />
+      <DataRow label={strings.employee.phone} value={employee.phone ? formatPhone(employee.phone) : '—'} />
       <DataRow label={strings.employee.email} value={employee.email ?? '—'} />
       {employee.workerType !== null ? (
         <DataRow label={strings.newEmployee.type} value={typeLabel(strings, employee.workerType)} />

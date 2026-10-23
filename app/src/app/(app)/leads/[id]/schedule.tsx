@@ -1,11 +1,11 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
-import { AppField } from '@/components/AppField';
 import { AppText } from '@/components/AppText';
+import { TimeField, type Clock } from '@/components/PickerField';
 import { MonthCalendar } from '@/components/sales/MonthCalendar';
 import { SelectField } from '@/components/SelectField';
 import { TopBar } from '@/components/TopBar';
@@ -17,7 +17,7 @@ import {
   checkSchedule,
   dateFromKey,
   dayKey,
-  formatTimeOf,
+  formatClock,
   monthGrid,
   shiftMonth,
   siteLabel,
@@ -49,7 +49,7 @@ export default function ScheduleWalkthroughScreen() {
   const [step, setStep] = useState<'site' | 'calendar'>(params.site ? 'calendar' : 'site');
   const [view, setView] = useState({ year: today.getFullYear(), month: today.getMonth() });
   const [selected, setSelected] = useState<string>(dayKey(today));
-  const [time, setTime] = useState('');
+  const [time, setTime] = useState<Clock | null>(null);
   const [busyDays, setBusyDays] = useState<Set<string>>(new Set());
   const [error, setError] = useState<'time' | 'past' | 'save' | null>(null);
   const [saving, setSaving] = useState(false);
@@ -77,7 +77,7 @@ export default function ScheduleWalkthroughScreen() {
     if (!current || current.getTime() < today.getTime()) return;
     setSelected(dayKey(current));
     setView({ year: current.getFullYear(), month: current.getMonth() });
-    setTime(formatTimeOf(current));
+    setTime({ hours: current.getHours(), minutes: current.getMinutes() });
   }, [site, today]);
 
   // Puntos del mes visible (D-104): todas las citas agendadas que la persona puede ver.
@@ -97,7 +97,7 @@ export default function ScheduleWalkthroughScreen() {
 
   async function submit() {
     if (saving || !siteId) return;
-    const check = checkSchedule(selected, time, new Date());
+    const check = checkSchedule(selected, time ? formatClock(time.hours, time.minutes) : '', new Date());
     if (!check.ok) {
       setError(check.error);
       return;
@@ -117,10 +117,7 @@ export default function ScheduleWalkthroughScreen() {
   const previousAllowed = canGoToPreviousMonth(view.year, view.month, today);
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={s.schedule.title} onBack={goBack} backLabel={strings.common.back} />
       <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
         {loadFailed ? <AppAlert tone="error" text={s.detail.errorLoad} /> : null}
@@ -163,16 +160,17 @@ export default function ScheduleWalkthroughScreen() {
               previousLabel={s.schedule.previousMonth}
               nextLabel={s.schedule.nextMonth}
             />
-            <AppField
+            {/* D-216: la hora se elige en una hoja (hora, minutos de 5 en 5 y AM / PM), no se escribe. */}
+            <TimeField
               label={s.schedule.time}
               value={time}
-              onChangeText={(v) => {
+              onChange={(v) => {
                 setTime(v);
                 setError(null);
               }}
-              placeholder={s.schedule.timePlaceholder}
-              autoCapitalize="characters"
-              autoCorrect={false}
+              format={(v) => formatClock(v.hours, v.minutes)}
+              placeholder={strings.common.pickTime}
+              strings={{ hour: strings.common.hour, minutes: strings.common.minutes, done: strings.common.done }}
               error={error === 'time' ? s.schedule.errorTime : error === 'past' ? s.schedule.errorPast : null}
             />
             {error === 'save' ? <AppAlert tone="error" text={s.schedule.errorSchedule} /> : null}
@@ -185,6 +183,6 @@ export default function ScheduleWalkthroughScreen() {
           </>
         ) : null}
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }

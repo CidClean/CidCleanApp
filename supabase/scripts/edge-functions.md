@@ -47,3 +47,43 @@ Abre un documento del jobsite (SOW, contrato u otro). `verify_jwt` activado. Rec
 ```
 npx supabase@latest functions deploy open-jobsite-document --project-ref <ref> --use-api
 ```
+
+## Hito 4: send-quote y quote-portal (D-209)
+
+- `send-quote` (`verify_jwt` activado): con el JWT de quien envía, `prepare_send_quote` valida `quotes_enviar`, el SOW y los destinatarios; la función genera el PDF de una página (pdf-lib con Manrope, que baja de Google Fonts; si no hay red usa Helvetica), lo guarda en `quote-files/<quote>/<versión>/quote-<versión>.pdf`, confirma el envío (`confirm_send_quote`, solo service role) y manda el correo a cada destinatario. `{ resend: true }` reenvía el correo de una versión ya enviada. Devuelve `{ sent, failed }`.
+- `quote-portal` (**sin** `verify_jwt`: lo usa el cliente sin cuenta; desplegar con `--no-verify-jwt`): acciones `state`, `request`, `verify`, `quote`, `file` y `decide`. Solo llama a las funciones `portal_*`, que no puede ejecutar ningún rol de la API. Responde igual a un correo que no es del quote (no revela destinatarios). Al aceptar copia el SOW a `jobsite-docs/<jobsite>/` y avisa por correo a quien envió.
+- Correo: `Cid Clean <quotes@mail.cidclean.com>`, respuesta a `admin@cidclean.com`. Dominio `mail.cidclean.com` creado y verificado en Resend; sus 4 registros (DKIM `resend._domainkey.mail`, MX y TXT `send.mail`, CNAME `rsend.mail`) están en Cloudflare con el comentario "Resend mail.cidclean.com". No se tocaron los de Vercel ni Zoho.
+- Secretos de las funciones: `RESEND_QUOTES_KEY` (llave `cidclean-quotes`, solo envío, limitada a `mail.cidclean.com`), `PORTAL_CODE_PEPPER` (aleatorio; con él se guarda el hash del código del cliente) y `PORTAL_BASE_URL` (`https://quote.cidclean.com`).
+
+```
+npx supabase@latest functions deploy send-quote --project-ref <ref> --use-api
+npx supabase@latest functions deploy quote-portal --project-ref <ref> --use-api --no-verify-jwt
+```
+
+## Portal en quote.cidclean.com (Cloudflare Pages)
+
+Proyecto de Pages `cidclean-quote` con el dominio `quote.cidclean.com` (registro CNAME proxied a `cidclean-quote.pages.dev`). Se publica la exportación web con solo las rutas del portal:
+
+```
+cd app && EXPO_PUBLIC_PORTAL_ONLY=1 npx expo export --platform web --clear --output-dir dist-portal
+printf '/* /index.html 200\n' > dist-portal/_redirects
+# Pages no publica carpetas node_modules: las fuentes se mueven y se reescriben sus rutas.
+mv dist-portal/assets/node_modules dist-portal/assets/nm
+grep -rl "assets/node_modules/" dist-portal --include=*.js --include=*.html | xargs sed -i 's#assets/node_modules/#assets/nm/#g'
+CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... npx wrangler pages deploy dist-portal --project-name cidclean-quote --branch main
+```
+
+## Pruebas del hito 4
+
+Última corrida (2026-10-23, orden 17): 37 de 37 contra `quote.cidclean.com` recién publicado; no quedaron datos de prueba (el historial conserva sus 20 filas).
+
+- `supabase/tests/quotes.sql`: 87 pruebas (totales, armado, permisos, envío, portal, bloqueo del código, límites, decisiones, Cliente y Jobsite, Perdido sin sitios abiertos, versiones, vencimiento).
+- `supabase/tests/quote-portal.e2e.mjs`: 37 comprobaciones contra el proyecto real (enviar con PDF y correo, portal completo y aceptar; en un segundo sitio pedir cambios, versión 1.1 que reemplaza y se reenvía, y rechazar con motivo). Escribe solo a `admin@cidclean.com`; pone un `PORTAL_CODE_PEPPER` conocido al empezar y uno aleatorio nuevo al terminar; borra lo que crea.
+
+## walkthrough-pdf (hito 3, D-212)
+
+PDF del resumen del walkthrough. `verify_jwt` activado. Recibe `walkthrough_id`, `version` y `language` (`es` o `en`). Con el JWT de quien llama, `walkthrough_pdf_source` (migración `20261023000002`) exige poder ver walkthroughs (`walkthroughs_hacer`, `leads_ver` o `clientes_editar_walkthrough_sow`) y da los datos de esa versión. Si la versión aún no tiene PDF, la service role lo arma (`functions/walkthrough-pdf/pdf.ts`: encabezado "Cid Clean" en `#0F766E`, Sitio y contacto, Áreas en tabla y Frecuencia; las fotos en un anexo; sin notas internas), lo guarda en el bucket privado `walkthrough-pdfs` como `<walkthrough>/v<versión>.pdf` y anota `pdf_path` en `walkthrough_versions`. Devuelve `{ url, expires_in: 60, path }`. Errores: `forbidden` 403, `invalid` 400, `not_found` 404, `server_error` 500; sin JWT, 401. Manrope se baja de jsDelivr (`@expo-google-fonts/manrope@0.4.2`); si no responde, usa Helvetica. La app la llama al cerrar cada versión y al tocar "Ver PDF".
+
+```
+npx supabase@latest functions deploy walkthrough-pdf --project-ref <ref> --use-api
+```

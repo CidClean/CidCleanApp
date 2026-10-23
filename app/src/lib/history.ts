@@ -99,6 +99,24 @@ export function historyTitle(strings: Strings, e: HistoryEntry): string {
       return h.walkthroughRescheduled;
     case 'walkthrough_estado_cambiado':
       return h.walkthroughStatusChanged;
+    case 'quote_creado':
+      return h.quoteCreated;
+    case 'quote_version_nueva':
+      return h.quoteNewVersion(version);
+    case 'quote_enviado':
+      return h.quoteSent(version);
+    case 'quote_visto':
+      return h.quoteViewed(version);
+    case 'quote_aceptado':
+      return h.quoteAccepted(version);
+    case 'quote_rechazado':
+      return h.quoteRejected(version);
+    case 'quote_cambios_pedidos':
+      return h.quoteChanges(version);
+    case 'cliente_creado':
+      return h.clientCreated;
+    case 'jobsite_creado':
+      return h.jobsiteCreated;
     case 'sitio_editado':
       return h.siteEdited;
     case 'sitio_eliminado':

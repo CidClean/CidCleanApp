@@ -99,13 +99,22 @@ describe('formulario del lead', () => {
     expect(hasLeadErrors(validateLeadForm(ok))).toBe(false);
     expect(validateLeadForm({ ...ok, email: 'ana@' })).toEqual({ email: true });
     expect(validateLeadForm({ ...ok, followUp: '13/40/2026' })).toEqual({ followUp: true });
+    // D-216: teléfono de EE. UU. de 10 dígitos, guardado como (239) 555-0142.
+    expect(validateLeadForm({ ...ok, phone: '(239) 555-01' })).toEqual({ phone: true });
+    expect(hasLeadErrors(validateLeadForm({ ...ok, phone: '(239) 555-0142' }))).toBe(false);
+    expect(leadColumns({ ...ok, phone: '239.555.0142' }).phone).toBe('(239) 555-0142');
   });
 
   it('parte con fuente Manual y limpia los textos al guardar', () => {
     expect(emptyLeadForm.source).toBe('manual');
     expect(
       leadColumns({ ...emptyLeadForm, company: '  Gulf  ', email: ' Ana@X.com ', phone: ' ', notes: 'n' }),
-    ).toEqual({ company: 'Gulf', contact_name: null, phone: null, email: 'ana@x.com', source: 'manual', notes: 'n' });
+    ).toEqual({ company: 'Gulf', contact_name: null, phone: null, email: 'ana@x.com', source: 'manual', notes: 'n', language: 'en' });
+  });
+
+  it('idioma del cliente: inglés por defecto y se guarda el elegido (D-209)', () => {
+    expect(emptyLeadForm.language).toBe('en');
+    expect(leadColumns({ ...emptyLeadForm, company: 'X', language: 'es' }).language).toBe('es');
   });
 
   it('fechas MM/DD/AAAA', () => {
