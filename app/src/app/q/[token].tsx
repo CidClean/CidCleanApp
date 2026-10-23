@@ -405,7 +405,7 @@ function AcceptStep({
   return shell(
     t.accept,
     <View>
-      <View style={[styles.card, { borderColor: colors.fieldBorder }]}>
+      <View style={[styles.card, { backgroundColor: colors.card }]}>
         <AppText size={sample.noteSize} color={colors.secondary}>
           {quote.company} · {quote.site}
         </AppText>
@@ -529,7 +529,7 @@ function DoneState({ t, lang, quote, decision }: { t: PortalStrings; lang: 'es' 
           {t.acceptedTitle}
         </AppText>
       </View>
-      <View style={[styles.card, { borderColor: colors.fieldBorder, marginBottom: 0 }]}>
+      <View style={[styles.card, { backgroundColor: colors.card, marginBottom: 0 }]}>
         {rows.map(([k, v], i) => (
           <View key={k} style={[styles.cardRow, { borderBottomColor: colors.border, borderBottomWidth: i === rows.length - 1 ? 0 : 0.5 }]}>
             <AppText size={14}>{k}</AppText>
@@ -574,7 +574,8 @@ const styles = StyleSheet.create({
   fix: { borderTopWidth: 0.5, paddingTop: 10, paddingHorizontal: 12, alignItems: 'center' },
   dots: { width: 44, minHeight: sample.buttonMinHeight, borderWidth: 1, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center' },
   menuRow: { paddingVertical: 10 },
-  card: { borderWidth: 1, borderRadius: radius.control, paddingVertical: 10, paddingHorizontal: 12, marginBottom: 8 },
+  // D-223: tarjetas blancas de 24px sobre el fondo crema.
+  card: { borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 16, marginBottom: 8 },
   cardLine: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 2 },
   cardRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, paddingVertical: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
