@@ -254,13 +254,14 @@ begin
   -- Clientes y tarifas según permisos (D-125, D-210)
   perform pg_temp.prueba('el Cliente lo ve quien tiene clientes_ver', '1', pg_temp.valor('clientes', format('select count(*) from clients where lead_id = %L', lead)));
   perform pg_temp.prueba('sin clientes_ver no', '0', pg_temp.valor('ventas', format('select count(*) from clients where lead_id = %L', lead)));
-  perform pg_temp.prueba('la tarifa no la ve quien solo tiene clientes_ver', '0', pg_temp.valor('clientes', format('select count(*) from jobsite_rates where jobsite_id = %L', j)));
-  perform pg_temp.prueba('la tarifa sí con clientes_ver_tarifa', '1', pg_temp.valor('tarifa', format('select count(*) from jobsite_rates where jobsite_id = %L', j)));
+  -- Hito 5 (20261025000001): la tarifa ya no se lee directo; get_jobsite_rate registra cada apertura (D-210).
+  perform pg_temp.prueba('la tarifa no la ve quien solo tiene clientes_ver', 'ERR:42501', pg_temp.valor('clientes', format('select get_jobsite_rate(%L)::text', j)));
+  perform pg_temp.prueba('la tarifa sí con clientes_ver_tarifa', 't', (pg_temp.valor('tarifa', format('select get_jobsite_rate(%L)::text', j)) is not null)::text::char(1));
   perform pg_temp.prueba('el SOW del jobsite lo ve quien tiene clientes_ver', '1', pg_temp.valor('clientes', format('select count(*) from jobsite_documents where jobsite_id = %L', j)));
   perform pg_temp.prueba('nadie escribe clientes directo (42501)', 'ERR:42501', pg_temp.valor('tarifa', 'insert into clients (name) values (''X'') returning 1'));
-  perform pg_temp.prueba('pendiente en el Inicio: quote aceptado sin ver', 'accepted', pg_temp.valor('ver', 'select kind from home_quote_pending() limit 1'));
+  perform pg_temp.prueba('pendiente en el Inicio: quote aceptado sin ver', 'accepted', pg_temp.valor('ver', format('select kind from home_quote_pending() where lead_id = %L limit 1', lead)));
   perform pg_temp.valor('ver', format('select get_site_quote(%L)', s1));
-  perform pg_temp.prueba('al abrir el quote el pendiente desaparece', '0', pg_temp.valor('ver', 'select count(*) from home_quote_pending() where kind = ''accepted'''));
+  perform pg_temp.prueba('al abrir el quote el pendiente desaparece', '0', pg_temp.valor('ver', format('select count(*) from home_quote_pending() where kind = ''accepted'' and lead_id = %L', lead)));
 end $$;
 
 -- E. Rechazo, cambios, versiones y vencimiento con un segundo lead de dos sitios ---------------------------

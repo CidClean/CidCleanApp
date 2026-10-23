@@ -53,6 +53,13 @@ const mockResend = jest.fn();
 const mockFetchPermissions = jest.fn();
 const mockFetchTemplate = jest.fn();
 const mockSavePermissions = jest.fn();
+// Pagos del empleado (hito 5) se prueba en clientScreens.test.tsx.
+jest.mock('@/components/clients/EmployeePay', () => ({
+  EmployeePay: () => {
+    const { Text } = require('react-native');
+    return <Text>PAGOS DEL EMPLEADO</Text>;
+  },
+}));
 jest.mock('@/lib/employeesApi', () => ({
   fetchEmployeePermissions: (...a: unknown[]) => mockFetchPermissions(...a),
   fetchTemplatePermissions: (...a: unknown[]) => mockFetchTemplate(...a),
@@ -294,11 +301,11 @@ describe('Perfil del empleado (D-057, D-172 a D-175, D-182 a D-184)', () => {
     expect(mockResend).toHaveBeenCalledWith('e1');
   });
 
-  test('Pagos con el permiso sigue en "Pendiente" (D-194); sin él, el aviso con candado y ninguna cifra', async () => {
+  test('Pagos con el permiso muestra su pago por jobsite (hito 5), sin el aviso de candado', async () => {
     await render(<EmployeeProfileScreen />);
     await screen.findByText(es.employee.invitationSent);
     await fireEvent.press(screen.getByText(es.employee.tabPay));
-    expect(screen.getByText(es.pending)).toBeTruthy();
+    expect(screen.getByText('PAGOS DEL EMPLEADO')).toBeTruthy();
     expect(screen.queryByText(es.permissions.noPayPermission)).toBeNull();
   });
 

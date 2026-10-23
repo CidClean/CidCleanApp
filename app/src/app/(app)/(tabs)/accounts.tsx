@@ -1,11 +1,121 @@
-import { PendingScreen } from '@/components/PendingScreen';
-import { useStrings } from '@/i18n/useStrings';
-import { usePermissions } from '@/lib/session';
-import { visibleTabs } from '@/lib/visibility';
+import { Redirect, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-// TEMPORAL: reemplazar al construir Cuentas (lista de jobsites agrupada por cliente, D-133)
+import { AppAlert } from '@/components/AppAlert';
+import { AppText } from '@/components/AppText';
+import { Chip } from '@/components/Chip';
+import { Icon } from '@/components/Icon';
+import { ListRow } from '@/components/ListRow';
+import { TopBar } from '@/components/TopBar';
+import { useClientsStrings } from '@/i18n/useClientsStrings';
+import { useStrings } from '@/i18n/useStrings';
+import { canCreateLegacy, canSeeAccounts, canSeeRate, groupByClient, money, statusTone, type ClientGroup } from '@/lib/clientRules';
+import { fetchAtRisk, fetchClients, fetchJobsites, fetchRates } from '@/lib/clientsApi';
+import { usePermissions } from '@/lib/session';
+import { iconStrokeWidth, sample, useTheme } from '@/theme';
+
+/**
+ * Cuentas (D-132, D-133): lista de jobsites agrupada por cliente (D-082, muestra ronda 9): título pequeño con el
+ * cliente (tocarlo abre el Cliente) y debajo sus jobsites con la tarifa mensual (con permiso) y la ficha de estado;
+ * "Margen en riesgo" en ámbar en lugar de Activo (D-097). El + crea un cliente previo a la app (D-210).
+ */
 export default function AccountsScreen() {
+  const router = useRouter();
+  const { colors } = useTheme();
   const strings = useStrings();
+  const c = useClientsStrings();
   const { access } = usePermissions();
-  return <PendingScreen title={strings.nav.accounts} allowed={visibleTabs(access).includes('accounts')} />;
+  const [groups, setGroups] = useState<ClientGroup[] | null>(null);
+  const [rates, setRates] = useState<Map<string, number>>(new Map());
+  const [risk, setRisk] = useState<Set<string>>(new Set());
+  const [failed, setFailed] = useState(false);
+  const allowed = canSeeAccounts(access);
+  const seesRate = canSeeRate(access);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!allowed) return;
+      let cancelled = false;
+      void (async () => {
+        const [clients, jobsites] = await Promise.all([fetchClients(), fetchJobsites()]);
+        if (cancelled) return;
+        if (!clients.ok || !jobsites.ok) {
+          setFailed(true);
+          return;
+        }
+        setFailed(false);
+        setGroups(groupByClient(jobsites.data, clients.data));
+        if (seesRate) {
+          const [r, k] = await Promise.all([fetchRates(), fetchAtRisk()]);
+          if (cancelled) return;
+          if (r.ok) setRates(r.data);
+          if (k.ok) setRisk(k.data);
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [allowed, seesRate]),
+  );
+
+  if (!allowed) return <Redirect href="/" />;
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <TopBar
+        title={strings.nav.accounts}
+        action={
+          canCreateLegacy(access)
+            ? { icon: 'plus', onPress: () => router.push('/clients/new'), accessibilityLabel: c.list.newClient }
+            : undefined
+        }
+      />
+      <ScrollView contentContainerStyle={{ padding: 12 }}>
+        {failed ? <AppAlert tone="error" text={c.list.errorLoad} /> : null}
+        {groups && groups.length === 0 ? (
+          <AppText size={sample.noteSize} color={colors.secondary}>
+            {c.list.empty}
+          </AppText>
+        ) : null}
+        {groups?.map((g, gi) => (
+          <View key={g.clientId}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push({ pathname: '/clients/[id]', params: { id: g.clientId } })}
+              style={[styles.groupHead, { marginTop: gi === 0 ? 0 : 10 }]}
+            >
+              <AppText size={sample.labelSize} color={colors.secondary}>
+                {g.clientName}
+              </AppText>
+              <Icon name="chevron-right" size={14} strokeWidth={iconStrokeWidth} color={colors.secondary} />
+            </Pressable>
+            {g.jobsites.length === 0 ? (
+              <AppText size={sample.noteSize} color={colors.secondary} style={{ paddingVertical: 6 }}>
+                {c.list.noJobsites}
+              </AppText>
+            ) : null}
+            {g.jobsites.map((j, i) => {
+              const rate = rates.get(j.id);
+              const atRisk = j.status === 'active' && risk.has(j.id);
+              return (
+                <ListRow
+                  key={j.id}
+                  title={j.name}
+                  detail={seesRate && rate !== undefined ? c.perMonth(money(rate)) : j.address}
+                  right={<Chip label={atRisk ? c.atRisk : c.status[j.status]} tone={atRisk ? 'warning' : statusTone(j.status)} />}
+                  last={i === g.jobsites.length - 1}
+                  onPress={() => router.push({ pathname: '/jobsites/[id]', params: { id: j.id } })}
+                />
+              );
+            })}
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  groupHead: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
+});

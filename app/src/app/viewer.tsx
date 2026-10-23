@@ -8,6 +8,7 @@ import { AppAlert } from '@/components/AppAlert';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
 import { fetchDocumentUrl } from '@/lib/documents';
+import { fetchJobsiteDocumentUrl } from '@/lib/clientsApi';
 import { fetchWalkthroughPdfUrl } from '@/lib/walkthroughApi';
 import { useGoBack } from '@/lib/navigation';
 import { fetchQuoteFileUrl } from '@/lib/quotesApi';
@@ -25,7 +26,7 @@ type State = { status: 'loading' } | { status: 'error' } | { status: 'ready'; ki
  */
 export default function ViewerScreen() {
   const { source, documentId, title, path, version, language } = useLocalSearchParams<{
-    source: 'terms' | 'document' | 'quote-file' | 'walkthrough';
+    source: 'terms' | 'document' | 'quote-file' | 'walkthrough' | 'jobsite';
     documentId?: string;
     title?: string;
     /** source 'quote-file': ruta en el bucket quote-files (SOW o PDF del quote, hito 4). */
@@ -43,6 +44,7 @@ export default function ViewerScreen() {
     let file: File | null = null;
 
     async function load() {
+      // Hito 5: los documentos del jobsite usan el mismo visor (open-jobsite-document registra cada apertura).
       // Hito 3 (D-212): el PDF del walkthrough usa el mismo visor; documentId es el walkthrough y version su versión.
       const result =
         source === 'terms'
@@ -51,7 +53,9 @@ export default function ViewerScreen() {
             ? await fetchQuoteFileUrl(path ?? '')
             : source === 'walkthrough'
               ? await fetchWalkthroughPdfUrl(documentId ?? '', Number(version), language === 'en' ? 'en' : 'es')
-              : await fetchDocumentUrl(documentId ?? '');
+              : source === 'jobsite'
+                ? await fetchJobsiteDocumentUrl(documentId ?? '')
+                : await fetchDocumentUrl(documentId ?? '');
       if (cancelled) return;
       if (!result.ok) {
         setState({ status: 'error' });

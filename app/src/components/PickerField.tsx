@@ -65,11 +65,15 @@ type DateProps = {
   /** Si la fecha es opcional: texto del botón que la quita. */
   clearLabel?: string;
   error?: string | null;
+  /** Deja elegir días pasados (por ejemplo, el inicio del contrato de un cliente previo a la app). */
+  allowPast?: boolean;
 };
 
 /** Campo de fecha: abre el calendario del mes existente (D-072, D-104) en una hoja; días pasados no se eligen. */
-export function DateField({ label, value, onChange, format, placeholder, calendar, clearLabel, error }: DateProps) {
+export function DateField({ label, value, onChange, format, placeholder, calendar, clearLabel, error, allowPast = false }: DateProps) {
   const today = useMemo(() => new Date(), []);
+  // Con allowPast, el límite de lo que se puede elegir queda muy atrás.
+  const floor = useMemo(() => (allowPast ? new Date(2000, 0, 1) : today), [allowPast, today]);
   const [open, setOpen] = useState(false);
   const start = value ? dateFromKey(value) : today;
   const [view, setView] = useState({ year: start.getFullYear(), month: start.getMonth() });
@@ -80,7 +84,7 @@ export function DateField({ label, value, onChange, format, placeholder, calenda
     setOpen(true);
   }
 
-  const weeks = monthGrid(view.year, view.month, today, new Set(), value);
+  const weeks = monthGrid(view.year, view.month, floor, new Set(), value);
   return (
     <>
       <FieldBox label={label} text={value ? format(value) : placeholder} placeholder={!value} icon="calendar" error={error} onPress={show} />
@@ -96,7 +100,7 @@ export function DateField({ label, value, onChange, format, placeholder, calenda
             onChange(key);
             setOpen(false);
           }}
-          onPrevious={canGoToPreviousMonth(view.year, view.month, today) ? () => setView((v) => shiftMonth(v.year, v.month, -1)) : undefined}
+          onPrevious={canGoToPreviousMonth(view.year, view.month, floor) ? () => setView((v) => shiftMonth(v.year, v.month, -1)) : undefined}
           onNext={() => setView((v) => shiftMonth(v.year, v.month, 1))}
           previousLabel={calendar.previousMonth}
           nextLabel={calendar.nextMonth}

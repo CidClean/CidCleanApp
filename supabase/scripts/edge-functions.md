@@ -40,6 +40,14 @@ Es la única forma de abrir un documento sensible de un 1099 (W-9 o certificado 
 - `supabase/tests/terms-storage.e2e.mjs`: 9 comprobaciones del bucket `terms` (solo el Super Admin sube, cualquier empleado firma y lee, nadie reemplaza ni borra). No publica versiones: `terms_documents` es de solo agregar.
 - Las dos pruebas e2e crean perfiles y usuarios temporales `@prueba.local` y los borran al terminar; el historial (solo se agrega) conserva sus filas.
 
+## open-jobsite-document (hito 5, D-210)
+
+Abre un documento del jobsite (SOW, contrato u otro). `verify_jwt` activado. Recibe `document_id`; `open_jobsite_document` (migración `20261025000001`), con el JWT de quien llama, exige `clientes_ver` (y `clientes_ver_tarifa` para el contrato) y deja `documento_abierto` en `change_log`; después la service role firma una URL de 60 s del bucket `jobsite-docs`. El contrato no tiene lectura directa en Storage: este es su único camino. Errores: `forbidden` 403, `invalid` 400, `not_found` 404, `server_error` 500; sin JWT, 401.
+
+```
+npx supabase@latest functions deploy open-jobsite-document --project-ref <ref> --use-api
+```
+
 ## Hito 4: send-quote y quote-portal (D-209)
 
 - `send-quote` (`verify_jwt` activado): con el JWT de quien envía, `prepare_send_quote` valida `quotes_enviar`, el SOW y los destinatarios; la función genera el PDF de una página (pdf-lib con Manrope, que baja de Google Fonts; si no hay red usa Helvetica), lo guarda en `quote-files/<quote>/<versión>/quote-<versión>.pdf`, confirma el envío (`confirm_send_quote`, solo service role) y manda el correo a cada destinatario. `{ resend: true }` reenvía el correo de una versión ya enviada. Devuelve `{ sent, failed }`.
