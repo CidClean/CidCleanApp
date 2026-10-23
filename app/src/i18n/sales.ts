@@ -55,7 +55,9 @@ export const salesEs = {
     barTitle: 'Lead', // APROBADO (muestra ronda 8)
     sourceLine: (source: string) => `Lead · Fuente: ${source.toLowerCase()}`, // APROBADO (muestra ronda 8: "Lead · Fuente: web")
     tabData: 'Datos', // APROBADO (D-070)
-    tabSites: 'Sitios', // APROBADO (D-070)
+    tabSites: 'Sitios', // APROBADO (D-070, D-220)
+    tabWalkthrough: 'Walkthrough', // APROBADO (D-220)
+    tabQuote: 'Quote', // APROBADO (D-220)
     tabNotes: 'Notas', // APROBADO (D-070)
     contact: 'Contacto', // APROBADO (muestra ronda 8)
     phone: 'Teléfono', // APROBADO (muestra ronda 8)
@@ -212,6 +214,8 @@ export const salesEn: SalesStrings = {
     sourceLine: (source: string) => `Lead · Source: ${source.toLowerCase()}`, // lead detail header
     tabData: 'Details',
     tabSites: 'Sites',
+    tabWalkthrough: 'Walkthrough',
+    tabQuote: 'Quote',
     tabNotes: 'Notes',
     contact: 'Contact',
     phone: 'Phone',

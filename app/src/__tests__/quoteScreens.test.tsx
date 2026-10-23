@@ -53,6 +53,7 @@ jest.mock('@/lib/leadsApi', () => ({
 const mockChoosePdf = jest.fn();
 jest.mock('@/lib/termsApi', () => ({ choosePdf: (...a: unknown[]) => mockChoosePdf(...a) }));
 
+let mockSavedSession: string | null = null;
 const mockPortal = {
   state: jest.fn(),
   request: jest.fn(),
@@ -68,7 +69,7 @@ jest.mock('@/lib/portalApi', () => ({
   fetchPortalQuote: (...a: unknown[]) => mockPortal.quote(...a),
   portalFileUrl: (...a: unknown[]) => mockPortal.file(...a),
   decide: (...a: unknown[]) => mockPortal.decide(...a),
-  readPortalSession: () => null,
+  readPortalSession: () => mockSavedSession,
   savePortalSession: jest.fn(),
 }));
 
@@ -233,9 +234,13 @@ describe('Portal del cliente (D-041 a D-047, D-094, D-095, D-209)', () => {
     expect(await screen.findByText(p.locked)).toBeTruthy();
   });
 
-  test('Continuar bloqueado hasta abrir el SOW (D-042)', async () => {
+  test('Aceptar y Más opciones bloqueados hasta abrir el SOW (D-042, D-220 b)', async () => {
     await enter();
     expect(screen.getByText(p.sowLocked)).toBeTruthy();
+    expect(screen.getByLabelText(p.moreOptions, { includeHiddenElements: true }).props.accessibilityState).toEqual({ disabled: true });
+    // El botón Aceptar va deshabilitado con candado (sin onPress) hasta abrir el SOW.
+    expect(screen.getByText(p.accept).parent?.props.accessibilityState).toEqual({ disabled: true });
+    expect(screen.queryByText(p.negotiateHint)).toBeNull();
     mockPortal.quote.mockResolvedValue({ ok: true, data: portalQuote({ sow_opened: true }) });
     await fireEvent.press(screen.getByText(p.readSow));
     await waitFor(() => expect(mockPortal.file).toHaveBeenCalledWith('ses', 'sow'));
@@ -245,8 +250,8 @@ describe('Portal del cliente (D-041 a D-047, D-094, D-095, D-209)', () => {
   test('aceptar: nombre, cargo y casilla de lectura (D-045, D-095); pantalla final con resumen (D-047)', async () => {
     mockPortal.quote.mockResolvedValue({ ok: true, data: portalQuote({ sow_opened: true }) });
     await enter();
-    await fireEvent.press(screen.getByText(p.continue));
-    expect(screen.getByText(p.totalWithTax)).toBeTruthy();
+    // D-220 b: Aceptar va en la misma pantalla del quote, sin Continuar.
+    expect(screen.queryByText(p.continue)).toBeNull();
     await fireEvent.press(screen.getByText(p.accept));
     await fireEvent.press(screen.getAllByText(p.accept).slice(-1)[0]);
     expect(screen.getByText(p.needNameTitle)).toBeTruthy();
@@ -265,7 +270,6 @@ describe('Portal del cliente (D-041 a D-047, D-094, D-095, D-209)', () => {
     mockPortal.quote.mockResolvedValue({ ok: true, data: portalQuote({ sow_opened: true }) });
     mockPortal.decide.mockResolvedValue({ ok: true, data: { kind: 'rejected' } });
     await enter();
-    await fireEvent.press(screen.getByText(p.continue));
     await fireEvent.press(screen.getByLabelText(p.moreOptions));
     expect(screen.getByText(p.negotiateHint)).toBeTruthy();
     expect(screen.getByText(p.rejectHint)).toBeTruthy();
@@ -277,6 +281,30 @@ describe('Portal del cliente (D-041 a D-047, D-094, D-095, D-209)', () => {
     await fireEvent.press(screen.getByText(p.submit));
     await waitFor(() => expect(mockPortal.decide).toHaveBeenCalledWith('ses', { kind: 'rejected', reason_id: 'r1', note: 'Muy caro' }));
     expect(await screen.findByText(p.rejectedTitle)).toBeTruthy();
+  });
+
+  test('D-220 d: si la respuesta de aceptar se pierde pero quedó aceptado, igual muestra la pantalla final', async () => {
+    mockPortal.quote.mockResolvedValue({ ok: true, data: portalQuote({ sow_opened: true }) });
+    await enter();
+    await fireEvent.press(screen.getByText(p.accept));
+    await fireEvent.changeText(screen.getByLabelText(p.fullName), 'Ana Rivera');
+    await fireEvent.changeText(screen.getByLabelText(p.jobTitle), 'Gerente');
+    await fireEvent.press(screen.getByText(p.confirmReadSowOnly));
+    mockPortal.decide.mockResolvedValue({ ok: false, reason: 'network' });
+    mockPortal.quote.mockResolvedValue({ ok: true, data: portalQuote({ sow_opened: true, status: 'accepted', decision: { kind: 'accepted', name: 'Ana Rivera', at: '2026-10-20T20:30:00Z' } }) });
+    await fireEvent.press(screen.getAllByText(p.accept).slice(-1)[0]);
+    expect(await screen.findByText(p.acceptedTitle)).toBeTruthy();
+    expect(screen.queryByText(p.network)).toBeNull();
+  });
+
+  test('D-220 d: al volver a abrir el enlace ya aceptado en el mismo navegador, la pantalla final (D-047)', async () => {
+    mockSavedSession = 'ses';
+    mockPortal.state.mockResolvedValue({ ok: true, data: { state: 'decided', language: 'es' } });
+    mockPortal.quote.mockResolvedValue({ ok: true, data: portalQuote({ sow_opened: true, status: 'accepted', decision: { kind: 'accepted', name: 'Ana Rivera', at: '2026-10-20T20:30:00Z' } }) });
+    await render(<PortalScreen />);
+    expect(await screen.findByText(p.acceptedTitle)).toBeTruthy();
+    expect(screen.queryByText(p.decidedTitle)).toBeNull();
+    mockSavedSession = null;
   });
 
   test('estados cerrados: vencido, reemplazado, cambios pedidos y enlace no válido', async () => {

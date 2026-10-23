@@ -220,7 +220,7 @@ describe('Detalle del lead (D-070, D-071)', () => {
     expect(screen.queryByText('Agregar sitio')).toBeNull();
   });
 
-  it('Sitios: cada sitio con su walkthrough y el botón Agendar walkthrough', async () => {
+  it('Walkthrough (D-220): cada sitio con su cita y el botón Agendar walkthrough; Sitios solo con los sitios', async () => {
     mockFetchLead.mockResolvedValue({
       ok: true,
       data: { ...lead, sites: [{ ...lead.sites[0], scheduled: { id: 'a', startsAt: new Date(2026, 9, 22, 10, 0), status: 'scheduled' } }] },
@@ -228,7 +228,11 @@ describe('Detalle del lead (D-070, D-071)', () => {
     await render(<LeadDetailScreen />);
     await screen.findByText('Gulf Coast Dental');
     await fireEvent.press(screen.getByText('Sitios'));
+    expect(screen.queryByText('Agendar walkthrough')).toBeNull();
+    expect(screen.getByText('Agregar sitio')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Walkthrough'));
     expect(screen.getByText('Walkthrough: Jue 22 oct · 10:00 AM')).toBeTruthy();
+    expect(screen.getByText('Quote')).toBeTruthy();
     await fireEvent.press(screen.getByText('Agendar walkthrough'));
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/leads/[id]/schedule', params: { id: 'l1' } });
   });

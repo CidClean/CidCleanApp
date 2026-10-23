@@ -10,7 +10,7 @@ import { AppText } from '@/components/AppText';
 import { Checkbox } from '@/components/Checkbox';
 import { CodeBoxes } from '@/components/CodeBoxes';
 import { Icon } from '@/components/Icon';
-import { Sheet } from '@/components/Sheet';
+import { Dialog } from '@/components/Dialog';
 import { TopBar } from '@/components/TopBar';
 import { QuoteView } from '@/components/quotes/QuoteView';
 import { getPortalStrings, type PortalStrings } from '@/i18n/quotes';
@@ -36,7 +36,6 @@ type Step =
   | { kind: 'email' }
   | { kind: 'code' }
   | { kind: 'quote' }
-  | { kind: 'decision' }
   | { kind: 'accept' }
   | { kind: 'reason'; decision: 'rejected' | 'changes_requested' }
   | { kind: 'done'; decision: 'accepted' | 'rejected' | 'changes_requested' };
@@ -84,11 +83,21 @@ export default function PortalScreen() {
         return;
       }
       setLang(st.data.language);
+      const saved = readPortalSession(token);
       if (st.data.state !== 'open') {
+        // D-220 d: quien ya decidió en este navegador vuelve a ver su pantalla final (D-047), no "ya decidido".
+        const done = saved ? await fetchPortalQuote(saved) : null;
+        if (cancelled) return;
+        if (done?.ok && done.data.decision) {
+          setQuote(done.data);
+          setLang(done.data.language);
+          setSession(saved);
+          setStep({ kind: 'done', decision: done.data.decision.kind });
+          return;
+        }
         setStep({ kind: 'closed', state: st.data.state });
         return;
       }
-      const saved = readPortalSession(token);
       if (saved && (await loadQuote(saved))) {
         setSession(saved);
         setStep({ kind: 'quote' });
@@ -159,14 +168,24 @@ export default function PortalScreen() {
     setBusy(true);
     setNotice(null);
     const r = await decide(session, d);
-    setBusy(false);
     if (!r.ok) {
+      // D-220 d: la respuesta pudo perderse aunque la decisión quedó guardada; se revisa antes de mostrar un error.
+      const again = await fetchPortalQuote(session);
+      setBusy(false);
+      if (again.ok && again.data.decision) {
+        setQuote(again.data);
+        setStep({ kind: 'done', decision: again.data.decision.kind });
+        return;
+      }
       if (r.reason === 'session') setStep({ kind: 'email' });
       else setNotice(r.reason === 'network' ? t.network : t.error);
       return;
     }
-    await loadQuote(session);
+    // La pantalla final se muestra siempre tras la respuesta; recargar la cotización solo actualiza la fecha y el nombre.
     setStep({ kind: 'done', decision: d.kind });
+    setBusy(false);
+    const fresh = await fetchPortalQuote(session);
+    if (fresh.ok) setQuote(fresh.data);
   }
 
   const shell = (title: string, body: React.ReactNode, onBack?: () => void, bottom?: React.ReactNode) => (
@@ -242,6 +261,8 @@ export default function PortalScreen() {
     validDays: 0,
   };
 
+  // D-220 b: Aceptar cotización y Más opciones van en la misma pantalla del quote (sin el paso Continuar); siguen
+  // bloqueados hasta abrir el SOW (D-042).
   if (step.kind === 'quote')
     return shell(
       t.yourQuote,
@@ -250,35 +271,24 @@ export default function PortalScreen() {
         <View style={{ gap: 8, marginTop: 14 }}>
           <AppButton label={t.readSow} variant="outline" icon="file-text" onPress={() => void openFile('sow')} />
           <AppButton label={t.downloadQuote} variant="text" onPress={() => void openFile('pdf')} />
-          {quote.sow_opened ? (
-            <AppButton label={t.continue} onPress={() => setStep({ kind: 'decision' })} />
-          ) : (
-            <View>
-              <AppText size={sample.noteSize} color={colors.secondary} style={{ marginBottom: 8 }}>
-                {t.sowLocked}
-              </AppText>
-              <AppButton label={t.continue} icon="lock" disabled onPress={() => undefined} />
-            </View>
-          )}
+          {!quote.sow_opened ? (
+            <AppText size={sample.noteSize} color={colors.secondary}>
+              {t.sowLocked}
+            </AppText>
+          ) : null}
         </View>
       </View>,
-    );
-
-  if (step.kind === 'decision')
-    return (
-      <DecisionStep
+      undefined,
+      <DecisionBar
         t={t}
-        lang={lang}
-        quote={quote}
-        shell={shell}
-        onBack={() => setStep({ kind: 'quote' })}
+        unlocked={quote.sow_opened}
         onAccept={() => setStep({ kind: 'accept' })}
         onReason={(decision) => setStep({ kind: 'reason', decision })}
-      />
+      />,
     );
 
   if (step.kind === 'accept')
-    return <AcceptStep t={t} quote={quote} shell={shell} busy={busy} onBack={() => setStep({ kind: 'decision' })} onTerms={() => void openFile('terms')} onSubmit={(name, title, ok) => void submit({ kind: 'accepted', name, title, read_confirmed: ok })} />;
+    return <AcceptStep t={t} quote={quote} shell={shell} busy={busy} onBack={() => setStep({ kind: 'quote' })} onTerms={() => void openFile('terms')} onSubmit={(name, title, ok) => void submit({ kind: 'accepted', name, title, read_confirmed: ok })} />;
 
   if (step.kind === 'reason')
     return (
@@ -288,7 +298,7 @@ export default function PortalScreen() {
         decision={step.decision}
         shell={shell}
         busy={busy}
-        onBack={() => setStep({ kind: 'decision' })}
+        onBack={() => setStep({ kind: 'quote' })}
         onSubmit={(reason, note) => void submit({ kind: step.decision, reason_id: reason, note })}
       />
     );
@@ -298,59 +308,44 @@ export default function PortalScreen() {
 
 type Shell = (title: string, body: React.ReactNode, onBack?: () => void, bottom?: React.ReactNode) => React.ReactElement;
 
-/** Decisión (D-044, D-094): total con tax, barra fija con Más opciones (Negociar, Rechazar) y Aceptar cotización. */
-function DecisionStep({
+/**
+ * Barra fija de la decisión (D-044, D-094) bajo el quote: botón de tres puntos con contorno (Más opciones: Negociar y
+ * Rechazar, en una ventana al centro, D-220 c) y botón sólido Aceptar cotización. Sin abrir el SOW los dos van
+ * bloqueados, el de aceptar con candado (D-042).
+ */
+function DecisionBar({
   t,
-  quote,
-  shell,
-  onBack,
+  unlocked,
   onAccept,
   onReason,
 }: {
   t: PortalStrings;
-  lang: 'es' | 'en';
-  quote: PortalQuote;
-  shell: Shell;
-  onBack: () => void;
+  unlocked: boolean;
   onAccept: () => void;
   onReason: (d: 'rejected' | 'changes_requested') => void;
 }) {
   const { colors, brand } = useTheme();
   const insets = useSafeAreaInsets();
   const [menu, setMenu] = useState(false);
-  const bar = (
+  return (
     <View style={[styles.fix, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: 10 + insets.bottom }]}>
       <View style={styles.column}>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t.moreOptions}
-            onPress={() => setMenu(true)}
-            style={[styles.dots, { borderColor: brand }]}
+            accessibilityState={{ disabled: !unlocked }}
+            onPress={unlocked ? () => setMenu(true) : undefined}
+            style={[styles.dots, { borderColor: unlocked ? brand : colors.border }]}
           >
-            <Icon name="dots" size={20} strokeWidth={iconStrokeWidth} color={colors.text} />
+            <Icon name="dots" size={20} strokeWidth={iconStrokeWidth} color={unlocked ? colors.text : colors.secondary} />
           </Pressable>
           <View style={{ flex: 1 }}>
-            <AppButton label={t.accept} onPress={onAccept} />
+            <AppButton label={t.accept} icon={unlocked ? undefined : 'lock'} disabled={!unlocked} onPress={onAccept} />
           </View>
         </View>
       </View>
-    </View>
-  );
-  return (
-    <>
-      {shell(
-        t.decisionTitle,
-        <View>
-          <AppText size={sample.noteSize}>{t.totalWithTax}</AppText>
-          <AppText weight="medium" size={sample.titleSize} style={{ lineHeight: 31 }}>
-            {money(Number(quote.total))}
-          </AppText>
-        </View>,
-        onBack,
-        bar,
-      )}
-      <Sheet visible={menu} onClose={() => setMenu(false)}>
+      <Dialog visible={menu} onClose={() => setMenu(false)}>
         {(
           [
             ['changes_requested', t.negotiate, t.negotiateHint],
@@ -372,8 +367,8 @@ function DecisionStep({
             </AppText>
           </Pressable>
         ))}
-      </Sheet>
-    </>
+      </Dialog>
+    </View>
   );
 }
 

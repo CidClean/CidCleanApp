@@ -47,7 +47,8 @@ import { useGoBack } from '@/lib/navigation';
 import { usePermissions, useSession } from '@/lib/session';
 import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
-type Tab = 'data' | 'sites' | 'notes';
+// D-220 (reemplaza D-070): Datos, Sitios, Walkthrough, Quote y Notas.
+type Tab = 'data' | 'sites' | 'walkthrough' | 'quote' | 'notes';
 
 /**
  * Detalle del lead (D-070): encabezado con empresa, "Lead · Fuente" y ficha de estado; pestañas Datos, Sitios y Notas.
@@ -171,7 +172,7 @@ export default function LeadDetailScreen() {
   }
 
   const topAction =
-    lead && canEdit && tab !== 'sites'
+    lead && canEdit && (tab === 'data' || tab === 'notes')
       ? editing
         ? { label: strings.common.cancel, onPress: () => setEditing(false), accessibilityLabel: strings.common.cancel }
         : { label: strings.common.edit, onPress: startEditing, accessibilityLabel: strings.common.edit }
@@ -205,6 +206,8 @@ export default function LeadDetailScreen() {
               tabs={[
                 { key: 'data', label: s.detail.tabData },
                 { key: 'sites', label: s.detail.tabSites },
+                { key: 'walkthrough', label: s.detail.tabWalkthrough },
+                { key: 'quote', label: s.detail.tabQuote },
                 { key: 'notes', label: s.detail.tabNotes },
               ]}
             />
@@ -264,6 +267,22 @@ export default function LeadDetailScreen() {
                 }
               />
             ) : null}
+
+            {tab === 'walkthrough' ? (
+              <WalkthroughSection
+                lead={lead}
+                s={s}
+                canEdit={canEdit}
+                canWalkthrough={canDoWalkthroughs(access)}
+                onWalkthrough={() => router.push({ pathname: '/walkthrough/new', params: { lead: lead.id } })}
+                onSchedule={(siteId) =>
+                  router.push({ pathname: '/leads/[id]/schedule', params: siteId ? { id: lead.id, site: siteId } : { id: lead.id } })
+                }
+              />
+            ) : null}
+
+            {/* D-220: la lista de quotes de cada sitio (D-208) va en su pestaña. */}
+            {tab === 'quote' ? <LeadQuotes leadId={lead.id} sites={lead.sites} /> : null}
 
             {tab === 'notes' && !editing ? (
               <AppText color={lead.notes ? colors.text : colors.secondary}>{lead.notes ?? s.detail.noNotes}</AppText>
@@ -332,7 +351,7 @@ function DataSection({ lead, s, locale }: { lead: Lead; s: SalesStrings; locale:
   );
 }
 
-/** Pestaña Sitios: un sitio por fila con su walkthrough; Agendar walkthrough y Agregar sitio con `leads_editar`. */
+/** Pestaña Sitios (D-220): un sitio por fila con lápiz y papelera, y Agregar sitio con `leads_editar`. */
 function SitesSection({
   lead,
   s,
@@ -341,21 +360,18 @@ function SitesSection({
   onSchedule,
   onEdit,
   onDelete,
-  canWalkthrough,
-  onWalkthrough,
 }: {
   lead: Lead;
   s: SalesStrings;
   canEdit: boolean;
-  canWalkthrough: boolean;
-  onWalkthrough: () => void;
+  canWalkthrough?: boolean;
+  onWalkthrough?: () => void;
   onAdd: () => void;
   onSchedule: (siteId?: string) => void;
   onEdit: (siteId: string) => void;
   onDelete: (site: LeadSite) => void;
 }) {
   const { colors } = useTheme();
-  const w = useWalkthroughStrings();
   const hasSites = lead.sites.length > 0;
   return (
     <View>
@@ -368,13 +384,7 @@ function SitesSection({
         <ListRow
           key={site.id}
           title={siteLabel(site)}
-          detail={
-            site.walkthroughDone
-              ? w.siteDone
-              : site.scheduled
-                ? s.sites.walkthroughOn(formatDateTime(site.scheduled.startsAt, s))
-                : s.sites.noWalkthrough
-          }
+          detail={site.name?.trim() ? site.address : undefined}
           right={
             canEdit ? (
               <View style={styles.rowIcons}>
@@ -391,18 +401,57 @@ function SitesSection({
           onPress={canEdit ? () => onSchedule(site.id) : undefined}
         />
       ))}
-      {canEdit || (canWalkthrough && hasSites) ? (
-        <View style={{ gap: 8, marginTop: hasSites ? 12 : 0 }}>
-          {canEdit && hasSites ? <AppButton label={s.sites.schedule} onPress={() => onSchedule()} /> : null}
-          {/* Hito 3: iniciar o retomar el walkthrough de un sitio (D-200). */}
-          {canWalkthrough && hasSites ? <AppButton label={w.start} variant="outline" onPress={onWalkthrough} /> : null}
-          {canEdit ? <AppButton label={s.sites.add} variant="outline" icon="plus" onPress={onAdd} /> : null}
+      {canEdit ? (
+        <View style={{ marginTop: hasSites ? 12 : 0 }}>
+          <AppButton label={s.sites.add} variant="outline" icon="plus" onPress={onAdd} />
         </View>
       ) : null}
-      {/* D-217: el walkthrough de cada sitio sigue visible y se abre desde aquí. */}
-      <LeadWalkthroughs leadId={lead.id} sites={lead.sites} visible={canWalkthrough} />
-      {/* Hito 4: el quote de cada sitio (D-208). */}
-      <LeadQuotes leadId={lead.id} sites={lead.sites} />
+    </View>
+  );
+}
+
+/**
+ * Pestaña Walkthrough (D-220): la lista de walkthroughs de los sitios (cita agendada, en curso o hecho, D-217) y los
+ * botones Agendar walkthrough (con `leads_editar`) y Hacer walkthrough (con `walkthroughs_hacer`).
+ */
+function WalkthroughSection({
+  lead,
+  s,
+  canEdit,
+  canWalkthrough,
+  onWalkthrough,
+  onSchedule,
+}: {
+  lead: Lead;
+  s: SalesStrings;
+  canEdit: boolean;
+  canWalkthrough: boolean;
+  onWalkthrough: () => void;
+  onSchedule: (siteId?: string) => void;
+}) {
+  const { colors } = useTheme();
+  const w = useWalkthroughStrings();
+  const hasSites = lead.sites.length > 0;
+  return (
+    <View>
+      {!hasSites ? (
+        <AppText size={sample.noteSize} color={colors.secondary} style={{ marginBottom: 12 }}>
+          {canEdit ? s.sites.needSite : s.sites.empty}
+        </AppText>
+      ) : null}
+      <LeadWalkthroughs
+        leadId={lead.id}
+        sites={lead.sites}
+        canOpen={canWalkthrough}
+        scheduleLine={(site) => (site.scheduled ? s.sites.walkthroughOn(formatDateTime(site.scheduled.startsAt, s)) : s.sites.noWalkthrough)}
+        onSchedule={canEdit ? (siteId) => onSchedule(siteId) : undefined}
+      />
+      {hasSites && (canEdit || canWalkthrough) ? (
+        <View style={{ gap: 8, marginTop: 12 }}>
+          {canEdit ? <AppButton label={s.sites.schedule} onPress={() => onSchedule()} /> : null}
+          {canWalkthrough ? <AppButton label={w.start} variant="outline" onPress={onWalkthrough} /> : null}
+        </View>
+      ) : null}
     </View>
   );
 }

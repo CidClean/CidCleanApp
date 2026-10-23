@@ -98,18 +98,28 @@ Deno.serve(async (req) => {
         p_user_agent: (req.headers.get('user-agent') ?? '').slice(0, 400),
       });
       if (error) return r(error.code === '42501' ? 401 : error.code === '22023' ? 400 : 500, { error: error.code === '22023' ? 'invalid' : 'server_error' });
-      // Al aceptar, el SOW se copia al Jobsite (D-209).
-      if (kind === 'accepted' && d.jobsite_id && d.sow_path) {
-        const f = await db.storage.from('quote-files').download(d.sow_path);
-        if (f.data) {
-          const destino = `${d.jobsite_id}/sow-${d.version}.pdf`;
-          const up = await db.storage.from('jobsite-docs').upload(destino, f.data, { contentType: 'application/pdf', upsert: true });
-          if (!up.error) {
-            await db.rpc('portal_attach_jobsite_sow', { p_jobsite: d.jobsite_id, p_path: destino, p_version: null });
+      // La decisión ya quedó guardada: lo que sigue (copiar el SOW y avisar) no puede hacer fallar la respuesta, o el
+      // cliente vería un error aunque aceptó (D-220 d).
+      try {
+        // Al aceptar, el SOW se copia al Jobsite (D-209).
+        if (kind === 'accepted' && d.jobsite_id && d.sow_path) {
+          const f = await db.storage.from('quote-files').download(d.sow_path);
+          if (f.data) {
+            const destino = `${d.jobsite_id}/sow-${d.version}.pdf`;
+            const up = await db.storage.from('jobsite-docs').upload(destino, f.data, { contentType: 'application/pdf', upsert: true });
+            if (!up.error) {
+              await db.rpc('portal_attach_jobsite_sow', { p_jobsite: d.jobsite_id, p_path: destino, p_version: null });
+            }
           }
         }
+      } catch (e) {
+        console.error('copiar SOW', e);
       }
-      if (d.sender_email) await enviarCorreo(d.sender_email, correoDecision(lang(d.sender_language), kind, d.company, d.site, d.version));
+      try {
+        if (d.sender_email) await enviarCorreo(d.sender_email, correoDecision(lang(d.sender_language), kind, d.company, d.site, d.version));
+      } catch (e) {
+        console.error('aviso a quien envió', e);
+      }
       return r(200, { kind });
     }
     default:
