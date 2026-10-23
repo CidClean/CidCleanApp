@@ -1,5 +1,5 @@
 import type { ScheduleVisit } from './scheduleApi';
-import { abbreviate, dayRows, employeeRows, firstHour, hourLabel, placeDay, scheduleHtml, shiftAnchor, viewDays } from './scheduleViews';
+import { abbreviate, copyWeek, dayRows, employeeRows, firstHour, hourLabel, placeDay, sameCells, scheduleHtml, shiftAnchor, toggleCell, viewDays } from './scheduleViews';
 
 const v = (id: string, day: string, h: number, minutes: number, staff: string[], jobsite = 'Break TAX Office'): ScheduleVisit => {
   const [y, m, d] = day.split('-').map(Number);
@@ -85,5 +85,21 @@ describe('vistas del Schedule (D-231)', () => {
     expect(html).toContain('&lt;b&gt;Rosemary&lt;/b&gt;');
     expect(html).toContain('1.5 h');
     expect(html.indexOf('>D<')).toBeLessThan(html.indexOf('>L<'));
+  });
+});
+
+describe('semana por semana (D-232)', () => {
+  const site = { id: 'j', days: [1, 3], locked: [1], cells: [[], ['a'], [], [], [], [], []], people: [{ id: 'a', name: 'Ana' }] };
+  it('copiar la semana anterior solo en días que se trabajan y que se pueden cambiar', () => {
+    const prev = { ...site, locked: [], cells: [['x'], ['b'], ['c'], ['b'], [], [], []], people: [{ id: 'b', name: 'Beto' }] };
+    const r = copyWeek([site], [prev], {});
+    expect(r.cells.j).toEqual([[], ['a'], [], ['b'], [], [], []]);
+    expect(r.people.j).toEqual([{ id: 'b', name: 'Beto' }]);
+  });
+  it('marcar y desmarcar', () => {
+    const c = toggleCell(site.cells, 3, 'a');
+    expect(c[3]).toEqual(['a']);
+    expect(toggleCell(c, 3, 'a')[3]).toEqual([]);
+    expect(sameCells(site.cells, toggleCell(c, 3, 'a'))).toBe(true);
   });
 });

@@ -188,3 +188,39 @@ td { border-bottom: 0.5px solid #EADFD2; padding: 6px 4px; vertical-align: top; 
 .muted { color: #6B5F52; }
 </style></head><body><div class="card"><div class="brand">CID CLEAN</div><h1>${esc(s.title)}</h1><div class="range">${esc(s.range)}</div>${body}</div></body></html>`;
 }
+
+// --- Semana por semana (D-232) ----------------------------------------------------------------------------------
+
+type PlanSite = { id: string; days: number[]; locked: number[]; cells: string[][]; people: { id: string; name: string }[] };
+
+/**
+ * "Copiar semana anterior" (D-200, orden 24): por jobsite, quién fue cada día de la semana anterior, solo en los días
+ * que el jobsite trabaja y que todavía se pueden cambiar. Devuelve las celdas nuevas y las personas que hay que sumar
+ * a la cuadrícula. No guarda: se guarda con "Guardar semana".
+ */
+export function copyWeek<T extends PlanSite>(
+  current: readonly T[],
+  previous: readonly PlanSite[],
+  drafts: Readonly<Record<string, string[][]>>,
+): { cells: Record<string, string[][]>; people: Record<string, { id: string; name: string }[]> } {
+  const cells: Record<string, string[][]> = {};
+  const people: Record<string, { id: string; name: string }[]> = {};
+  for (const site of current) {
+    const prev = previous.find((p) => p.id === site.id);
+    if (!prev) continue;
+    const base = drafts[site.id] ?? site.cells;
+    cells[site.id] = base.map((c, i) => (site.days.includes(i) && !site.locked.includes(i) ? [...(prev.cells[i] ?? [])] : c));
+    const ids = new Set(cells[site.id].flat());
+    people[site.id] = prev.people.filter((p) => ids.has(p.id) && !site.people.some((x) => x.id === p.id));
+  }
+  return { cells, people };
+}
+
+/** Marcar o desmarcar a una persona un día. */
+export function toggleCell(cells: readonly string[][], day: number, person: string): string[][] {
+  return cells.map((c, i) => (i !== day ? c : c.includes(person) ? c.filter((x) => x !== person) : [...c, person]));
+}
+
+export function sameCells(a: readonly string[][], b: readonly string[][]): boolean {
+  return a.every((c, i) => c.length === (b[i] ?? []).length && c.every((x) => (b[i] ?? []).includes(x)));
+}

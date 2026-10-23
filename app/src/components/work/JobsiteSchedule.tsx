@@ -23,8 +23,8 @@ import { formatTime } from '@/lib/week';
 import { sample, useTheme } from '@/theme';
 
 /**
- * Pestaña Horario del jobsite (D-055, D-214): hora y duración de las visitas (definen las visitas generadas 4 semanas
- * por adelantado) y la lista de las próximas visitas con su personal.
+ * Pestaña Horario del jobsite (D-055, D-232): hora y duración de las visitas (se usan al armar cada semana)
+ * y la lista de las próximas visitas con su personal.
  */
 export function JobsiteSchedule({ jobsite }: { jobsite: Jobsite }) {
   const { colors } = useTheme();

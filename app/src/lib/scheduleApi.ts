@@ -333,3 +333,63 @@ export const setJobsiteVisitTime = (jobsiteId: string, start: string, minutes: n
   rpc('set_jobsite_visit_time', { p_jobsite: jobsiteId, p_start: start, p_minutes: minutes }, () => null);
 export const setJobsiteLocation = (jobsiteId: string, lat: number | null, lng: number | null) =>
   rpc('set_jobsite_location', { p_jobsite: jobsiteId, p_lat: lat, p_lng: lng }, () => null);
+
+// --- Semana por semana (D-232) ----------------------------------------------------------------------------------
+
+export type WeekSite = {
+  id: string;
+  name: string;
+  client: string;
+  startTime: string | null;
+  minutes: number | null;
+  /** Días que el jobsite trabaja esa semana (0 = domingo). */
+  days: number[];
+  /** Días que ya no se cambian: pasados, con trabajo o aprobados. */
+  locked: number[];
+  /** Quién va cada día (7 listas, de domingo a sábado). */
+  cells: string[][];
+  people: { id: string; name: string; assigned: boolean }[];
+};
+export type WeekPlan = { sunday: string; staff: { id: string; name: string }[]; jobsites: WeekSite[] };
+
+type WeekSiteDb = {
+  id: string;
+  name: string;
+  client: string;
+  start_time: string | null;
+  minutes: number | null;
+  days: number[];
+  locked: number[];
+  cells: Record<string, string[]>;
+  people: { id: string; name: string; assigned: boolean }[];
+};
+
+export const fetchWeekPlan = (sunday: string) =>
+  rpc('week_plan', { p_sunday: sunday }, (d) => {
+    const r = d as { sunday: string; staff: { id: string; name: string }[]; jobsites: WeekSiteDb[] };
+    return {
+      sunday: r.sunday,
+      staff: r.staff ?? [],
+      jobsites: (r.jobsites ?? []).map<WeekSite>((j) => ({
+        id: j.id,
+        name: j.name,
+        client: j.client,
+        startTime: j.start_time,
+        minutes: j.minutes,
+        days: j.days ?? [],
+        locked: j.locked ?? [],
+        cells: Array.from({ length: 7 }, (_, i) => j.cells?.[String(i)] ?? []),
+        people: j.people ?? [],
+      })),
+    } as WeekPlan;
+  });
+
+export const saveWeek = (sunday: string, plan: { jobsite: string; cells: string[][] }[]) =>
+  rpc(
+    'save_week',
+    {
+      p_sunday: sunday,
+      p_plan: plan.map((p) => ({ jobsite: p.jobsite, days: Object.fromEntries(p.cells.map((c, i) => [String(i), c])) })),
+    },
+    warnings,
+  );

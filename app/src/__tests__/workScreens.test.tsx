@@ -63,9 +63,13 @@ jest.mock('@/lib/scheduleApi', () => ({
     ],
   })),
   setVisitStaff: (...a: unknown[]) => mockSetStaff(...a),
+  fetchWeekPlan: (...a: unknown[]) => mockWeekPlan(...a),
+  saveWeek: (...a: unknown[]) => mockSaveWeek(...a),
 }));
 const mockSchedule = jest.fn();
 const mockSetStaff = jest.fn();
+const mockWeekPlan = jest.fn();
+const mockSaveWeek = jest.fn();
 const mockShare = jest.fn();
 jest.mock('@/lib/sharePdf', () => ({ sharePdf: (...a: unknown[]) => mockShare(...a), shareAvailable: () => false }));
 
@@ -230,5 +234,53 @@ describe('Schedule simple (D-232)', () => {
     await fireEvent.press(await screen.findByLabelText('Diego'));
     await fireEvent.press(screen.getByText('Guardar'));
     await waitFor(() => expect(mockSetStaff).toHaveBeenCalledWith('v2', ['p2']));
+  });
+});
+
+describe('Schedule por semana (D-232)', () => {
+  const site = (cells: string[][]) => ({
+    id: 'j1',
+    name: 'Break TAX Office',
+    client: 'Break TAX',
+    startTime: '18:00:00',
+    minutes: 180,
+    days: [1, 3],
+    locked: [],
+    cells,
+    people: [{ id: 'p1', name: 'Rosemary', assigned: true }],
+  });
+  const empty = [[], [], [], [], [], [], []];
+
+  it('una semana sin guardar se ve vacía; marcar, copiar la anterior y guardar', async () => {
+    mockSchedule.mockResolvedValue({ ok: true, data: [] });
+    mockWeekPlan.mockImplementation(async (sunday: string) => ({
+      ok: true,
+      data: { sunday, staff: [{ id: 'p1', name: 'Rosemary' }, { id: 'p2', name: 'Diego' }], jobsites: [site(empty)] },
+    }));
+    mockSaveWeek.mockResolvedValue({ ok: true, data: [] });
+    await render(<ScheduleScreen />);
+    await fireEvent.press((await screen.findAllByText('Semana'))[0]);
+    expect(await screen.findByText('Esta semana todavía no está guardada: marca quién va y guarda.')).toBeTruthy();
+    expect(screen.getByText('6:00 PM · 3 h · toca para marcar quién va cada día')).toBeTruthy();
+    // Martes no se trabaja: no se puede marcar.
+    expect(screen.getByLabelText('Break TAX Office no tiene visita el Mar')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Rosemary Lun'));
+    await fireEvent.press(screen.getByText('Guardar semana'));
+    await waitFor(() => expect(mockSaveWeek).toHaveBeenCalled());
+    const [sunday, plan] = mockSaveWeek.mock.calls[0];
+    expect(new Date(`${sunday}T12:00:00`).getDay()).toBe(0);
+    expect(plan).toEqual([{ jobsite: 'j1', cells: [[], ['p1'], [], [], [], [], []] }]);
+
+    // Copiar semana anterior: trae a Diego el miércoles (y lo suma a la cuadrícula).
+    mockWeekPlan.mockImplementation(async (sun: string) => ({
+      ok: true,
+      data: {
+        sunday: sun,
+        staff: [{ id: 'p1', name: 'Rosemary' }, { id: 'p2', name: 'Diego' }],
+        jobsites: [{ ...site([[], [], [], ['p2'], [], [], []]), people: [{ id: 'p2', name: 'Diego', assigned: false }] }],
+      },
+    }));
+    await fireEvent.press(screen.getByText('Copiar semana anterior'));
+    expect(await screen.findByLabelText('Diego Mié')).toBeTruthy();
   });
 });

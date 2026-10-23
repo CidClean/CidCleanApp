@@ -90,9 +90,9 @@ export const workEs = {
   // Horario del jobsite
   jobsiteTime: 'Hora de las visitas', // D-200 (D-214)
   jobsiteDuration: 'Duración de cada visita', // D-200 (D-231: en horas)
-  jobsiteTimeNote: 'Las visitas se generan 4 semanas por adelantado según la frecuencia.', // D-200 (D-214)
-  jobsiteNoTime: 'Pon la hora y la duración para generar las visitas.', // D-200
-  jobsiteOther: 'Frecuencia Otra: las visitas se agregan a mano en Schedule y Work.', // D-200 (D-214)
+  jobsiteTimeNote: 'La hora y la duración se usan al armar cada semana en Schedule y Work → Semana.', // D-200 (D-232)
+  jobsiteNoTime: 'Pon la hora y la duración para poder armar sus semanas.', // D-200 (D-232)
+  jobsiteOther: 'Frecuencia Otra: en Schedule y Work → Semana se puede marcar cualquier día.', // D-200 (D-232)
 
   // Vistas del Schedule (D-231, orden 23)
   viewList: 'Lista', // APROBADO (orden 23, D-231)
@@ -217,9 +217,9 @@ export const workEn: WorkStrings = {
   homeOpen: (n: number) => (n === 1 ? '1 open shift' : `${n} open shifts`),
   jobsiteTime: 'Visit time',
   jobsiteDuration: 'Length of each visit',
-  jobsiteTimeNote: 'Visits are generated 4 weeks ahead from the frequency.',
-  jobsiteNoTime: 'Set the time and length to generate visits.',
-  jobsiteOther: 'Frequency Other: visits are added by hand in Schedule & Work.',
+  jobsiteTimeNote: 'The time and length are used when planning each week in Schedule & Work → Week.',
+  jobsiteNoTime: 'Set the time and length to plan its weeks.',
+  jobsiteOther: 'Frequency Other: any day can be marked in Schedule & Work → Week.',
 
   viewList: 'List',
   viewTable: 'Table',

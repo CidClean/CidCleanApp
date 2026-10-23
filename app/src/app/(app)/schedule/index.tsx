@@ -12,6 +12,7 @@ import { TopBar } from '@/components/TopBar';
 import { ScheduleCalendar } from '@/components/work/ScheduleCalendar';
 import { ScheduleSimple } from '@/components/work/ScheduleSimple';
 import { ScheduleTable } from '@/components/work/ScheduleTable';
+import { ScheduleWeek } from '@/components/work/ScheduleWeek';
 import { ModeSeg } from '@/components/work/SimpleParts';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useStrings } from '@/i18n/useStrings';
@@ -28,8 +29,7 @@ import { formatTime } from '@/lib/week';
 import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
 type ScheduleMode = 'simple' | 'week' | 'detail';
-// La Semana entra en la parte 2 de la orden 24.
-const MODES: ScheduleMode[] = ['simple', 'detail'];
+const MODES: ScheduleMode[] = ['simple', 'week', 'detail'];
 
 const WORK_KEYS = ['work_aprobar', 'work_editar', 'work_revisar_gps', 'work_registrar_por_otros'];
 
@@ -138,6 +138,7 @@ export default function ScheduleScreen() {
           </View>
         ) : null}
         {tab === 'schedule' && mode === 'simple' ? <ScheduleSimple onError={(e) => setFailed(e !== null)} /> : null}
+        {tab === 'schedule' && mode === 'week' ? <ScheduleWeek onError={(e) => setFailed(e !== null)} /> : null}
 
         {tab === 'schedule' && mode === 'detail' ? (
           <>
