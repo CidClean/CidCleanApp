@@ -66,6 +66,10 @@ export const en: Strings = {
     confirmBody: "You'll need to request a code to sign in again.",
     cancel: 'Cancel',
     languageError: "Couldn't change the language. Try again.", // profile screen: red notice under the language options (D-178)
+    theme: 'Theme',
+    themeSystem: 'System',
+    themeLight: 'Light',
+    themeDark: 'Dark',
   },
 
   common: {

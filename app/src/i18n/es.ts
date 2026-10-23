@@ -65,6 +65,10 @@ export const es = {
     confirmBody: 'Tendrás que pedir un código para volver a entrar.', // APROBADO (D-167)
     cancel: 'Cancelar', // APROBADO (D-167)
     languageError: 'No se pudo cambiar el idioma. Inténtalo otra vez.', // APROBADO (D-178)
+    theme: 'Tema', // APROBADO (D-222)
+    themeSystem: 'Sistema', // APROBADO (D-222)
+    themeLight: 'Claro', // APROBADO (D-222)
+    themeDark: 'Oscuro', // APROBADO (D-222)
   },
 
   common: {

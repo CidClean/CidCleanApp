@@ -49,7 +49,7 @@ function Routes() {
 
   return (
     <ThemeProvider value={navTheme}>
-      <StatusBar style="auto" />
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
         {/* Portal del cliente (D-209): sin sesión del staff, siempre disponible. */}
         <Stack.Screen name="q/index" />

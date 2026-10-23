@@ -1,5 +1,7 @@
 import { useColorScheme } from 'react-native';
 
+import { useThemePreference } from './lib/themePreference';
+
 /**
  * Valores vigentes de current/diseno-visual.md. Nada aquí se inventa.
  * Los valores marcados "muestra" salen de la muestra aprobada
@@ -90,8 +92,10 @@ export const sample = {
 } as const;
 
 export function useTheme() {
-  // D-028: automático, sigue el modo del teléfono.
-  const scheme = useColorScheme();
+  // D-028: automático, sigue el modo del teléfono; D-222 b: o el tema que la persona eligió en Mi perfil.
+  const system = useColorScheme();
+  const preference = useThemePreference();
+  const scheme = preference === 'system' ? (system === 'dark' ? 'dark' : 'light') : preference;
   const colors = scheme === 'dark' ? palettes.dark : palettes.light;
-  return { scheme: scheme === 'dark' ? 'dark' : 'light', colors, brand, status } as const;
+  return { scheme, colors, brand, status } as const;
 }
