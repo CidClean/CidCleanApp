@@ -13,9 +13,10 @@ const mockApprove = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: jest.fn(), push: mockPush, navigate: jest.fn(), back: mockBack, canGoBack: () => true }),
   useLocalSearchParams: () => ({ id: 'v1' }),
+  // Como expo-router: se vuelve a correr cuando cambia la función.
   useFocusEffect: (effect: () => void | (() => void)) => {
     const { useEffect } = require('react');
-    useEffect(effect, []);
+    useEffect(effect, [effect]);
   },
   Redirect: ({ href }: { href: string }) => {
     const { Text } = require('react-native');
@@ -54,8 +55,17 @@ jest.mock('@/lib/scheduleApi', () => ({
   reviewGps: jest.fn(),
   fetchSchedule: (...a: unknown[]) => mockSchedule(...a),
   fetchToApprove: jest.fn(async () => ({ ok: true, data: [] })),
+  fetchSchedulable: jest.fn(async () => ({
+    ok: true,
+    data: [
+      { id: 'p1', name: 'Rosemary', assigned: true, weekMinutes: 90 },
+      { id: 'p2', name: 'Diego', assigned: true, weekMinutes: 0 },
+    ],
+  })),
+  setVisitStaff: (...a: unknown[]) => mockSetStaff(...a),
 }));
 const mockSchedule = jest.fn();
+const mockSetStaff = jest.fn();
 const mockShare = jest.fn();
 jest.mock('@/lib/sharePdf', () => ({ sharePdf: (...a: unknown[]) => mockShare(...a), shareAvailable: () => false }));
 
@@ -166,6 +176,7 @@ describe('Schedule: Tabla y Calendario (D-231)', () => {
     mockSchedule.mockResolvedValue({ ok: true, data: visits });
     mockShare.mockResolvedValue('unavailable');
     await render(<ScheduleScreen />);
+    await fireEvent.press(await screen.findByText('Detallado'));
     expect(await screen.findByText('6:00 PM · 1.5 h · Break TAX')).toBeTruthy();
     await fireEvent.press(screen.getByText('Tabla'));
     expect(await screen.findByText('Rosemary')).toBeTruthy();
@@ -183,5 +194,41 @@ describe('Schedule: Tabla y Calendario (D-231)', () => {
     expect(await screen.findByText('Break…')).toBeTruthy();
     await fireEvent.press(screen.getByText('Break…'));
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/schedule/visit/[id]', params: { id: 'v1', day: key } });
+  });
+});
+
+describe('Schedule simple (D-232)', () => {
+  const today = new Date();
+  const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const base = {
+    jobsiteId: 'j1',
+    client: 'Break TAX',
+    day: key,
+    startsAt: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 18, 0),
+    minutes: 180,
+    generated: false,
+    approved: false,
+    worked: false,
+  };
+
+  it('muestra hoy con sus jobsites y personas, y cambia quién va ese día', async () => {
+    mockSchedule.mockResolvedValue({
+      ok: true,
+      data: [
+        { ...base, id: 'v1', jobsite: 'Break TAX Office', staff: [{ id: 'p1', name: 'Rosemary' }] },
+        { ...base, id: 'v2', jobsite: 'Naples Yacht Club', staff: [] },
+      ],
+    });
+    mockSetStaff.mockResolvedValue({ ok: true, data: [] });
+    await render(<ScheduleScreen />);
+    expect(await screen.findByText(/^Hoy · /)).toBeTruthy();
+    expect(screen.getByText('2 jobsites')).toBeTruthy();
+    expect(screen.getAllByText('6:00 PM · 3 h')).toHaveLength(2);
+    expect(screen.getByText('Rosemary')).toBeTruthy();
+    expect(screen.getByText('Falta asignar personal')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Cambiar quién va a Naples Yacht Club'));
+    await fireEvent.press(await screen.findByLabelText('Diego'));
+    await fireEvent.press(screen.getByText('Guardar'));
+    await waitFor(() => expect(mockSetStaff).toHaveBeenCalledWith('v2', ['p2']));
   });
 });

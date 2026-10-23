@@ -10,7 +10,9 @@ import { Icon } from '@/components/Icon';
 import { Segmented } from '@/components/Segmented';
 import { TopBar } from '@/components/TopBar';
 import { ScheduleCalendar } from '@/components/work/ScheduleCalendar';
+import { ScheduleSimple } from '@/components/work/ScheduleSimple';
 import { ScheduleTable } from '@/components/work/ScheduleTable';
+import { ModeSeg } from '@/components/work/SimpleParts';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useStrings } from '@/i18n/useStrings';
 import { useWorkStrings } from '@/i18n/useWorkStrings';
@@ -24,6 +26,10 @@ import { usePermissions } from '@/lib/session';
 import { can, canAny } from '@/lib/visibility';
 import { formatTime } from '@/lib/week';
 import { iconStrokeWidth, sample, useTheme } from '@/theme';
+
+type ScheduleMode = 'simple' | 'week' | 'detail';
+// La Semana entra en la parte 2 de la orden 24.
+const MODES: ScheduleMode[] = ['simple', 'detail'];
 
 const WORK_KEYS = ['work_aprobar', 'work_editar', 'work_revisar_gps', 'work_registrar_por_otros'];
 
@@ -45,6 +51,8 @@ export default function ScheduleScreen() {
   const seesSchedule = can(access, 'schedule_ver_editar');
   const seesWork = canAny(access, WORK_KEYS);
   const [tab, setTab] = useState<'schedule' | 'approve'>(params.tab === 'approve' || !seesSchedule ? 'approve' : 'schedule');
+  // D-232: Simple (el de todos los días), Semana (se arma y guarda cada semana) y Detallado (D-231).
+  const [mode, setMode] = useState<ScheduleMode>('simple');
   const [view, setView] = useState<ScheduleView>('list');
   const [tableMode, setTableMode] = useState<'employee' | 'day'>('employee');
   const [calMode, setCalMode] = useState<CalendarMode>('week');
@@ -59,7 +67,7 @@ export default function ScheduleScreen() {
   const to = days[days.length - 1];
   const load = useCallback(async () => {
     setFailed(false);
-    if (tab === 'schedule' && seesSchedule) {
+    if (tab === 'schedule' && seesSchedule && mode === 'detail') {
       const r = await fetchSchedule(from, to);
       if (r.ok) setVisits(r.data);
       else setFailed(true);
@@ -69,7 +77,7 @@ export default function ScheduleScreen() {
       if (r.ok) setToApprove(r.data);
       else setFailed(true);
     }
-  }, [tab, from, to, seesSchedule, seesWork]);
+  }, [tab, mode, from, to, seesSchedule, seesWork]);
 
   useFocusEffect(
     useCallback(() => {
@@ -78,6 +86,7 @@ export default function ScheduleScreen() {
   );
 
   if (!seesSchedule && !seesWork) return <Redirect href="/" />;
+  const modeLabel = (m: ScheduleMode) => (m === 'simple' ? t.modeSimple : m === 'week' ? t.modeWeek : t.modeDetail);
   const dayTitle = (key: string) => formatShortDate(dateFromKey(key), s);
   const shift = (dir: 1 | -1) => setAnchor((a) => shiftAnchor(view, calMode, a, dir));
   const open = (v: ScheduleVisit) => router.push({ pathname: '/schedule/visit/[id]', params: { id: v.id, day: v.day } });
@@ -124,6 +133,13 @@ export default function ScheduleScreen() {
         {failed ? <AppAlert tone="error" text={t.errorLoad} /> : null}
 
         {tab === 'schedule' ? (
+          <View style={{ marginBottom: 12 }}>
+            <ModeSeg options={MODES.map((m) => ({ value: m, label: modeLabel(m) }))} value={mode} onChange={setMode} />
+          </View>
+        ) : null}
+        {tab === 'schedule' && mode === 'simple' ? <ScheduleSimple onError={(e) => setFailed(e !== null)} /> : null}
+
+        {tab === 'schedule' && mode === 'detail' ? (
           <>
             <View style={{ marginBottom: 10 }}>
               <Segmented

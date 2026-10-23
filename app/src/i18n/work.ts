@@ -113,6 +113,30 @@ export const workEs = {
   previous: 'Anterior', // D-200: flecha (lector de pantalla)
   next: 'Siguiente', // D-200
   more: (n: number) => `+${n}`, // D-200: más visitas en un día del mes
+
+  // Modos del Schedule (D-232, surveys/schedule-simple-aprobado.html)
+  modeSimple: 'Simple', // APROBADO (D-232)
+  modeWeek: 'Semana', // APROBADO (D-232, orden 24: reemplaza "Equipos fijos")
+  modeDetail: 'Detallado', // APROBADO (D-232)
+  rangeToday: 'Hoy', // APROBADO (muestra D-232)
+  range3: '3 días', // APROBADO (muestra D-232)
+  rangeWeek: 'Semana', // APROBADO (muestra D-232)
+  todayPrefix: 'Hoy · ', // APROBADO (muestra D-232)
+  jobsitesCount: (n: number) => (n === 1 ? '1 jobsite' : `${n} jobsites`), // APROBADO (muestra D-232)
+  noVisitsDay: 'Sin visitas', // APROBADO (muestra D-232)
+  missingStaff: 'Falta asignar personal', // APROBADO (D-232)
+  changeWho: (site: string) => `Cambiar quién va a ${site}`, // APROBADO (muestra D-232, lector de pantalla)
+  cancel: 'Cancelar', // APROBADO (muestra D-232)
+  weekHint: 'toca para marcar quién va cada día', // APROBADO (muestra D-232)
+  saveWeek: 'Guardar semana', // D-200
+  copyPrevious: 'Copiar semana anterior', // D-200 (orden 24)
+  weekSaved: 'Semana guardada.', // D-200
+  weekEmpty: 'Esta semana todavía no está guardada: marca quién va y guarda.', // D-200 (D-232: sin guardar se ve vacía)
+  noTimeSite: 'Pon la hora y la duración en la pestaña Horario del jobsite para armar su semana.', // D-200
+  noPeopleSite: 'Nadie asignado a este jobsite. Agrega a alguien para armar su semana.', // D-200
+  noDay: (site: string, day: string) => `${site} no tiene visita el ${day}`, // APROBADO (muestra D-232, lector de pantalla)
+  weekNote: 'Lo que guardes crea las visitas de esa semana. Los cambios de un día puntual se hacen tocando la tarjeta en Simple.', // D-200 (muestra D-232, sin generación 4 semanas)
+  unsaved: 'Hay cambios sin guardar.', // D-200
 };
 
 export type WorkStrings = typeof workEs;
@@ -215,6 +239,29 @@ export const workEn: WorkStrings = {
   previous: 'Previous',
   next: 'Next',
   more: (n: number) => `+${n}`,
+
+  modeSimple: 'Simple',
+  modeWeek: 'Week',
+  modeDetail: 'Detailed',
+  rangeToday: 'Today',
+  range3: '3 days',
+  rangeWeek: 'Week',
+  todayPrefix: 'Today · ',
+  jobsitesCount: (n: number) => (n === 1 ? '1 jobsite' : `${n} jobsites`),
+  noVisitsDay: 'No visits',
+  missingStaff: 'Staff still needed',
+  changeWho: (site: string) => `Change who goes to ${site}`,
+  cancel: 'Cancel',
+  weekHint: 'tap to mark who goes each day',
+  saveWeek: 'Save week',
+  copyPrevious: 'Copy previous week',
+  weekSaved: 'Week saved.',
+  weekEmpty: "This week isn't saved yet: mark who goes and save.",
+  noTimeSite: "Set the visit time and length in the jobsite's Schedule tab to plan its week.",
+  noPeopleSite: 'Nobody is assigned to this jobsite. Add someone to plan its week.',
+  noDay: (site: string, day: string) => `${site} has no visit on ${day}`,
+  weekNote: 'Saving creates that week\'s visits. One-off changes for a day are made by tapping the card in Simple.',
+  unsaved: 'There are unsaved changes.',
 };
 
 export function getWorkStrings(locale: Locale): WorkStrings {
