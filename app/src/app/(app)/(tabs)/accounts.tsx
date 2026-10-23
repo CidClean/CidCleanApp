@@ -2,6 +2,7 @@ import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { CardBlock } from '@/components/bento/Card';
 import { AppAlert } from '@/components/AppAlert';
 import { AppText } from '@/components/AppText';
 import { Chip } from '@/components/Chip';
@@ -95,6 +96,8 @@ export default function AccountsScreen() {
                 {c.list.noJobsites}
               </AppText>
             ) : null}
+            {g.jobsites.length > 0 ? (
+            <CardBlock style={{ marginBottom: 0 }}>
             {g.jobsites.map((j, i) => {
               const rate = rates.get(j.id);
               const atRisk = j.status === 'active' && risk.has(j.id);
@@ -109,6 +112,8 @@ export default function AccountsScreen() {
                 />
               );
             })}
+            </CardBlock>
+            ) : null}
           </View>
         ))}
       </ScrollView>

@@ -2,6 +2,7 @@ import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { CardBlock } from '@/components/bento/Card';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
@@ -301,6 +302,7 @@ function Summary({
           }}
         />
       ) : null}
+      <CardBlock>
       <DataRow label={c.jobsite.address} value={v(jobsite.address)} />
       <DataRow
         label={c.jobsite.plusCode}
@@ -316,6 +318,7 @@ function Summary({
         value={jobsite.walkthroughVersion ? c.jobsite.walkthroughVersion(jobsite.walkthroughVersion) : jobsite.clientLegacy ? c.legacy : none}
         last
       />
+      </CardBlock>
       {!jobsite.clientLegacy && canSeeRate(access) ? (
         <AppText size={sample.noteSize} color={colors.secondary} style={{ marginTop: 6 }}>
           {c.jobsite.rateQuoteNote}
@@ -427,6 +430,7 @@ function Documents({ jobsite, c, day }: { jobsite: Jobsite; c: ClientsStrings; d
 
   return (
     <View>
+      <CardBlock>
       <ListRow
         title={c.docs.sow}
         detail={sow ? detail(sow) : c.docs.missing}
@@ -446,6 +450,7 @@ function Documents({ jobsite, c, day }: { jobsite: Jobsite; c: ClientsStrings; d
       {others.map((d, i) => (
         <ListRow key={d.id} title={label(d)} detail={detail(d)} chevron last={i === others.length - 1} onPress={() => openDoc(d)} />
       ))}
+      </CardBlock>
       {kinds.length > 0 && jobsite.status !== 'terminated' ? (
         <View style={{ marginTop: 12 }}>
           <AppButton
@@ -574,7 +579,9 @@ function Staff({ jobsite, c, day, onChanged }: { jobsite: Jobsite; c: ClientsStr
           {c.staff.empty}
         </AppText>
       ) : null}
-      {rows?.map((r, i) => {
+      {rows && rows.length > 0 ? (
+      <CardBlock>
+      {rows.map((r, i) => {
         const dates = [c.staff.since(day(r.startDate)), r.endDate ? c.staff.until(day(r.endDate)) : null].filter(Boolean).join(' · ');
         const detail = seesPay ? `${paySummary(pay.get(r.assignmentId) ?? null, sumStrings)} · ${dates}` : dates;
         const openPay = canSetPay(access) && editable;
@@ -613,6 +620,8 @@ function Staff({ jobsite, c, day, onChanged }: { jobsite: Jobsite; c: ClientsStr
           />
         );
       })}
+      </CardBlock>
+      ) : null}
       {canAssign(access) && editable ? (
         <View style={{ marginTop: 12 }}>
           <AppButton

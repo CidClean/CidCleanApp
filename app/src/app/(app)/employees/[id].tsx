@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CardBlock } from '@/components/bento/Card';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
@@ -675,6 +676,7 @@ function DataSection({
   const state = accessState(employee);
   return (
     <View>
+      <CardBlock>
       <DataRow label={strings.newEmployee.name} value={employee.fullName} />
       <DataRow label={strings.employee.phone} value={employee.phone ? formatPhone(employee.phone) : '—'} />
       <DataRow label={strings.employee.email} value={employee.email ?? '—'} />
@@ -692,6 +694,7 @@ function DataSection({
         last
         right={state.kind === 'pending' ? <Chip label={strings.employee.pendingChip} tone="warning" /> : undefined}
       />
+      </CardBlock>
       {canResend ? (
         <View style={{ marginTop: 8 }}>
           {resend === 'error' ? <AppAlert tone="error" text={strings.employee.errorResend} /> : null}

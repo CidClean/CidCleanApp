@@ -1,8 +1,8 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { View } from 'react-native';
 
 import { ListRow } from '../ListRow';
+import { CardBlock } from '@/components/bento/Card';
 import { useWalkthroughStrings } from '@/i18n/useWalkthroughStrings';
 import { siteLabel, type LeadSite } from '@/lib/leadRules';
 import type { WalkthroughDoc } from '@/lib/walkthroughRules';
@@ -55,8 +55,9 @@ export function LeadWalkthroughs({
     }, [leadId, canOpen]),
   );
 
+  if (sites.length === 0) return null;
   return (
-    <View>
+    <CardBlock style={{ marginBottom: 0 }}>
       {sites.map((site, i) => {
         const state = walkthroughRowState(site, canOpen ? local.find((d) => d.siteId === site.id) : undefined);
         const opens = state !== null && canOpen;
@@ -76,6 +77,6 @@ export function LeadWalkthroughs({
           />
         );
       })}
-    </View>
+    </CardBlock>
   );
 }

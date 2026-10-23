@@ -2,6 +2,7 @@ import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-
 import { useCallback, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { CardBlock } from '@/components/bento/Card';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppText } from '@/components/AppText';
@@ -343,11 +344,11 @@ function DataSection({ lead, s, locale }: { lead: Lead; s: SalesStrings; locale:
     if (lead.lostNote) rows.push({ label: s.detail.lostNote, value: lead.lostNote });
   }
   return (
-    <View>
+    <CardBlock>
       {rows.map((r, i) => (
         <ListRow key={r.label} title={r.label} detail={r.value} last={i === rows.length - 1} />
       ))}
-    </View>
+    </CardBlock>
   );
 }
 
@@ -380,6 +381,8 @@ function SitesSection({
           {canEdit ? s.sites.needSite : s.sites.empty}
         </AppText>
       ) : null}
+      {hasSites ? (
+      <CardBlock style={{ marginBottom: 0 }}>
       {lead.sites.map((site, i) => (
         <ListRow
           key={site.id}
@@ -401,6 +404,8 @@ function SitesSection({
           onPress={canEdit ? () => onSchedule(site.id) : undefined}
         />
       ))}
+      </CardBlock>
+      ) : null}
       {canEdit ? (
         <View style={{ marginTop: hasSites ? 12 : 0 }}>
           <AppButton label={s.sites.add} variant="outline" icon="plus" onPress={onAdd} />

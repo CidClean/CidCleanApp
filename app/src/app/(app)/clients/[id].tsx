@@ -2,6 +2,7 @@ import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-
 import { useCallback, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
+import { CardBlock } from '@/components/bento/Card';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppText } from '@/components/AppText';
@@ -113,10 +114,12 @@ export default function ClientScreen() {
               </>
             ) : (
               <>
+                <CardBlock>
                 <ListRow title={c.client.phone} detail={client.phone ? formatPhone(client.phone) : c.client.none} />
                 <ListRow title={c.client.email} detail={value(client.email)} />
                 <ListRow title={c.client.address} detail={value(client.address)} />
                 <ListRow title={c.client.notes} detail={value(client.notes)} last />
+                </CardBlock>
                 <AppText size={sample.labelSize} color={colors.secondary} style={styles.section}>
                   {c.client.jobsites}
                 </AppText>
@@ -125,6 +128,8 @@ export default function ClientScreen() {
                     {c.list.noJobsites}
                   </AppText>
                 ) : null}
+                {jobsites.length > 0 ? (
+                <CardBlock>
                 {jobsites.map((j, i) => (
                   <ListRow
                     key={j.id}
@@ -135,6 +140,8 @@ export default function ClientScreen() {
                     onPress={() => router.push({ pathname: '/jobsites/[id]', params: { id: j.id } })}
                   />
                 ))}
+                </CardBlock>
+                ) : null}
                 {client.legacy && canCreateLegacy(access) ? (
                   <View style={{ marginTop: 12 }}>
                     <AppButton

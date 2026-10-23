@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { AppText } from '../AppText';
 import type { PortalStrings } from '@/i18n/quotes';
 import { discountAmount, frequencyText, money, shortDate, type Frequency } from '@/lib/quoteRules';
-import { sample, useTheme } from '@/theme';
+import { radius, sample, useTheme } from '@/theme';
 
 export type QuoteViewData = {
   company: string;
@@ -56,8 +56,9 @@ export function QuoteView({ data, t, language }: { data: QuoteViewData; t: Porta
         ))}
       </View>
     );
+  // D-223: el quote va sobre una tarjeta blanca de 24px (app y portal).
   return (
-    <View>
+    <View style={{ backgroundColor: colors.card, borderRadius: radius.card, padding: 16 }}>
       <AppText weight="medium" size={sample.headingSize}>
         {data.company}
       </AppText>

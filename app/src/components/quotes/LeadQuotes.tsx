@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { AppText } from '../AppText';
 import { Chip } from '../Chip';
 import { ListRow } from '../ListRow';
+import { CardBlock } from '../bento/Card';
 import { useQuoteStrings } from '@/i18n/useQuoteStrings';
 import type { LeadSite } from '@/lib/leadRules';
 import { statusTone } from '@/lib/quoteRules';
@@ -44,6 +45,7 @@ export function LeadQuotes({ leadId, sites }: { leadId: string; sites: readonly 
       <AppText size={sample.labelSize} color={colors.secondary} style={{ marginBottom: 2 }}>
         {q.sectionTitle}
       </AppText>
+      <CardBlock>
       {sites.map((site, i) => {
         const r = rows.find((x) => x.siteId === site.id);
         const open = r?.walkthroughClosed || r?.status;
@@ -59,6 +61,7 @@ export function LeadQuotes({ leadId, sites }: { leadId: string; sites: readonly 
           />
         );
       })}
+      </CardBlock>
     </View>
   );
 }
