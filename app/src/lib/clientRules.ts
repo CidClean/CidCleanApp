@@ -4,6 +4,7 @@
  * D-059 a D-061, D-082, D-096, D-097, D-100, D-125, D-194, D-210, D-211.
  */
 import { dayKey, parseUsDate } from './leadRules';
+import { formatPhone, isValidPhone, normalizePhone } from './phone';
 import { can, type Access } from './visibility';
 
 // --- Tipos ------------------------------------------------------------------------------------------
@@ -317,6 +318,8 @@ export type JobsiteErrors = {
   plusCode?: true;
   contactEmail?: true;
   emergencyEmail?: true;
+  contactPhone?: true;
+  emergencyPhone?: true;
   estHours?: true;
   visitsPerMonth?: true;
   startDate?: true;
@@ -332,6 +335,9 @@ export function validateJobsite(f: JobsiteForm, opts: { withRate: boolean; plusC
   if (f.plusCode.trim() !== '' && !opts.plusCodeOk(f.plusCode)) e.plusCode = true;
   if (f.contactEmail.trim() !== '' && !EMAIL.test(f.contactEmail.trim())) e.contactEmail = true;
   if (f.emergencyEmail.trim() !== '' && !EMAIL.test(f.emergencyEmail.trim())) e.emergencyEmail = true;
+  // D-216: teléfonos de EE. UU. de 10 dígitos.
+  if (!isValidPhone(f.contactPhone)) e.contactPhone = true;
+  if (!isValidPhone(f.emergencyPhone)) e.emergencyPhone = true;
   if (f.estHours.trim() !== '' && parseHours(f.estHours) === null) e.estHours = true;
   if (f.frequency.kind === 'other' && f.visitsPerMonth.trim() !== '') {
     const v = Number(f.visitsPerMonth.replace(',', '.'));
@@ -350,10 +356,10 @@ export function jobsiteData(f: JobsiteForm) {
     address: f.address.trim(),
     plus_code: f.plusCode.trim(),
     contact_name: f.contactName,
-    contact_phone: f.contactPhone,
+    contact_phone: normalizePhone(f.contactPhone),
     contact_email: f.contactEmail,
     emergency_name: f.emergencyName,
-    emergency_phone: f.emergencyPhone,
+    emergency_phone: normalizePhone(f.emergencyPhone),
     emergency_relation: f.emergencyRelation,
     emergency_email: f.emergencyEmail,
     frequency: f.frequency.kind === 'weekly' ? { kind: 'weekly', days: f.frequency.days } : f.frequency.kind === 'daily'
@@ -404,10 +410,10 @@ export function jobsiteFormFrom(j: Jobsite, us: (key: string | null) => string):
     address: j.address,
     plusCode: j.plusCode ?? '',
     contactName: j.contactName ?? '',
-    contactPhone: j.contactPhone ?? '',
+    contactPhone: formatPhone(j.contactPhone),
     contactEmail: j.contactEmail ?? '',
     emergencyName: j.emergencyName ?? '',
-    emergencyPhone: j.emergencyPhone ?? '',
+    emergencyPhone: formatPhone(j.emergencyPhone),
     emergencyRelation: j.emergencyRelation ?? '',
     emergencyEmail: j.emergencyEmail ?? '',
     frequency: j.frequency ?? { kind: 'weekly', days: [] },

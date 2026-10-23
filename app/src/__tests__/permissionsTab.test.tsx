@@ -41,6 +41,8 @@ const mockFetchEmployee = jest.fn();
 const mockFetchPermissions = jest.fn();
 const mockFetchTemplate = jest.fn();
 const mockSavePermissions = jest.fn();
+// Pagos del empleado (hito 5) se prueba en clientScreens.test.tsx.
+jest.mock('@/components/clients/EmployeePay', () => ({ EmployeePay: () => null }));
 jest.mock('@/lib/employeesApi', () => ({
   fetchEmployee: (...a: unknown[]) => mockFetchEmployee(...a),
   fetchEmployeePermissions: (...a: unknown[]) => mockFetchPermissions(...a),

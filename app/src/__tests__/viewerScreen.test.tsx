@@ -23,6 +23,9 @@ jest.mock('@/lib/quotesApi', () => ({ fetchQuoteFileUrl: (...a: unknown[]) => mo
 const mockFetchWalkthroughPdf = jest.fn();
 jest.mock('@/lib/walkthroughApi', () => ({ fetchWalkthroughPdfUrl: (...a: unknown[]) => mockFetchWalkthroughPdf(...a) }));
 
+const mockFetchJobsiteDoc = jest.fn();
+jest.mock('@/lib/clientsApi', () => ({ fetchJobsiteDocumentUrl: (...a: unknown[]) => mockFetchJobsiteDoc(...a) }));
+
 const mockOpenBrowser = jest.fn();
 jest.mock('expo-web-browser', () => ({ openBrowserAsync: (...a: unknown[]) => mockOpenBrowser(...a) }));
 

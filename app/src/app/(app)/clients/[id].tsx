@@ -6,7 +6,8 @@ import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppText } from '@/components/AppText';
 import { Chip } from '@/components/Chip';
-import { ClientFields, type ClientForm } from '@/components/clients/ClientFields';
+import { ClientFields, clientPayload, clientPhoneOk, type ClientForm } from '@/components/clients/ClientFields';
+import { formatPhone } from '@/lib/phone';
 import { ListRow } from '@/components/ListRow';
 import { TopBar } from '@/components/TopBar';
 import { useClientsStrings } from '@/i18n/useClientsStrings';
@@ -35,6 +36,7 @@ export default function ClientScreen() {
   const [failed, setFailed] = useState(false);
   const [form, setForm] = useState<ClientForm | null>(null);
   const [nameError, setNameError] = useState(false);
+  const [phoneError, setPhoneError] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -60,11 +62,13 @@ export default function ClientScreen() {
   async function save() {
     if (!form || saving) return;
     const missing = form.name.trim() === '';
+    const badPhone = !clientPhoneOk(form);
     setNameError(missing);
-    if (missing) return;
+    setPhoneError(badPhone);
+    if (missing || badPhone) return;
     setSaving(true);
     setSaveError(false);
-    const result = await updateClient(id, form);
+    const result = await updateClient(id, clientPayload(form));
     setSaving(false);
     if (!result.ok) {
       setSaveError(true);
@@ -82,7 +86,7 @@ export default function ClientScreen() {
             label: strings.common.edit,
             accessibilityLabel: strings.common.edit,
             onPress: () =>
-              setForm({ name: client.name, phone: client.phone ?? '', email: client.email ?? '', address: client.address ?? '', notes: client.notes ?? '' }),
+              setForm({ name: client.name, phone: formatPhone(client.phone), email: client.email ?? '', address: client.address ?? '', notes: client.notes ?? '' }),
           }
       : undefined;
 
@@ -103,13 +107,13 @@ export default function ClientScreen() {
             </View>
             {form ? (
               <>
-                <ClientFields form={form} onChange={setForm} c={c} nameError={nameError} />
+                <ClientFields form={form} onChange={setForm} c={c} nameError={nameError} phoneError={phoneError} />
                 {saveError ? <AppAlert tone="error" text={c.client.errorSave} /> : null}
                 <AppButton label={strings.common.save} onPress={() => void save()} disabled={saving} />
               </>
             ) : (
               <>
-                <ListRow title={c.client.phone} detail={value(client.phone)} />
+                <ListRow title={c.client.phone} detail={client.phone ? formatPhone(client.phone) : c.client.none} />
                 <ListRow title={c.client.email} detail={value(client.email)} />
                 <ListRow title={c.client.address} detail={value(client.address)} />
                 <ListRow title={c.client.notes} detail={value(client.notes)} last />

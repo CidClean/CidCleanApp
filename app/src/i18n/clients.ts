@@ -176,6 +176,8 @@ export const clientsEs = {
     removeBody: (date: string) => `Deja de estar asignado después del ${date}.`, // D-200
     confirmRemove: 'Quitar', // D-200
     errorEnd: 'La fecha de fin no puede ser anterior a hoy.', // D-200
+    noEmployees: 'No hay empleados activos para asignar.', // D-200
+    noJobsites: 'No hay jobsites activos.', // D-200
   },
 };
 
@@ -345,6 +347,8 @@ export const clientsEn: ClientsStrings = {
     removeBody: (date: string) => `No longer assigned after ${date}.`,
     confirmRemove: 'Remove',
     errorEnd: "The end date can't be before today.",
+    noEmployees: 'No active employees to assign.',
+    noJobsites: 'No active jobsites.',
   },
 };
 

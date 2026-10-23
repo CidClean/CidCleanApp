@@ -7,6 +7,7 @@ import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
 import { PhoneField } from '@/components/PhoneField';
+import { EmployeePay } from '@/components/clients/EmployeePay';
 import { formatPhone } from '@/lib/phone';
 import { AppText } from '@/components/AppText';
 import { Avatar } from '@/components/Avatar';
@@ -14,7 +15,6 @@ import { Chip } from '@/components/Chip';
 import { DataRow } from '@/components/DataRow';
 import { Icon } from '@/components/Icon';
 import { ListRow } from '@/components/ListRow';
-import { PendingBody } from '@/components/PendingScreen';
 import { PermissionsTab } from '@/components/PermissionsTab';
 import { Segmented } from '@/components/Segmented';
 import { SelectField } from '@/components/SelectField';
@@ -422,8 +422,8 @@ export default function EmployeeProfileScreen() {
               </View>
             ) : null}
 
-            {/* Pagos (D-194): sin empleados_ver_pagos, el aviso y ninguna cifra. Con el permiso sigue "Pendiente": se construye en el hito 5. */}
-            {tab === 'pay' && canSeePay(access) ? <View style={{ height: 160 }}><PendingBody /></View> : null}
+            {/* Pagos (D-194, D-210): sin empleados_ver_pagos, el aviso y ninguna cifra; con el permiso, su pago en cada jobsite. */}
+            {tab === 'pay' && canSeePay(access) && employee ? <EmployeePay profileId={employee.id} workerType={employee.workerType} /> : null}
             {tab === 'pay' && !canSeePay(access) ? (
               <View style={styles.noPay}>
                 <Icon name="lock" size={26} strokeWidth={iconStrokeWidth} color={colors.secondary} />

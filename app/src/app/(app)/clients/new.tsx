@@ -4,7 +4,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
-import { ClientFields, emptyClientForm, type ClientForm } from '@/components/clients/ClientFields';
+import { ClientFields, clientPayload, clientPhoneOk, emptyClientForm, type ClientForm } from '@/components/clients/ClientFields';
 import { TopBar } from '@/components/TopBar';
 import { useClientsStrings } from '@/i18n/useClientsStrings';
 import { useStrings } from '@/i18n/useStrings';
@@ -24,6 +24,7 @@ export default function NewClientScreen() {
   const { access } = usePermissions();
   const [form, setForm] = useState<ClientForm>(emptyClientForm);
   const [nameError, setNameError] = useState(false);
+  const [phoneError, setPhoneError] = useState(false);
   const [failed, setFailed] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -32,11 +33,13 @@ export default function NewClientScreen() {
   async function submit() {
     if (saving) return;
     const missing = form.name.trim() === '';
+    const badPhone = !clientPhoneOk(form);
     setNameError(missing);
+    setPhoneError(badPhone);
     setFailed(false);
-    if (missing) return;
+    if (missing || badPhone) return;
     setSaving(true);
-    const result = await createLegacyClient(form);
+    const result = await createLegacyClient(clientPayload(form));
     setSaving(false);
     if (!result.ok) {
       setFailed(true);
@@ -49,7 +52,7 @@ export default function NewClientScreen() {
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <TopBar title={c.list.newClient} onBack={goBack} backLabel={strings.common.back} />
       <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
-        <ClientFields form={form} onChange={setForm} c={c} nameError={nameError} />
+        <ClientFields form={form} onChange={setForm} c={c} nameError={nameError} phoneError={phoneError} />
         <View style={{ height: 4 }} />
         {failed ? <AppAlert tone="error" text={c.client.errorSave} /> : null}
         <AppButton label={c.client.create} onPress={() => void submit()} disabled={saving} />
