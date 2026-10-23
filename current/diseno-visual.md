@@ -142,6 +142,8 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 
 Copia visual de lo aprobado, la más reciente primero:
 
+- Estilo C (2026-10-23, D-223): [`../surveys/estilo-c-aprobado/`](../surveys/estilo-c-aprobado/). Inicio del admin y del staff en el estilo Combinación que se aplica a toda la app. Manda sobre el aspecto de las muestras anteriores (fondos, esquinas, barra inferior). Sus datos son de ejemplo.
+
 - Ronda 17: [`../surveys/ronda-17-historial-y-transferir-aprobado.html`](../surveys/ronda-17-historial-y-transferir-aprobado.html). Muestra el Historial de cambios y el estado del Super Admin anterior al transferir. Sus datos son de ejemplo.
 
 - Ronda 16: [`../surveys/ronda-16-permisos-y-pendientes-aprobado.html`](../surveys/ronda-16-permisos-y-pendientes-aprobado.html). Muestra el guardado de permisos, la confirmación de plantilla, el rol bajo el nombre, la lista sin los permisos que quien edita no tiene, el Super Admin, el permiso nuevo de documentos y las pestañas. Sus datos son de ejemplo.
