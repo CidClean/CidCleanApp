@@ -1,41 +1,53 @@
-import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
 import { AppText } from '@/components/AppText';
+import { AreaPhotos } from '@/components/walkthrough/AreaPhotos';
 import { Segmented } from '@/components/Segmented';
 import { SelectField } from '@/components/SelectField';
 import { TopBar } from '@/components/TopBar';
 import { SyncStatus } from '@/components/walkthrough/SyncStatus';
 import { useStrings } from '@/i18n/useStrings';
 import { useWalkthroughStrings } from '@/i18n/useWalkthroughStrings';
+import { pickPhotos, takePhoto, type PickedFile } from '@/lib/documents';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions } from '@/lib/session';
 import { useWalkthrough } from '@/lib/useWalkthrough';
+import { keepPhotoOnDevice } from '@/lib/walkthroughApi';
 import {
+  AREA_SIZES,
   AREA_TYPES,
   CONDITIONS,
   canDoWalkthroughs,
   isEditable,
   isUntouched,
   newArea,
+  newId,
+  photoPath,
+  removePhoto,
   syncBadge,
   upsertArea,
   withAreaType,
   type Area,
+  type Photo,
+  type WalkthroughDoc,
 } from '@/lib/walkthroughRules';
 import { sample, useTheme } from '@/theme';
 
 /**
- * Área del walkthrough (D-037, D-074; muestras rondas 3 y 8): Tipo, Nombre ("Type ##" por defecto), Tamaño, condición
- * Buena / Regular / Mala, Pedido especial y Notas; botones Foto y Guardar y otra. Se guarda en el teléfono con cada
- * cambio; un área nueva sin tocar no se guarda (D-200).
+ * Área del walkthrough (D-037, D-074; muestras rondas 3 y 8; D-217): Tipo, Nombre ("Type ##" por defecto), Tamaño
+ * Pequeña / Mediana / Grande, condición Buena / Regular / Mala, Pedido especial, Notas, el apartado de Fotos (cámara
+ * al instante y galería) y Guardar y otra. Se guarda en el teléfono con cada cambio; un área nueva sin tocar no se
+ * guarda (D-200).
+ *
+ * Las fotos se leen siempre del documento guardado y cada cambio de un campo conserva las fotos guardadas: así una foto
+ * nunca se pierde por un cambio hecho con datos viejos de la pantalla (D-217, fallo "las fotos no quedan guardadas").
  */
 export default function AreaScreen() {
   const params = useLocalSearchParams<{ id: string; area?: string }>();
-  const router = useRouter();
   const goBack = useGoBack();
   const { colors } = useTheme();
   const strings = useStrings();
@@ -43,6 +55,7 @@ export default function AreaScreen() {
   const { access } = usePermissions();
   const { doc, update } = useWalkthrough(params.id);
   const [area, setArea] = useState<Area | null>(null);
+  const [photoError, setPhotoError] = useState<'camera' | 'gallery' | 'photo' | null>(null);
   const isNew = useRef(!params.area);
 
   const typeLabel = (t: Area['type']) => w.types[t];
@@ -58,25 +71,89 @@ export default function AreaScreen() {
   // Cerrado se ve en el Resumen; para cambiar un área primero se toca Editar (D-212).
   if (doc && !isEditable(doc)) return <Redirect href={{ pathname: '/walkthrough/[id]', params: { id: params.id } }} />;
 
-  function change(next: Area) {
-    setArea(next);
-    if (isNew.current && isUntouched(next)) return;
-    void update((d) => ({ ...d, data: { ...d.data, areas: upsertArea(d.data.areas, next) } }));
+  const saved = area && doc ? doc.data.areas.find((a) => a.id === area.id) : undefined;
+  const photos: Photo[] = saved?.photos ?? [];
+
+  /** El área con los campos de la pantalla y las fotos que ya están guardadas en el documento. */
+  function merged(d: WalkthroughDoc, fields: Area): Area {
+    const stored = d.data.areas.find((a) => a.id === fields.id);
+    return { ...fields, photos: stored?.photos ?? [] };
   }
 
-  async function openPhotos() {
+  function change(next: Area) {
+    setArea(next);
+    if (isNew.current && isUntouched({ ...next, photos })) return;
+    void update((d) => ({ ...d, data: { ...d.data, areas: upsertArea(d.data.areas, merged(d, next)) } }));
+  }
+
+  async function addFiles(files: PickedFile[]) {
     if (!area) return;
+    const added: Photo[] = files.map((f) => {
+      const id = newId();
+      const path = photoPath(params.id, id, f.mimeType);
+      const uri = keepPhotoOnDevice(f.uri, params.id, path.split('/')[1]);
+      return { id, path, uri, note: '', uploaded: false };
+    });
     // La foto cuelga del área: se guarda aunque todavía no se haya tocado nada.
-    await update((d) => ({ ...d, data: { ...d.data, areas: upsertArea(d.data.areas, area) } }));
+    const fields = area;
+    await update((d) => {
+      const base = merged(d, fields);
+      return { ...d, data: { ...d.data, areas: upsertArea(d.data.areas, { ...base, photos: [...base.photos, ...added] }) } };
+    });
     isNew.current = false;
-    router.push({ pathname: '/walkthrough/[id]/photos', params: { id: params.id, area: area.id } });
+  }
+
+  async function take() {
+    setPhotoError(null);
+    try {
+      const picked = await takePhoto();
+      if (picked.kind === 'denied') return setPhotoError('camera');
+      if (picked.kind === 'cancelled') return;
+      await addFiles([picked.file]);
+    } catch {
+      setPhotoError('photo');
+    }
+  }
+
+  async function fromGallery() {
+    setPhotoError(null);
+    try {
+      const picked = await pickPhotos();
+      if (picked.kind === 'denied') return setPhotoError('gallery');
+      if (picked.kind === 'cancelled') return;
+      await addFiles(picked.files);
+    } catch {
+      setPhotoError('photo');
+    }
+  }
+
+  function setNote(photoId: string, note: string) {
+    if (!area) return;
+    const areaId = area.id;
+    void update((d) => ({
+      ...d,
+      data: {
+        ...d.data,
+        areas: d.data.areas.map((a) =>
+          a.id === areaId ? { ...a, photos: a.photos.map((p) => (p.id === photoId ? { ...p, note } : p)) } : a,
+        ),
+      },
+    }));
+  }
+
+  function deletePhoto(photoId: string) {
+    if (!area) return;
+    const areaId = area.id;
+    void update((d) => ({ ...d, data: { ...d.data, areas: removePhoto(d.data.areas, areaId, photoId) } }));
   }
 
   function saveAndNext() {
     if (!doc || !area) return;
-    const areas = upsertArea(doc.data.areas, area);
-    void update((d) => ({ ...d, data: { ...d.data, areas: upsertArea(d.data.areas, area) } }));
+    const fields = area;
+    const areas = upsertArea(doc.data.areas, merged(doc, fields));
+    void update((d) => ({ ...d, data: { ...d.data, areas: upsertArea(d.data.areas, merged(d, fields)) } }));
     isNew.current = true;
+    setPhotoError(null);
     setArea(newArea(areas, typeLabel, area.type));
   }
 
@@ -107,11 +184,13 @@ export default function AreaScreen() {
               value={area.name}
               onChangeText={(v) => change({ ...area, name: v, nameEdited: true })}
             />
-            <AppField
-              label={w.areas.size}
+            <AppText size={sample.labelSize} color={colors.secondary} style={{ marginBottom: 3 }}>
+              {w.areas.size}
+            </AppText>
+            <Segmented
+              options={AREA_SIZES.map((z) => ({ value: z, label: w.sizes[z] }))}
               value={area.size}
-              keyboardType="numeric"
-              onChangeText={(v) => change({ ...area, size: v })}
+              onChange={(z) => change({ ...area, size: z })}
             />
             <AppText size={sample.labelSize} color={colors.secondary} style={{ marginBottom: 3 }}>
               {w.areas.condition}
@@ -128,27 +207,20 @@ export default function AreaScreen() {
               onChangeText={(v) => change({ ...area, specialRequest: v })}
             />
             <AppField label={w.areas.notes} value={area.notes} multiline onChangeText={(v) => change({ ...area, notes: v })} />
-            <View style={styles.row}>
-              <View style={styles.flex}>
-                <AppButton
-                  label={w.areas.photo}
-                  variant="outline"
-                  icon="camera"
-                  onPress={() => void openPhotos()}
-                />
-              </View>
-              <View style={styles.flex}>
-                <AppButton label={w.areas.saveAndNext} onPress={saveAndNext} />
-              </View>
-            </View>
+            <AreaPhotos
+              w={w}
+              common={strings.common}
+              photos={photos}
+              error={photoError}
+              onTake={() => void take()}
+              onGallery={() => void fromGallery()}
+              onNote={setNote}
+              onRemove={deletePhoto}
+            />
+            <AppButton label={w.areas.saveAndNext} onPress={saveAndNext} />
           </>
         ) : null}
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 8, marginTop: 4 },
-  flex: { flex: 1 },
-});

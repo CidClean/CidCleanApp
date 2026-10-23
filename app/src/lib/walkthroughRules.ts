@@ -25,6 +25,15 @@ export type AreaType = (typeof AREA_TYPES)[number];
 export const CONDITIONS = ['good', 'fair', 'poor'] as const; // Buena / Regular / Mala (D-037)
 export type Condition = (typeof CONDITIONS)[number];
 
+/** Tamaño cualitativo del área (D-217, reemplaza el tamaño en ft² de D-213): Small / Medium / Big. */
+export const AREA_SIZES = ['small', 'medium', 'big'] as const;
+export type AreaSize = (typeof AREA_SIZES)[number];
+
+/** Un tamaño guardado antes de D-217 (texto en ft²) o desconocido no se usa: queda sin elegir. */
+export function normalizeSize(raw: unknown): AreaSize | null {
+  return typeof raw === 'string' && (AREA_SIZES as readonly string[]).includes(raw) ? (raw as AreaSize) : null;
+}
+
 export type Photo = {
   id: string;
   /** Ruta en el bucket: <walkthrough>/<foto>.jpg. */
@@ -41,7 +50,7 @@ export type Area = {
   name: string;
   /** El nombre lo puso la persona: ya no se cambia solo al cambiar el tipo. */
   nameEdited: boolean;
-  size: string;
+  size: AreaSize | null;
   condition: Condition | null;
   specialRequest: string;
   notes: string;
@@ -169,7 +178,7 @@ export function newArea(areas: readonly Area[], typeLabel: (t: AreaType) => stri
     type,
     name: defaultAreaName(type, typeLabel(type), areas),
     nameEdited: false,
-    size: '',
+    size: null,
     condition: null,
     specialRequest: '',
     notes: '',
@@ -190,12 +199,22 @@ export function withAreaType(area: Area, type: AreaType, typeLabel: string, area
 export function isUntouched(area: Area): boolean {
   return (
     !area.nameEdited &&
-    area.size.trim() === '' &&
+    area.size === null &&
     area.condition === null &&
     area.specialRequest.trim() === '' &&
     area.notes.trim() === '' &&
     area.photos.length === 0
   );
+}
+
+/** Área leída del teléfono o del servidor: tamaño de D-217 y fotos siempre como lista. */
+export function normalizeArea(a: Area): Area {
+  return { ...a, size: normalizeSize(a.size), photos: Array.isArray(a.photos) ? a.photos : [] };
+}
+
+/** Documento guardado en el teléfono antes de D-217: se lee con el tamaño nuevo. */
+export function normalizeDoc(doc: WalkthroughDoc): WalkthroughDoc {
+  return { ...doc, data: { ...doc.data, areas: (doc.data.areas ?? []).map(normalizeArea) } };
 }
 
 export function upsertArea(areas: readonly Area[], area: Area): Area[] {
@@ -206,10 +225,10 @@ export function upsertArea(areas: readonly Area[], area: Area): Area[] {
   return next;
 }
 
-/** Línea gris de la fila del área: "120 ft² · Regular" (muestra ronda 8). */
-export function areaDetail(area: Area, conditionLabel: (c: Condition) => string): string {
+/** Línea gris de la fila del área: "Mediana · Regular" (muestra ronda 8, con el tamaño de D-217). */
+export function areaDetail(area: Area, conditionLabel: (c: Condition) => string, sizeLabel: (s: AreaSize) => string): string {
   const parts: string[] = [];
-  if (area.size.trim() !== '') parts.push(`${area.size.trim()} ft²`);
+  if (area.size) parts.push(sizeLabel(area.size));
   if (area.condition) parts.push(conditionLabel(area.condition));
   return parts.join(' · ');
 }
@@ -312,6 +331,7 @@ export function dataFromServer(raw: unknown, fallback: WalkthroughData): Walkthr
     areas: Array.isArray(r.areas)
       ? r.areas.map((a) => ({
           ...a,
+          size: normalizeSize(a.size),
           photos: (a.photos ?? []).map((p) => ({ id: p.id, path: p.path, note: p.note ?? '', uri: null, uploaded: true })),
         }))
       : [],

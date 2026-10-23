@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { WalkthroughDoc } from './walkthroughRules';
+import { normalizeDoc, type WalkthroughDoc } from './walkthroughRules';
 
 /**
  * Walkthroughs guardados en el teléfono (D-004: funciona completo sin internet). Cada documento va en su propia
@@ -34,7 +34,7 @@ export async function loadWalkthrough(id: string): Promise<WalkthroughDoc | null
   const raw = await kv.getItem(PREFIX + id);
   if (!raw) return null;
   try {
-    const doc = JSON.parse(raw) as WalkthroughDoc;
+    const doc = normalizeDoc(JSON.parse(raw) as WalkthroughDoc);
     memory.set(id, doc);
     return doc;
   } catch {

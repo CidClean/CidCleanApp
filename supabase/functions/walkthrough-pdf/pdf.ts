@@ -18,7 +18,7 @@ export type Fuente = {
     areas?: {
       name?: string;
       type?: string;
-      size?: string;
+      size?: string | null;
       condition?: string | null;
       specialRequest?: string;
       notes?: string;
@@ -72,6 +72,7 @@ const T = {
       hallway: 'Pasillo', reception: 'Recepción', stairs: 'Escaleras', storage: 'Almacén', other: 'Otro',
     } as Record<string, string>,
     conditions: { good: 'Buena', fair: 'Regular', poor: 'Mala' } as Record<string, string>,
+    sizes: { small: 'Pequeña', medium: 'Mediana', big: 'Grande' } as Record<string, string>, // D-217
     months: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
     date: (d: number, m: string, y: number) => `${d} ${m} ${y}`,
   },
@@ -102,6 +103,7 @@ const T = {
       hallway: 'Hallway', reception: 'Reception', stairs: 'Stairs', storage: 'Storage room', other: 'Other',
     } as Record<string, string>,
     conditions: { good: 'Good', fair: 'Fair', poor: 'Poor' } as Record<string, string>,
+    sizes: { small: 'Small', medium: 'Medium', big: 'Big' } as Record<string, string>, // D-217
     months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
     date: (d: number, m: string, y: number) => `${m} ${d}, ${y}`,
   },
@@ -234,7 +236,8 @@ export async function armarPdf(
     for (const a of areas) {
       const celdas = [
         `${a.name ?? ''}\n${t.types[a.type ?? ''] ?? ''}`,
-        a.size && a.size.trim() ? `${a.size.trim()} ft²` : '—',
+        // D-217: tamaño cualitativo; un texto en ft² anterior a D-217 no se muestra.
+        a.size ? t.sizes[a.size] ?? '—' : '—',
         a.condition ? t.conditions[a.condition] ?? '—' : '—',
         a.specialRequest?.trim() || '—',
         a.notes?.trim() || '—',

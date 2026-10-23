@@ -1,5 +1,5 @@
 import type { Locale } from './index';
-import type { AreaType, Condition } from '@/lib/walkthroughRules';
+import type { AreaSize, AreaType, Condition } from '@/lib/walkthroughRules';
 
 /**
  * Textos del walkthrough (hito 3). APROBADO = de una decisión o muestra aprobada; D-200 = detalle menor del ejecutor.
@@ -8,6 +8,10 @@ export const walkthroughEs = {
   title: 'Walkthrough', // APROBADO (muestras ronda 8, 10 y 12)
   start: 'Hacer walkthrough', // D-200: botón de contorno en la pestaña Sitios
   siteDone: 'Walkthrough hecho', // APROBADO (estado del flujo): línea gris del sitio con walkthrough cerrado
+  sitesSection: 'Walkthroughs', // D-217 (delegado D-200): filas de los walkthroughs en la pestaña Sitios
+  siteRow: (site: string) => `Walkthrough · ${site}`, // D-200, como "Quote · {sitio}"
+  siteInProgress: 'En curso', // D-200
+  siteClosing: 'Cierre pendiente de enviar', // D-200
   startSite: 'Sitio', // APROBADO (muestra ronda 9, mismo paso de elegir sitio)
   startContinue: 'Continuar', // APROBADO (muestra ronda 9)
   closedAlready: 'Este sitio ya tiene un walkthrough cerrado.', // D-200
@@ -40,7 +44,7 @@ export const walkthroughEs = {
     newTitle: 'Nueva área', // APROBADO (muestras ronda 3 y 8)
     type: 'Tipo', // APROBADO (D-037, D-074)
     name: 'Nombre', // APROBADO (D-037, D-074)
-    size: 'Tamaño (ft²)', // APROBADO (D-037; la unidad sale de la muestra "120 ft²")
+    size: 'Tamaño', // APROBADO (D-037, D-217)
     condition: 'Condición', // D-200: etiqueta del control segmentado
     specialRequest: 'Pedido especial', // APROBADO (D-074)
     notes: 'Notas', // APROBADO (D-074)
@@ -51,6 +55,9 @@ export const walkthroughEs = {
   photos: {
     heading: (area: string) => `Fotos de ${area}`, // APROBADO (muestra ronda 3)
     take: 'Tomar foto', // APROBADO (D-039)
+    section: 'Fotos', // D-217: apartado de fotos dentro del área
+    gallery: 'Subir de la galería', // D-217
+    galleryDenied: 'Permite el acceso a las fotos en los ajustes del teléfono.', // D-200, como D-195
     empty: 'Todavía no hay fotos.', // D-200
     noteTitle: 'Nota de la foto', // D-200
     note: 'Nota', // D-200
@@ -114,6 +121,7 @@ export const walkthroughEs = {
     other: 'Otro',
   } satisfies Record<AreaType, string>, // APROBADO (D-106)
   conditions: { good: 'Buena', fair: 'Regular', poor: 'Mala' } satisfies Record<Condition, string>, // APROBADO (D-037)
+  sizes: { small: 'Pequeña', medium: 'Mediana', big: 'Grande' } satisfies Record<AreaSize, string>, // APROBADO (D-217)
 };
 
 export type WalkthroughStrings = typeof walkthroughEs;
@@ -123,6 +131,10 @@ export const walkthroughEn: WalkthroughStrings = {
   title: 'Walkthrough',
   start: 'Do walkthrough', // Sites tab: outline button
   siteDone: 'Walkthrough done',
+  sitesSection: 'Walkthroughs',
+  siteRow: (site: string) => `Walkthrough · ${site}`,
+  siteInProgress: 'In progress',
+  siteClosing: 'Closing, waiting to send',
   startSite: 'Site',
   startContinue: 'Continue',
   closedAlready: 'This site already has a closed walkthrough.',
@@ -141,7 +153,7 @@ export const walkthroughEn: WalkthroughStrings = {
     newTitle: 'New area',
     type: 'Type',
     name: 'Name',
-    size: 'Size (sq ft)',
+    size: 'Size',
     condition: 'Condition',
     specialRequest: 'Special request',
     notes: 'Notes',
@@ -151,6 +163,9 @@ export const walkthroughEn: WalkthroughStrings = {
   photos: {
     heading: (area: string) => `Photos of ${area}`,
     take: 'Take photo',
+    section: 'Photos',
+    gallery: 'Upload from gallery',
+    galleryDenied: "Allow photo access in the phone's settings.",
     empty: 'No photos yet.',
     noteTitle: 'Photo note',
     note: 'Note',
@@ -205,6 +220,7 @@ export const walkthroughEn: WalkthroughStrings = {
     other: 'Other',
   },
   conditions: { good: 'Good', fair: 'Fair', poor: 'Poor' },
+  sizes: { small: 'Small', medium: 'Medium', big: 'Big' }, // D-217
 };
 
 export function getWalkthroughStrings(locale: Locale): WalkthroughStrings {

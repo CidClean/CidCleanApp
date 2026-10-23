@@ -50,7 +50,7 @@ test('sin red se guarda todo en el teléfono; al volver la señal sube el docume
   await saveWalkthrough(doc);
   const area = newArea([], label);
   const photos = ['f1', 'f2'].map((id) => ({ id, path: `${doc.id}/${id}.jpg`, uri: `file:///${id}.jpg`, note: '', uploaded: false }));
-  await updateWalkthrough(doc.id, (d) => ({ ...d, data: { ...d.data, areas: [{ ...area, size: '120', photos }] } }));
+  await updateWalkthrough(doc.id, (d) => ({ ...d, data: { ...d.data, areas: [{ ...area, size: 'medium', photos }] } }));
   await updateWalkthrough(doc.id, (d) => ({ ...d, data: { ...d.data, frequency: { kind: 'daily', days: [0, 1, 2, 3, 4, 5, 6], other: '' } } }));
 
   expect(await syncWalkthrough(doc.id, server.deps)).toBe('offline');
@@ -69,7 +69,7 @@ test('sin red se guarda todo en el teléfono; al volver la señal sube el docume
   expect(syncBadge(local)).toEqual({ kind: 'synced' });
   expect(server.files).toEqual(new Set([`${doc.id}/f1.jpg`, `${doc.id}/f2.jpg`]));
   const sent = server.drafts.get(doc.id) as { areas: { size: string; photos: { uri?: string }[] }[]; frequency: { kind: string } };
-  expect(sent.areas[0].size).toBe('120');
+  expect(sent.areas[0].size).toBe('medium');
   expect(sent.areas[0].photos[0].uri).toBeUndefined();
   expect(sent.frequency.kind).toBe('daily');
 

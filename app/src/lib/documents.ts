@@ -87,6 +87,16 @@ export async function takePhoto(): Promise<PickResult> {
   return { kind: 'picked', file: { uri: asset.uri, mimeType: asset.mimeType ?? 'image/jpeg', name: asset.fileName ?? null } };
 }
 
+/** Fotos de la galería del teléfono (D-217): una o varias. Sin módulos nativos nuevos (expo-image-picker ya está). */
+export async function pickPhotos(): Promise<{ kind: 'picked'; files: PickedFile[] } | { kind: 'cancelled' } | { kind: 'denied' }> {
+  const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8, allowsMultipleSelection: true });
+  if (result.canceled || result.assets.length === 0) return { kind: 'cancelled' };
+  return {
+    kind: 'picked',
+    files: result.assets.map((a) => ({ uri: a.uri, mimeType: a.mimeType ?? 'image/jpeg', name: a.fileName ?? null })),
+  };
+}
+
 /** Escoger un archivo del teléfono: foto o PDF (D-183). */
 export async function chooseFile(): Promise<PickResult> {
   const result = await DocumentPicker.getDocumentAsync({

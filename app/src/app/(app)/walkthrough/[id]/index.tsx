@@ -5,6 +5,8 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
+import { PhoneField } from '@/components/PhoneField';
+import { formatPhone, isValidPhone } from '@/lib/phone';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { ListRow } from '@/components/ListRow';
@@ -59,6 +61,7 @@ export default function WalkthroughScreen() {
   const { locale } = useSession();
   const { doc, missing, update, updateLocal } = useWalkthrough(id);
   const [removing, setRemoving] = useState<Area | null>(null);
+  const [phoneTouched, setPhoneTouched] = useState(false);
 
   // Los campos escriben en una copia local (sin saltos del cursor) y se guardan en el teléfono al momento.
   const [form, setForm] = useState<Pick<WalkthroughData, 'contact' | 'frequency' | 'internal'> | null>(null);
@@ -118,11 +121,13 @@ export default function WalkthroughScreen() {
                   autoCapitalize="words"
                   onChangeText={(v) => setSection('contact', { ...form.contact, contactName: v })}
                 />
-                <AppField
+                {/* D-216: el error sale al dejar el campo; el walkthrough se guarda igual (es rápido, D-004). */}
+                <PhoneField
                   label={w.site.phone}
                   value={form.contact.phone}
-                  keyboardType="phone-pad"
-                  onChangeText={(v) => setSection('contact', { ...form.contact, phone: v })}
+                  onChange={(v) => setSection('contact', { ...form.contact, phone: v })}
+                  onBlur={() => setPhoneTouched(true)}
+                  error={phoneTouched && !isValidPhone(form.contact.phone) ? strings.common.phoneError : null}
                 />
                 <AppField
                   label={w.site.email}
@@ -150,7 +155,7 @@ export default function WalkthroughScreen() {
                   </AppText>
                 ) : null}
                 {doc.data.areas.map((a, i) => {
-                  const detail = areaDetail(a, (c) => w.conditions[c]);
+                  const detail = areaDetail(a, (c) => w.conditions[c], (z) => w.sizes[z]);
                   return (
                     <ListRow
                       key={a.id}
@@ -305,7 +310,7 @@ function SummaryStep({
       {rows([
         [w.site.address, c.address],
         [w.site.contact, c.contactName],
-        [w.site.phone, c.phone],
+        [w.site.phone, formatPhone(c.phone)],
         [w.site.email, c.email],
         [w.site.general, c.general],
       ])}
@@ -316,7 +321,7 @@ function SummaryStep({
         </AppText>
       ) : (
         doc.data.areas.map((a, i) => {
-          const detail = areaDetail(a, (k) => w.conditions[k]);
+          const detail = areaDetail(a, (k) => w.conditions[k], (z) => w.sizes[z]);
           return <ListRow key={a.id} title={a.name} detail={detail === '' ? undefined : detail} last={i === doc.data.areas.length - 1} />;
         })
       )}

@@ -8,6 +8,8 @@ import {
   emptyData,
   isUntouched,
   newArea,
+  normalizeArea,
+  normalizeSize,
   newDoc,
   newId,
   pendingCount,
@@ -74,19 +76,29 @@ describe('áreas (D-037, D-074, D-106)', () => {
     const a = newArea([], label);
     expect(isUntouched(a)).toBe(true);
     expect(isUntouched({ ...a, condition: 'fair' })).toBe(false);
-    expect(isUntouched({ ...a, size: '120' })).toBe(false);
+    expect(isUntouched({ ...a, size: 'medium' })).toBe(false);
   });
 
   it('upsert: agrega al final o reemplaza la misma', () => {
     const a = newArea([], label);
     const list = upsertArea([], a);
-    expect(upsertArea(list, { ...a, size: '5' })).toEqual([{ ...a, size: '5' }]);
+    expect(upsertArea(list, { ...a, size: 'big' })).toEqual([{ ...a, size: 'big' }]);
   });
 
-  it('línea de la fila: "120 ft² · Regular" (muestra ronda 8)', () => {
-    const a = { ...newArea([], label), size: '120', condition: 'fair' as const };
-    expect(areaDetail(a, (c) => walkthroughEs.conditions[c])).toBe('120 ft² · Regular');
-    expect(areaDetail({ ...a, size: '' }, (c) => walkthroughEn.conditions[c])).toBe('Fair');
+  it('línea de la fila: "Mediana · Regular" (tamaño cualitativo, D-217)', () => {
+    const a = { ...newArea([], label), size: 'medium' as const, condition: 'fair' as const };
+    expect(areaDetail(a, (c) => walkthroughEs.conditions[c], (z) => walkthroughEs.sizes[z])).toBe('Mediana · Regular');
+    expect(areaDetail({ ...a, size: null }, (c) => walkthroughEn.conditions[c], (z) => walkthroughEn.sizes[z])).toBe('Fair');
+    expect(walkthroughEn.sizes).toEqual({ small: 'Small', medium: 'Medium', big: 'Big' });
+  });
+
+  it('un tamaño en ft² guardado antes de D-217 se lee sin elegir', () => {
+    expect(normalizeSize('120')).toBeNull();
+    expect(normalizeSize('')).toBeNull();
+    expect(normalizeSize('small')).toBe('small');
+    const old = { ...newArea([], label), size: '340' } as unknown as Area;
+    expect(normalizeArea(old).size).toBeNull();
+    expect(dataFromServer({ areas: [{ ...old, photos: [] }] }, emptyData()).areas[0].size).toBeNull();
   });
 });
 

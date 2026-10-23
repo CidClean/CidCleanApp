@@ -51,7 +51,12 @@ jest.mock('@/lib/leadsApi', () => ({
 jest.mock('@/lib/quotesApi', () => ({ fetchQuotePending: async () => [] }));
 jest.mock('@/i18n/useSalesStrings', () => ({ useSalesStrings: () => require('@/i18n/sales').salesEs }));
 jest.mock('@/lib/week', () => ({ ...jest.requireActual('@/lib/week'), fetchWeekVisits: () => Promise.resolve([]) }));
-jest.mock('@/lib/documents', () => ({ takePhoto: jest.fn() }));
+const mockTakePhoto = jest.fn();
+const mockPickPhotos = jest.fn();
+jest.mock('@/lib/documents', () => ({
+  takePhoto: (...a: unknown[]) => mockTakePhoto(...a),
+  pickPhotos: (...a: unknown[]) => mockPickPhotos(...a),
+}));
 
 import HomeScreen from '@/app/(app)/(tabs)/index';
 import WalkthroughAreaScreen from '@/app/(app)/walkthrough/[id]/area';
@@ -178,12 +183,12 @@ describe('Pasos del walkthrough (D-073)', () => {
 
   it('Áreas lista cada área con su tamaño y condición y Agregar área abre el formulario', async () => {
     const doc = newDoc({ siteId: 's1', leadId: 'l1', appointmentId: null, company: 'G', siteLabel: 'S', contact: {} });
-    const area = { ...newArea([], () => 'Baño'), size: '120', condition: 'fair' as const };
+    const area = { ...newArea([], () => 'Baño'), size: 'medium' as const, condition: 'fair' as const };
     await saveWalkthrough({ ...doc, step: 2, data: { ...doc.data, areas: [area] } });
     mockParams = { id: doc.id };
     await render(<WalkthroughScreen />);
     expect(await screen.findByText('Baño 01')).toBeTruthy();
-    expect(screen.getByText('120 ft² · Regular')).toBeTruthy();
+    expect(screen.getByText('Mediana · Regular')).toBeTruthy();
     await fireEvent.press(screen.getByText('Agregar área'));
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/walkthrough/[id]/area', params: { id: doc.id } });
   });
@@ -204,7 +209,7 @@ describe('Pasos del walkthrough (D-073)', () => {
 describe('Resumen (D-212)', () => {
   async function openSummary(extra: Record<string, unknown> = {}) {
     const base = newDoc({ siteId: 's1', leadId: 'l1', appointmentId: 'c1', company: 'Gulf Coast Dental', siteLabel: '5th Ave S', contact: { address: '123 5th Ave S', contactName: 'Ana Rivera' } });
-    const area = { ...newArea([], () => 'Baño'), size: '120', condition: 'fair' as const };
+    const area = { ...newArea([], () => 'Baño'), size: 'medium' as const, condition: 'fair' as const };
     const doc = {
       ...base,
       step: 5,
@@ -222,7 +227,7 @@ describe('Resumen (D-212)', () => {
     const doc = await openSummary();
     expect(screen.getByText('123 5th Ave S')).toBeTruthy();
     expect(screen.getByText('Baño 01')).toBeTruthy();
-    expect(screen.getByText('120 ft² · Regular')).toBeTruthy();
+    expect(screen.getByText('Mediana · Regular')).toBeTruthy();
     expect(screen.getByText('Semanal: Lun, Mié, Vie · 3 veces por semana')).toBeTruthy();
     expect(screen.getByText('2 personas')).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('Editar Frecuencia'));
@@ -277,13 +282,72 @@ describe('Área (D-037, D-074, D-106)', () => {
     await fireEvent.press(screen.getByLabelText('Tipo'));
     await fireEvent.press(screen.getByText('Cocina'));
     expect(screen.getByDisplayValue('Cocina 01')).toBeTruthy();
-    await fireEvent.changeText(screen.getByLabelText('Tamaño (ft²)'), '340');
+    await fireEvent.press(screen.getByText('Grande'));
     await fireEvent.press(screen.getByText('Buena'));
     await fireEvent.press(screen.getByText('Guardar y otra'));
     expect(await screen.findByDisplayValue('Cocina 02')).toBeTruthy();
     const saved = (await loadWalkthrough(doc.id))!.data.areas;
     expect(saved).toHaveLength(1);
-    expect(saved[0]).toMatchObject({ type: 'kitchen', name: 'Cocina 01', size: '340', condition: 'good' });
+    expect(saved[0]).toMatchObject({ type: 'kitchen', name: 'Cocina 01', size: 'big', condition: 'good' });
+  });
+
+  it('fotos dentro del área (D-217): cámara con un toque y galería, y quedan guardadas', async () => {
+    const doc = newDoc({ siteId: 's1', leadId: 'l1', appointmentId: null, company: 'G', siteLabel: 'S', contact: {} });
+    await saveWalkthrough(doc);
+    mockParams = { id: doc.id };
+    mockTakePhoto.mockResolvedValue({ kind: 'picked', file: { uri: 'file:///cam.jpg', mimeType: 'image/jpeg', name: null } });
+    mockPickPhotos.mockResolvedValue({
+      kind: 'picked',
+      files: [
+        { uri: 'file:///g1.jpg', mimeType: 'image/jpeg', name: null },
+        { uri: 'file:///g2.png', mimeType: 'image/png', name: null },
+      ],
+    });
+    await render(<WalkthroughAreaScreen />);
+    await screen.findByDisplayValue('Baño 01');
+    expect(screen.getByText('Todavía no hay fotos.')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Tomar foto'));
+    expect(mockTakePhoto).toHaveBeenCalledTimes(1);
+    await waitFor(async () => expect((await loadWalkthrough(doc.id))!.data.areas[0]?.photos).toHaveLength(1));
+    await fireEvent.press(screen.getByText('Subir de la galería'));
+    await waitFor(async () => expect((await loadWalkthrough(doc.id))!.data.areas[0].photos).toHaveLength(3));
+    expect(screen.getAllByLabelText('Nota de la foto')).toHaveLength(3);
+    const paths = (await loadWalkthrough(doc.id))!.data.areas[0].photos.map((p) => p.path);
+    expect(paths[2].endsWith('.png')).toBe(true);
+  });
+
+  it('fallo "las fotos no quedan guardadas": cambiar un campo o Guardar y otra después de una foto la conserva', async () => {
+    const doc = newDoc({ siteId: 's1', leadId: 'l1', appointmentId: null, company: 'G', siteLabel: 'S', contact: {} });
+    await saveWalkthrough(doc);
+    mockParams = { id: doc.id };
+    mockTakePhoto.mockResolvedValue({ kind: 'picked', file: { uri: 'file:///cam.jpg', mimeType: 'image/jpeg', name: null } });
+    await render(<WalkthroughAreaScreen />);
+    await screen.findByDisplayValue('Baño 01');
+    await fireEvent.press(screen.getByText('Tomar foto'));
+    await waitFor(async () => expect((await loadWalkthrough(doc.id))!.data.areas[0]?.photos).toHaveLength(1));
+    // Antes, la pantalla guardaba su copia vieja del área (sin la foto) y la borraba.
+    await fireEvent.press(screen.getByText('Mala'));
+    await fireEvent.changeText(screen.getByLabelText('Notas'), 'Piso mojado');
+    await waitFor(async () => expect((await loadWalkthrough(doc.id))!.data.areas[0].notes).toBe('Piso mojado'));
+    expect((await loadWalkthrough(doc.id))!.data.areas[0].photos).toHaveLength(1);
+    await fireEvent.press(screen.getByText('Guardar y otra'));
+    await screen.findByDisplayValue('Baño 02');
+    const saved = (await loadWalkthrough(doc.id))!.data.areas;
+    expect(saved).toHaveLength(1);
+    expect(saved[0]).toMatchObject({ condition: 'poor', notes: 'Piso mojado' });
+    expect(saved[0].photos).toHaveLength(1);
+  });
+
+  it('la papelera de una foto pide confirmación y la quita', async () => {
+    const base = newDoc({ siteId: 's1', leadId: 'l1', appointmentId: null, company: 'G', siteLabel: 'S', contact: {} });
+    const area = { ...newArea([], () => 'Baño'), photos: [{ id: 'p1', path: `${base.id}/p1.jpg`, uri: 'file:///p1.jpg', note: 'Lavabo', uploaded: false }] };
+    await saveWalkthrough({ ...base, data: { ...base.data, areas: [area] } });
+    mockParams = { id: base.id, area: area.id };
+    await render(<WalkthroughAreaScreen />);
+    expect(await screen.findByText('Lavabo')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Eliminar foto'));
+    await fireEvent.press(screen.getByText('Eliminar'));
+    await waitFor(async () => expect((await loadWalkthrough(base.id))!.data.areas[0].photos).toHaveLength(0));
   });
 
   it('un área nueva sin tocar no se guarda', async () => {

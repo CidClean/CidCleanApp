@@ -10,6 +10,7 @@ import { useStrings } from '@/i18n/useStrings';
 import { useWalkthroughStrings } from '@/i18n/useWalkthroughStrings';
 import { siteLabel, type Lead, type LeadSite } from '@/lib/leadRules';
 import { fetchLead } from '@/lib/leadsApi';
+import { formatPhone } from '@/lib/phone';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions } from '@/lib/session';
 import { fetchServerWalkthrough } from '@/lib/walkthroughApi';
@@ -44,7 +45,7 @@ export default function StartWalkthroughScreen() {
         router.replace({ pathname: '/walkthrough/[id]', params: { id: local.id } });
         return;
       }
-      const prefill = { address: site.address, contactName: l.contactName ?? '', phone: l.phone ?? '', email: l.email ?? '' };
+      const prefill = { address: site.address, contactName: l.contactName ?? '', phone: formatPhone(l.phone), email: l.email ?? '' };
       const base = {
         siteId: site.id,
         leadId: l.id,
