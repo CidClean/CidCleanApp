@@ -2,6 +2,7 @@
  * Reglas puras de Ventas A (hito 2): quién ve y edita leads, estados, formularios, fechas y horas,
  * calendario del mes (D-104) y pendientes del Inicio (D-111). Sin red: se prueban solas.
  */
+import { formatPhone, isValidPhone, normalizePhone } from './phone';
 import type { SalesStrings } from '@/i18n/sales';
 import { can, type Access } from './visibility';
 
@@ -210,7 +211,7 @@ export type LeadForm = {
   phone: string;
   email: string;
   source: LeadSource;
-  followUp: string; // MM/DD/AAAA
+  followUp: string; // MM/DD/AAAA (lo pone el selector de fecha, D-216)
   notes: string;
   /** Idioma del correo y del portal del quote (D-209): inglés por defecto. */
   language: 'en' | 'es';
@@ -228,7 +229,7 @@ export const emptyLeadForm: LeadForm = {
   language: 'en',
 };
 
-export type LeadFormErrors = { company?: true; email?: true; followUp?: true };
+export type LeadFormErrors = { company?: true; email?: true; followUp?: true; phone?: true };
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -237,18 +238,19 @@ export function validateLeadForm(f: LeadForm): LeadFormErrors {
   if (f.company.trim() === '') errors.company = true;
   if (f.email.trim() !== '' && !EMAIL.test(f.email.trim())) errors.email = true;
   if (parseUsDate(f.followUp) === 'invalid') errors.followUp = true;
+  if (!isValidPhone(f.phone)) errors.phone = true;
   return errors;
 }
 
 export function hasLeadErrors(e: LeadFormErrors): boolean {
-  return Boolean(e.company || e.email || e.followUp);
+  return Boolean(e.company || e.email || e.followUp || e.phone);
 }
 
 export function leadFormFrom(lead: Lead): LeadForm {
   return {
     company: lead.company,
     contactName: lead.contactName ?? '',
-    phone: lead.phone ?? '',
+    phone: formatPhone(lead.phone),
     email: lead.email ?? '',
     source: lead.source,
     followUp: formatUsDate(lead.followUpOn),
@@ -263,7 +265,7 @@ export function leadColumns(f: LeadForm) {
   return {
     company: f.company.trim(),
     contact_name: clean(f.contactName),
-    phone: clean(f.phone),
+    phone: clean(normalizePhone(f.phone)),
     email: clean(f.email)?.toLowerCase() ?? null,
     source: f.source,
     notes: clean(f.notes),

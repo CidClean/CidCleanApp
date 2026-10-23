@@ -74,6 +74,15 @@ export const es = {
     cancel: 'Cancelar', // APROBADO (D-167, D-173)
     yes: 'Sí', // APROBADO (D-184)
     no: 'No', // APROBADO (D-174: fila Acceso a la app sin acceso)
+    // D-216 (delegado D-200): teléfono y selectores de fecha y hora.
+    phoneError: 'Escribe un teléfono de 10 dígitos, por ejemplo (239) 555-0142.',
+    pickDate: 'Elegir fecha',
+    pickTime: 'Elegir hora',
+    noDate: 'Sin fecha',
+    clearDate: 'Quitar fecha',
+    hour: 'Hora',
+    minutes: 'Minutos',
+    done: 'Listo',
   },
 
   employees: {
@@ -299,6 +308,7 @@ export const es = {
 
   // Menú → Ajustes (solo el Super Admin, D-114, D-169) y publicar los términos del staff (D-176, D-187).
   settings: {
+    viewPdf: 'Ver PDF', // D-216 (delegado D-200): botón de contorno de la versión vigente
     termsRow: 'Términos del staff', // APROBADO (D-176, D-187): fila de Ajustes y título de la pantalla
     termsValue: (version: number) => `v${version}`, // valor de la fila (formato dado por la orden 10, D-187 dice "la versión vigente")
     unpublished: 'Sin publicar', // SIN APROBAR: valor de la fila y de la línea de versión cuando aún no hay versión publicada

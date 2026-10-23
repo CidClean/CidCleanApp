@@ -99,6 +99,10 @@ describe('formulario del lead', () => {
     expect(hasLeadErrors(validateLeadForm(ok))).toBe(false);
     expect(validateLeadForm({ ...ok, email: 'ana@' })).toEqual({ email: true });
     expect(validateLeadForm({ ...ok, followUp: '13/40/2026' })).toEqual({ followUp: true });
+    // D-216: teléfono de EE. UU. de 10 dígitos, guardado como (239) 555-0142.
+    expect(validateLeadForm({ ...ok, phone: '(239) 555-01' })).toEqual({ phone: true });
+    expect(hasLeadErrors(validateLeadForm({ ...ok, phone: '(239) 555-0142' }))).toBe(false);
+    expect(leadColumns({ ...ok, phone: '239.555.0142' }).phone).toBe('(239) 555-0142');
   });
 
   it('parte con fuente Manual y limpia los textos al guardar', () => {

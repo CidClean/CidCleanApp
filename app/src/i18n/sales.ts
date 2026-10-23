@@ -106,7 +106,7 @@ export const salesEs = {
     submit: 'Agendar', // APROBADO (D-072)
     previousMonth: 'Mes anterior', // D-200: solo lo lee el lector de pantalla
     nextMonth: 'Mes siguiente', // D-200: solo lo lee el lector de pantalla
-    errorTime: 'Escribe una hora válida, por ejemplo 10:00 AM.', // D-200
+    errorTime: 'Elige la hora.', // D-216 (delegado D-200): la hora ya no se escribe
     errorPast: 'Elige una fecha y hora futuras.', // D-200
     errorSchedule: 'No se pudo agendar. Inténtalo otra vez.', // D-200 (mismo estilo de D-195)
     weekDays: ['L', 'M', 'X', 'J', 'V', 'S', 'D'], // APROBADO (muestras ronda 8 y 12)
@@ -262,7 +262,7 @@ export const salesEn: SalesStrings = {
     submit: 'Schedule',
     previousMonth: 'Previous month',
     nextMonth: 'Next month',
-    errorTime: 'Enter a valid time, for example 10:00 AM.',
+    errorTime: 'Choose a time.',
     errorPast: 'Choose a future date and time.',
     errorSchedule: "Couldn't schedule. Try again.",
     weekDays: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],

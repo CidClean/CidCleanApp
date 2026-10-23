@@ -5,6 +5,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
+import { PhoneField } from '@/components/PhoneField';
 import { AppText } from '@/components/AppText';
 import { Checkbox } from '@/components/Checkbox';
 import { Segmented } from '@/components/Segmented';
@@ -77,12 +78,11 @@ export default function NewEmployeeScreen() {
           autoComplete="name"
           error={errors.fullName ? strings.newEmployee.errorName : null}
         />
-        <AppField
+        <PhoneField
           label={strings.newEmployee.phone}
           value={form.phone}
-          onChangeText={(v) => set('phone', v)}
-          keyboardType="phone-pad"
-          autoComplete="tel"
+          onChange={(v) => set('phone', v)}
+          error={errors.phone ? strings.common.phoneError : null}
         />
         <AppText size={sample.labelSize} color={colors.secondary} style={{ marginBottom: 2 }}>
           {strings.newEmployee.type}

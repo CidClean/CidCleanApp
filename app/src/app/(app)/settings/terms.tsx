@@ -1,4 +1,4 @@
-import { Redirect, useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -25,6 +25,7 @@ export default function PublishTermsScreen() {
   const kind: TermsKind = kindParam === 'portal' ? 'portal' : 'staff';
   const qs = useQuoteStrings();
   const goBack = useGoBack();
+  const router = useRouter();
   const { colors, brand } = useTheme();
   const strings = useStrings();
   const { locale } = useSession();
@@ -82,6 +83,17 @@ export default function PublishTermsScreen() {
         <AppText size={sample.noteSize} color={colors.secondary} style={{ marginBottom: 8 }}>
           {versionLine}
         </AppText>
+        {/* D-216: la versión vigente de los términos del staff se ve con el visor de la app (D-196). */}
+        {kind === 'staff' && current !== null ? (
+          <View style={{ marginBottom: 10 }}>
+            <AppButton
+              label={strings.settings.viewPdf}
+              variant="outline"
+              icon="file-text"
+              onPress={() => router.push({ pathname: '/viewer', params: { source: 'terms', title: strings.settings.termsRow } })}
+            />
+          </View>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={strings.settings.uploadPdf}

@@ -40,6 +40,8 @@ import {
 } from '@/lib/leadRules';
 import { deleteLead, deleteSite, fetchLead, setLeadStatus, updateLead } from '@/lib/leadsApi';
 import { canDoWalkthroughs } from '@/lib/walkthroughRules';
+import { formatPhone } from '@/lib/phone';
+import { LeadWalkthroughs } from '@/components/walkthrough/LeadWalkthroughs';
 import { useWalkthroughStrings } from '@/i18n/useWalkthroughStrings';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions, useSession } from '@/lib/session';
@@ -309,7 +311,7 @@ export default function LeadDetailScreen() {
 function DataSection({ lead, s, locale }: { lead: Lead; s: SalesStrings; locale: 'es' | 'en' }) {
   const rows: { label: string; value: string }[] = [
     { label: s.detail.contact, value: lead.contactName ?? s.detail.none },
-    { label: s.detail.phone, value: lead.phone ?? s.detail.none },
+    { label: s.detail.phone, value: lead.phone ? formatPhone(lead.phone) : s.detail.none },
     { label: s.detail.email, value: lead.email ?? s.detail.none },
     { label: s.form.language, value: lead.language === 'es' ? 'Español' : 'English' },
     {
@@ -397,6 +399,8 @@ function SitesSection({
           {canEdit ? <AppButton label={s.sites.add} variant="outline" icon="plus" onPress={onAdd} /> : null}
         </View>
       ) : null}
+      {/* D-217: el walkthrough de cada sitio sigue visible y se abre desde aquí. */}
+      <LeadWalkthroughs leadId={lead.id} sites={lead.sites} visible={canWalkthrough} />
       {/* Hito 4: el quote de cada sitio (D-208). */}
       <LeadQuotes leadId={lead.id} sites={lead.sites} />
     </View>

@@ -75,6 +75,15 @@ export const en: Strings = {
     cancel: 'Cancel', // cancel button of the confirmation sheets and of the edit mode
     yes: 'Yes', // employee profile: app access row
     no: 'No', // employee profile: app access row, person without access
+    // D-216: phone and date/time pickers.
+    phoneError: 'Enter a 10-digit phone number, for example (239) 555-0142.',
+    pickDate: 'Choose a date',
+    pickTime: 'Choose a time',
+    noDate: 'No date',
+    clearDate: 'Remove date',
+    hour: 'Hour',
+    minutes: 'Minutes',
+    done: 'Done',
   },
 
   employees: {
@@ -299,6 +308,7 @@ export const en: Strings = {
 
   // Menu → Settings (Super Admin only) and publishing the staff terms.
   settings: {
+    viewPdf: 'View PDF', // D-216: outline button for the current version
     termsRow: 'Staff terms', // Settings row and title of the publish screen
     termsValue: (version: number) => `v${version}`, // value of the Settings row
     unpublished: 'Not published', // value of the row and of the version line when no version is published yet

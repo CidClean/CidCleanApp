@@ -285,8 +285,11 @@ describe('Agendar walkthrough (D-072, D-078, D-104)', () => {
     const key = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-10`;
     await fireEvent.press(screen.getByLabelText(key));
     await fireEvent.press(screen.getByText('Agendar'));
-    expect(screen.getByText('Escribe una hora válida, por ejemplo 10:00 AM.')).toBeTruthy();
-    await fireEvent.changeText(screen.getByLabelText('Hora'), '10:00 AM');
+    expect(screen.getByText('Elige la hora.')).toBeTruthy();
+    // D-216: la hora se elige en la hoja; abre en 10:00 AM.
+    await fireEvent.press(screen.getByLabelText('Hora'));
+    await fireEvent.press(screen.getByText('Listo'));
+    expect(screen.getByText('10:00 AM')).toBeTruthy();
     await fireEvent.press(screen.getByText('Agendar'));
     await waitFor(() => expect(mockSchedule).toHaveBeenCalled());
     const [site, startsAt] = mockSchedule.mock.calls[0];
