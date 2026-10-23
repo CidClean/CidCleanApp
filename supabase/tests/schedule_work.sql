@@ -141,6 +141,8 @@ begin
   perform pg_temp.prueba('al pausar se quitan las visitas futuras sin trabajo', '0',
     (select count(*) from visits where jobsite_id = js and starts_at > now() and not removed)::text);
   perform pg_temp.prueba('la pestaña Horario la ve quien ve clientes o el schedule', 'ERR:42501', pg_temp.valor('staff1', format('select jobsite_visits(%L)::text', js)));
+  perform pg_temp.prueba('la semana empieza en domingo (D-231)', '2026-10-18|2026-10-25|2026-10-18',
+    week_monday('2026-10-23')::text || '|' || week_monday('2026-10-25')::text || '|' || week_monday('2026-10-24')::text);
 end $$;
 
 select n, prueba, ok, detalle from resultados order by n;
