@@ -14,6 +14,8 @@ export type WorkFailure =
   | 'open_shift'
   | 'gps_pending'
   | 'no_work'
+  | 'no_time'
+  | 'no_day'
   | 'not_found'
   | 'network'
   | 'server';
@@ -29,7 +31,7 @@ export function workFailure(code: string | undefined, message: string | undefine
   if (code === '42501') return { reason: 'forbidden' };
   if (code === 'P0002') return { reason: 'not_found' };
   if (m.startsWith('over_32:')) return { reason: 'over_32', detail: m.slice(8) };
-  for (const k of ['already_in', 'not_today', 'open_shift', 'gps_pending', 'no_work'] as const) if (m.startsWith(k)) return { reason: k };
+  for (const k of ['already_in', 'not_today', 'open_shift', 'gps_pending', 'no_work', 'no_time', 'no_day'] as const) if (m.startsWith(k)) return { reason: k };
   if (code === '22023' || code === '22P02' || code === '22008' || code === '23514') return { reason: 'invalid' };
   return { reason: 'server' };
 }

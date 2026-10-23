@@ -96,6 +96,11 @@ describe('semana por semana (D-232)', () => {
     expect(r.cells.j).toEqual([[], ['a'], [], ['b'], [], [], []]);
     expect(r.people.j).toEqual([{ id: 'b', name: 'Beto' }]);
   });
+  it('no copia a un jobsite sin hora ni duración (D-234)', () => {
+    const prev = { ...site, locked: [], cells: [[], ['b'], [], ['b'], [], [], []] };
+    const r = copyWeek([{ ...site, startTime: null, minutes: null }], [prev], {});
+    expect(r.cells.j).toBeUndefined();
+  });
   it('marcar y desmarcar', () => {
     const c = toggleCell(site.cells, 3, 'a');
     expect(c[3]).toEqual(['a']);

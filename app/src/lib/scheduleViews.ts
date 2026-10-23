@@ -191,7 +191,15 @@ td { border-bottom: 0.5px solid #EADFD2; padding: 6px 4px; vertical-align: top; 
 
 // --- Semana por semana (D-232) ----------------------------------------------------------------------------------
 
-type PlanSite = { id: string; days: number[]; locked: number[]; cells: string[][]; people: { id: string; name: string }[] };
+type PlanSite = {
+  id: string;
+  days: number[];
+  locked: number[];
+  cells: string[][];
+  people: { id: string; name: string }[];
+  startTime?: string | null;
+  minutes?: number | null;
+};
 
 /**
  * "Copiar semana anterior" (D-200, orden 24): por jobsite, quién fue cada día de la semana anterior, solo en los días
@@ -207,7 +215,8 @@ export function copyWeek<T extends PlanSite>(
   const people: Record<string, { id: string; name: string }[]> = {};
   for (const site of current) {
     const prev = previous.find((p) => p.id === site.id);
-    if (!prev) continue;
+    // Sin hora y duración no se puede guardar esa semana (D-234): no se copia nada a ese jobsite.
+    if (!prev || site.startTime === null || site.minutes === null) continue;
     const base = drafts[site.id] ?? site.cells;
     cells[site.id] = base.map((c, i) => (site.days.includes(i) && !site.locked.includes(i) ? [...(prev.cells[i] ?? [])] : c));
     const ids = new Set(cells[site.id].flat());

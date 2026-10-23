@@ -5,13 +5,17 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { AppAlert } from '../AppAlert';
 import { AppButton } from '../AppButton';
 import { AppText } from '../AppText';
+import { Dialog } from '../Dialog';
 import { Icon } from '../Icon';
+import type { Clock } from '../PickerField';
 import { SelectField } from '../SelectField';
-import { Initial } from './SimpleParts';
+import { ClockField } from './ClockField';
+import { HoursField } from './HoursField';
+import { DialogButtons, Initial } from './SimpleParts';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useWorkStrings } from '@/i18n/useWorkStrings';
 import { dateFromKey, dayKey, formatShortDate } from '@/lib/leadRules';
-import { fetchWeekPlan, saveWeek, type WeekPlan, type WeekSite } from '@/lib/scheduleApi';
+import { fetchWeekPlan, saveWeek, setJobsiteVisitTime, type WeekPlan, type WeekSite } from '@/lib/scheduleApi';
 import { addDays, formatMinutes, sundayOf } from '@/lib/scheduleRules';
 import { copyWeek, sameCells, toggleCell } from '@/lib/scheduleViews';
 import { formatTime } from '@/lib/week';
@@ -38,6 +42,11 @@ export function ScheduleWeek({ onError }: { onError: (text: string | null) => vo
   const [extra, setExtra] = useState<Record<string, Person[]>>({});
   const [notice, setNotice] = useState<{ tone: 'error' | 'warning' | 'success'; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  // "Poner hora" desde la tarjeta (D-234): ventana al centro con hora y duración que se guardan en el jobsite.
+  const [timeFor, setTimeFor] = useState<WeekSite | null>(null);
+  const [clock, setClock] = useState<Clock | null>(null);
+  const [mins, setMins] = useState('');
+  const [timeError, setTimeError] = useState<string | null>(null);
   const key = dayKey(sunday);
 
   const load = useCallback(async () => {
@@ -92,11 +101,40 @@ export function ScheduleWeek({ onError }: { onError: (text: string | null) => vo
     const r = await saveWeek(key, changed.map((j) => ({ jobsite: j.id, cells: drafts[j.id] })));
     setBusy(false);
     if (!r.ok) {
-      setNotice({ tone: 'error', text: r.reason === 'over_32' ? t.over32(r.detail ?? '') : t.errorSave });
+      const text =
+        r.reason === 'over_32' ? t.over32(r.detail ?? '') : r.reason === 'no_time' ? t.errorNoTime : r.reason === 'no_day' ? t.errorNoDay : t.errorSave;
+      setNotice({ tone: 'error', text });
       return;
     }
     await load();
     setNotice(r.data.length ? { tone: 'warning', text: t.warn28(r.data.map((w) => w.name).join(', ')) } : { tone: 'success', text: t.weekSaved });
+  }
+
+  function openTime(j: WeekSite) {
+    setTimeFor(j);
+    setClock(null);
+    setMins('');
+    setTimeError(null);
+  }
+
+  async function saveTime() {
+    if (!timeFor) return;
+    const m = Number(mins);
+    if (!clock || !(m >= 15 && m <= 1440)) {
+      setTimeError(t.errorDuration);
+      return;
+    }
+    setBusy(true);
+    const r = await setJobsiteVisitTime(timeFor.id, `${String(clock.hours).padStart(2, '0')}:${String(clock.minutes).padStart(2, '0')}`, m);
+    setBusy(false);
+    if (!r.ok) {
+      setTimeError(t.errorSave);
+      return;
+    }
+    setTimeFor(null);
+    // Se vuelve a leer la semana sin perder lo marcado en otros jobsites.
+    const w = await fetchWeekPlan(key);
+    if (w.ok) setPlan(w.data);
   }
 
   const end = addDays(sunday, 6);
@@ -132,6 +170,7 @@ export function ScheduleWeek({ onError }: { onError: (text: string | null) => vo
             <AppText size={12} color={colors.secondary} style={{ marginTop: -8 }}>
               {time ? `${time} · ${t.weekHint}` : t.noTimeSite}
             </AppText>
+            {time ? null : <AppButton label={t.setTime} icon="clock" onPress={() => openTime(j)} />}
             {time ? (
               <>
                 {rows.length === 0 ? (
@@ -210,6 +249,16 @@ export function ScheduleWeek({ onError }: { onError: (text: string | null) => vo
         </AppText>
       </View>
       <AppButton label={t.saveWeek} onPress={() => void save()} disabled={busy || changed.length === 0} />
+
+      <Dialog visible={timeFor !== null} onClose={() => setTimeFor(null)}>
+        <AppText weight="heavy" size={17}>
+          {timeFor ? t.setTimeTitle(timeFor.name) : ''}
+        </AppText>
+        {timeError ? <AppAlert tone="error" text={timeError} /> : null}
+        <ClockField label={t.jobsiteTime} value={clock} onChange={setClock} />
+        <HoursField label={t.jobsiteDuration} value={mins} onChange={setMins} />
+        <DialogButtons cancel={t.cancel} save={t.save} onCancel={() => setTimeFor(null)} onSave={() => void saveTime()} disabled={busy} />
+      </Dialog>
     </View>
   );
 }

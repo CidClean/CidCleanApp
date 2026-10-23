@@ -132,7 +132,11 @@ export const workEs = {
   copyPrevious: 'Copiar semana anterior', // D-200 (orden 24)
   weekSaved: 'Semana guardada.', // D-200
   weekEmpty: 'Esta semana todavía no está guardada: marca quién va y guarda.', // D-200 (D-232: sin guardar se ve vacía)
-  noTimeSite: 'Pon la hora y la duración en la pestaña Horario del jobsite para armar su semana.', // D-200
+  noTimeSite: 'Este jobsite no tiene hora ni duración de visita. Ponlas para armar su semana.', // D-234
+  setTime: 'Poner hora', // APROBADO (D-234)
+  setTimeTitle: (name: string) => `Hora de las visitas de ${name}`, // D-234
+  errorNoTime: 'Un jobsite no tiene hora ni duración de visita. Toca "Poner hora" en su tarjeta.', // D-234
+  errorNoDay: 'Marcaste un día que ese jobsite no trabaja.', // D-234
   noPeopleSite: 'Nadie asignado a este jobsite. Agrega a alguien para armar su semana.', // D-200
   noDay: (site: string, day: string) => `${site} no tiene visita el ${day}`, // APROBADO (muestra D-232, lector de pantalla)
   weekNote: 'Lo que guardes crea las visitas de esa semana. Los cambios de un día puntual se hacen tocando la tarjeta en Simple.', // D-200 (muestra D-232, sin generación 4 semanas)
@@ -257,7 +261,11 @@ export const workEn: WorkStrings = {
   copyPrevious: 'Copy previous week',
   weekSaved: 'Week saved.',
   weekEmpty: "This week isn't saved yet: mark who goes and save.",
-  noTimeSite: "Set the visit time and length in the jobsite's Schedule tab to plan its week.",
+  noTimeSite: 'This jobsite has no visit time or length. Set them to plan its week.',
+  setTime: 'Set time',
+  setTimeTitle: (name: string) => `Visit time for ${name}`,
+  errorNoTime: 'A jobsite has no visit time or length. Tap "Set time" on its card.',
+  errorNoDay: "You marked a day that jobsite doesn't work.",
   noPeopleSite: 'Nobody is assigned to this jobsite. Add someone to plan its week.',
   noDay: (site: string, day: string) => `${site} has no visit on ${day}`,
   weekNote: 'Saving creates that week\'s visits. One-off changes for a day are made by tapping the card in Simple.',
