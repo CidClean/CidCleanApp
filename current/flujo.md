@@ -43,7 +43,7 @@ El walkthrough recoge la información específica de un sitio mientras se camina
 
 ## Ventas 3: Quote, SOW y portal del cliente
 
-El quote se arma desde el walkthrough y se envía por email a un portal seguro donde el cliente decide. Hay un quote por sitio y su monto es mensual.
+El quote se arma desde el walkthrough y se envía por email a un portal seguro donde el cliente decide. Hay un quote por sitio. El quote es el punto de partida, no un invoice: define planes por temporada con su frecuencia y su precio, add-ons y ajustes, y de ahí el sistema calcula el ingreso esperado de cada mes (D-227).
 
 - **Contenido:** services, add-ons, descuentos y tax (tasa predeterminada de 6%, editable). Cada servicio y add-on lleva una casilla "gravable" que decide el dueño.
 - **Envío:** por email, con acceso al portal mediante OTP.

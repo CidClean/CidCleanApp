@@ -24,3 +24,4 @@ Aquí van las versiones reemplazadas, con su fecha. No se usan: mandan los docum
 | [`arquitectura-2026-10-22-antes-de-D-214.md`](arquitectura-2026-10-22-antes-de-D-214.md) | 2026-10-22 | D-214 | Sin conexión funcionaba solo el walkthrough; ahora también marcar entrada y salida. |
 | [`diseno-visual-2026-10-23-antes-de-D-220.md`](diseno-visual-2026-10-23-antes-de-D-220.md) | 2026-10-23 | D-220 | El detalle del lead tenía solo las pestañas Datos, Sitios y Notas. |
 | [`diseno-visual-2026-10-23-antes-de-D-223.md`](diseno-visual-2026-10-23-antes-de-D-223.md) | 2026-10-23 | D-223 | Antes del estilo C (bento con ilustraciones) para toda la app. |
+| [`flujo-2026-10-23-antes-de-D-227.md`](flujo-2026-10-23-antes-de-D-227.md) | 2026-10-23 | D-227 | El quote tenía un solo monto mensual; ahora define planes por temporada, add-ons y ajustes. |
