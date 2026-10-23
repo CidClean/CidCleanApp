@@ -1,4 +1,4 @@
--- Pruebas del Schedule y Work (migración 20261026000001, hito 6). Repetibles: todo termina en rollback.
+-- Pruebas del Schedule y Work (migraciones 20261026000001 a 20261026000004, hito 6; D-231 y D-232). Repetibles: todo termina en rollback.
 -- Uso: psql -f supabase/tests/schedule_work.sql (la última consulta lista cada prueba con ok = true/false).
 
 begin;
@@ -59,6 +59,10 @@ declare
   hoy uuid;
   w uuid;
   w2 uuid;
+  js3 uuid;
+  js4 uuid;
+  dom date := week_monday(cc_today());  -- domingo de esta semana (D-231)
+  fw date := week_monday(cc_today()) + 35;  -- una semana futura sin guardar
   lunes date := week_monday(cc_today()) + 7;  -- la semana siguiente
   s1 uuid := (select profile_id from actores where nombre = 'staff1');
   s2 uuid := (select profile_id from actores where nombre = 'staff2');
@@ -72,10 +76,17 @@ begin
   insert into jobsite_assignments (jobsite_id, profile_id, start_date) values (js, s1, cc_today()) returning id into asig;
   insert into assignment_pay (assignment_id, kind, hourly_rate, guaranteed_hours, effective_from) values (asig, 'hourly', 18, 3, cc_today());
 
-  perform pg_temp.prueba('el generador crea 28 visitas de la frecuencia diaria', '28', generate_visits(js)::text);
-  perform pg_temp.prueba('no repite días', '0', generate_visits(js)::text);
-  perform pg_temp.prueba('frecuencia Otra no genera', '0', (select count(*) from visits where jobsite_id = js2)::text);
-  perform pg_temp.prueba('programa al personal asignado', '28', (select count(*) from visit_staff s join visits v on v.id = s.visit_id where v.jobsite_id = js and s.profile_id = s1)::text);
+  -- D-232: ya no se generan visitas solas; salen de cada semana guardada.
+  perform pg_temp.prueba('el generador ya no crea visitas (D-232)', '0', generate_visits(js)::text);
+  perform pg_temp.prueba('no queda el trabajo programado diario', '0', (select count(*) from cron.job where jobname = 'cidclean-generar-visitas')::text);
+  for r in select generate_series(0, 3) loop
+    perform pg_temp.valor('sched', format('select save_week(%L, %L)::text', dom + 7 * r::int,
+      jsonb_build_array(jsonb_build_object('jobsite', js, 'days', (select jsonb_object_agg(i::text, jsonb_build_array(s1)) from generate_series(0, 6) i)))));
+  end loop;
+  perform pg_temp.prueba('guardar 4 semanas crea las visitas desde hoy (los días pasados no)', (dom + 28 - cc_today())::text,
+    (select count(*) from visits where jobsite_id = js and not removed)::text);
+  perform pg_temp.prueba('con el personal marcado', (dom + 28 - cc_today())::text,
+    (select count(*) from visit_staff s join visits v on v.id = s.visit_id where v.jobsite_id = js and s.profile_id = s1)::text);
   select id into hoy from visits where jobsite_id = js and local_date = cc_today();
 
   -- Permisos del schedule
@@ -135,12 +146,45 @@ begin
   -- Quitar una visita sin trabajo; pausar detiene las visitas futuras
   r := (select id::text from visits where jobsite_id = js and local_date = cc_today() + 3);
   perform pg_temp.valor('sched', format('select delete_visit(%L)::text', r));
-  perform pg_temp.prueba('la visita generada quitada no vuelve', '0', (generate_visits(js) + (select count(*) from visits where id = r::uuid and not removed))::text);
+  perform pg_temp.prueba('quitar una visita sin trabajo: nada la vuelve a crear (D-232)', '0', (generate_visits(js) + (select count(*) from visits where id = r::uuid and not removed))::text);
   perform pg_temp.prueba('con trabajo no se quita', 'ERR:22023', pg_temp.valor('sched', format('select delete_visit(%L)::text', hoy)));
   update jobsites set status = 'paused' where id = js;
   perform pg_temp.prueba('al pausar se quitan las visitas futuras sin trabajo', '0',
     (select count(*) from visits where jobsite_id = js and starts_at > now() and not removed)::text);
   perform pg_temp.prueba('la pestaña Horario la ve quien ve clientes o el schedule', 'ERR:42501', pg_temp.valor('staff1', format('select jobsite_visits(%L)::text', js)));
+  -- Semana por semana (D-232)
+  insert into jobsites (client_id, name, address, frequency, visit_start_time, visit_minutes)
+  values (cli, 'Sede Semanal', '3 Main St', '{"kind":"weekly","days":[0,2]}', '18:00', 600) returning id into js3;
+  insert into jobsites (client_id, name, address, frequency, visit_start_time, visit_minutes)
+  values (cli, 'Sede Larga', '4 Main St', '{"kind":"daily","days":[0,1,2,3,4,5,6]}', '08:00', 300) returning id into js4;
+  perform pg_temp.prueba('el staff no ve el plan de la semana', 'ERR:42501', pg_temp.valor('staff1', format('select week_plan(%L)::text', fw)));
+  perform pg_temp.prueba('el staff no guarda semanas', 'ERR:42501', pg_temp.valor('staff1', format('select save_week(%L, ''[]'')::text', fw)));
+  perform pg_temp.prueba('la semana empieza en domingo al guardar', 'ERR:22023', pg_temp.valor('sched', format('select save_week(%L, ''[]'')::text', fw + 1)));
+  perform pg_temp.prueba('semanal lunes y miércoles: solo esos días se marcan (1 y 3 desde el domingo)', '[1, 3]',
+    pg_temp.valor('sched', format('select x->''days'' from jsonb_array_elements(week_plan(%L)->''jobsites'') x where x->>''id'' = %L', fw, js3)));
+  perform pg_temp.prueba('Otra se arma cualquier día', '7',
+    pg_temp.valor('sched', format('select jsonb_array_length(x->''days'') from jsonb_array_elements(week_plan(%L)->''jobsites'') x where x->>''id'' = %L', fw, js2)));
+  perform pg_temp.prueba('una semana sin guardar se ve vacía', '[]',
+    pg_temp.valor('sched', format('select x->''cells''->''1'' from jsonb_array_elements(week_plan(%L)->''jobsites'') x where x->>''id'' = %L', fw, js3)));
+  perform pg_temp.valor('sched', format('select save_week(%L, %L)::text', fw, jsonb_build_array(jsonb_build_object('jobsite', js3, 'days', jsonb_build_object('1', jsonb_build_array(s2))))));
+  perform pg_temp.prueba('guardar crea la visita con la hora y duración del jobsite', '18:00:00|600',
+    (select (starts_at at time zone cc_tz())::time || '|' || minutes from visits where jobsite_id = js3 and local_date = fw + 1));
+  perform pg_temp.prueba('y el plan la muestra', 'true',
+    pg_temp.valor('sched', format('select x->''cells''->''1'' ? %L from jsonb_array_elements(week_plan(%L)->''jobsites'') x where x->>''id'' = %L', s2, fw, js3)));
+  perform pg_temp.prueba('un día que el jobsite no trabaja no se marca', 'ERR:22023',
+    pg_temp.valor('sched', format('select save_week(%L, %L)::text', fw, jsonb_build_array(jsonb_build_object('jobsite', js3, 'days', jsonb_build_object('2', jsonb_build_array(s2)))))));
+  perform pg_temp.prueba('sin hora ni duración no se arma', 'ERR:22023',
+    pg_temp.valor('sched', format('select save_week(%L, %L)::text', fw, jsonb_build_array(jsonb_build_object('jobsite', js2, 'days', jsonb_build_object('1', jsonb_build_array(s2)))))));
+  perform pg_temp.valor('sched', format('select save_week(%L, %L)::text', fw, jsonb_build_array(jsonb_build_object('jobsite', js3, 'days', '{}'::jsonb))));
+  perform pg_temp.prueba('desmarcar quita la visita sin trabajo', '0', (select count(*) from visits where jobsite_id = js3 and not removed)::text);
+  perform pg_temp.prueba('con más de 32 h en la semana no guarda nada', 'ERR:22023',
+    pg_temp.valor('sched', format('select save_week(%L, %L)::text', fw, jsonb_build_array(jsonb_build_object('jobsite', js4,
+      'days', (select jsonb_object_agg(i::text, jsonb_build_array(s2)) from generate_series(0, 6) i))))));
+  perform pg_temp.prueba('(nada quedó a medias)', '0', (select count(*) from visits where jobsite_id = js4)::text);
+  perform pg_temp.prueba('con 30 h avisa (desde 28 h)', '1',
+    pg_temp.valor('sched', format('select jsonb_array_length(save_week(%L, %L))', fw, jsonb_build_array(jsonb_build_object('jobsite', js4,
+      'days', (select jsonb_object_agg(i::text, jsonb_build_array(s2)) from generate_series(0, 5) i))))));
+  perform pg_temp.prueba('guardar la semana queda en el historial', 'true', (select count(*) >= 1 from change_log where action = 'semana_guardada')::text);
   perform pg_temp.prueba('la semana empieza en domingo (D-231)', '2026-10-18|2026-10-25|2026-10-18',
     week_monday('2026-10-23')::text || '|' || week_monday('2026-10-25')::text || '|' || week_monday('2026-10-24')::text);
 end $$;
