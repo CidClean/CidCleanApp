@@ -8,6 +8,7 @@ import { AppAlert } from '@/components/AppAlert';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
 import { fetchDocumentUrl } from '@/lib/documents';
+import { fetchJobsiteDocumentUrl } from '@/lib/clientsApi';
 import { useGoBack } from '@/lib/navigation';
 import { fetchTermsUrl } from '@/lib/termsApi';
 import { downloadToCache, kindFromUrl, loadPdfView, removeCachedFile, type ViewerKind } from '@/lib/viewerFile';
@@ -22,7 +23,7 @@ type State = { status: 'loading' } | { status: 'error' } | { status: 'ready'; ki
  * open-document (documentos; deja la apertura en el historial) o de Storage firmado (términos).
  */
 export default function ViewerScreen() {
-  const { source, documentId, title } = useLocalSearchParams<{ source: 'terms' | 'document'; documentId?: string; title?: string }>();
+  const { source, documentId, title } = useLocalSearchParams<{ source: 'terms' | 'document' | 'jobsite'; documentId?: string; title?: string }>();
   const goBack = useGoBack();
   const { colors } = useTheme();
   const strings = useStrings();
@@ -33,7 +34,13 @@ export default function ViewerScreen() {
     let file: File | null = null;
 
     async function load() {
-      const result = source === 'terms' ? await fetchTermsUrl() : await fetchDocumentUrl(documentId ?? '');
+      // Hito 5: los documentos del jobsite usan el mismo visor (open-jobsite-document registra cada apertura).
+      const result =
+        source === 'terms'
+          ? await fetchTermsUrl()
+          : source === 'jobsite'
+            ? await fetchJobsiteDocumentUrl(documentId ?? '')
+            : await fetchDocumentUrl(documentId ?? '');
       if (cancelled) return;
       if (!result.ok) {
         setState({ status: 'error' });
