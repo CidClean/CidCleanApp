@@ -361,7 +361,7 @@ export type CalendarCell = {
   selected: boolean;
 };
 
-/** Semanas de lunes a domingo que cubren el mes (5 o 6 filas), como la muestra de la ronda 12. */
+/** Semanas de domingo a sábado (D-231) que cubren el mes (5 o 6 filas), como la muestra de la ronda 12. */
 export function monthGrid(
   year: number,
   month: number,
@@ -370,7 +370,7 @@ export function monthGrid(
   selectedKey: string | null,
 ): CalendarCell[][] {
   const first = new Date(year, month, 1);
-  const offset = (first.getDay() + 6) % 7; // lunes = 0
+  const offset = first.getDay(); // domingo = 0 (D-231)
   const start = new Date(year, month, 1 - offset);
   const last = new Date(year, month + 1, 0);
   const total = Math.ceil((offset + last.getDate()) / 7) * 7;

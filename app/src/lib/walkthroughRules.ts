@@ -4,6 +4,7 @@
  * Fuente: current/flujo.md ("Ventas 2: Walkthrough"), D-004, D-037, D-038, D-073 a D-075, D-080, D-091, D-105, D-106, D-119.
  */
 import { can, type Access } from './visibility';
+import { bySunday } from './weekOrder';
 
 // --- Tipos ------------------------------------------------------------------------------------------
 
@@ -296,7 +297,7 @@ export function frequencySummary(
 ): string {
   if (f.kind === 'daily') return `${s.daily} · ${s.times(7)}`;
   if (f.kind === 'other') return f.other.trim() ? `${s.other}: ${f.other.trim()}` : s.other;
-  const days = f.days.map((d) => s.days[d]);
+  const days = [...f.days].sort(bySunday).map((d) => s.days[d]);
   return days.length ? `${s.weekly}: ${days.join(', ')} · ${s.times(days.length)}` : s.weekly;
 }
 

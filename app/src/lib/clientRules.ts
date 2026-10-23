@@ -6,6 +6,7 @@
 import { dayKey, parseUsDate } from './leadRules';
 import { formatPhone, isValidPhone, normalizePhone } from './phone';
 import { can, type Access } from './visibility';
+import { bySunday } from './weekOrder';
 
 // --- Tipos ------------------------------------------------------------------------------------------
 
@@ -379,7 +380,7 @@ export function frequencyLabel(
   if (!f) return null;
   if (f.kind === 'daily') return s.daily;
   if (f.kind === 'other') return f.other?.trim() || s.other;
-  const names = [...f.days].sort((a, b) => a - b).map((d) => s.days[d]);
+  const names = [...f.days].sort(bySunday).map((d) => s.days[d]);
   if (names.length === 0) return null;
   if (names.length === 1) return names[0];
   return `${names.slice(0, -1).join(', ')} ${s.and} ${names[names.length - 1]}`;

@@ -23,7 +23,7 @@ export const workEs = {
   unscheduled: 'No programado', // D-200 (D-214)
   manual: 'Registrado por otro', // D-200 (D-052)
   open: 'Turno abierto', // D-200 (D-214)
-  hours: { h: 'h', min: 'min' }, // D-200
+  hours: { h: 'h' }, // D-231: duraciones en horas
   people: (n: number) => (n === 1 ? '1 persona' : `${n} personas`), // D-200
   nothingToApprove: 'No hay trabajos por aprobar.', // D-200
 
@@ -33,7 +33,7 @@ export const workEs = {
   jobsite: 'Jobsite', // APROBADO (flujo)
   day: 'Día', // D-200
   time: 'Hora', // APROBADO (D-072)
-  duration: 'Duración (min)', // D-200
+  duration: 'Duración', // D-200 (D-231: en horas)
   staff: 'Personal', // APROBADO (D-055)
   weekHours: (h: string) => `${h} esta semana`, // D-200 (solo para quien programa; el staff no lo ve, D-223)
   warn28: (names: string) => `${names}: 28 h o más esta semana.`, // D-200 (D-214: aviso desde 28 h)
@@ -46,7 +46,7 @@ export const workEs = {
   errorLoad: 'No se pudo cargar el schedule. Inténtalo otra vez.', // D-200
   errorSave: 'No se pudo guardar. Inténtalo otra vez.', // APROBADO (D-195)
   errorWorked: 'Esta visita ya tiene trabajo registrado.', // D-200
-  errorDuration: 'Escribe la duración en minutos, de 15 a 1440.', // D-200
+  errorDuration: 'Elige la hora y la duración (de 0.25 h a 24 h).', // D-200 (D-231)
   registerOthers: 'Registrar trabajo', // D-200 (D-052)
   addPerson: 'Agregar persona', // D-200
 
@@ -89,10 +89,30 @@ export const workEs = {
 
   // Horario del jobsite
   jobsiteTime: 'Hora de las visitas', // D-200 (D-214)
-  jobsiteDuration: 'Duración de cada visita (min)', // D-200 (D-214)
+  jobsiteDuration: 'Duración de cada visita', // D-200 (D-231: en horas)
   jobsiteTimeNote: 'Las visitas se generan 4 semanas por adelantado según la frecuencia.', // D-200 (D-214)
   jobsiteNoTime: 'Pon la hora y la duración para generar las visitas.', // D-200
   jobsiteOther: 'Frecuencia Otra: las visitas se agregan a mano en Schedule y Work.', // D-200 (D-214)
+
+  // Vistas del Schedule (D-231, orden 23)
+  viewList: 'Lista', // APROBADO (orden 23, D-231)
+  viewTable: 'Tabla', // APROBADO (orden 23, D-231)
+  viewCalendar: 'Calendario', // APROBADO (orden 23, D-231)
+  byEmployee: 'Empleado → días', // APROBADO (D-231)
+  byDay: 'Día → empleados', // APROBADO (D-231)
+  employee: 'Empleado', // D-200: encabezado de la primera columna
+  unstaffed: 'Sin personal', // D-200: fila de visitas sin personal en la tabla
+  share: 'Compartir', // APROBADO (D-231)
+  shareSoon: 'Compartir llega con la versión 1.3.0 de la app.', // D-200 (en el APK 1.2.0 no está el módulo)
+  shareError: 'No se pudo compartir. Inténtalo otra vez.', // D-200
+  pdfTitle: 'Horario semanal', // D-200: título del PDF
+  calDay: 'Día', // APROBADO (D-231)
+  cal3: '3 días', // APROBADO (D-231)
+  calWeek: 'Semana', // APROBADO (D-231)
+  calMonth: 'Mes', // APROBADO (D-231)
+  previous: 'Anterior', // D-200: flecha (lector de pantalla)
+  next: 'Siguiente', // D-200
+  more: (n: number) => `+${n}`, // D-200: más visitas en un día del mes
 };
 
 export type WorkStrings = typeof workEs;
@@ -116,7 +136,7 @@ export const workEn: WorkStrings = {
   unscheduled: 'Not scheduled',
   manual: 'Recorded by someone else',
   open: 'Shift open',
-  hours: { h: 'h', min: 'min' },
+  hours: { h: 'h' },
   people: (n: number) => (n === 1 ? '1 person' : `${n} people`),
   nothingToApprove: 'Nothing to approve.',
   visitTitle: 'Visit',
@@ -124,7 +144,7 @@ export const workEn: WorkStrings = {
   jobsite: 'Jobsite',
   day: 'Day',
   time: 'Time',
-  duration: 'Duration (min)',
+  duration: 'Length',
   staff: 'Staff',
   weekHours: (h: string) => `${h} this week`,
   warn28: (names: string) => `${names}: 28 h or more this week.`,
@@ -137,7 +157,7 @@ export const workEn: WorkStrings = {
   errorLoad: "Couldn't load the schedule. Try again.",
   errorSave: "Couldn't save. Try again.",
   errorWorked: 'This visit already has work recorded.',
-  errorDuration: 'Enter the duration in minutes, 15 to 1440.',
+  errorDuration: 'Choose the time and length (0.25 h to 24 h).',
   registerOthers: 'Record work',
   addPerson: 'Add person',
   workTitle: 'Work',
@@ -172,10 +192,29 @@ export const workEn: WorkStrings = {
   homeForgot: (n: number) => (n === 1 ? '1 missed clock in' : `${n} missed clock ins`),
   homeOpen: (n: number) => (n === 1 ? '1 open shift' : `${n} open shifts`),
   jobsiteTime: 'Visit time',
-  jobsiteDuration: 'Length of each visit (min)',
+  jobsiteDuration: 'Length of each visit',
   jobsiteTimeNote: 'Visits are generated 4 weeks ahead from the frequency.',
   jobsiteNoTime: 'Set the time and length to generate visits.',
   jobsiteOther: 'Frequency Other: visits are added by hand in Schedule & Work.',
+
+  viewList: 'List',
+  viewTable: 'Table',
+  viewCalendar: 'Calendar',
+  byEmployee: 'Employee → days',
+  byDay: 'Day → employees',
+  employee: 'Employee',
+  unstaffed: 'No staff',
+  share: 'Share',
+  shareSoon: 'Sharing comes with version 1.3.0 of the app.',
+  shareError: "Couldn't share. Try again.",
+  pdfTitle: 'Weekly schedule',
+  calDay: 'Day',
+  cal3: '3 days',
+  calWeek: 'Week',
+  calMonth: 'Month',
+  previous: 'Previous',
+  next: 'Next',
+  more: (n: number) => `+${n}`,
 };
 
 export function getWorkStrings(locale: Locale): WorkStrings {

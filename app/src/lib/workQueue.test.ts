@@ -1,5 +1,5 @@
 import { enqueue, loadQueue, loadShift, saveShift, setWorkStorage, syncWorkQueue, type QueueDeps } from './workQueue';
-import { elapsed, formatMinutes, pickNext, pickToday, weekRange, weekWarning } from './scheduleRules';
+import { elapsed, formatMinutes, HOUR_STEPS, pickNext, pickToday, toQuarter, weekRange, weekWarning } from './scheduleRules';
 import type { MyVisit } from './scheduleApi';
 
 function memory() {
@@ -49,17 +49,21 @@ describe('marcar sin internet (D-214)', () => {
 });
 
 describe('reglas del schedule', () => {
-  it('horas al minuto y cronómetro', () => {
-    expect(formatMinutes(135)).toBe('2 h 15 min');
-    expect(formatMinutes(45)).toBe('45 min');
-    expect(formatMinutes(180)).toBe('3 h');
+  it('horas en horas (D-231) y cronómetro', () => {
+    expect(formatMinutes(135)).toBe('2.25 h');
+    expect(formatMinutes(90)).toBe('1.5 h');
+    expect(formatMinutes(120)).toBe('2 h');
+    expect(formatMinutes(127)).toBe('2.12 h');
+    expect(toQuarter(127)).toBe(120);
+    expect(HOUR_STEPS[0]).toBe(15);
+    expect(HOUR_STEPS[HOUR_STEPS.length - 1]).toBe(1440);
     expect(elapsed(new Date(0), new Date(3909000))).toBe('1:05:09');
   });
-  it('semana actual y siguiente de lunes a domingo (D-012, D-093)', () => {
+  it('semana actual y siguiente de domingo a sábado (D-012, D-093, D-231)', () => {
     const r = weekRange(new Date(2026, 9, 23), 'this');
-    expect(r.from).toBe('2026-10-19');
-    expect(r.to).toBe('2026-10-25');
-    expect(weekRange(new Date(2026, 9, 23), 'next').from).toBe('2026-10-26');
+    expect(r.from).toBe('2026-10-18');
+    expect(r.to).toBe('2026-10-24');
+    expect(weekRange(new Date(2026, 9, 23), 'next').from).toBe('2026-10-25');
   });
   it('aviso desde 28 h y bloqueo con más de 32 h (solo para quien programa)', () => {
     expect(weekWarning(27 * 60)).toBeNull();

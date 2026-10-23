@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 
 // --- Simulaciones --------------------------------------------------------------------------------------------
 const mockBack = jest.fn();
+const mockPush = jest.fn();
 const mockPosition = jest.fn();
 const mockCheck = jest.fn();
 const mockClockIn = jest.fn();
@@ -10,7 +11,7 @@ const mockVisitWork = jest.fn();
 const mockApprove = jest.fn();
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ replace: jest.fn(), push: jest.fn(), navigate: jest.fn(), back: mockBack, canGoBack: () => true }),
+  useRouter: () => ({ replace: jest.fn(), push: mockPush, navigate: jest.fn(), back: mockBack, canGoBack: () => true }),
   useLocalSearchParams: () => ({ id: 'v1' }),
   useFocusEffect: (effect: () => void | (() => void)) => {
     const { useEffect } = require('react');
@@ -51,10 +52,16 @@ jest.mock('@/lib/scheduleApi', () => ({
   editWorkEntry: jest.fn(),
   recordWork: jest.fn(),
   reviewGps: jest.fn(),
+  fetchSchedule: (...a: unknown[]) => mockSchedule(...a),
+  fetchToApprove: jest.fn(async () => ({ ok: true, data: [] })),
 }));
+const mockSchedule = jest.fn();
+const mockShare = jest.fn();
+jest.mock('@/lib/sharePdf', () => ({ sharePdf: (...a: unknown[]) => mockShare(...a), shareAvailable: () => false }));
 
 import { ClockCard } from '@/components/work/ClockCard';
 import WorkScreen from '@/app/(app)/schedule/work/[id]';
+import ScheduleScreen from '@/app/(app)/schedule/index';
 
 const visit = {
   id: 'v1',
@@ -133,5 +140,48 @@ describe('Trabajo por aprobar (D-109)', () => {
     await fireEvent.press(screen.getByText('Aprobar'));
     expect(await screen.findByText('Falta revisar el GPS fuera de rango.')).toBeTruthy();
     expect(mockBack).not.toHaveBeenCalled();
+  });
+});
+
+describe('Schedule: Tabla y Calendario (D-231)', () => {
+  const today = new Date();
+  const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const visits = [
+    {
+      id: 'v1',
+      jobsiteId: 'j1',
+      jobsite: 'Break TAX Office',
+      client: 'Break TAX',
+      day: key,
+      startsAt: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 18, 0),
+      minutes: 90,
+      generated: true,
+      approved: false,
+      worked: false,
+      staff: [{ id: 'p1', name: 'Rosemary', weekMinutes: 90 }],
+    },
+  ];
+
+  it('alterna Lista, Tabla (dos sentidos, Compartir) y Calendario', async () => {
+    mockSchedule.mockResolvedValue({ ok: true, data: visits });
+    mockShare.mockResolvedValue('unavailable');
+    await render(<ScheduleScreen />);
+    expect(await screen.findByText('6:00 PM · 1.5 h · Break TAX')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Tabla'));
+    expect(await screen.findByText('Rosemary')).toBeTruthy();
+    expect(screen.getByText('Break TAX O…')).toBeTruthy();
+    // La semana empieza en domingo (D-231): la primera columna es D.
+    expect(screen.getByText(/^D \d+$/)).toBeTruthy();
+    await fireEvent.press(screen.getByText('Día → empleados'));
+    expect(await screen.findByText('Rosemary → Break TAX Office · 6:00 PM')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Compartir'));
+    await waitFor(() => expect(mockShare).toHaveBeenCalled());
+    expect(String(mockShare.mock.calls[0][0])).toContain('Rosemary');
+    expect(await screen.findByText('Compartir llega con la versión 1.3.0 de la app.')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Calendario'));
+    await fireEvent.press(screen.getByText('Mes'));
+    expect(await screen.findByText('Break…')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Break…'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/schedule/visit/[id]', params: { id: 'v1', day: key } });
   });
 });

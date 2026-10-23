@@ -163,13 +163,13 @@ describe('hora del walkthrough (D-072)', () => {
 describe('calendario del mes (D-104)', () => {
   const today = new Date(2026, 9, 21);
 
-  it('octubre de 2026 empieza en el lunes 28 de septiembre y termina el domingo 1 de noviembre (muestra ronda 12)', () => {
+  it('octubre de 2026 empieza en el domingo 27 de septiembre y termina el sábado 31 de octubre (D-231)', () => {
     const weeks = monthGrid(2026, 9, today, new Set(), null);
     expect(weeks).toHaveLength(5);
     expect(weeks.every((w) => w.length === 7)).toBe(true);
-    expect(weeks[0][0]).toMatchObject({ key: '2026-09-28', day: 28, inMonth: false });
-    expect(weeks[0][3]).toMatchObject({ key: '2026-10-01', inMonth: true });
-    expect(weeks[4][6]).toMatchObject({ key: '2026-11-01', inMonth: false });
+    expect(weeks[0][0]).toMatchObject({ key: '2026-09-27', day: 27, inMonth: false });
+    expect(weeks[0][4]).toMatchObject({ key: '2026-10-01', inMonth: true });
+    expect(weeks[4][6]).toMatchObject({ key: '2026-10-31', inMonth: true });
   });
 
   it('marca los días con citas, el elegido y los pasados', () => {
@@ -183,8 +183,8 @@ describe('calendario del mes (D-104)', () => {
     expect(cells.filter((c) => c.selected)).toHaveLength(1);
   });
 
-  it('un mes que empieza en lunes no lleva días del mes anterior; uno largo usa 6 semanas', () => {
-    expect(monthGrid(2027, 2, today, new Set(), null)[0][0].key).toBe('2027-03-01');
+  it('un mes que empieza en domingo no lleva días del mes anterior; uno largo usa 6 semanas', () => {
+    expect(monthGrid(2026, 10, today, new Set(), null)[0][0].key).toBe('2026-11-01');
     expect(monthGrid(2026, 7, today, new Set(), null)).toHaveLength(6); // agosto 2026 empieza en sábado
   });
 

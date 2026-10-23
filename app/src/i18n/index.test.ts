@@ -63,8 +63,8 @@ describe('textos', () => {
   });
 
   test('la tira de la semana: español L M X J V S D, inglés M T W T F S S', () => {
-    expect(es.home.weekDays.join('')).toBe('LMXJVSD');
-    expect(en.home.weekDays.join('')).toBe('MTWTFSS');
+    expect(es.home.weekDays.join('')).toBe('DLMXJVS');
+    expect(en.home.weekDays.join('')).toBe('SMTWTFS');
   });
 
   test('getStrings devuelve cada idioma', () => {

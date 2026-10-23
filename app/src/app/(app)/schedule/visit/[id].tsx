@@ -4,7 +4,6 @@ import { View } from 'react-native';
 
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
-import { AppField } from '@/components/AppField';
 import { AppText } from '@/components/AppText';
 import { CardBlock } from '@/components/bento/Card';
 import { Checkbox } from '@/components/Checkbox';
@@ -12,6 +11,7 @@ import { FormScroll } from '@/components/FormScroll';
 import { Sheet } from '@/components/Sheet';
 import { TopBar } from '@/components/TopBar';
 import { UsDateField } from '@/components/UsDateField';
+import { HoursField } from '@/components/work/HoursField';
 import { ClockField, clockOf } from '@/components/work/ClockField';
 import type { Clock } from '@/components/PickerField';
 import { useStrings } from '@/i18n/useStrings';
@@ -141,7 +141,7 @@ export default function VisitScreen() {
               <>
                 <UsDateField label={t.day} value={date} onChange={setDate} />
                 <ClockField label={t.time} value={time} onChange={setTime} />
-                <AppField label={t.duration} value={minutes} onChangeText={(v) => setMinutes(v.replace(/\D/g, ''))} keyboardType="number-pad" error={minutes && !validMinutes ? t.errorDuration : null} />
+                <HoursField label={t.duration} value={minutes} onChange={setMinutes} />
               </>
             ) : (
               <AppText size={sample.noteSize} color={colors.secondary} style={{ marginBottom: 8 }}>

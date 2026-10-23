@@ -126,7 +126,7 @@ export const salesEs = {
     errorTime: 'Elige la hora.', // D-216 (delegado D-200): la hora ya no se escribe
     errorPast: 'Elige una fecha y hora futuras.', // D-200
     errorSchedule: 'No se pudo agendar. Inténtalo otra vez.', // D-200 (mismo estilo de D-195)
-    weekDays: ['L', 'M', 'X', 'J', 'V', 'S', 'D'], // APROBADO (muestras ronda 8 y 12)
+    weekDays: ['D', 'L', 'M', 'X', 'J', 'V', 'S'], // APROBADO (muestras ronda 8 y 12); D-231: desde domingo
     months: [
       'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
@@ -297,7 +297,7 @@ export const salesEn: SalesStrings = {
     errorTime: 'Choose a time.',
     errorPast: 'Choose a future date and time.',
     errorSchedule: "Couldn't schedule. Try again.",
-    weekDays: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+    weekDays: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
     months: [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December',

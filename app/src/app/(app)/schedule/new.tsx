@@ -4,12 +4,12 @@ import { View } from 'react-native';
 
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
-import { AppField } from '@/components/AppField';
 import { FormScroll } from '@/components/FormScroll';
 import type { Clock } from '@/components/PickerField';
 import { SelectField } from '@/components/SelectField';
 import { TopBar } from '@/components/TopBar';
 import { UsDateField } from '@/components/UsDateField';
+import { HoursField } from '@/components/work/HoursField';
 import { ClockField } from '@/components/work/ClockField';
 import { useStrings } from '@/i18n/useStrings';
 import { useWorkStrings } from '@/i18n/useWorkStrings';
@@ -77,7 +77,7 @@ export default function NewVisitScreen() {
         ) : null}
         <UsDateField label={t.day} value={date} onChange={setDate} />
         <ClockField label={t.time} value={time} onChange={setTime} />
-        <AppField label={t.duration} value={minutes} onChangeText={(v) => setMinutes(v.replace(/\D/g, ''))} keyboardType="number-pad" />
+        <HoursField label={t.duration} value={minutes} onChange={setMinutes} />
         <AppButton label={t.save} onPress={() => void create()} disabled={busy || !jobsite} />
       </FormScroll>
     </View>

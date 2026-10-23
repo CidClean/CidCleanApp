@@ -50,7 +50,7 @@ export const es = {
     today: 'Hoy', // APROBADO (D-165)
     slideToClockIn: 'Desliza para marcar entrada', // APROBADO (D-049)
     timeRange: (from: string, to: string) => `${from} a ${to}`, // APROBADO (muestra ronda 14): "6:00 PM a 9:00 PM"
-    weekDays: ['L', 'M', 'X', 'J', 'V', 'S', 'D'], // APROBADO (D-048)
+    weekDays: ['D', 'L', 'M', 'X', 'J', 'V', 'S'], // APROBADO (D-048); D-231: la semana empieza en domingo
     // D-223 (muestra estilo C).
     greeting: (name: string) => `Hola, ${name}`, // APROBADO (D-223)
     dateLine: (d: Date | string) => {

@@ -22,11 +22,10 @@ export function dateKey(d: Date): string {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
-/** Lunes de la semana de `d`, a las 00:00 locales. */
-export function startOfWeekMonday(d: Date): Date {
+/** Domingo de la semana de `d` (D-231), a las 00:00 locales. */
+export function startOfWeek(d: Date): Date {
   const out = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const sinceMonday = (out.getDay() + 6) % 7; // domingo = 0 -> 6
-  out.setDate(out.getDate() - sinceMonday);
+  out.setDate(out.getDate() - out.getDay());
   return out;
 }
 
@@ -38,9 +37,9 @@ export type WeekDay = {
   isToday: boolean;
 };
 
-/** Los 7 días de la semana (lunes a domingo) con los días de visita marcados. */
+/** Los 7 días de la semana (domingo a sábado, D-231) con los días de visita marcados. */
 export function weekDays(today: Date, visits: readonly Visit[], labels: readonly string[]): WeekDay[] {
-  const monday = startOfWeekMonday(today);
+  const monday = startOfWeek(today);
   const visitDays = new Set(visits.map((v) => dateKey(v.start)));
   return Array.from({ length: 7 }, (_, i) => {
     const day = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);

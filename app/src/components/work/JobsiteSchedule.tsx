@@ -4,12 +4,12 @@ import { View } from 'react-native';
 
 import { AppAlert } from '../AppAlert';
 import { AppButton } from '../AppButton';
-import { AppField } from '../AppField';
 import { AppText } from '../AppText';
 import { CardBlock } from '../bento/Card';
 import { ListRow } from '../ListRow';
 import type { Clock } from '../PickerField';
 import { ClockField } from './ClockField';
+import { HoursField } from './HoursField';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useWorkStrings } from '@/i18n/useWorkStrings';
 import type { Jobsite } from '@/lib/clientRules';
@@ -83,7 +83,7 @@ export function JobsiteSchedule({ jobsite }: { jobsite: Jobsite }) {
       {canSet ? (
         <>
           <ClockField label={t.jobsiteTime} value={time} onChange={setTime} />
-          <AppField label={t.jobsiteDuration} value={minutes} onChangeText={(v) => setMinutes(v.replace(/\D/g, ''))} keyboardType="number-pad" />
+          <HoursField label={t.jobsiteDuration} value={minutes} onChange={setMinutes} />
           <AppText size={sample.noteSize} color={colors.secondary} style={{ marginBottom: 8 }}>
             {jobsite.frequency?.kind === 'other' ? t.jobsiteOther : t.jobsiteTimeNote}
           </AppText>

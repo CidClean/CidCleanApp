@@ -1,19 +1,21 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '../AppText';
+import { SUNDAY_FIRST } from '@/lib/weekOrder';
 import { useTheme } from '@/theme';
 
 type Props = { labels: readonly string[]; selected: readonly number[]; disabled?: boolean; onToggle: (day: number) => void };
 
 /**
- * Selector de días (D-038, muestras ronda 8 y 12 `.days`): 7 botones de nombre corto en una fila, 12px,
+ * Selector de días (D-038, muestras ronda 8 y 12 `.days`): 7 botones de nombre corto en una fila (de domingo a sábado, D-231), 12px,
  * relleno de 10px, esquinas de 8px, contorno al 32%; el marcado con fondo de marca y texto blanco en medio peso.
  */
 export function DayButtons({ labels, selected, disabled = false, onToggle }: Props) {
   const { colors, brand } = useTheme();
   return (
     <View style={styles.row}>
-      {labels.map((label, day) => {
+      {SUNDAY_FIRST.map((day) => {
+        const label = labels[day] ?? '';
         const on = selected.includes(day);
         return (
           <Pressable

@@ -9,13 +9,17 @@ import { Chip } from '@/components/Chip';
 import { Icon } from '@/components/Icon';
 import { Segmented } from '@/components/Segmented';
 import { TopBar } from '@/components/TopBar';
+import { ScheduleCalendar } from '@/components/work/ScheduleCalendar';
+import { ScheduleTable } from '@/components/work/ScheduleTable';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useStrings } from '@/i18n/useStrings';
 import { useWorkStrings } from '@/i18n/useWorkStrings';
 import { dateFromKey, dayKey, formatShortDate } from '@/lib/leadRules';
 import { useGoBack } from '@/lib/navigation';
 import { fetchSchedule, fetchToApprove, type ScheduleVisit, type ToApprove } from '@/lib/scheduleApi';
-import { formatMinutes, groupByDay, mondayOf, weekWarning } from '@/lib/scheduleRules';
+import { formatMinutes, groupByDay, weekWarning } from '@/lib/scheduleRules';
+import { scheduleHtml, shiftAnchor, viewDays, type CalendarMode, type ScheduleView } from '@/lib/scheduleViews';
+import { sharePdf } from '@/lib/sharePdf';
 import { usePermissions } from '@/lib/session';
 import { can, canAny } from '@/lib/visibility';
 import { formatTime } from '@/lib/week';
@@ -24,8 +28,10 @@ import { iconStrokeWidth, sample, useTheme } from '@/theme';
 const WORK_KEYS = ['work_aprobar', 'work_editar', 'work_revisar_gps', 'work_registrar_por_otros'];
 
 /**
- * Schedule y Work (D-214): Schedule como lista por día con todos los jobsites y su personal (semana con flechas y + para
- * una visita a mano) y Por aprobar (D-053) con ficha Pendiente, Urgente (D-131) y GPS fuera de rango (D-054).
+ * Schedule y Work (D-214): Schedule con tres vistas (D-231): Lista por día con todos los jobsites y su personal, Tabla
+ * semanal (Empleado → días o Día → empleados, con Compartir en PDF) y Calendario (Día, 3 días, Semana y Mes); flechas
+ * para moverse y + para una visita a mano. Por aprobar (D-053) con ficha Pendiente, Urgente (D-131) y GPS fuera de
+ * rango (D-054).
  */
 export default function ScheduleScreen() {
   const params = useLocalSearchParams<{ tab?: string }>();
@@ -39,13 +45,18 @@ export default function ScheduleScreen() {
   const seesSchedule = can(access, 'schedule_ver_editar');
   const seesWork = canAny(access, WORK_KEYS);
   const [tab, setTab] = useState<'schedule' | 'approve'>(params.tab === 'approve' || !seesSchedule ? 'approve' : 'schedule');
-  const [monday, setMonday] = useState(() => mondayOf(new Date()));
+  const [view, setView] = useState<ScheduleView>('list');
+  const [tableMode, setTableMode] = useState<'employee' | 'day'>('employee');
+  const [calMode, setCalMode] = useState<CalendarMode>('week');
+  const [anchor, setAnchor] = useState(() => new Date());
+  const [notice, setNotice] = useState<string | null>(null);
   const [visits, setVisits] = useState<ScheduleVisit[] | null>(null);
   const [toApprove, setToApprove] = useState<ToApprove[] | null>(null);
   const [failed, setFailed] = useState(false);
 
-  const from = dayKey(monday);
-  const to = dayKey(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6));
+  const days = viewDays(view, calMode, anchor);
+  const from = days[0];
+  const to = days[days.length - 1];
   const load = useCallback(async () => {
     setFailed(false);
     if (tab === 'schedule' && seesSchedule) {
@@ -68,7 +79,28 @@ export default function ScheduleScreen() {
 
   if (!seesSchedule && !seesWork) return <Redirect href="/" />;
   const dayTitle = (key: string) => formatShortDate(dateFromKey(key), s);
-  const shift = (weeks: number) => setMonday((m) => new Date(m.getFullYear(), m.getMonth(), m.getDate() + weeks * 7));
+  const shift = (dir: 1 | -1) => setAnchor((a) => shiftAnchor(view, calMode, a, dir));
+  const open = (v: ScheduleVisit) => router.push({ pathname: '/schedule/visit/[id]', params: { id: v.id, day: v.day } });
+  const monthTitle = `${s.schedule.months[anchor.getMonth()]} ${anchor.getFullYear()}`;
+  const rangeTitle =
+    view === 'calendar' && calMode === 'month' ? monthTitle : from === to ? dayTitle(from) : `${dayTitle(from)} – ${dayTitle(to)}`;
+
+  async function share() {
+    setNotice(null);
+    const html = scheduleHtml(tableMode, visits ?? [], days, {
+      title: t.pdfTitle,
+      range: rangeTitle,
+      employee: t.employee,
+      unstaffed: t.unstaffed,
+      noVisits: t.noVisits,
+      dayHeaders: strings.home.weekDays,
+      dayTitle,
+      hours: t.hours,
+    });
+    const r = await sharePdf(html, t.pdfTitle);
+    if (r === 'unavailable') setNotice(t.shareSoon);
+    else if (r === 'error') setNotice(t.shareError);
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -93,21 +125,89 @@ export default function ScheduleScreen() {
 
         {tab === 'schedule' ? (
           <>
+            <View style={{ marginBottom: 10 }}>
+              <Segmented
+                options={[
+                  { value: 'list', label: t.viewList },
+                  { value: 'table', label: t.viewTable },
+                  { value: 'calendar', label: t.viewCalendar },
+                ]}
+                value={view}
+                onChange={(v) => {
+                  setNotice(null);
+                  setView(v);
+                }}
+              />
+            </View>
+            {view === 'table' ? (
+              <View style={styles.toolbar}>
+                <View style={{ flex: 1 }}>
+                  <Segmented
+                    options={[
+                      { value: 'employee', label: t.byEmployee },
+                      { value: 'day', label: t.byDay },
+                    ]}
+                    value={tableMode}
+                    onChange={setTableMode}
+                  />
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t.share}
+                  onPress={() => void share()}
+                  style={[styles.share, { backgroundColor: colors.card }]}
+                >
+                  <Icon name="share" size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
+                  <AppText size={13} weight="bold">
+                    {t.share}
+                  </AppText>
+                </Pressable>
+              </View>
+            ) : null}
+            {view === 'calendar' ? (
+              <View style={{ marginBottom: 10 }}>
+                <Segmented
+                  options={[
+                    { value: 'day', label: t.calDay },
+                    { value: 'three', label: t.cal3 },
+                    { value: 'week', label: t.calWeek },
+                    { value: 'month', label: t.calMonth },
+                  ]}
+                  value={calMode}
+                  onChange={setCalMode}
+                />
+              </View>
+            ) : null}
+            {notice ? <AppAlert text={notice} /> : null}
             <View style={[styles.week, { backgroundColor: colors.card }]}>
-              <Pressable accessibilityRole="button" accessibilityLabel={t.previousWeek} onPress={() => shift(-1)} hitSlop={12}>
+              <Pressable accessibilityRole="button" accessibilityLabel={t.previous} onPress={() => shift(-1)} hitSlop={12}>
                 <Icon name="chevron-left" size={20} strokeWidth={iconStrokeWidth} color={colors.text} />
               </Pressable>
-              <AppText weight="bold">{`${dayTitle(from)} – ${dayTitle(to)}`}</AppText>
-              <Pressable accessibilityRole="button" accessibilityLabel={t.followingWeek} onPress={() => shift(1)} hitSlop={12}>
+              <AppText weight="bold">{rangeTitle}</AppText>
+              <Pressable accessibilityRole="button" accessibilityLabel={t.next} onPress={() => shift(1)} hitSlop={12}>
                 <Icon name="chevron-right" size={20} strokeWidth={iconStrokeWidth} color={colors.text} />
               </Pressable>
             </View>
-            {visits && visits.length === 0 ? (
+            {view === 'table' && visits ? <ScheduleTable mode={tableMode} visits={visits} days={days} onOpen={open} /> : null}
+            {view === 'calendar' && visits ? (
+              <ScheduleCalendar
+                mode={calMode}
+                days={days}
+                visits={visits}
+                month={anchor.getMonth()}
+                onOpen={open}
+                onPickDay={(key) => {
+                  setAnchor(dateFromKey(key));
+                  setCalMode('day');
+                }}
+              />
+            ) : null}
+            {view === 'list' && visits && visits.length === 0 ? (
               <AppText size={sample.noteSize} color={colors.secondary}>
                 {t.noVisits}
               </AppText>
             ) : null}
-            {groupByDay(visits ?? []).map((g) => (
+            {(view === 'list' ? groupByDay(visits ?? []) : []).map((g) => (
               <View key={g.day} style={{ marginBottom: 12, gap: 8 }}>
                 <AppText weight="heavy" size={16}>
                   {dayTitle(g.day)}
@@ -119,7 +219,7 @@ export default function ScheduleScreen() {
                       key={v.id}
                       wide
                       accessibilityLabel={`${v.jobsite} ${formatTime(v.startsAt)}`}
-                      onPress={() => router.push({ pathname: '/schedule/visit/[id]', params: { id: v.id, day: v.day } })}
+                      onPress={() => open(v)}
                       style={{ gap: 6, paddingVertical: 14 }}
                     >
                       <View style={styles.rowHead}>
@@ -194,4 +294,6 @@ const styles = StyleSheet.create({
   page: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 16 },
   week: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: 20, padding: 12, marginBottom: 12 },
   rowHead: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  toolbar: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  share: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 40, paddingHorizontal: 12, borderRadius: 12 },
 });

@@ -51,7 +51,7 @@ export const en: Strings = {
     today: 'Today', // staff home: today's visit card
     slideToClockIn: 'Slide to clock in',
     timeRange: (from: string, to: string) => `${from} to ${to}`, // "6:00 PM to 9:00 PM"
-    weekDays: ['M', 'T', 'W', 'T', 'F', 'S', 'S'], // staff home: week strip, Monday first
+    weekDays: ['S', 'M', 'T', 'W', 'T', 'F', 'S'], // staff home: week strip, Sunday first (D-231)
     greeting: (name: string) => `Hi, ${name}`,
     dateLine: (d: Date | string) => {
       const x = d instanceof Date ? d : new Date();

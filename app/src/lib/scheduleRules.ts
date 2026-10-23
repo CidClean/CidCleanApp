@@ -3,13 +3,22 @@ import type { MyVisit } from './scheduleApi';
 
 /** Reglas puras del Schedule y Work (hito 6). Sin red: se prueban solas. */
 
-/** "2 h 15 min", "45 min", "3 h" (horas al minuto, D-214). */
-export function formatMinutes(total: number, s: { h: string; min: string } = { h: 'h', min: 'min' }): string {
+/**
+ * Duraciones y horas en horas (D-231): "2 h", "1.5 h", "2.25 h". Se guardan al minuto (D-214) y se muestran con hasta
+ * dos decimales, sin ceros de más.
+ */
+export function formatMinutes(total: number, s: { h: string } = { h: 'h' }): string {
   const m = Math.max(0, Math.round(total));
-  const h = Math.floor(m / 60);
-  const r = m % 60;
-  if (h === 0) return `${r} ${s.min}`;
-  return r === 0 ? `${h} ${s.h}` : `${h} ${s.h} ${r} ${s.min}`;
+  const h = Math.round((m / 60) * 100) / 100;
+  return `${String(h)} ${s.h}`;
+}
+
+/** Opciones del selector de horas (D-231): de 0.25 h a 24 h en pasos de 0.25 h, como minutos. */
+export const HOUR_STEPS: readonly number[] = Array.from({ length: 96 }, (_, i) => (i + 1) * 15);
+
+/** Minutos al paso de 0.25 h más cercano (para mostrar en el selector una duración guardada fuera de paso). */
+export function toQuarter(minutes: number): number {
+  return Math.min(1440, Math.max(15, Math.round(minutes / 15) * 15));
 }
 
 /** Cronómetro del turno (D-050): "1:05:09". */
@@ -21,15 +30,20 @@ export function elapsed(from: Date, now: Date): string {
   return `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}`;
 }
 
-export function mondayOf(d: Date): Date {
+/** Domingo de la semana de `d` (D-231: toda semana empieza en domingo). */
+export function sundayOf(d: Date): Date {
   const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  x.setDate(x.getDate() - x.getDay());
   return x;
 }
 
-/** Semana actual o siguiente (D-012, D-093): de lunes a domingo, como claves AAAA-MM-DD. */
+export function addDays(d: Date, n: number): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+}
+
+/** Semana actual o siguiente (D-012, D-093): de domingo a sábado (D-231), como claves AAAA-MM-DD. */
 export function weekRange(today: Date, which: 'this' | 'next'): { from: string; to: string; days: string[] } {
-  const mon = mondayOf(today);
+  const mon = sundayOf(today);
   if (which === 'next') mon.setDate(mon.getDate() + 7);
   const days = Array.from({ length: 7 }, (_, i) => dayKey(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i)));
   return { from: days[0], to: days[6], days };
