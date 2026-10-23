@@ -94,12 +94,14 @@ describe('Jobsite (D-055, D-060, D-210)', () => {
   it('Documentos muestra el contrato y el SOW que falta; Personal el pago y abre el formulario', async () => {
     await render(<JobsiteScreen />);
     await screen.findAllByText('$1,850.00 al mes');
-    await fireEvent.press(screen.getByText('Documentos'));
+    await fireEvent.press(screen.getByLabelText('Documentos'));
     expect(await screen.findByText('Contrato')).toBeTruthy();
     expect(screen.getByText('Sin archivo')).toBeTruthy();
     await fireEvent.press(screen.getByText('Contrato'));
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/viewer', params: { source: 'jobsite', documentId: 'd1', title: 'Contrato' } });
-    await fireEvent.press(screen.getByText('Personal'));
+    // D-226: cada tarjeta del mosaico abre su sección y Volver regresa al resumen.
+    await fireEvent.press(screen.getByLabelText('Volver'));
+    await fireEvent.press(screen.getByLabelText('Personal'));
     expect(await screen.findByText(/\$18\.00\/h · 3 h garantizadas/)).toBeTruthy();
     await fireEvent.press(screen.getByText('María López'));
     expect(mockPush).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/pay/[assignment]' }));
@@ -110,7 +112,7 @@ describe('Jobsite (D-055, D-060, D-210)', () => {
     await render(<JobsiteScreen />);
     expect(await screen.findByText('5th Ave S')).toBeTruthy();
     expect(screen.queryByText('$1,850.00 al mes')).toBeNull();
-    await fireEvent.press(screen.getByText('Documentos'));
+    await fireEvent.press(screen.getByLabelText('Documentos'));
     expect(screen.queryByText('Contrato')).toBeNull();
   });
 });

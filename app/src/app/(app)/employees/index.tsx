@@ -8,7 +8,8 @@ import { AppText } from '@/components/AppText';
 import { Avatar } from '@/components/Avatar';
 import { Chip } from '@/components/Chip';
 import { rowStyles } from '@/components/ListRow';
-import { TopBar } from '@/components/TopBar';
+import { BackHeader } from '@/components/bento/Header';
+import { StatRow } from '@/components/bento/Stats';
 import { useStrings } from '@/i18n/useStrings';
 import { canCreateEmployees, type Employee } from '@/lib/employeeRules';
 import { subtitle } from '@/lib/employeeLabels';
@@ -49,17 +50,21 @@ export default function EmployeesScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <TopBar
+      <BackHeader
         title={strings.nav.employees}
         onBack={goBack}
         backLabel={strings.common.back}
-        action={
-          canCreateEmployees(access)
-            ? { icon: 'plus', onPress: () => router.push('/employees/new'), accessibilityLabel: strings.newEmployee.title }
-            : undefined
-        }
+        action={canCreateEmployees(access) ? { icon: 'plus', label: strings.newEmployee.title, onPress: () => router.push('/employees/new') } : undefined}
       />
-      <ScrollView contentContainerStyle={{ padding: 12 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 16 }}>
+        {employees ? (
+          <StatRow
+            stats={[
+              { value: employees.filter((e) => e.active).length, label: strings.employees.statActive, tone: 'brand' },
+              { value: employees.filter((e) => !e.active).length, label: strings.employees.statInactive, tone: 'plain' },
+            ]}
+          />
+        ) : null}
         {failed ? <AppAlert tone="error" text={strings.employees.errorLoad} /> : null}
         {employees && employees.length > 0 ? (
         <CardBlock>

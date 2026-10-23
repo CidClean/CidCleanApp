@@ -10,7 +10,9 @@ import { Chip } from '@/components/Chip';
 import { ClientFields, clientPayload, clientPhoneOk, type ClientForm } from '@/components/clients/ClientFields';
 import { formatPhone } from '@/lib/phone';
 import { ListRow } from '@/components/ListRow';
-import { TopBar } from '@/components/TopBar';
+import { BackHeader } from '@/components/bento/Header';
+import { MainCard } from '@/components/bento/MainCard';
+import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useClientsStrings } from '@/i18n/useClientsStrings';
 import { useStrings } from '@/i18n/useStrings';
 import { canCreateLegacy, canEditClientData, canSeeAccounts, statusTone, type Client, type Jobsite } from '@/lib/clientRules';
@@ -31,6 +33,7 @@ export default function ClientScreen() {
   const { colors } = useTheme();
   const strings = useStrings();
   const c = useClientsStrings();
+  const s = useSalesStrings();
   const { access } = usePermissions();
   const [client, setClient] = useState<Client | null>(null);
   const [jobsites, setJobsites] = useState<Jobsite[]>([]);
@@ -95,17 +98,18 @@ export default function ClientScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <TopBar title={c.client.barTitle} onBack={goBack} backLabel={strings.common.back} action={editAction} />
-      <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
+      <BackHeader onBack={goBack} backLabel={strings.common.back} action={editAction} />
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 16 }} keyboardShouldPersistTaps="handled">
         {failed && !client ? <AppAlert tone="error" text={c.client.errorLoad} /> : null}
         {client ? (
           <>
-            <View style={styles.header}>
-              <AppText weight="medium" size={sample.headingSize} style={{ flex: 1 }}>
-                {client.name}
-              </AppText>
-              {client.legacy ? <Chip label={c.legacy} tone="neutral" /> : null}
-            </View>
+            {/* D-226: tarjeta principal de marca con Llamar y Correo. */}
+            <MainCard
+              title={client.name}
+              subtitle={`${c.client.barTitle} · ${c.list.jobsitesCount(jobsites.length)}`}
+              chip={client.legacy ? c.legacy : undefined}
+              contact={{ phone: client.phone, email: client.email, callLabel: s.detail.call, mailLabel: s.detail.mail }}
+            />
             {form ? (
               <>
                 <ClientFields form={form} onChange={setForm} c={c} nameError={nameError} phoneError={phoneError} />

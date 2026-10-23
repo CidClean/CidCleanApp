@@ -42,7 +42,7 @@ import {
   type WalkthroughData,
   type WalkthroughDoc,
 } from '@/lib/walkthroughRules';
-import { iconStrokeWidth, sample, useTheme } from '@/theme';
+import { iconStrokeWidth, radius, sample, useTheme } from '@/theme';
 
 /**
  * Walkthrough por pasos (D-073): "Paso N de 5 · nombre", barra de 4px, contenido del paso y Atrás / Siguiente.
@@ -107,10 +107,13 @@ export default function WalkthroughScreen() {
         {missing ? <AppAlert tone="error" text={w.missing} /> : null}
         {doc && form ? (
           <>
+            {/* D-226: empresa, sitio y paso en una tarjeta blanca de 24px. */}
+            <View style={{ backgroundColor: colors.card, borderRadius: radius.card, padding: 16, marginBottom: 12 }}>
             <AppText size={sample.noteSize} color={colors.secondary} style={{ marginBottom: 2 }}>
               {`${doc.company} · ${doc.siteLabel}`}
             </AppText>
             <StepHeader label={w.stepLine(step, w.steps[stepKey])} progress={stepProgress(step)} />
+            </View>
 
             {stepKey === 'site' ? (
               <>

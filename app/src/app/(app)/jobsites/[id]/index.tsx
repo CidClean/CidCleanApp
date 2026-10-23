@@ -14,8 +14,11 @@ import { ListRow } from '@/components/ListRow';
 import { PendingBody } from '@/components/PendingScreen';
 import { SelectField } from '@/components/SelectField';
 import { Sheet } from '@/components/Sheet';
-import { Tabs } from '@/components/Tabs';
-import { TopBar } from '@/components/TopBar';
+import { Bento, Card } from '@/components/bento/Card';
+import { BackHeader } from '@/components/bento/Header';
+import { MainCard } from '@/components/bento/MainCard';
+import { DocIcon, LeadCalendarIcon, PeopleIcon } from '@/components/illustrations';
+import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { UsDateField } from '@/components/UsDateField';
 import type { ClientsStrings } from '@/i18n/clients';
 import { useClientsStrings } from '@/i18n/useClientsStrings';
@@ -82,6 +85,7 @@ export default function JobsiteScreen() {
   const { colors } = useTheme();
   const strings = useStrings();
   const c = useClientsStrings();
+  const s = useSalesStrings();
   const { locale } = useSession();
   const { access } = usePermissions();
   const [jobsite, setJobsite] = useState<Jobsite | null>(null);
@@ -117,49 +121,63 @@ export default function JobsiteScreen() {
   const atRisk = jobsite?.status === 'active' && margin?.atRisk;
   const city = jobsite ? cityFrom(jobsite.address) : '';
   const day = (key: string) => formatDate(dateFromKey(key).toISOString(), locale);
+  const tabLabel = (t: Tab) =>
+    t === 'documents' ? c.jobsite.tabDocuments : t === 'staff' ? c.jobsite.tabStaff : t === 'schedule' ? c.jobsite.tabSchedule : c.jobsite.tabSummary;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <TopBar
-        title={c.jobsite.barTitle}
-        onBack={goBack}
+      <BackHeader
+        onBack={tab === 'summary' ? goBack : () => setTab('summary')}
         backLabel={strings.common.back}
+        title={tab === 'summary' ? undefined : tabLabel(tab)}
         action={
-          jobsite && canEditClientData(access) && jobsite.status !== 'terminated'
-            ? { label: c.jobsite.edit, accessibilityLabel: c.jobsite.edit, onPress: () => router.push({ pathname: '/jobsites/[id]/edit', params: { id } }) }
+          tab === 'summary' && jobsite && canEditClientData(access) && jobsite.status !== 'terminated'
+            ? { label: c.jobsite.edit, onPress: () => router.push({ pathname: '/jobsites/[id]/edit', params: { id } }) }
             : undefined
         }
       />
-      <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 16 }} keyboardShouldPersistTaps="handled">
         {failed && !jobsite ? <AppAlert tone="error" text={c.jobsite.errorLoad} /> : null}
         {jobsite ? (
           <>
-            <View style={styles.header}>
-              <View style={{ flex: 1 }}>
-                <AppText weight="medium" size={sample.headingSize}>
-                  {jobsite.name}
-                </AppText>
-                <AppText size={sample.noteSize} color={colors.secondary}>
-                  {[jobsite.clientName, city].filter(Boolean).join(' · ')}
-                </AppText>
-                {seesRate && rate !== null ? (
-                  <AppText weight="medium" style={{ marginTop: 2 }}>
-                    {c.perMonth(money(rate))}
-                  </AppText>
-                ) : null}
-              </View>
-              <Chip label={atRisk ? c.atRisk : c.status[jobsite.status]} tone={atRisk ? 'warning' : statusTone(jobsite.status)} />
-            </View>
-            <Tabs<Tab>
-              tabs={[
-                { key: 'summary', label: c.jobsite.tabSummary },
-                { key: 'documents', label: c.jobsite.tabDocuments },
-                { key: 'staff', label: c.jobsite.tabStaff },
-                { key: 'schedule', label: c.jobsite.tabSchedule },
-              ]}
-              value={tab}
-              onChange={setTab}
-            />
+            {tab === 'summary' ? (
+              <>
+                {/* D-226: tarjeta principal de marca y mosaico que abre Documentos, Personal y Horario (D-055). */}
+                <MainCard
+                  title={jobsite.name}
+                  subtitle={[jobsite.clientName, city].filter(Boolean).join(' · ')}
+                  figure={seesRate && rate !== null ? c.perMonth(money(rate)) : undefined}
+                  chip={atRisk ? c.atRisk : c.status[jobsite.status]}
+                  contact={{ phone: jobsite.contactPhone, email: jobsite.contactEmail, callLabel: s.detail.call, mailLabel: s.detail.mail }}
+                />
+                <Bento>
+                  <Card onPress={() => setTab('documents')} accessibilityLabel={c.jobsite.tabDocuments} style={{ gap: 10 }}>
+                    <DocIcon />
+                    <AppText weight="heavy" size={15}>
+                      {c.jobsite.tabDocuments}
+                    </AppText>
+                  </Card>
+                  <Card onPress={() => setTab('staff')} accessibilityLabel={c.jobsite.tabStaff} style={{ gap: 10 }}>
+                    <PeopleIcon />
+                    <AppText weight="heavy" size={15}>
+                      {c.jobsite.tabStaff}
+                    </AppText>
+                  </Card>
+                  <Card tone="dark" wide onPress={() => setTab('schedule')} accessibilityLabel={c.jobsite.tabSchedule} style={styles.scheduleTile}>
+                    <LeadCalendarIcon />
+                    <View style={{ flex: 1 }}>
+                      <AppText weight="heavy" size={15} color={colors.darkCardText}>
+                        {c.jobsite.tabSchedule}
+                      </AppText>
+                      <AppText size={12} color={colors.darkCardText} style={{ opacity: 0.75 }}>
+                        {strings.pending}
+                      </AppText>
+                    </View>
+                  </Card>
+                </Bento>
+                <View style={{ height: 12 }} />
+              </>
+            ) : null}
             {tab === 'summary' ? (
               <Summary jobsite={jobsite} c={c} rate={rate} margin={margin} day={day} onChanged={load} />
             ) : null}
@@ -656,7 +674,7 @@ function Staff({ jobsite, c, day, onChanged }: { jobsite: Jobsite; c: ClientsStr
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 8 },
+  scheduleTile: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
   marginHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
   bar: { height: 8, borderRadius: 4, overflow: 'hidden' },
   sheetButtons: { flexDirection: 'row', gap: 8, marginTop: 12 },

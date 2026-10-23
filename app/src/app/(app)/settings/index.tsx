@@ -2,7 +2,9 @@ import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
-import { CardBlock } from '@/components/bento/Card';
+import { Bento, Card, CardBlock } from '@/components/bento/Card';
+import { AppText } from '@/components/AppText';
+import { DocIcon, LeadCalendarIcon } from '@/components/illustrations';
 import { AppAlert } from '@/components/AppAlert';
 import { ListRow } from '@/components/ListRow';
 import { LostReasonsSettingsRow } from '@/components/sales/LostReasonsSettingsRow';
@@ -54,16 +56,39 @@ export default function SettingsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={strings.nav.settings} onBack={goBack} backLabel={strings.common.back} />
-      <ScrollView contentContainerStyle={{ padding: 12 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 16 }}>
         {failed ? <AppAlert tone="error" text={strings.terms.errorLoad} /> : null}
+        {/* D-226: los términos en un mosaico con su versión vigente; el resto en filas sobre tarjeta. */}
+        <Bento>
+          <Card onPress={() => router.push('/settings/terms')} accessibilityLabel={strings.settings.termsRow} style={{ gap: 10 }}>
+            <DocIcon />
+            <View style={{ gap: 2 }}>
+              <AppText weight="heavy" size={15}>
+                {strings.settings.termsRow}
+              </AppText>
+              {value ? (
+                <AppText size={12} color={colors.secondary}>
+                  {value}
+                </AppText>
+              ) : null}
+            </View>
+          </Card>
+          <Card tone="attention" onPress={() => router.push({ pathname: '/settings/terms', params: { kind: 'portal' } })} accessibilityLabel={qs.portalTermsRow} style={{ gap: 10 }}>
+            <LeadCalendarIcon />
+            <View style={{ gap: 2 }}>
+              <AppText weight="heavy" size={15}>
+                {qs.portalTermsRow}
+              </AppText>
+              {portal !== undefined ? (
+                <AppText size={12} color={colors.attentionText}>
+                  {portal === null ? strings.settings.unpublished : strings.settings.termsValue(portal.version)}
+                </AppText>
+              ) : null}
+            </View>
+          </Card>
+        </Bento>
+        <View style={{ height: 12 }} />
         <CardBlock>
-        <ListRow title={strings.settings.termsRow} detail={value} chevron onPress={() => router.push('/settings/terms')} />
-        <ListRow
-          title={qs.portalTermsRow}
-          detail={portal === undefined ? '' : portal === null ? strings.settings.unpublished : strings.settings.termsValue(portal.version)}
-          chevron
-          onPress={() => router.push({ pathname: '/settings/terms', params: { kind: 'portal' } })}
-        />
         <LostReasonsSettingsRow />
         <ListRow title={strings.transfer.row} chevron last onPress={() => router.push('/settings/transfer')} />
         </CardBlock>

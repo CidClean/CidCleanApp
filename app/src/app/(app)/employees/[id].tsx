@@ -66,7 +66,7 @@ import {
   visibleAreas,
 } from '@/lib/permissionsRules';
 import { usePermissions, useSession } from '@/lib/session';
-import { iconStrokeWidth, sample, useTheme } from '@/theme';
+import { iconStrokeWidth, radius, sample, useTheme } from '@/theme';
 
 type Tab = 'data' | 'permissions' | 'pay';
 type ConfirmSheet = 'deactivate' | 'reactivate' | null;
@@ -361,11 +361,12 @@ export default function EmployeeProfileScreen() {
             {invitation === 'failed' ? <AppAlert text={strings.employee.invitationFailed} /> : null}
             {toggleError ? <AppAlert tone="error" text={strings.employee.errorToggle} /> : null}
 
-            <View style={styles.header}>
+            {/* D-226: el encabezado del perfil en una tarjeta blanca de 24px. */}
+            <View style={[styles.header, { backgroundColor: colors.card, borderRadius: radius.card, padding: 16 }]}>
               <View style={styles.who}>
                 <Avatar name={employee.fullName} size={48} />
                 <View style={{ flex: 1 }}>
-                  <AppText weight="medium" size={sample.headingSize}>
+                  <AppText weight="heavy" size={20}>
                     {employee.fullName}
                   </AppText>
                   <AppText size={sample.noteSize} color={colors.secondary}>

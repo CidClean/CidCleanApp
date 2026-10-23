@@ -113,6 +113,8 @@ export const es = {
   },
 
   employees: {
+    statActive: 'Activos', // D-200 (D-226)
+    statInactive: 'Inactivos', // D-200 (D-226)
     active: 'Activo', // APROBADO (D-083, D-173)
     inactive: 'Inactivo', // APROBADO (D-083)
     w2: 'W-2', // APROBADO (D-171)

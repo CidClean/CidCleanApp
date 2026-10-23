@@ -8,7 +8,8 @@ import { AppText } from '@/components/AppText';
 import { Chip } from '@/components/Chip';
 import { Icon } from '@/components/Icon';
 import { ListRow } from '@/components/ListRow';
-import { TopBar } from '@/components/TopBar';
+import { TitleHeader } from '@/components/bento/Header';
+import { StatRow } from '@/components/bento/Stats';
 import { useClientsStrings } from '@/i18n/useClientsStrings';
 import { useStrings } from '@/i18n/useStrings';
 import { canCreateLegacy, canSeeAccounts, canSeeRate, groupByClient, money, statusTone, type ClientGroup } from '@/lib/clientRules';
@@ -61,18 +62,25 @@ export default function AccountsScreen() {
   );
 
   if (!allowed) return <Redirect href="/" />;
+  const allJobsites = (groups ?? []).flatMap((g) => g.jobsites);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <TopBar
+      <TitleHeader
+        kicker={c.list.kicker}
         title={strings.nav.accounts}
-        action={
-          canCreateLegacy(access)
-            ? { icon: 'plus', onPress: () => router.push('/clients/new'), accessibilityLabel: c.list.newClient }
-            : undefined
-        }
+        action={canCreateLegacy(access) ? { icon: 'plus', label: c.list.newClient, onPress: () => router.push('/clients/new') } : undefined}
       />
-      <ScrollView contentContainerStyle={{ padding: 12 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 }}>
+        {groups ? (
+          <StatRow
+            stats={[
+              { value: allJobsites.filter((j) => j.status === 'active').length, label: c.list.statActive, tone: 'plain' },
+              { value: allJobsites.filter((j) => j.status === 'paused').length, label: c.list.statPaused, tone: 'attention' },
+              ...(seesRate ? [{ value: allJobsites.filter((j) => j.status === 'active' && risk.has(j.id)).length, label: c.list.statRisk, tone: 'brand' as const }] : []),
+            ]}
+          />
+        ) : null}
         {failed ? <AppAlert tone="error" text={c.list.errorLoad} /> : null}
         {groups && groups.length === 0 ? (
           <AppText size={sample.noteSize} color={colors.secondary}>

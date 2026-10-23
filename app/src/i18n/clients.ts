@@ -11,6 +11,11 @@ export const clientsEs = {
   legacy: 'Previo a la app', // APROBADO (D-210)
 
   list: {
+    kicker: 'Operaciones', // D-200 (D-226)
+    statActive: 'Activos', // D-200 (D-226)
+    statPaused: 'Pausados', // D-200 (D-226)
+    statRisk: 'En riesgo', // D-200 (D-226)
+    jobsitesCount: (n: number) => (n === 1 ? '1 jobsite' : `${n} jobsites`), // D-200 (D-226)
     empty: 'Todavía no hay clientes.', // D-200
     errorLoad: 'No se pudieron cargar las cuentas. Inténtalo otra vez.', // D-200 (mismo estilo de D-195)
     newClient: 'Nuevo cliente', // D-200: icono + de la barra (como D-185) y título del alta
@@ -190,6 +195,11 @@ export const clientsEn: ClientsStrings = {
   perMonth: (m: string) => `${m} per month`,
   legacy: 'Before the app',
   list: {
+    kicker: 'Operations',
+    statActive: 'Active',
+    statPaused: 'Paused',
+    statRisk: 'At risk',
+    jobsitesCount: (n: number) => (n === 1 ? '1 jobsite' : `${n} jobsites`),
     empty: 'No clients yet.',
     errorLoad: "Couldn't load the accounts. Try again.",
     newClient: 'New client',

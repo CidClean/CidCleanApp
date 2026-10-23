@@ -112,6 +112,8 @@ export const en: Strings = {
   },
 
   employees: {
+    statActive: 'Active',
+    statInactive: 'Inactive',
     active: 'Active', // employee list and profile: status chip
     inactive: 'Inactive', // employee list and profile: status chip
     w2: 'W-2', // worker type

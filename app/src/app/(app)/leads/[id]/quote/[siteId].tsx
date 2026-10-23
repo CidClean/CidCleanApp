@@ -49,7 +49,7 @@ import {
 } from '@/lib/quotesApi';
 import { usePermissions, useSession } from '@/lib/session';
 import { choosePdf } from '@/lib/termsApi';
-import { iconStrokeWidth, sample, useTheme } from '@/theme';
+import { iconStrokeWidth, radius, sample, useTheme } from '@/theme';
 
 type Draft = { lines: QuoteLines; amounts: Record<string, string>; taxRate: string; validDays: string; recipients: string[] };
 
@@ -329,7 +329,7 @@ export default function SiteQuoteScreen() {
           </AppText>
         ) : null}
         {latest ? (
-          <View style={styles.header}>
+          <View style={[styles.header, { backgroundColor: colors.card, borderRadius: radius.card, padding: 16, marginBottom: 12 }]}>
             <AppText weight="medium" size={sample.headingSize}>
               {q.version(latest.version)}
             </AppText>

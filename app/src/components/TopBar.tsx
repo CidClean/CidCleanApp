@@ -1,10 +1,7 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppText } from './AppText';
-import { Icon, type IconName } from './Icon';
-import { iconStrokeWidth, sample, useTheme } from '@/theme';
+import { BackHeader, TitleHeader } from './bento/Header';
+import type { IconName } from './Icon';
 
 /** Acción a la derecha de la barra: texto ("Editar", D-174) o icono (+, D-185). */
 export type TopBarAction = {
@@ -24,56 +21,31 @@ type Props = {
   subtitle?: ReactNode;
 };
 
-/** Barra superior de marca con el título de la pantalla (muestras aprobadas). */
+/**
+ * Barra superior de las pantallas internas. D-226: ya no es la barra de marca; sigue el lenguaje bento de las
+ * muestras (fondo crema, botón blanco de volver de 44px, título 18px/800 y la acción en una pastilla blanca o un
+ * cuadro de marca), con el área segura de arriba. Sin flecha de volver, el título va grande a la izquierda.
+ */
 export function TopBar({ title, onBack, backLabel, action, subtitle }: Props) {
-  const insets = useSafeAreaInsets();
-  const { brand } = useTheme();
+  if (!onBack) {
+    return (
+      <TitleHeader
+        title={title}
+        action={action?.icon ? { icon: action.icon, label: action.accessibilityLabel, onPress: action.onPress } : undefined}
+      />
+    );
+  }
   return (
-    <View style={[styles.bar, { backgroundColor: brand, paddingTop: insets.top + sample.barPaddingVertical }]}>
-      <View style={styles.left}>
-        {onBack ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={backLabel}
-            onPress={onBack}
-            hitSlop={12}
-            style={styles.back}
-          >
-            <Icon name="chevron-left" size={22} strokeWidth={iconStrokeWidth} color="#FFFFFF" />
-          </Pressable>
-        ) : null}
-        <View style={styles.title}>
-          <AppText weight="heavy" size={sample.barTextSize} color="#FFFFFF" accessibilityRole="header" numberOfLines={1}>
-            {title}
-          </AppText>
-          {subtitle}
-        </View>
-      </View>
-      {action ? (
-        <Pressable accessibilityRole="button" accessibilityLabel={action.accessibilityLabel} onPress={action.onPress} hitSlop={12}>
-          {action.icon ? (
-            <Icon name={action.icon} size={22} strokeWidth={iconStrokeWidth} color="#FFFFFF" />
-          ) : (
-            <AppText weight="medium" size={sample.barTextSize} color="#FFFFFF">
-              {action.label}
-            </AppText>
-          )}
-        </Pressable>
-      ) : null}
-    </View>
+    <BackHeader
+      onBack={onBack}
+      backLabel={backLabel ?? ''}
+      title={title}
+      subtitle={subtitle}
+      action={
+        action
+          ? { label: action.label ?? action.accessibilityLabel, accessibilityLabel: action.accessibilityLabel, icon: action.icon, onPress: action.onPress }
+          : undefined
+      }
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  bar: {
-    paddingHorizontal: 12,
-    paddingBottom: sample.barPaddingVertical,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  left: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
-  back: { marginLeft: -4 },
-  title: { flexShrink: 1 },
-});
