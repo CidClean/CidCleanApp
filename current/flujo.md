@@ -103,7 +103,8 @@ El Schedule es lo planificado y el Work es lo realmente trabajado. Son independi
 
 **Schedule**
 
-- Cada jobsite genera sus visitas según su frecuencia: fecha, hora y empleados asignados.
+- El horario se arma y se guarda semana por semana (D-232): por jobsite se marca quién va cada día de la semana elegida, y al guardar se crean las visitas de esa semana con la hora y duración del jobsite. Las visitas no se generan solas.
+- Si un jobsite no tiene hora y duración, se ponen ahí mismo en la vista Semana, en una ventana al centro, y se guardan en el jobsite (D-234).
 - Se edita en cualquier momento (cambios y reemplazos).
 - Los empleados ven solo la semana actual y la siguiente, aunque haya horario más adelante, y reciben aviso si algo cambia.
 - Las visitas siempre se realizan. Si una no va a hacerse, se quita del schedule, así que no existe el estado "no realizada".
