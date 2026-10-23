@@ -307,3 +307,30 @@ describe('eliminar lead y motivos (D-201, D-203)', () => {
     expect(validateReasonForm({ labelEs: 'Precio', labelEn: 'Price' })).toEqual({});
   });
 });
+
+describe('Pipeline en mosaico (D-226)', () => {
+  const { pipelineCounts, filterPipeline, leadTone, initialsOf } = require('./leadRules');
+  const base = { contactName: null, createdAt: new Date(), followUpOn: null, nextWalkthrough: null };
+  const leads = [
+    { ...base, id: '1', company: 'Gulf Coast Dental', status: 'walkthrough_scheduled', nextWalkthrough: new Date(2026, 9, 30) },
+    { ...base, id: '2', company: 'Marco Island Offices', status: 'quote_sent' },
+    { ...base, id: '3', company: 'Naples Bay', status: 'contacted', followUpOn: '2026-10-23' },
+    { ...base, id: '4', company: 'Break TAX', status: 'won', followUpOn: '2026-10-20' },
+    { ...base, id: '5', company: 'Otro', status: 'lost' },
+  ];
+  it('tres cifras: abiertos, quote enviado y ganados', () => {
+    expect(pipelineCounts(leads)).toEqual({ open: 3, quoteSent: 1, won: 1 });
+  });
+  it('filtros: seguimiento de hoy (o vencido) y con walkthrough, solo abiertos', () => {
+    expect(filterPipeline(leads, 'followUpToday', '2026-10-23').map((l: { id: string }) => l.id)).toEqual(['3']);
+    expect(filterPipeline(leads, 'walkthrough', '2026-10-23').map((l: { id: string }) => l.id)).toEqual(['1']);
+    expect(filterPipeline(leads, 'all', '2026-10-23')).toHaveLength(5);
+  });
+  it('tono por estado e iniciales', () => {
+    expect(leadTone('walkthrough_scheduled')).toBe('brand');
+    expect(leadTone('negotiation')).toBe('attention');
+    expect(leadTone('won')).toBe('won');
+    expect(leadTone('new')).toBe('neutral');
+    expect(initialsOf('Gulf Coast Dental')).toBe('GC');
+  });
+});

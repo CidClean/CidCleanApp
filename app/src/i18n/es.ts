@@ -68,6 +68,14 @@ export const es = {
     yourWeek: 'Tu semana', // APROBADO (D-223)
   },
 
+  // D-226 (muestra surveys/estilo-c1-pantallas/Menu.html).
+  menu: {
+    profileLine: (role: string) => `${role} · Mi perfil`, // APROBADO (D-226)
+    activeEmployees: (n: number) => (n === 1 ? '1 activo' : `${n} activos`), // APROBADO (D-226)
+    historyLine: 'Cambios recientes', // APROBADO (D-226)
+    settingsLine: 'Términos, motivos y Super Admin', // APROBADO (D-226)
+  },
+
   profile: {
     title: 'Mi perfil', // APROBADO (muestra ronda 14)
     name: 'Nombre', // APROBADO (D-166)

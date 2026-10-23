@@ -68,7 +68,49 @@ export type LeadSummary = {
   followUpOn: string | null;
   /** La próxima cita agendada entre todos sus sitios. */
   nextWalkthrough: Date | null;
+  /** Fuente (D-226: línea "contacto · fuente" de la tarjeta del Pipeline). */
+  source?: LeadSource;
 };
+
+// --- Pipeline en mosaico (D-226) -------------------------------------------------------------------------
+
+export type PipelineFilter = 'all' | 'followUpToday' | 'walkthrough';
+
+const isOpen = (l: LeadSummary) => l.status !== 'won' && l.status !== 'lost';
+
+/** Las tres cifras de arriba: abiertos (ni Ganado ni Perdido), con quote enviado y ganados. */
+export function pipelineCounts(leads: readonly LeadSummary[]): { open: number; quoteSent: number; won: number } {
+  return {
+    open: leads.filter(isOpen).length,
+    quoteSent: leads.filter((l) => l.status === 'quote_sent').length,
+    won: leads.filter((l) => l.status === 'won').length,
+  };
+}
+
+/** Filtros rápidos: seguimiento de hoy o vencido (abiertos) y con walkthrough agendado. */
+export function filterPipeline(leads: readonly LeadSummary[], filter: PipelineFilter, today: string): LeadSummary[] {
+  if (filter === 'followUpToday') return leads.filter((l) => isOpen(l) && l.followUpOn !== null && l.followUpOn <= today);
+  if (filter === 'walkthrough') return leads.filter((l) => isOpen(l) && l.nextWalkthrough !== null);
+  return [...leads];
+}
+
+/** Tono de la tarjeta según el estado: marca (walkthrough), ámbar (quote o negociación), neutro o ganado. */
+export function leadTone(status: LeadStatus): 'brand' | 'attention' | 'neutral' | 'won' {
+  if (status === 'won') return 'won';
+  if (status === 'quote_sent' || status === 'negotiation') return 'attention';
+  if (status === 'walkthrough_scheduled' || status === 'walkthrough_done') return 'brand';
+  return 'neutral';
+}
+
+/** Iniciales de la empresa: "Gulf Coast Dental" -> "GC". */
+export function initialsOf(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? '')
+    .join('');
+}
 
 export function isLeadStatus(v: unknown): v is LeadStatus {
   return typeof v === 'string' && (LEAD_STATUSES as readonly string[]).includes(v);

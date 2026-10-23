@@ -29,6 +29,15 @@ export const salesEs = {
     noPermission: 'No tienes permiso para ver leads.', // D-200 (mismo estilo de D-194)
     walkthroughOn: (when: string) => `Walkthrough: ${when}`, // D-200 (muestra ronda 1: "Mar 22 oct · 10:00 AM")
     followUpOn: (when: string) => `Seguimiento: ${when}`, // D-200
+    // D-226 (muestra surveys/estilo-c1-pantallas/Pipeline.html).
+    kicker: 'Ventas', // APROBADO (D-226)
+    open: 'Abiertos', // APROBADO (D-226)
+    quoteSent: 'Quote enviado', // APROBADO (D-226)
+    won: 'Ganados', // APROBADO (D-226)
+    all: 'Todos', // APROBADO (D-226)
+    followUpToday: 'Seguimiento hoy', // APROBADO (D-226)
+    withWalkthrough: 'Walkthrough', // APROBADO (D-226)
+    noMatch: 'Ningún lead con este filtro.', // D-200
   },
 
   form: {
@@ -75,6 +84,12 @@ export const salesEs = {
     deleteBody: 'Se borran también sus sitios, citas y seguimientos.', // D-200
     delete: 'Eliminar', // APROBADO (D-201)
     errorDelete: 'No se pudo eliminar el lead. Inténtalo otra vez.', // D-200 (mismo estilo de D-195)
+    // D-226 (muestra surveys/estilo-c1-pantallas/Lead.html).
+    call: 'Llamar', // APROBADO (D-226)
+    mail: 'Correo', // APROBADO (D-226)
+    statusButton: (status: string) => `Estado: ${status}`, // APROBADO (D-226)
+    sitesCount: (n: number) => (n === 1 ? '1 sitio' : `${n} sitios`), // APROBADO (D-226: "2 sitios")
+    noQuote: 'Sin quote todavía', // APROBADO (D-226)
   },
 
   sites: {
@@ -187,6 +202,14 @@ export const salesEn: SalesStrings = {
     noPermission: "You don't have permission to see leads.", // Pipeline: person with a Sales permission but not leads_ver
     walkthroughOn: (when: string) => `Walkthrough: ${when}`, // Pipeline row detail
     followUpOn: (when: string) => `Follow-up: ${when}`, // Pipeline row detail
+    kicker: 'Sales',
+    open: 'Open',
+    quoteSent: 'Quote sent',
+    won: 'Won',
+    all: 'All',
+    followUpToday: 'Follow-up today',
+    withWalkthrough: 'Walkthrough',
+    noMatch: 'No leads match this filter.',
   },
 
   form: {
@@ -233,6 +256,11 @@ export const salesEn: SalesStrings = {
     deleteBody: 'Its sites, appointments and follow-ups are deleted too.',
     delete: 'Delete', // solid button of the sheet
     errorDelete: "Couldn't delete the lead. Try again.",
+    call: 'Call',
+    mail: 'Email',
+    statusButton: (status: string) => `Status: ${status}`,
+    sitesCount: (n: number) => (n === 1 ? '1 site' : `${n} sites`),
+    noQuote: 'No quote yet',
   },
 
   sites: {

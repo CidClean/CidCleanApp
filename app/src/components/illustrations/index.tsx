@@ -137,3 +137,135 @@ export function CalendarIcon() {
     </Svg>
   );
 }
+
+// --- D-226: Menú y detalle del lead (surveys/estilo-c1-pantallas/), también provisionales ---
+
+/** Calendario grande (tarjeta Schedule y Work del Menú), 120×104. */
+export function ScheduleArt() {
+  if (!illustrations) return null;
+  return (
+    <Svg width={120} height={104} viewBox="0 0 120 104" {...hidden}>
+      <Circle cx={78} cy={44} r={34} fill="#13887F" />
+      <Rect x={34} y={30} width={72} height={66} rx={10} fill="#F7F1E7" />
+      <Rect x={34} y={30} width={72} height={18} rx={9} fill="#F2C27B" />
+      <Path d="M50 22v14M90 22v14" stroke="#0A4F49" strokeWidth={4} strokeLinecap="round" />
+      <Rect x={46} y={58} width={12} height={10} rx={3} fill="#BFE3DE" />
+      <Rect x={64} y={58} width={12} height={10} rx={3} fill="#0F766E" />
+      <Rect x={82} y={58} width={12} height={10} rx={3} fill="#BFE3DE" />
+      <Rect x={46} y={74} width={12} height={10} rx={3} fill="#BFE3DE" />
+      <Rect x={64} y={74} width={12} height={10} rx={3} fill="#BFE3DE" />
+    </Svg>
+  );
+}
+
+/** Icono de 44px: Empleados. */
+export function PeopleIcon() {
+  if (!illustrations) return null;
+  return (
+    <Svg width={44} height={44} viewBox="0 0 44 44" {...hidden}>
+      <Rect width={44} height={44} rx={14} fill="#DDEFEC" />
+      <Circle cx={18} cy={18} r={6} fill="#0F766E" />
+      <Circle cx={29} cy={20} r={4.5} fill="#2E9C92" />
+      <Path d="M8 34c1-6 5-9 10-9s9 3 10 9" fill="#0F766E" />
+      <Path d="M25 34c.6-4 3-6 6-6s5 2 6 6" fill="#2E9C92" />
+    </Svg>
+  );
+}
+
+/** Icono de 44px: Accounting (sobre tarjeta oscura). */
+export function ChartIcon() {
+  if (!illustrations) return null;
+  return (
+    <Svg width={44} height={44} viewBox="0 0 44 44" {...hidden}>
+      <Rect width={44} height={44} rx={14} fill="#2C3A37" />
+      <Rect x={10} y={24} width={6} height={10} rx={2} fill="#F2C27B" />
+      <Rect x={19} y={17} width={6} height={17} rx={2} fill="#4FB8AC" />
+      <Rect x={28} y={11} width={6} height={23} rx={2} fill="#FFFFFF" />
+    </Svg>
+  );
+}
+
+/** Icono de 44px: Notificaciones. */
+export function BellIcon() {
+  if (!illustrations) return null;
+  return (
+    <Svg width={44} height={44} viewBox="0 0 44 44" {...hidden}>
+      <Rect width={44} height={44} rx={14} fill="#FFFFFF" />
+      <Path d="M22 10c-5 0-8 4-8 9v6l-3 4h22l-3-4v-6c0-5-3-9-8-9z" fill="#F2C27B" />
+      <Circle cx={22} cy={33} r={3} fill="#8A4B0F" />
+      <Circle cx={31} cy={12} r={4} fill="#8A4B0F" />
+    </Svg>
+  );
+}
+
+/** Icono de 44px: Historial. */
+export function ClockIcon() {
+  if (!illustrations) return null;
+  return (
+    <Svg width={44} height={44} viewBox="0 0 44 44" {...hidden}>
+      <Rect width={44} height={44} rx={14} fill="#F6EFE6" />
+      <Circle cx={22} cy={22} r={11} fill="none" stroke="#6B5F52" strokeWidth={2} />
+      <Path d="M22 16v6l4 3" stroke="#0F766E" strokeWidth={2.2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+/** Icono de 40px: Ajustes. */
+export function GearIcon() {
+  if (!illustrations) return null;
+  return (
+    <Svg width={40} height={40} viewBox="0 0 40 40" {...hidden}>
+      <Rect width={40} height={40} rx={12} fill="#F6EFE6" />
+      <Circle cx={20} cy={20} r={5} fill="none" stroke="#6B5F52" strokeWidth={2} />
+      <Path d="M20 9v4M20 27v4M9 20h4M27 20h4M12.5 12.5l2.8 2.8M24.7 24.7l2.8 2.8M12.5 27.5l2.8-2.8M24.7 15.3l2.8-2.8" stroke="#6B5F52" strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+/** Icono de 40px: Walkthrough del lead. */
+export function LeadCalendarIcon() {
+  if (!illustrations) return null;
+  return (
+    <Svg width={40} height={40} viewBox="0 0 40 40" {...hidden}>
+      <Rect width={40} height={40} rx={12} fill="#FFFFFF" />
+      <Rect x={9} y={11} width={22} height={20} rx={4} fill="#F2C27B" />
+      <Rect x={9} y={11} width={22} height={6} rx={3} fill="#8A4B0F" />
+      <Path d="M15 8v6M25 8v6" stroke="#8A4B0F" strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+/** Icono de 40px: Quote del lead. */
+export function DocIcon() {
+  if (!illustrations) return null;
+  return (
+    <Svg width={40} height={40} viewBox="0 0 40 40" {...hidden}>
+      <Rect width={40} height={40} rx={12} fill="#DDEFEC" />
+      <Rect x={11} y={8} width={18} height={24} rx={3} fill="#FFFFFF" stroke="#0F766E" strokeWidth={1.5} />
+      <Path d="M15 15h10M15 20h10M15 25h6" stroke="#0F766E" strokeWidth={1.6} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+/** Icono de 40px: Sitios. */
+export function PinIcon() {
+  if (!illustrations) return null;
+  return (
+    <Svg width={40} height={40} viewBox="0 0 40 40" {...hidden}>
+      <Rect width={40} height={40} rx={12} fill="#F6EFE6" />
+      <Path d="M20 9a8 8 0 0 0-8 8c0 6 8 14 8 14s8-8 8-14a8 8 0 0 0-8-8z" fill="#0F766E" />
+      <Circle cx={20} cy={17} r={3} fill="#FFFFFF" />
+    </Svg>
+  );
+}
+
+/** Icono de 40px: Notas (sobre tarjeta oscura). */
+export function NoteIcon() {
+  if (!illustrations) return null;
+  return (
+    <Svg width={40} height={40} viewBox="0 0 40 40" {...hidden}>
+      <Rect width={40} height={40} rx={12} fill="#2C3A37" />
+      <Path d="M12 12h16v12H18l-6 5z" fill="#F2C27B" />
+    </Svg>
+  );
+}

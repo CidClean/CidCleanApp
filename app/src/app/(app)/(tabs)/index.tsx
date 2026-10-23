@@ -1,6 +1,7 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
@@ -187,6 +188,8 @@ function AdminHome() {
 function Greeting({ name, avatar = false }: { name: string; avatar?: boolean }) {
   const { colors, brand } = useTheme();
   const strings = useStrings();
+  // Área segura de arriba: el saludo no queda bajo la barra de estado del teléfono.
+  const insets = useSafeAreaInsets();
   const first = name.trim().split(/\s+/)[0] ?? '';
   const initials = name
     .trim()
@@ -195,7 +198,7 @@ function Greeting({ name, avatar = false }: { name: string; avatar?: boolean }) 
     .map((p) => p[0]?.toUpperCase() ?? '')
     .join('');
   return (
-    <View style={styles.greeting}>
+    <View style={[styles.greeting, { paddingTop: insets.top + 20 }]}>
       <View style={{ gap: 2, flex: 1 }}>
         <AppText size={13} color={colors.secondary}>
           {strings.home.dateLine(new Date())}
@@ -314,7 +317,7 @@ function StaffHome() {
 
 const styles = StyleSheet.create({
   page: { paddingHorizontal: 16, paddingBottom: 16 },
-  greeting: { paddingTop: 20, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  greeting: { paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   avatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   mainCard: { padding: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   // D-224 (C1): con ilustración la tarjeta mide 172px y el dibujo llega al borde derecho e inferior.

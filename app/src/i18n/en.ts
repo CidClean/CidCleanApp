@@ -68,6 +68,13 @@ export const en: Strings = {
     yourWeek: 'Your week',
   },
 
+  menu: {
+    profileLine: (role: string) => `${role} · My profile`,
+    activeEmployees: (n: number) => `${n} active`,
+    historyLine: 'Recent changes',
+    settingsLine: 'Terms, reasons and Super Admin',
+  },
+
   profile: {
     title: 'My profile',
     name: 'Name',

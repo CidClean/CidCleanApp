@@ -190,10 +190,23 @@ describe('Detalle del lead (D-070, D-071)', () => {
     expect(screen.getByText('ana@gulfcoastdental.com')).toBeTruthy();
   });
 
+  it('tarjeta principal (D-226): Llamar abre tel: y Correo abre mailto:', async () => {
+    const { Linking } = require('react-native');
+    const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    await render(<LeadDetailScreen />);
+    await screen.findByText('Gulf Coast Dental');
+    await fireEvent.press(screen.getByText('Llamar'));
+    expect(open).toHaveBeenCalledWith('tel:2395550142');
+    await fireEvent.press(screen.getByText('Correo'));
+    expect(open).toHaveBeenCalledWith('mailto:ana@gulfcoastdental.com');
+    open.mockRestore();
+  });
+
   it('elegir Perdido abre Marcar como perdido sin guardar', async () => {
     await render(<LeadDetailScreen />);
     await screen.findByText('Gulf Coast Dental');
-    await fireEvent.press(screen.getByLabelText('Estado'));
+    // D-226: el estado va en el botón fijo de abajo.
+    await fireEvent.press(screen.getByLabelText(/^Estado: /));
     await fireEvent.press(screen.getByText('Perdido'));
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/leads/[id]/lost', params: { id: 'l1' } });
     expect(mockSetStatus).not.toHaveBeenCalled();
@@ -203,7 +216,7 @@ describe('Detalle del lead (D-070, D-071)', () => {
     mockSetStatus.mockResolvedValue({ ok: true, data: null });
     await render(<LeadDetailScreen />);
     await screen.findByText('Gulf Coast Dental');
-    await fireEvent.press(screen.getByLabelText('Estado'));
+    await fireEvent.press(screen.getByLabelText(/^Estado: /));
     await fireEvent.press(screen.getByText('Negociación'));
     await waitFor(() => expect(mockSetStatus).toHaveBeenCalledWith('l1', 'negotiation'));
   });
@@ -212,7 +225,7 @@ describe('Detalle del lead (D-070, D-071)', () => {
     mockAccess = { isSuperAdmin: false, permissions: new Set(['leads_ver']) };
     await render(<LeadDetailScreen />);
     await screen.findByText('Gulf Coast Dental');
-    expect(screen.queryByLabelText('Estado')).toBeNull();
+    expect(screen.queryByLabelText(/^Estado: /)).toBeNull();
     expect(screen.queryByText('Editar')).toBeNull();
     await fireEvent.press(screen.getByText('Sitios'));
     expect(screen.getByText('5th Ave S')).toBeTruthy();
@@ -220,19 +233,20 @@ describe('Detalle del lead (D-070, D-071)', () => {
     expect(screen.queryByText('Agregar sitio')).toBeNull();
   });
 
-  it('Walkthrough (D-220): cada sitio con su cita y el botón Agendar walkthrough; Sitios solo con los sitios', async () => {
+  it('Mosaico (D-226): Sitios y Walkthrough abren su sección; el walkthrough con su cita y Agendar walkthrough', async () => {
     mockFetchLead.mockResolvedValue({
       ok: true,
       data: { ...lead, sites: [{ ...lead.sites[0], scheduled: { id: 'a', startsAt: new Date(2026, 9, 22, 10, 0), status: 'scheduled' } }] },
     });
     await render(<LeadDetailScreen />);
     await screen.findByText('Gulf Coast Dental');
-    await fireEvent.press(screen.getByText('Sitios'));
+    expect(screen.getByText('Quote')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Sitios'));
     expect(screen.queryByText('Agendar walkthrough')).toBeNull();
     expect(screen.getByText('Agregar sitio')).toBeTruthy();
-    await fireEvent.press(screen.getByText('Walkthrough'));
+    await fireEvent.press(screen.getByLabelText('Volver'));
+    await fireEvent.press(screen.getByLabelText('Walkthrough'));
     expect(screen.getByText('Walkthrough: Jue 22 oct · 10:00 AM')).toBeTruthy();
-    expect(screen.getByText('Quote')).toBeTruthy();
     await fireEvent.press(screen.getByText('Agendar walkthrough'));
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/leads/[id]/schedule', params: { id: 'l1' } });
   });

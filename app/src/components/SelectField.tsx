@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
@@ -13,19 +14,25 @@ type Props<T extends string> = {
   options: readonly Option<T>[];
   value: T;
   onChange: (value: T) => void;
+  /** Otro botón para abrir la misma hoja (D-226: botón fijo de Estado del lead). */
+  renderTrigger?: (current: string, open: () => void) => React.ReactNode;
 };
 
 /**
  * Campo desplegable (muestra ronda 15): igual que un campo, con la flecha hacia abajo. Las opciones se abren encima de
  * la pantalla en una hoja desde abajo (D-217), sin empujar el contenido; la hoja lleva el nombre del campo arriba.
  */
-export function SelectField<T extends string>({ label, options, value, onChange }: Props<T>) {
+export function SelectField<T extends string>({ label, options, value, onChange, renderTrigger }: Props<T>) {
   const { colors, brand } = useTheme();
   const [open, setOpen] = useState(false);
   const { height } = useWindowDimensions();
   const current = options.find((o) => o.value === value);
   return (
-    <View style={styles.wrap}>
+    <View style={renderTrigger ? undefined : styles.wrap}>
+      {renderTrigger ? (
+        renderTrigger(current?.label ?? '', () => setOpen(true))
+      ) : (
+        <>
       <AppText size={sample.labelSize} color={colors.secondary} style={styles.label}>
         {label}
       </AppText>
@@ -39,6 +46,8 @@ export function SelectField<T extends string>({ label, options, value, onChange 
         <AppText>{current?.label ?? ''}</AppText>
         <Icon name="chevron-down" size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
       </Pressable>
+        </>
+      )}
       <Sheet visible={open} onClose={() => setOpen(false)}>
         <AppText weight="medium" size={sample.headingSize} style={styles.title}>
           {label}

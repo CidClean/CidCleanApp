@@ -60,6 +60,7 @@ type SummaryRow = {
   company: string;
   contact_name: string | null;
   status: string;
+  source?: string;
   created_at: string;
   lead_followups: FollowUpRow[] | null;
   lead_sites: { walkthrough_appointments: AppointmentRow[] | null }[] | null;
@@ -75,6 +76,7 @@ export function rowToSummary(r: SummaryRow, now: Date): LeadSummary {
     createdAt: new Date(r.created_at),
     followUpOn: openFollowUp(r.lead_followups),
     nextWalkthrough: nextScheduled(appointments, now),
+    source: isLeadSource(r.source) ? r.source : undefined,
   };
 }
 
@@ -83,7 +85,7 @@ export async function fetchLeads(now = new Date()): Promise<LeadsResult<LeadSumm
     const { data, error } = await supabase
       .from('leads')
       .select(
-        'id, company, contact_name, status, created_at, lead_followups(due_on, done_at), lead_sites(walkthrough_appointments(id, starts_at, status))',
+        'id, company, contact_name, status, source, created_at, lead_followups(due_on, done_at), lead_sites(walkthrough_appointments(id, starts_at, status))',
       )
       .order('created_at', { ascending: false });
     if (error) return { ok: false, reason: failureFrom(error.code) };
