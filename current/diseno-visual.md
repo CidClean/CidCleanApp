@@ -50,7 +50,7 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Accounting: personal | Control Por empleado / Por jobsite; filas con nombre, horas y monto | D-067 | ronda 7 |
 | Accounting: dashboard | Cuadrícula de 2 columnas con tarjetas Ingresos, Personal, Gastos y Profit (cifra de `20px`) y línea Recibido y Pendiente | D-068 | ronda 7 |
 | Accounting: filtros | Control Global / Por cuenta y selector de mes con flechas | D-069 | ronda 7 |
-| Ventas: detalle del lead | Encabezado (empresa, fuente, ficha de estado) y pestañas Datos, Sitios y Notas | D-070 | [`ronda-08-ventas.md`](../surveys/ronda-08-ventas.md) |
+| Ventas: detalle del lead | Encabezado (empresa, fuente, ficha de estado) y pestañas Datos, Sitios, Walkthrough, Quote y Notas; Agendar y Hacer walkthrough en la pestaña Walkthrough | D-220 | pedido del dueño 2026-10-23 |
 | Ventas: estado del lead | Campo con contorno y flecha; opciones = estados del flujo | D-071 | ronda 8 |
 | Ventas: agendar walkthrough | Calendario del mes (día elegido con fondo de marca, esquinas de 8px), campo Hora y botón Agendar | D-072 | ronda 8 |
 | Ventas: pasos del walkthrough | "Paso N de 5 · nombre", barra de progreso de 4px, botones Atrás y Siguiente | D-073 | ronda 8 |
