@@ -1,0 +1,208 @@
+<title>Schedule simple</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: un teléfono de prueba al centro con la explicación al lado (debajo en pantallas angostas). */
+:root{
+  --bg:#FBF6EF; --card:#FFFFFF; --ink:#1E2A28; --muted:#6B5F52; --brand:#0F766E; --brand-soft:#DDEFEC;
+  --amber:#FBE3C7; --amber-ink:#8A4B0F; --dark:#1E2A28; --line:#EFE5D8; --chip:#F6EFE6; --page:#EFE8DD;
+  --sans:Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#16130F; --card:#221E19; --ink:#F3ECE2; --muted:#B9AC9C; --brand:#4FB8AC; --brand-soft:#16332F;
+  --amber:#3A2A17; --amber-ink:#F2C27B; --dark:#0E0C0A; --line:#332C24; --chip:#2B2620; --page:#100E0B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#16130F; --card:#221E19; --ink:#F3ECE2; --muted:#B9AC9C; --brand:#4FB8AC; --brand-soft:#16332F;
+  --amber:#3A2A17; --amber-ink:#F2C27B; --dark:#0E0C0A; --line:#332C24; --chip:#2B2620; --page:#100E0B; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px}
+.wrap{max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start;justify-content:center}
+.phone{width:390px;max-width:100%;background:var(--bg);border-radius:32px;padding:18px 14px 20px;display:flex;flex-direction:column;gap:14px;min-height:760px;box-shadow:0 10px 30px rgba(30,42,40,.12)}
+.notes{flex:1 1 300px;min-width:0;max-width:440px;display:flex;flex-direction:column;gap:14px}
+.notes h1{font-size:24px;font-weight:800;margin:0;text-wrap:balance}
+.notes p,.notes li{font-size:15px;line-height:1.55;color:var(--muted);margin:0}
+.notes ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.notes b{color:var(--ink)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.kicker{font-size:13px;color:var(--muted)}
+.ttl{font-size:24px;font-weight:800}
+.seg{display:flex;background:var(--card);border-radius:16px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:none;font:inherit;font-size:14px;font-weight:700;color:var(--muted);height:40px;border-radius:12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--brand);color:#fff}
+:root[data-theme="dark"] .seg button[aria-pressed="true"]{color:#0E0C0A}
+.range{display:flex;gap:8px;flex-wrap:wrap}
+.range button{border:0;font:inherit;font-size:13px;font-weight:700;height:36px;padding:0 14px;border-radius:18px;background:var(--card);color:var(--ink);cursor:pointer}
+.range button[aria-pressed="true"]{background:var(--dark);color:#fff}
+.day{display:flex;flex-direction:column;gap:8px}
+.dayh{display:flex;justify-content:space-between;align-items:baseline;padding:0 4px}
+.dayh b{font-size:16px;font-weight:800}
+.dayh span{font-size:12px;color:var(--muted)}
+.site{background:var(--card);border:0;border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:10px;text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
+.site.today{background:var(--brand);color:#fff}
+.siteh{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.siteh b{font-size:16px;font-weight:800}
+.siteh span{font-size:13px;opacity:.85;font-variant-numeric:tabular-nums;white-space:nowrap}
+.people{display:flex;flex-wrap:wrap;gap:6px}
+.p{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px 0 4px;border-radius:15px;background:var(--chip);font-size:13px;font-weight:600}
+.site.today .p{background:rgba(255,255,255,.18)}
+.av{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff}
+.empty{font-size:13px;color:var(--amber-ink);background:var(--amber);border-radius:15px;padding:6px 10px;font-weight:700}
+.site.today .empty{background:rgba(255,255,255,.2);color:#fff}
+.grid{background:var(--card);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.grid h3{margin:0;font-size:16px;font-weight:800}
+.grid .sub{font-size:12px;color:var(--muted);margin-top:-8px}
+.wk{display:grid;grid-template-columns:76px repeat(7,minmax(0,1fr));gap:4px;align-items:center}
+.wk .h{font-size:11px;color:var(--muted);text-align:center;font-weight:700}
+.wk .n{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;min-width:0}
+.wk .n span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cell{height:34px;border-radius:10px;border:0;background:var(--chip);cursor:pointer}
+.cell[aria-pressed="true"]{background:var(--brand)}
+.cell:disabled{background:transparent;outline:1px dashed var(--line);cursor:default}
+.note{font-size:12px;color:var(--muted);background:var(--chip);border-radius:14px;padding:10px 12px;line-height:1.45}
+.detail{background:var(--card);border-radius:22px;padding:22px;text-align:center;color:var(--muted);font-size:14px;line-height:1.5}
+.scrim{position:fixed;inset:0;background:rgba(20,16,12,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.dlg{background:var(--card);border-radius:24px;width:100%;max-width:360px;padding:18px;display:flex;flex-direction:column;gap:12px;max-height:85vh;overflow:auto}
+.dlg h4{margin:0;font-size:18px;font-weight:800}
+.dlg .sub{font-size:13px;color:var(--muted);margin-top:-6px}
+.opt{display:flex;align-items:center;gap:10px;min-height:48px;border-bottom:.5px solid var(--line);font-size:15px;cursor:pointer}
+.opt input{width:20px;height:20px;accent-color:var(--brand)}
+.scope{display:flex;background:var(--chip);border-radius:14px;padding:4px;gap:4px}
+.scope label{flex:1;text-align:center;font-size:13px;font-weight:700;height:36px;line-height:36px;border-radius:10px;cursor:pointer;color:var(--muted)}
+.scope input{position:absolute;opacity:0;pointer-events:none}
+.scope input:checked+span{display:block;background:var(--card);color:var(--ink);border-radius:10px}
+.row{display:flex;gap:8px}
+.btn{flex:1;height:44px;border-radius:14px;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.btn.s{background:var(--brand);color:#fff;border:0}
+.btn.n{background:none;border:1px solid var(--brand);color:var(--ink)}
+:root[data-theme="dark"] .btn.s,:root[data-theme="dark"] .site.today{color:#0E0C0A}
+button:focus-visible,label:focus-within{outline:2px solid var(--amber-ink);outline-offset:2px}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.s,:root:not([data-theme="light"]) .site.today,:root:not([data-theme="light"]) .seg button[aria-pressed="true"]{color:#0E0C0A}}
+</style>
+
+<div class="wrap">
+  <main class="phone" aria-label="Prototipo del Schedule simple">
+    <div class="top">
+      <div><div class="kicker">Operaciones</div><div class="ttl">Schedule</div></div>
+    </div>
+    <div class="seg" role="group" aria-label="Modo">
+      <button id="mSimple" aria-pressed="true">Simple</button>
+      <button id="mTeams" aria-pressed="false">Equipos fijos</button>
+      <button id="mDetail" aria-pressed="false">Detallado</button>
+    </div>
+    <div id="viewSimple">
+      <div class="range" role="group" aria-label="Rango" style="margin-bottom:12px">
+        <button data-r="1" aria-pressed="false">Hoy</button>
+        <button data-r="3" aria-pressed="true">3 días</button>
+        <button data-r="7" aria-pressed="false">Semana</button>
+      </div>
+      <div id="days" style="display:flex;flex-direction:column;gap:16px"></div>
+    </div>
+    <div id="viewTeams" hidden>
+      <div id="teams" style="display:flex;flex-direction:column;gap:12px"></div>
+    </div>
+    <div id="viewDetail" hidden>
+      <div class="detail">Aquí queda tal cual lo que ya tienes: Lista, Tabla y Calendario con horas. No se borra nada.</div>
+    </div>
+  </main>
+
+  <section class="notes">
+    <h1>Mi recomendación: equipos fijos más ajustes del día</h1>
+    <p>Hoy el Schedule pide armar visita por visita. En limpieza comercial casi siempre va el mismo equipo al mismo sitio los mismos días, así que conviene invertir el orden:</p>
+    <ol>
+      <li><b>Equipos fijos.</b> En cada jobsite marcas una sola vez quién va cada día de la semana. La app genera las visitas solas con eso.</li>
+      <li><b>Simple.</b> Lo que ves a diario: por día, cada jobsite con las personas que van. Un toque en la tarjeta cambia quién va, solo ese día o de ahí en adelante.</li>
+      <li><b>Detallado.</b> Lo que ya construimos (tabla, calendario, horas) queda igual para cuando necesites precisión.</li>
+    </ol>
+    <p>Prueba el teléfono de la izquierda: cambia entre Hoy, 3 días y Semana, toca una tarjeta para cambiar a quién va y marca o desmarca días en Equipos fijos. Los nombres son de ejemplo.</p>
+  </section>
+</div>
+
+<div class="scrim" id="scrim" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+    <h4 id="dTitle"></h4>
+    <div class="sub" id="dSub"></div>
+    <div id="dPeople"></div>
+    <div class="scope" role="radiogroup" aria-label="Aplicar a">
+      <label><input type="radio" name="scope" id="sOne" value="one" checked><span>Solo este día</span></label>
+      <label><input type="radio" name="scope" id="sAll" value="all"><span>Todos los <i id="dDow"></i></span></label>
+    </div>
+    <div class="row"><button class="btn n" id="dCancel">Cancelar</button><button class="btn s" id="dSave">Guardar</button></div>
+  </div>
+</div>
+
+<script>
+const PEOPLE=[{id:'es',n:'Estela',c:'#0F766E'},{id:'hu',n:'Humberto',c:'#8A4B0F'},{id:'an',n:'Ana',c:'#5B5BB0'},{id:'lu',n:'Luis',c:'#B0473F'}];
+const DOW=['D','L','M','M','J','V','S'];
+const DOWL=['domingos','lunes','martes','miércoles','jueves','viernes','sábados'];
+const DAYN=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+// Equipos fijos: por jobsite, días que se trabaja y quién va cada día.
+const SITES=[
+ {id:'bt',n:'Break TAX Office',t:'6:00 PM · 3 h',days:[1,3,5],crew:{1:['es','hu'],3:['es','hu'],5:['es','an']}},
+ {id:'gc',n:'Gulf Coast Dental',t:'7:00 PM · 2 h',days:[2,4],crew:{2:['an','lu'],4:['an']}},
+ {id:'nb',n:'Naples Bay Clinic',t:'8:00 AM · 4 h',days:[6],crew:{6:['lu','hu']}}
+];
+const overrides={}; // 'site|yyyy-mm-dd' -> [ids]
+let range=3, editing=null;
+const today=new Date(2026,9,23);
+const key=d=>d.toISOString().slice(0,10);
+const pById=id=>PEOPLE.find(p=>p.id===id);
+const chip=id=>{const p=pById(id);return '<span class="p"><span class="av" style="background:'+p.c+'">'+p.n[0]+'</span>'+p.n+'</span>';};
+function crewFor(s,d){const k=s.id+'|'+key(d);return overrides[k]||s.crew[d.getDay()]||[];}
+function renderDays(){
+  const box=document.getElementById('days');let start=new Date(today);
+  if(range===3)start.setDate(today.getDate()-1);
+  if(range===7)start.setDate(today.getDate()-today.getDay());
+  let html='';
+  for(let i=0;i<range;i++){
+    const d=new Date(start);d.setDate(start.getDate()+i);const isT=key(d)===key(today);
+    const sites=SITES.filter(s=>s.days.includes(d.getDay()));
+    html+='<div class="day"><div class="dayh"><b>'+(isT?'Hoy · ':'')+DAYN[d.getDay()]+' '+d.getDate()+' oct</b><span>'+(sites.length?sites.length+' jobsite'+(sites.length>1?'s':''):'Sin visitas')+'</span></div>';
+    sites.forEach(s=>{const c=crewFor(s,d);
+      html+='<button class="site'+(isT?' today':'')+'" data-s="'+s.id+'" data-d="'+key(d)+'" aria-label="Cambiar quién va a '+s.n+'"><span class="siteh"><b>'+s.n+'</b><span>'+s.t+'</span></span><span class="people">'+(c.length?c.map(chip).join(''):'<span class="empty">Falta asignar personal</span>')+'</span></button>';});
+    html+='</div>';
+  }
+  box.innerHTML=html;
+  box.querySelectorAll('.site').forEach(b=>b.addEventListener('click',()=>openDlg(b.dataset.s,b.dataset.d)));
+}
+function renderTeams(){
+  const box=document.getElementById('teams');let html='';
+  SITES.forEach(s=>{
+    html+='<div class="grid"><h3>'+s.n+'</h3><div class="sub">'+s.t+' · toca para marcar quién va cada día</div><div class="wk"><span></span>'+DOW.map(x=>'<span class="h">'+x+'</span>').join('');
+    PEOPLE.forEach(p=>{html+='<span class="n"><span class="av" style="background:'+p.c+'">'+p.n[0]+'</span><span>'+p.n+'</span></span>';
+      for(let w=0;w<7;w++){const on=s.days.includes(w)&&(s.crew[w]||[]).includes(p.id);
+        html+=s.days.includes(w)?'<button class="cell" aria-label="'+p.n+' '+DOWL[w]+'" aria-pressed="'+on+'" data-s="'+s.id+'" data-w="'+w+'" data-p="'+p.id+'"></button>':'<button class="cell" disabled aria-label="'+s.n+' no tiene visita los '+DOWL[w]+'"></button>';}});
+    html+='</div></div>';
+  });
+  html+='<div class="note">Con esto la app genera las visitas de las próximas 4 semanas sola. Los cambios de un día puntual se hacen tocando la tarjeta en Simple.</div>';
+  box.innerHTML=html;
+  box.querySelectorAll('.cell:not(:disabled)').forEach(b=>b.addEventListener('click',()=>{
+    const s=SITES.find(x=>x.id===b.dataset.s),w=+b.dataset.w,arr=s.crew[w]=s.crew[w]||[];
+    const i=arr.indexOf(b.dataset.p); if(i>=0)arr.splice(i,1); else arr.push(b.dataset.p);
+    b.setAttribute('aria-pressed',i<0); renderDays();
+  }));
+}
+function openDlg(sid,dk){
+  const s=SITES.find(x=>x.id===sid),d=new Date(dk+'T12:00:00');editing={s,d};
+  document.getElementById('dTitle').textContent=s.n;
+  document.getElementById('dSub').textContent=DAYN[d.getDay()]+' '+d.getDate()+' oct · '+s.t;
+  document.getElementById('dDow').textContent=DOWL[d.getDay()];
+  const c=crewFor(s,d);
+  document.getElementById('dPeople').innerHTML=PEOPLE.map(p=>'<label class="opt"><input type="checkbox" id="chk-'+p.id+'" value="'+p.id+'"'+(c.includes(p.id)?' checked':'')+'><span class="av" style="background:'+p.c+'">'+p.n[0]+'</span>'+p.n+'</label>').join('');
+  document.getElementById('sOne').checked=true;
+  document.getElementById('scrim').hidden=false;
+}
+function closeDlg(){document.getElementById('scrim').hidden=true;editing=null;}
+document.getElementById('dCancel').onclick=closeDlg;
+document.getElementById('scrim').addEventListener('click',e=>{if(e.target.id==='scrim')closeDlg();});
+document.getElementById('dSave').onclick=()=>{
+  const ids=[...document.querySelectorAll('#dPeople input:checked')].map(i=>i.value);
+  const {s,d}=editing;
+  if(document.getElementById('sAll').checked){s.crew[d.getDay()]=ids;Object.keys(overrides).forEach(k=>{if(k.startsWith(s.id+'|')&&new Date(k.split('|')[1]+'T12:00:00').getDay()===d.getDay())delete overrides[k];});}
+  else overrides[s.id+'|'+key(d)]=ids;
+  closeDlg();renderDays();renderTeams();
+};
+document.querySelectorAll('.range button').forEach(b=>b.onclick=()=>{range=+b.dataset.r;document.querySelectorAll('.range button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderDays();});
+const modes={mSimple:'viewSimple',mTeams:'viewTeams',mDetail:'viewDetail'};
+Object.keys(modes).forEach(id=>document.getElementById(id).onclick=()=>{Object.keys(modes).forEach(o=>{document.getElementById(o).setAttribute('aria-pressed',o===id);document.getElementById(modes[o]).hidden=o!==id;});});
+renderDays();renderTeams();
+</script>
