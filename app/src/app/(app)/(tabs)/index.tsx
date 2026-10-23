@@ -19,8 +19,16 @@ import { useWalkthroughStrings } from '@/i18n/useWalkthroughStrings';
 import { canDoWalkthroughs, inProgress, type WalkthroughDoc } from '@/lib/walkthroughRules';
 import { listWalkthroughs } from '@/lib/walkthroughStore';
 import { usePermissions, useSession } from '@/lib/session';
-import { homeKind, showsMonthFigures } from '@/lib/visibility';
-import { fetchWeekVisits, formatTime, pickNextVisit, pickTodayVisit, startOfWeekMonday, weekDays, type Visit } from '@/lib/week';
+import { canAny, homeKind, showsMonthFigures } from '@/lib/visibility';
+import { formatTime } from '@/lib/week';
+import { ClockCard } from '@/components/work/ClockCard';
+import { ListRow } from '@/components/ListRow';
+import { Segmented } from '@/components/Segmented';
+import { useWorkStrings } from '@/i18n/useWorkStrings';
+import { dayKey } from '@/lib/leadRules';
+import { clockIn, clockOut, fetchMySchedule, fetchWorkPending, type MyVisit, type WorkPending } from '@/lib/scheduleApi';
+import { pickNext, pickToday, weekRange } from '@/lib/scheduleRules';
+import { syncWorkQueue } from '@/lib/workQueue';
 import { iconStrokeWidth, illustrations, sample, useTheme } from '@/theme';
 
 /** Inicio: el del admin para el Super Admin y quien tenga algún permiso; el del staff para quien no tenga ninguno (D-169). */
@@ -94,7 +102,32 @@ function AdminHome() {
   const otherRows = sortPending(quoteRows);
   const followUps = salesRows.find((r) => r.key === 'followUps') ? (sales?.followUpsDue ?? 0) : 0;
   const scheduled = salesRows.find((r) => r.key === 'walkthroughs') ? (sales?.walkthroughsUpcoming ?? 0) : 0;
-  const nothing = pending.length === 0 && ongoing.length === 0;
+  // Hito 6: trabajos por aprobar, GPS fuera de rango, entradas sin marcar a los 30 min y turnos abiertos (D-214).
+  const t = useWorkStrings();
+  const seesWork = canAny(access, ['work_aprobar', 'work_editar', 'work_revisar_gps', 'work_registrar_por_otros', 'schedule_ver_editar']);
+  const [work, setWork] = useState<WorkPending | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      if (!seesWork) return;
+      let cancelled = false;
+      void fetchWorkPending().then((r) => !cancelled && r.ok && setWork(r.data));
+      return () => {
+        cancelled = true;
+      };
+    }, [seesWork]),
+  );
+  // Quien también trabaja en sitios (un supervisor) marca su entrada desde aquí.
+  const mine = useMySchedule(true);
+  const myToday = pickToday(mine.visits, new Date());
+  const workCards = work
+    ? ([
+        work.toApprove > 0 ? { key: 'approve', text: t.homeApprove(work.toApprove), urgent: work.urgent > 0, tab: 'approve' } : null,
+        work.gpsOut > 0 ? { key: 'gps', text: t.homeGps(work.gpsOut), urgent: true, tab: 'approve' } : null,
+        work.forgotClockIn > 0 ? { key: 'forgot', text: t.homeForgot(work.forgotClockIn), urgent: true, tab: 'schedule' } : null,
+        work.openShifts > 0 ? { key: 'open', text: t.homeOpen(work.openShifts), urgent: true, tab: 'approve' } : null,
+      ].filter(Boolean) as { key: string; text: string; urgent: boolean; tab: string }[])
+    : [];
+  const nothing = pending.length === 0 && ongoing.length === 0 && workCards.length === 0 && !myToday;
   const money0 = '$0'; // TEMPORAL: cifras en $0 hasta que Accounting tenga datos (hito 7)
 
   return (
@@ -119,6 +152,21 @@ function AdminHome() {
               <OfficeArt />
             </Card>
           ) : null}
+          {myToday ? <ClockCard visit={myToday} onChanged={mine.reload} /> : null}
+          {workCards.map((c) => (
+            <Card
+              key={c.key}
+              tone={c.urgent ? 'attention' : 'plain'}
+              accessibilityLabel={c.text}
+              onPress={() => router.push({ pathname: '/schedule', params: { tab: c.tab } })}
+              style={{ gap: 10 }}
+            >
+              {c.urgent ? <QuoteDueIcon /> : <ApproveIcon />}
+              <AppText weight="bold" size={15}>
+                {c.text}
+              </AppText>
+            </Card>
+          ))}
           {otherRows.map((row) => (
             <Card
               key={row.key}
@@ -236,82 +284,118 @@ function NumberCard({ tone, label, value, sub, onPress }: { tone: 'plain' | 'dar
   );
 }
 
-/** Inicio del staff (D-165, D-223 estilo C): visita de hoy (solo si hay) con "Desliza para marcar entrada", la próxima visita y la semana. */
+/**
+ * Inicio del staff (D-165, D-214, D-223): la visita de hoy con "Desliza para marcar entrada" y el turno (ClockCard),
+ * la próxima visita y "Tu semana" con Esta semana / Próxima semana (D-093); tocar un día muestra sus visitas.
+ * Regla del dueño (D-223): el staff nunca ve sus horas contra el tope de 32 h; aquí no hay nada de eso.
+ */
 function StaffHome() {
+  const { profile } = useSession();
+  const { visits, reload } = useMySchedule(true);
+  return (
+    <View style={{ flex: 1, backgroundColor: useTheme().colors.background }}>
+      <ScrollView contentContainerStyle={styles.page}>
+        <Greeting name={profile?.fullName ?? ''} />
+        <StaffCards visits={visits} onChanged={reload} />
+      </ScrollView>
+    </View>
+  );
+}
+
+/** Mis visitas (semana actual y siguiente) y la cola de entradas y salidas sin conexión, al volver a la pantalla. */
+function useMySchedule(enabled: boolean) {
+  const [visits, setVisits] = useState<MyVisit[]>([]);
+  const reload = useCallback(() => {
+    if (!enabled) return;
+    void syncWorkQueue({ clockIn, clockOut }).finally(() =>
+      fetchMySchedule().then((r) => {
+        if (r.ok) setVisits(r.data);
+      }),
+    );
+  }, [enabled]);
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload]),
+  );
+  return { visits, reload };
+}
+
+function StaffCards({ visits, onChanged, weekCard = true }: { visits: MyVisit[]; onChanged: () => void; weekCard?: boolean }) {
   const { colors } = useTheme();
   const strings = useStrings();
   const s = useSalesStrings();
-  const { profile } = useSession();
-  const [visits, setVisits] = useState<Visit[]>([]);
-  const now = useMemo(() => new Date(), []);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchWeekVisits(startOfWeekMonday(now)).then((v) => {
-      if (!cancelled) setVisits(v);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [now]);
-
-  const today = pickTodayVisit(visits, now);
-  const next = pickNextVisit(visits, now);
-  const days = weekDays(now, visits, strings.home.weekDays);
-  // Regla del dueño (D-223): el staff nunca ve sus horas contra el tope de 32 h; aquí no hay nada de eso.
-
+  const t = useWorkStrings();
+  const now = new Date();
+  const [which, setWhich] = useState<'this' | 'next'>('this');
+  const [selected, setSelected] = useState<string | null>(null);
+  const today = pickToday(visits, now);
+  const next = pickNext(visits, now);
+  const range = weekRange(now, which);
+  const inWeek = visits.filter((v) => v.day >= range.from && v.day <= range.to);
+  const days = range.days.map((key, i) => ({
+    key,
+    label: strings.home.weekDays[i] ?? '',
+    dayNumber: Number(key.slice(8)),
+    hasVisit: inWeek.some((v) => v.day === key && v.scheduled),
+    isToday: key === dayKey(now),
+  }));
+  const dayList = selected ? inWeek.filter((v) => v.day === selected) : [];
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView contentContainerStyle={styles.page}>
-        <Greeting name={profile?.fullName ?? ''} />
-        <Bento>
-          {today ? (
-            <Card tone="brand" wide style={styles.todayCard}>
-              <View style={[styles.todayHead, illustrations ? styles.todayHeadArt : null]}>
-                <View style={{ gap: 6, flexShrink: 1, paddingBottom: illustrations ? 14 : 0 }}>
-                  <AppText size={13} color="#FFFFFF" style={{ opacity: 0.85 }}>
-                    {strings.home.today}
-                  </AppText>
-                  <AppText weight="heavy" size={22} color="#FFFFFF">
-                    {today.siteName}
-                  </AppText>
-                  <AppText size={14} color="#FFFFFF" style={{ opacity: 0.9 }}>
-                    {strings.home.timeRange(formatTime(today.start), formatTime(today.end))}
-                  </AppText>
-                </View>
-                <CartArt />
-              </View>
-              {/* TEMPORAL: marcar entrada se conecta en el hito 6 (Work) */}
-              <View style={styles.slide}>
-                <SlideToMark label={strings.home.slideToClockIn} onComplete={() => {}} onBrand />
-              </View>
-            </Card>
-          ) : null}
-          {next ? (
-            <Card tone="attention" wide style={styles.rowCard}>
-              <CalendarIcon />
-              <View style={{ gap: 2, flex: 1 }}>
-                <AppText size={13} color={colors.attentionText}>
-                  {strings.home.next}
-                </AppText>
-                <AppText weight="bold" size={16}>
-                  {`${s.dayNames[next.start.getDay()]} ${next.start.getDate()} · ${formatTime(next.start)}`}
-                </AppText>
-                <AppText size={12} color={colors.secondary}>
-                  {next.siteName}
-                </AppText>
-              </View>
-            </Card>
-          ) : null}
-          <Card wide style={{ gap: 12 }}>
-            <AppText size={13} color={colors.secondary}>
-              {strings.home.yourWeek}
+    <Bento>
+      {today ? <ClockCard visit={today} onChanged={onChanged} /> : null}
+      {next ? (
+        <Card tone="attention" wide style={styles.rowCard}>
+          <CalendarIcon />
+          <View style={{ gap: 2, flex: 1 }}>
+            <AppText size={13} color={colors.attentionText}>
+              {strings.home.next}
             </AppText>
-            <WeekStrip days={days} />
-          </Card>
-        </Bento>
-      </ScrollView>
-    </View>
+            <AppText weight="bold" size={16}>
+              {`${s.dayNames[next.startsAt.getDay()]} ${next.startsAt.getDate()} · ${formatTime(next.startsAt)}`}
+            </AppText>
+            <AppText size={12} color={colors.secondary}>
+              {next.jobsite}
+            </AppText>
+          </View>
+        </Card>
+      ) : null}
+      {weekCard ? (
+        <Card wide style={{ gap: 12 }}>
+          <AppText size={13} color={colors.secondary}>
+            {strings.home.yourWeek}
+          </AppText>
+          <Segmented
+            options={[
+              { value: 'this', label: t.thisWeek },
+              { value: 'next', label: t.nextWeek },
+            ]}
+            value={which}
+            onChange={(v) => {
+              setWhich(v);
+              setSelected(null);
+            }}
+          />
+          <WeekStrip days={days} selected={selected} onSelect={(k) => setSelected((cur) => (cur === k ? null : k))} />
+          {selected ? (
+            dayList.length === 0 ? (
+              <AppText size={sample.noteSize} color={colors.secondary}>
+                {t.noVisits}
+              </AppText>
+            ) : (
+              dayList.map((v, i) => (
+                <ListRow
+                  key={v.id}
+                  title={v.jobsite}
+                  detail={strings.home.timeRange(formatTime(v.startsAt), formatTime(new Date(v.startsAt.getTime() + v.minutes * 60000)))}
+                  last={i === dayList.length - 1}
+                />
+              ))
+            )
+          ) : null}
+        </Card>
+      ) : null}
+    </Bento>
   );
 }
 

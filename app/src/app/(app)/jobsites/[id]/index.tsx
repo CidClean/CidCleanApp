@@ -11,7 +11,7 @@ import { Chip } from '@/components/Chip';
 import { DataRow } from '@/components/DataRow';
 import { Icon } from '@/components/Icon';
 import { ListRow } from '@/components/ListRow';
-import { PendingBody } from '@/components/PendingScreen';
+import { JobsiteSchedule } from '@/components/work/JobsiteSchedule';
 import { SelectField } from '@/components/SelectField';
 import { Sheet } from '@/components/Sheet';
 import { Bento, Card } from '@/components/bento/Card';
@@ -169,9 +169,6 @@ export default function JobsiteScreen() {
                       <AppText weight="heavy" size={15} color={colors.darkCardText}>
                         {c.jobsite.tabSchedule}
                       </AppText>
-                      <AppText size={12} color={colors.darkCardText} style={{ opacity: 0.75 }}>
-                        {strings.pending}
-                      </AppText>
                     </View>
                   </Card>
                 </Bento>
@@ -183,11 +180,8 @@ export default function JobsiteScreen() {
             ) : null}
             {tab === 'documents' ? <Documents jobsite={jobsite} c={c} day={day} /> : null}
             {tab === 'staff' ? <Staff jobsite={jobsite} c={c} day={day} onChanged={load} /> : null}
-            {tab === 'schedule' ? (
-              <View style={{ height: 200 }}>
-                <PendingBody />
-              </View>
-            ) : null}
+            {/* Hito 6: hora y duración de las visitas y las próximas visitas (D-214). */}
+            {tab === 'schedule' ? <JobsiteSchedule jobsite={jobsite} /> : null}
           </>
         ) : null}
       </ScrollView>

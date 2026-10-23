@@ -15,6 +15,7 @@ import { useGoBack } from '@/lib/navigation';
 import { isValidPlusCode } from '@/lib/plusCode';
 import { usePermissions } from '@/lib/session';
 import { useTheme } from '@/theme';
+import { saveLocation } from '@/lib/jobsiteLocation';
 
 
 /** Nuevo jobsite de un cliente previo a la app (D-210): datos, contactos, frecuencia y tarifa. Al crear abre el jobsite. */
@@ -46,6 +47,7 @@ export default function NewJobsiteScreen() {
       setFailed(true);
       return;
     }
+    await saveLocation(result.data, form.plusCode);
     router.replace({ pathname: '/jobsites/[id]', params: { id: result.data } });
   }
 

@@ -8,6 +8,21 @@ const mockBack = jest.fn();
 let mockAccess: { isSuperAdmin: boolean; permissions: Set<string> } = { isSuperAdmin: true, permissions: new Set() };
 let mockParams: Record<string, string> = { id: 'l1' };
 
+// Hito 6: el Inicio y el Horario del jobsite leen el schedule; en estas pruebas no hay visitas.
+jest.mock('@/lib/scheduleApi', () => {
+  const empty = { ok: true, data: null };
+  return {
+    fetchMySchedule: jest.fn(async () => ({ ok: true, data: [] })),
+    fetchWorkPending: jest.fn(async () => ({ ok: true, data: { toApprove: 0, urgent: 0, gpsOut: 0, forgotClockIn: 0, openShifts: 0 } })),
+    fetchJobsiteSchedule: jest.fn(async () => ({ ok: true, data: { startTime: null, minutes: null, visits: [] } })),
+    setJobsiteLocation: jest.fn(async () => empty),
+    setJobsiteVisitTime: jest.fn(async () => empty),
+    clockIn: jest.fn(),
+    clockOut: jest.fn(),
+    checkDistance: jest.fn(),
+  };
+});
+jest.mock('@/lib/workQueue', () => ({ syncWorkQueue: jest.fn(async () => 'synced'), loadShift: jest.fn(async () => null), saveShift: jest.fn(), enqueue: jest.fn() }));
 jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: mockReplace, push: mockPush, navigate: mockNavigate, back: mockBack, canGoBack: () => true }),
   useLocalSearchParams: () => mockParams,

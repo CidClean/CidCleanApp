@@ -65,7 +65,8 @@ export function visibleTabs(access: Access): TabKey[] {
 export function visibleMenuItems(access: Access): MenuKey[] {
   const items: MenuKey[] = [];
   if (can(access, 'empleados_ver')) items.push('employees');
-  if (can(access, 'schedule_ver_editar')) items.push('scheduleWork');
+  // Hito 6: el schedule o cualquier permiso de Work (aprobar, editar, revisar GPS o registrar por otros).
+  if (canAny(access, ['schedule_ver_editar', 'work_registrar_por_otros', 'work_editar', 'work_aprobar', 'work_revisar_gps'])) items.push('scheduleWork');
   if (canAny(access, ACCOUNTING_KEYS)) items.push('accounting');
   if (access.isSuperAdmin) items.push('settings');
   if (can(access, 'historial_ver')) items.push('history');

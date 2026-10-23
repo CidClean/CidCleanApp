@@ -51,6 +51,7 @@ export default function MenuScreen() {
     else if (key === 'employees') router.push('/employees');
     else if (key === 'settings') router.push('/settings');
     else if (key === 'history') router.push('/history');
+    else if (key === 'scheduleWork') router.push('/schedule');
     else router.push({ pathname: '/section/[key]', params: { key } });
   }
 

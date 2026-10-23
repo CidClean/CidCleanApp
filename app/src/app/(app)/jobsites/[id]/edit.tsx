@@ -16,6 +16,7 @@ import { useGoBack } from '@/lib/navigation';
 import { isValidPlusCode } from '@/lib/plusCode';
 import { usePermissions } from '@/lib/session';
 import { useTheme } from '@/theme';
+import { saveLocation } from '@/lib/jobsiteLocation';
 
 /** Editar datos y contactos del jobsite (clientes_editar_datos). La tarifa y el estado se cambian en el Resumen. */
 export default function EditJobsiteScreen() {
@@ -57,6 +58,7 @@ export default function EditJobsiteScreen() {
       setFailed('save');
       return;
     }
+    await saveLocation(id, form.plusCode);
     goBack();
   }
 
