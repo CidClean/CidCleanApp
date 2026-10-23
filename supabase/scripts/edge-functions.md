@@ -67,8 +67,10 @@ CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... npx wrangler pages deploy dis
 
 ## Pruebas del hito 4
 
+Última corrida (2026-10-23, orden 17): 37 de 37 contra `quote.cidclean.com` recién publicado; no quedaron datos de prueba (el historial conserva sus 20 filas).
+
 - `supabase/tests/quotes.sql`: 87 pruebas (totales, armado, permisos, envío, portal, bloqueo del código, límites, decisiones, Cliente y Jobsite, Perdido sin sitios abiertos, versiones, vencimiento).
-- `supabase/tests/quote-portal.e2e.mjs`: 29 comprobaciones contra el proyecto real (enviar con PDF y correo, portal completo y aceptar). Escribe solo a `admin@cidclean.com` y a `delivered@resend.dev`; pone un `PORTAL_CODE_PEPPER` conocido al empezar y uno aleatorio nuevo al terminar; borra lo que crea.
+- `supabase/tests/quote-portal.e2e.mjs`: 37 comprobaciones contra el proyecto real (enviar con PDF y correo, portal completo y aceptar; en un segundo sitio pedir cambios, versión 1.1 que reemplaza y se reenvía, y rechazar con motivo). Escribe solo a `admin@cidclean.com`; pone un `PORTAL_CODE_PEPPER` conocido al empezar y uno aleatorio nuevo al terminar; borra lo que crea.
 
 ## walkthrough-pdf (hito 3, D-212)
 

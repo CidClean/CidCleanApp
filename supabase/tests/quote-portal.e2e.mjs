@@ -1,6 +1,6 @@
 // Prueba de extremo a extremo del hito 4 contra el proyecto real: armar y enviar un quote (send-quote), el portal
-// (quote-portal) y aceptar. No escribe a clientes reales: el contacto es admin@cidclean.com (el dueño) y el correo
-// opcional es delivered@resend.dev (dirección de prueba de Resend).
+// (quote-portal), aceptar, y en otro sitio pedir cambios, versión nueva y rechazar. No escribe a clientes reales:
+// el único destinatario es admin@cidclean.com (el dueño).
 // Uso: SUPABASE_ACCESS_TOKEN=... SUPABASE_PROJECT_REF=... NODE_PATH=$(npm root -g) node supabase/tests/quote-portal.e2e.mjs
 // Para poder escribir el código sin leer el correo, la prueba pone su propio PORTAL_CODE_PEPPER al empezar y uno
 // nuevo y aleatorio al terminar (nadie lo conoce). Borra todo lo que crea; el historial (solo agregar) conserva sus filas.
@@ -52,7 +52,7 @@ try {
   ids.version = sq.versions[0].id;
   ok('borrador 1.0 con el correo del contacto', sq.versions[0].version === '1.0' && sq.versions[0].contact_email === 'admin@cidclean.com', JSON.stringify(sq.versions[0].contact_email));
   const lines = { services: [{ label: 'Limpieza general', amount: 1650, taxable: true }], addons: [{ label: 'Ventanas', amount: 200, taxable: false }], discounts: [{ label: 'Primer mes', kind: 'percent', value: 5 }] };
-  let r = await app.rpc('save_quote_draft', { p_version: ids.version, p_lines: lines, p_tax_rate: 6, p_valid_days: 30, p_recipients: ['delivered@resend.dev'] });
+  let r = await app.rpc('save_quote_draft', { p_version: ids.version, p_lines: lines, p_tax_rate: 6, p_valid_days: 30, p_recipients: [] });
   ok('guardar borrador', !r.error, r.error?.message ?? '');
   let send = await app.functions.invoke('send-quote', { body: { version_id: ids.version } });
   ok('enviar sin SOW: rechazado', !!send.error, '');
@@ -63,9 +63,9 @@ try {
   r = await app.rpc('set_quote_sow', { p_version: ids.version, p_path: sowPath });
   ok('registrar el SOW', !r.error, r.error?.message ?? '');
 
-  // Enviar (PDF + correos: admin@cidclean.com y delivered@resend.dev)
+  // Enviar (PDF + correo solo a admin@cidclean.com, desde quotes@mail.cidclean.com)
   send = await app.functions.invoke('send-quote', { body: { version_id: ids.version } });
-  ok('send-quote: enviado a 2 correos', !send.error && send.data?.sent === 2 && send.data?.failed === 0, JSON.stringify(send.data ?? send.error?.message));
+  ok('send-quote: enviado a 1 correo', !send.error && send.data?.sent === 1 && send.data?.failed === 0, JSON.stringify(send.data ?? send.error?.message));
   const row = (await q(`select status, public_token, pdf_path, total::text, expires_at > now() + interval '29 days' vig, snapshot->>'language' lang from quote_versions where id = '${ids.version}'`))[0];
   ids.token = row.public_token;
   ok('quedó Enviado con enlace, PDF, total y vigencia de 30 días', row.status === 'sent' && !!row.public_token && /quote-1\.0\.pdf$/.test(row.pdf_path) && row.total === '1851.55' && row.vig && row.lang === 'es', JSON.stringify(row));
@@ -82,20 +82,20 @@ try {
   ok('portal: enlace inexistente', p.j.state === 'not_found', JSON.stringify(p.j));
   p = await portal({ action: 'request', token: ids.token, email: 'otro@prueba.local' });
   ok('portal: un correo que no es del quote recibe la misma respuesta (sin código)', p.s === 200 && (await q(`select count(*)::int n from quote_portal_codes where version_id = '${ids.version}' and email = 'otro@prueba.local'`))[0].n === 0);
-  p = await portal({ action: 'request', token: ids.token, email: 'Delivered@resend.dev' });
+  p = await portal({ action: 'request', token: ids.token, email: 'Admin@cidclean.com' });
   ok('portal: el destinatario recibe código (correo enviado)', p.s === 200, JSON.stringify(p.j));
   const code = '482915';
-  const setCode = () => q(`update quote_portal_codes set code_hash = '${sha(`${pepper}:${ids.token}:${code}`)}' where id = (select id from quote_portal_codes where version_id = '${ids.version}' and email = 'delivered@resend.dev' order by seq desc limit 1)`);
+  const setCode = () => q(`update quote_portal_codes set code_hash = '${sha(`${pepper}:${ids.token}:${code}`)}' where id = (select id from quote_portal_codes where version_id = '${ids.version}' and email = 'admin@cidclean.com' order by seq desc limit 1)`);
   await setCode();
-  for (let i = 0; i < 4; i++) p = await portal({ action: 'verify', token: ids.token, email: 'delivered@resend.dev', code: '000000' });
+  for (let i = 0; i < 4; i++) p = await portal({ action: 'verify', token: ids.token, email: 'admin@cidclean.com', code: '000000' });
   ok('portal: código incorrecto (400)', p.s === 400 && p.j.error === 'wrong', JSON.stringify(p));
-  p = await portal({ action: 'verify', token: ids.token, email: 'delivered@resend.dev', code: '000000' });
+  p = await portal({ action: 'verify', token: ids.token, email: 'admin@cidclean.com', code: '000000' });
   ok('portal: al 5º fallo queda bloqueado (423)', p.s === 423 && p.j.error === 'locked', JSON.stringify(p));
-  p = await portal({ action: 'verify', token: ids.token, email: 'delivered@resend.dev', code });
+  p = await portal({ action: 'verify', token: ids.token, email: 'admin@cidclean.com', code });
   ok('portal: bloqueado aunque sea el correcto', p.s === 423, JSON.stringify(p));
-  p = await portal({ action: 'request', token: ids.token, email: 'delivered@resend.dev' });
+  p = await portal({ action: 'request', token: ids.token, email: 'admin@cidclean.com' });
   await setCode();
-  p = await portal({ action: 'verify', token: ids.token, email: 'delivered@resend.dev', code });
+  p = await portal({ action: 'verify', token: ids.token, email: 'admin@cidclean.com', code });
   ok('portal: código nuevo correcto abre sesión', p.s === 200 && !!p.j.session, JSON.stringify(p.j).slice(0, 80));
   const session = p.j.session;
   p = await portal({ action: 'quote', session });
@@ -123,13 +123,55 @@ try {
   ok('portal: después dice que ya está decidido', p.j.state === 'decided', JSON.stringify(p.j));
   p = await portal({ action: 'decide', session, kind: 'rejected', reason_id: null });
   ok('portal: una segunda decisión no se acepta', p.s >= 400);
+
+  // Segundo sitio: pedir cambios, versión 1.1 (reemplaza y se reenvía) y rechazar.
+  ids.site2 = (await q(`insert into lead_sites (lead_id, name, address) values ('${ids.lead}', 'Sede E2E 2', '200 Main St, Naples') returning id`))[0].id;
+  ids.w2 = (await q(`select gen_random_uuid() id`))[0].id;
+  await q(`insert into walkthroughs (id, site_id, status, current_version, closed_at) values ('${ids.w2}', '${ids.site2}', 'closed', 1, now());
+           insert into walkthrough_versions (walkthrough_id, version, data) values ('${ids.w2}', 1,
+             '{"contact":{"address":"200 Main St, Naples","contactName":"Dueño E2E","phone":"(239) 555-0100","email":"admin@cidclean.com","general":""},"areas":[],"frequency":{"kind":"daily","days":[0,1,2,3,4,5,6],"other":""},"internal":{"staff":"1","time":"2 h","supplies":""}}')`);
+  ids.quote2 = (await app.rpc('ensure_quote', { p_site: ids.site2 })).data;
+  ids.v2a = (await app.rpc('get_site_quote', { p_site: ids.site2 })).data.versions[0].id;
+  await app.rpc('save_quote_draft', { p_version: ids.v2a, p_lines: lines, p_tax_rate: 6, p_valid_days: 30, p_recipients: [] });
+  const sow2 = `${ids.quote2}/${ids.v2a}/sow-e2e.pdf`;
+  await app.storage.from('quote-files').upload(sow2, pdf, { contentType: 'application/pdf' });
+  await app.rpc('set_quote_sow', { p_version: ids.v2a, p_path: sow2 });
+  send = await app.functions.invoke('send-quote', { body: { version_id: ids.v2a } });
+  ok('sitio 2: 1.0 enviado', !send.error && send.data?.sent === 1, JSON.stringify(send.data ?? send.error?.message));
+  const open2 = async (versionId) => {
+    const t = (await q(`select public_token from quote_versions where id = '${versionId}'`))[0].public_token;
+    await portal({ action: 'request', token: t, email: 'admin@cidclean.com' });
+    await q(`update quote_portal_codes set code_hash = '${sha(`${pepper}:${t}:${code}`)}' where id = (select id from quote_portal_codes where version_id = '${versionId}' order by seq desc limit 1)`);
+    const sv = await portal({ action: 'verify', token: t, email: 'admin@cidclean.com', code });
+    await portal({ action: 'quote', session: sv.j.session });
+    return { t, ses: sv.j.session };
+  };
+  let o = await open2(ids.v2a);
+  p = await portal({ action: 'decide', session: o.ses, kind: 'changes_requested', note: 'Menos días por semana' });
+  ok('sitio 2: pedir cambios', p.s === 200 && p.j.kind === 'changes_requested', JSON.stringify(p));
+  let st = (await q(`select v.status, l.status lead from quote_versions v, leads l where v.id = '${ids.v2a}' and l.id = '${ids.lead}'`))[0];
+  ok('sitio 2: 1.0 en Cambios pedidos; el lead ganado sigue Ganado', st.status === 'changes_requested' && st.lead === 'won', JSON.stringify(st));
+  p = await portal({ action: 'state', token: o.t });
+  ok('portal: después de pedir cambios queda en solo lectura (decidido)', p.j.state === 'changes_requested' || p.j.state === 'decided', JSON.stringify(p.j));
+  r = await app.rpc('new_quote_version', { p_quote: ids.quote2 });
+  ids.v2b = r.data;
+  ok('sitio 2: versión 1.1 creada', !r.error && !!r.data, r.error?.message ?? '');
+  send = await app.functions.invoke('send-quote', { body: { version_id: ids.v2b } });
+  st = (await q(`select (select status from quote_versions where id = '${ids.v2a}') a, (select status from quote_versions where id = '${ids.v2b}') b, (select recipients from quote_versions where id = '${ids.v2b}') rec`))[0];
+  ok('sitio 2: 1.1 enviada a los mismos destinatarios y 1.0 Reemplazada', !send.error && send.data?.sent === 1 && st.a === 'superseded' && st.b === 'sent', JSON.stringify({ st, d: send.data }));
+  o = await open2(ids.v2b);
+  const reason = (await q(`select id from lost_reasons where active order by sort limit 1`))[0]?.id;
+  p = await portal({ action: 'decide', session: o.ses, kind: 'rejected', reason_id: reason, note: 'Prueba' });
+  ok('sitio 2: rechazar con motivo', p.s === 200 && p.j.kind === 'rejected', JSON.stringify(p));
+  st = (await q(`select v.status, d.reason_id is not null motivo from quote_versions v join quote_decisions d on d.version_id = v.id where v.id = '${ids.v2b}'`))[0];
+  ok('sitio 2: 1.1 Rechazada con el motivo registrado', st?.status === 'rejected' && st.motivo, JSON.stringify(st));
 } finally {
   // Limpieza: archivos, jobsite, cliente, quote y lead de prueba. Pepper nuevo que nadie conoce.
   await setPepper(randomBytes(32).toString('base64url'));
   try {
-    for (const b of ['quote-files', 'jobsite-docs']) {
-      const prefix = b === 'quote-files' ? `${ids.quote}/${ids.version}` : ids.jobsite;
-      if (!prefix || prefix.includes('undefined')) continue;
+    const prefixes = [['quote-files', `${ids.quote}/${ids.version}`], ['quote-files', `${ids.quote2}/${ids.v2a}`], ['quote-files', `${ids.quote2}/${ids.v2b}`], ['jobsite-docs', ids.jobsite]];
+    for (const [b, prefix] of prefixes) {
+      if (!prefix || String(prefix).includes('undefined')) continue;
       const l = await admin.storage.from(b).list(prefix);
       if (l.data?.length) await admin.storage.from(b).remove(l.data.map((o) => `${prefix}/${o.name}`));
     }
@@ -139,7 +181,7 @@ try {
              delete from jobsite_rates where jobsite_id in (select id from jobsites where site_id = '${ids.site}');
              delete from jobsites where site_id = '${ids.site}';
              delete from clients where lead_id = '${ids.lead}';
-             delete from quotes where site_id = '${ids.site}';
+             delete from quotes where site_id in (select id from lead_sites where lead_id = '${ids.lead}');
              delete from leads where id = '${ids.lead}';`);
   }
   const resto = (await q(`select (select count(*) from leads where company like 'E2E%') leads, (select count(*) from quotes) quotes, (select count(*) from clients) clients,
