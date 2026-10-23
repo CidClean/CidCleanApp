@@ -2,6 +2,7 @@ import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
+import { CardBlock } from '@/components/bento/Card';
 import { AppAlert } from '@/components/AppAlert';
 import { ListRow } from '@/components/ListRow';
 import { LostReasonsSettingsRow } from '@/components/sales/LostReasonsSettingsRow';
@@ -55,6 +56,7 @@ export default function SettingsScreen() {
       <TopBar title={strings.nav.settings} onBack={goBack} backLabel={strings.common.back} />
       <ScrollView contentContainerStyle={{ padding: 12 }}>
         {failed ? <AppAlert tone="error" text={strings.terms.errorLoad} /> : null}
+        <CardBlock>
         <ListRow title={strings.settings.termsRow} detail={value} chevron onPress={() => router.push('/settings/terms')} />
         <ListRow
           title={qs.portalTermsRow}
@@ -64,6 +66,7 @@ export default function SettingsScreen() {
         />
         <LostReasonsSettingsRow />
         <ListRow title={strings.transfer.row} chevron last onPress={() => router.push('/settings/transfer')} />
+        </CardBlock>
       </ScrollView>
     </View>
   );

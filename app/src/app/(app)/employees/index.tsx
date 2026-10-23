@@ -2,6 +2,7 @@ import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { CardBlock } from '@/components/bento/Card';
 import { AppAlert } from '@/components/AppAlert';
 import { AppText } from '@/components/AppText';
 import { Avatar } from '@/components/Avatar';
@@ -60,7 +61,9 @@ export default function EmployeesScreen() {
       />
       <ScrollView contentContainerStyle={{ padding: 12 }}>
         {failed ? <AppAlert tone="error" text={strings.employees.errorLoad} /> : null}
-        {employees?.map((e, i) => (
+        {employees && employees.length > 0 ? (
+        <CardBlock>
+        {employees.map((e, i) => (
           <Pressable
             key={e.id}
             accessibilityRole="button"
@@ -85,6 +88,8 @@ export default function EmployeesScreen() {
             />
           </Pressable>
         ))}
+        </CardBlock>
+        ) : null}
       </ScrollView>
     </View>
   );

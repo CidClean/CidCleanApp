@@ -2,6 +2,7 @@ import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
+import { CardBlock } from '@/components/bento/Card';
 import { AppAlert } from '@/components/AppAlert';
 import { AppText } from '@/components/AppText';
 import { ListRow } from '@/components/ListRow';
@@ -72,7 +73,9 @@ export default function PipelineScreen() {
             {s.list.empty}
           </AppText>
         ) : null}
-        {leads?.map((lead, i) => {
+        {leads && leads.length > 0 ? (
+        <CardBlock>
+        {leads.map((lead, i) => {
           const detail = leadListDetail(lead, s);
           return (
             <ListRow
@@ -85,6 +88,8 @@ export default function PipelineScreen() {
             />
           );
         })}
+        </CardBlock>
+        ) : null}
       </ScrollView>
     </View>
   );

@@ -5,7 +5,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { Bento, Card, useCardText } from '@/components/bento/Card';
-import { BucketArt, BuildingArt, SmallBucketArt } from '@/components/illustrations';
+import { ApproveIcon, CalendarIcon, CartArt, OfficeArt, QuoteDueIcon, WalkthroughIcon } from '@/components/illustrations';
 import { SlideToMark } from '@/components/SlideToMark';
 import { WeekStrip } from '@/components/WeekStrip';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
@@ -20,7 +20,7 @@ import { listWalkthroughs } from '@/lib/walkthroughStore';
 import { usePermissions, useSession } from '@/lib/session';
 import { homeKind, showsMonthFigures } from '@/lib/visibility';
 import { fetchWeekVisits, formatTime, pickNextVisit, pickTodayVisit, startOfWeekMonday, weekDays, type Visit } from '@/lib/week';
-import { iconStrokeWidth, sample, useTheme } from '@/theme';
+import { iconStrokeWidth, illustrations, sample, useTheme } from '@/theme';
 
 /** Inicio: el del admin para el Super Admin y quien tenga algún permiso; el del staff para quien no tenga ninguno (D-169). */
 export default function HomeScreen() {
@@ -103,8 +103,8 @@ function AdminHome() {
         {/* D-223 (estilo C): mosaico de 2 columnas; D-111 y D-131: pendientes por urgencia, solo de las áreas con permiso. */}
         <Bento>
           {showsMonthFigures(access) ? (
-            <Card tone="brand" wide style={styles.mainCard}>
-              <View style={{ gap: 6, flexShrink: 1 }}>
+            <Card tone="brand" wide style={[styles.mainCard, illustrations ? styles.mainCardArt : null]}>
+              <View style={{ gap: 6, flexShrink: 1, paddingBottom: illustrations ? 18 : 0 }}>
                 <AppText size={13} color="#FFFFFF" style={{ opacity: 0.85 }}>
                   {strings.home.income}
                 </AppText>
@@ -115,7 +115,7 @@ function AdminHome() {
                   {strings.home.profitLine(money0)}
                 </AppText>
               </View>
-              <BuildingArt />
+              <OfficeArt />
             </Card>
           ) : null}
           {otherRows.map((row) => (
@@ -128,9 +128,7 @@ function AdminHome() {
               }
               style={{ gap: 10 }}
             >
-              <View style={[styles.iconTile, { backgroundColor: row.urgent ? colors.card : colors.brandSoft }]}>
-                <Icon name={row.urgent ? 'alert-triangle' : 'check'} size={20} strokeWidth={iconStrokeWidth} color={row.urgent ? colors.attentionText : colors.brandText} />
-              </View>
+              {row.urgent ? <QuoteDueIcon /> : <ApproveIcon />}
               <AppText weight="bold" size={15}>
                 {row.title}
               </AppText>
@@ -158,7 +156,7 @@ function AdminHome() {
                   : router.push('/walkthrough')
               }
             >
-              <SmallBucketArt />
+              <WalkthroughIcon />
               <View style={{ flex: 1 }}>
                 <AppText weight="bold" size={15}>
                   {ongoing.length === 1 ? strings.home.walkthroughOngoing : wt.home.row}
@@ -265,9 +263,9 @@ function StaffHome() {
         <Greeting name={profile?.fullName ?? ''} />
         <Bento>
           {today ? (
-            <Card tone="brand" wide style={{ gap: 10 }}>
-              <View style={styles.todayHead}>
-                <View style={{ gap: 6, flexShrink: 1 }}>
+            <Card tone="brand" wide style={styles.todayCard}>
+              <View style={[styles.todayHead, illustrations ? styles.todayHeadArt : null]}>
+                <View style={{ gap: 6, flexShrink: 1, paddingBottom: illustrations ? 14 : 0 }}>
                   <AppText size={13} color="#FFFFFF" style={{ opacity: 0.85 }}>
                     {strings.home.today}
                   </AppText>
@@ -278,23 +276,28 @@ function StaffHome() {
                     {strings.home.timeRange(formatTime(today.start), formatTime(today.end))}
                   </AppText>
                 </View>
-                <BucketArt />
+                <CartArt />
               </View>
               {/* TEMPORAL: marcar entrada se conecta en el hito 6 (Work) */}
-              <SlideToMark label={strings.home.slideToClockIn} onComplete={() => {}} onBrand />
+              <View style={styles.slide}>
+                <SlideToMark label={strings.home.slideToClockIn} onComplete={() => {}} onBrand />
+              </View>
             </Card>
           ) : null}
           {next ? (
-            <Card tone="attention" wide style={{ gap: 8 }}>
-              <AppText size={13} color={colors.attentionText}>
-                {strings.home.next}
-              </AppText>
-              <AppText weight="bold" size={16}>
-                {`${s.dayNames[next.start.getDay()]} ${next.start.getDate()} · ${formatTime(next.start)}`}
-              </AppText>
-              <AppText size={12} color={colors.secondary}>
-                {next.siteName}
-              </AppText>
+            <Card tone="attention" wide style={styles.rowCard}>
+              <CalendarIcon />
+              <View style={{ gap: 2, flex: 1 }}>
+                <AppText size={13} color={colors.attentionText}>
+                  {strings.home.next}
+                </AppText>
+                <AppText weight="bold" size={16}>
+                  {`${s.dayNames[next.start.getDay()]} ${next.start.getDate()} · ${formatTime(next.start)}`}
+                </AppText>
+                <AppText size={12} color={colors.secondary}>
+                  {next.siteName}
+                </AppText>
+              </View>
             </Card>
           ) : null}
           <Card wide style={{ gap: 12 }}>
@@ -314,8 +317,12 @@ const styles = StyleSheet.create({
   greeting: { paddingTop: 20, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   avatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   mainCard: { padding: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  iconTile: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  // D-224 (C1): con ilustración la tarjeta mide 172px y el dibujo llega al borde derecho e inferior.
+  mainCardArt: { height: 172, paddingRight: 0, paddingBottom: 0, alignItems: 'flex-end' },
   rowCard: { paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  todayHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 },
+  todayCard: { padding: 0, gap: 0 },
+  todayHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', gap: 8, padding: 18 },
+  todayHeadArt: { height: 150, paddingRight: 0, paddingBottom: 0 },
+  slide: { marginHorizontal: 12, marginBottom: 12 },
   empty: { alignItems: 'center', gap: 8, paddingVertical: 22 },
 });

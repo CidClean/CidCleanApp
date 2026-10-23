@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { CardBlock } from '@/components/bento/Card';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { ListRow, rowStyles } from '@/components/ListRow';
@@ -40,6 +41,7 @@ export default function ProfileScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={strings.profile.title} onBack={goBack} backLabel={strings.common.back} />
       <ScrollView contentContainerStyle={{ padding: 12 }}>
+        <CardBlock>
         <ListRow title={strings.profile.name} detail={profile?.fullName ?? ''} />
         <ListRow title={strings.profile.email} detail={profile?.email ?? ''} />
         <ListRow
@@ -71,6 +73,7 @@ export default function ProfileScreen() {
           <AppText weight="medium">{strings.profile.signOut}</AppText>
           <Icon name="chevron-right" size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
         </Pressable>
+        </CardBlock>
       </ScrollView>
       {/* D-222 a: la misma ventana al centro que el Menú. */}
       <SignOutDialog visible={confirming} onClose={() => setConfirming(false)} />

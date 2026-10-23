@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
+import { CardBlock } from '@/components/bento/Card';
 import { ListRow } from '@/components/ListRow';
 import { SignOutDialog } from '@/components/SignOutDialog';
 import { TopBar } from '@/components/TopBar';
@@ -31,6 +32,7 @@ export default function MenuScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={strings.nav.menu} />
       <ScrollView contentContainerStyle={{ padding: 12 }}>
+        <CardBlock>
         {items.map((key, i) => (
           <ListRow
             key={key}
@@ -41,6 +43,7 @@ export default function MenuScreen() {
         ))}
         {/* D-222 a: Cerrar sesión al final del Menú, con la ventana al centro. */}
         <ListRow title={strings.profile.signOut} last onPress={() => setConfirming(true)} />
+        </CardBlock>
       </ScrollView>
       <SignOutDialog visible={confirming} onClose={() => setConfirming(false)} />
     </View>
