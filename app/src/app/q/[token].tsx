@@ -1,8 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { FormScroll } from '@/components/FormScroll';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
@@ -189,16 +190,16 @@ export default function PortalScreen() {
   }
 
   const shell = (title: string, body: React.ReactNode, onBack?: () => void, bottom?: React.ReactNode) => (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={title} onBack={onBack} backLabel={lang === 'es' ? 'Volver' : 'Back'} />
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <FormScroll contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.column}>
           {notice ? <AppAlert tone="error" text={notice} /> : null}
           {body}
         </View>
-      </ScrollView>
+      </FormScroll>
       {bottom}
-    </KeyboardAvoidingView>
+    </View>
   );
 
   if (step.kind === 'loading') return <View style={{ flex: 1, backgroundColor: colors.background }} />;

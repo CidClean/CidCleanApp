@@ -1,8 +1,9 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { FormScroll } from '@/components/FormScroll';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
@@ -274,7 +275,7 @@ export default function SiteQuoteScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <TopBar title={q.previewTitle} onBack={() => setPreview(false)} backLabel={q.preview} />
-        <ScrollView contentContainerStyle={{ padding: 12 }}>
+        <FormScroll contentContainerStyle={{ padding: 12 }}>
           <QuoteView
             t={getPortalStrings(pl)}
             language={pl}
@@ -290,7 +291,7 @@ export default function SiteQuoteScreen() {
               validDays: Number(draft.validDays) || 30,
             }}
           />
-        </ScrollView>
+        </FormScroll>
       </View>
     );
   }
@@ -310,9 +311,9 @@ export default function SiteQuoteScreen() {
     ) : null;
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={title} onBack={goBack} backLabel={strings.common.back} />
-      <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
+      <FormScroll contentContainerStyle={{ padding: 12, paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
         {failed ? <AppAlert tone="error" text={q.errorLoad} /> : null}
         {notice ? (
           notice.tone === 'ok' ? (
@@ -470,9 +471,9 @@ export default function SiteQuoteScreen() {
             ))}
           </View>
         ) : null}
-      </ScrollView>
+      </FormScroll>
       {bottomBar}
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

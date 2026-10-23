@@ -1,7 +1,8 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 
+import { FormScroll } from '@/components/FormScroll';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { LeadFormFields } from '@/components/sales/LeadFormFields';
@@ -54,19 +55,16 @@ export default function NewLeadScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={s.form.newTitle} onBack={goBack} backLabel={strings.common.back} />
-      <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
+      <FormScroll contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
         <LeadFormFields form={form} errors={errors} onChange={setForm} s={s} />
         <View style={{ height: 4 }} />
         {failure ? (
           <AppAlert tone="error" text={failure === 'forbidden' ? s.form.errorForbidden : s.form.errorCreate} />
         ) : null}
         <AppButton label={s.form.create} onPress={() => void submit()} disabled={saving} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </FormScroll>
+    </View>
   );
 }

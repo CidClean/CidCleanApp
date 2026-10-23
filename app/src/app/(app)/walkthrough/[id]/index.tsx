@@ -1,7 +1,8 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { FormScroll } from '@/components/FormScroll';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
@@ -83,10 +84,7 @@ export default function WalkthroughScreen() {
   const goTo = (n: number) => void updateLocal((d) => ({ ...d, step: clampStep(n) }));
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar
         title={w.title}
         onBack={goBack}
@@ -103,7 +101,7 @@ export default function WalkthroughScreen() {
         }
         subtitle={doc ? <SyncStatus badge={syncBadge(doc)} pendingLabel={w.pending} syncedLabel={w.synced} /> : undefined}
       />
-      <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
+      <FormScroll contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
         {missing ? <AppAlert tone="error" text={w.missing} /> : null}
         {doc && form ? (
           <>
@@ -242,7 +240,7 @@ export default function WalkthroughScreen() {
             ) : null}
           </>
         ) : null}
-      </ScrollView>
+      </FormScroll>
 
       <Sheet visible={removing !== null} onClose={() => setRemoving(null)}>
         <AppText weight="medium" size={sample.headingSize} center>
@@ -269,7 +267,7 @@ export default function WalkthroughScreen() {
           </View>
         </View>
       </Sheet>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

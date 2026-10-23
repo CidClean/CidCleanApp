@@ -1,6 +1,6 @@
 import type React from 'react';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from './AppText';
 import { Icon } from './Icon';
@@ -20,12 +20,11 @@ type Props<T extends string> = {
 
 /**
  * Campo desplegable (muestra ronda 15): igual que un campo, con la flecha hacia abajo. Las opciones se abren encima de
- * la pantalla en una hoja desde abajo (D-217), sin empujar el contenido; la hoja lleva el nombre del campo arriba.
+ * la pantalla en una ventana al centro (D-217, D-229), sin empujar el contenido, con el nombre del campo arriba.
  */
 export function SelectField<T extends string>({ label, options, value, onChange, renderTrigger }: Props<T>) {
   const { colors, brand } = useTheme();
   const [open, setOpen] = useState(false);
-  const { height } = useWindowDimensions();
   const current = options.find((o) => o.value === value);
   return (
     <View style={renderTrigger ? undefined : styles.wrap}>
@@ -52,7 +51,8 @@ export function SelectField<T extends string>({ label, options, value, onChange,
         <AppText weight="medium" size={sample.headingSize} style={styles.title}>
           {label}
         </AppText>
-        <ScrollView style={{ maxHeight: height * 0.6 }} bounces={false}>
+        {/* D-229: la ventana al centro se desplaza por dentro si la lista es larga. */}
+        <View>
           {options.map((o, i) => {
             const on = o.value === value;
             return (
@@ -76,7 +76,7 @@ export function SelectField<T extends string>({ label, options, value, onChange,
               </Pressable>
             );
           })}
-        </ScrollView>
+        </View>
       </Sheet>
     </View>
   );

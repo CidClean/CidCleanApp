@@ -1,8 +1,9 @@
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { FormScroll } from '@/components/FormScroll';
 import { Bento, Card, CardBlock, useCardText, type CardTone } from '@/components/bento/Card';
 import { BackHeader } from '@/components/bento/Header';
 import { DocIcon, LeadCalendarIcon, NoteIcon, PinIcon } from '@/components/illustrations';
@@ -193,17 +194,14 @@ export default function LeadDetailScreen() {
     section === 'sites' ? s.detail.tabSites : section === 'walkthrough' ? s.detail.tabWalkthrough : section === 'quote' ? s.detail.tabQuote : section === 'notes' ? s.detail.tabNotes : undefined;
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <BackHeader
         onBack={section ? () => openSection(null) : goBack}
         backLabel={strings.common.back}
         title={sectionTitle}
         action={editAction}
       />
-      <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+      <FormScroll contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
         {loadFailed && !lead ? <AppAlert tone="error" text={s.detail.errorLoad} /> : null}
         {lead && section === null && !editing ? (
           <Bento>
@@ -294,7 +292,7 @@ export default function LeadDetailScreen() {
             <AppButton label={strings.common.save} onPress={() => void save()} disabled={saving} />
           </>
         ) : null}
-      </ScrollView>
+      </FormScroll>
 
       {/* D-226: el estado en un botón fijo abajo; abre la hoja de estados (D-071). */}
       {lead && canEdit && section === null && !editing ? (
@@ -339,7 +337,7 @@ export default function LeadDetailScreen() {
           </View>
         </View>
       </Sheet>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

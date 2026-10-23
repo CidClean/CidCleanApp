@@ -1,7 +1,8 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 
+import { FormScroll } from '@/components/FormScroll';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
@@ -67,12 +68,9 @@ export default function LostReasonFormScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={id ? s.reasons.editTitle : s.reasons.newTitle} onBack={goBack} backLabel={strings.common.back} />
-      <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
+      <FormScroll contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
         {failure === 'load' ? <AppAlert tone="error" text={s.reasons.errorLoad} /> : null}
         <AppField
           label={s.reasons.labelEs}
@@ -89,7 +87,7 @@ export default function LostReasonFormScreen() {
         <View style={{ height: 4 }} />
         {failure === 'save' ? <AppAlert tone="error" text={s.reasons.errorSave} /> : null}
         <AppButton label={strings.common.save} onPress={() => void save()} disabled={saving || sort === null} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </FormScroll>
+    </View>
   );
 }

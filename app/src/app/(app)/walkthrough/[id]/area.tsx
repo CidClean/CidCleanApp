@@ -1,7 +1,8 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { FormScroll } from '@/components/FormScroll';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
 import { AppText } from '@/components/AppText';
@@ -160,17 +161,14 @@ export default function AreaScreen() {
   const title = area && !isNew.current ? area.name : w.areas.newTitle;
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar
         title={title}
         onBack={goBack}
         backLabel={strings.common.back}
         subtitle={doc ? <SyncStatus badge={syncBadge(doc)} pendingLabel={w.pending} syncedLabel={w.synced} /> : undefined}
       />
-      <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
+      <FormScroll contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
         {doc && area ? (
           <>
             <SelectField
@@ -220,7 +218,7 @@ export default function AreaScreen() {
             <AppButton label={w.areas.saveAndNext} onPress={saveAndNext} />
           </>
         ) : null}
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </FormScroll>
+    </View>
   );
 }

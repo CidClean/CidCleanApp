@@ -1,7 +1,8 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 
+import { FormScroll } from '@/components/FormScroll';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { ClientFields, clientPayload, clientPhoneOk, emptyClientForm, type ClientForm } from '@/components/clients/ClientFields';
@@ -49,14 +50,14 @@ export default function NewClientScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={c.list.newClient} onBack={goBack} backLabel={strings.common.back} />
-      <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
+      <FormScroll contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
         <ClientFields form={form} onChange={setForm} c={c} nameError={nameError} phoneError={phoneError} />
         <View style={{ height: 4 }} />
         {failed ? <AppAlert tone="error" text={c.client.errorSave} /> : null}
         <AppButton label={c.client.create} onPress={() => void submit()} disabled={saving} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </FormScroll>
+    </View>
   );
 }

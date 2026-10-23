@@ -1,8 +1,9 @@
 import { Redirect, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { FormScroll } from '@/components/FormScroll';
 import { CardBlock } from '@/components/bento/Card';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
@@ -344,17 +345,14 @@ export default function EmployeeProfileScreen() {
       : undefined;
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar
         title={title}
         onBack={() => (dirtyRef.current ? setLeaveAsk({ kind: 'back' }) : goBack())}
         backLabel={strings.common.back}
         action={topAction}
       />
-      <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
+      <FormScroll contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
         {loadFailed && !employee ? <AppAlert tone="error" text={strings.employee.errorLoad} /> : null}
         {employee ? (
           <>
@@ -541,7 +539,7 @@ export default function EmployeeProfileScreen() {
             ) : null}
           </>
         ) : null}
-      </ScrollView>
+      </FormScroll>
 
       {showSaveBar ? (
         <View
@@ -642,7 +640,7 @@ export default function EmployeeProfileScreen() {
           <AppButton label={strings.common.cancel} variant="text" onPress={() => setUpload(null)} />
         </View>
       </Sheet>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

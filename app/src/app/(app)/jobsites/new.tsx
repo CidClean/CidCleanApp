@@ -1,7 +1,8 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 
+import { FormScroll } from '@/components/FormScroll';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { JobsiteFields } from '@/components/clients/JobsiteFields';
@@ -49,14 +50,14 @@ export default function NewJobsiteScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={c.form.newTitle} onBack={goBack} backLabel={strings.common.back} />
-      <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
+      <FormScroll contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
         <JobsiteFields form={form} errors={errors} onChange={setForm} c={c} withRate />
         <View style={{ height: 4 }} />
         {failed ? <AppAlert tone="error" text={c.form.errorSave} /> : null}
         <AppButton label={c.form.create} onPress={() => void submit()} disabled={saving} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </FormScroll>
+    </View>
   );
 }

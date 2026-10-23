@@ -1,8 +1,9 @@
 import { Redirect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { FormScroll } from '@/components/FormScroll';
 import { AppButton } from '@/components/AppButton';
 import { AppText } from '@/components/AppText';
 import { CodeBoxes } from '@/components/CodeBoxes';
@@ -83,16 +84,13 @@ export default function CodeScreen() {
   if (!email) return <Redirect href="/" />;
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={[styles.bar, { backgroundColor: brand, paddingTop: insets.top + sample.barPaddingVertical }]}>
         <AppText weight="medium" size={sample.barTextSize} color="#FFFFFF">
           {strings.code.barTitle}
         </AppText>
       </View>
-      <ScrollView
+      <FormScroll
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 12 }]}
         keyboardShouldPersistTaps="handled"
       >
@@ -125,8 +123,8 @@ export default function CodeScreen() {
             disabled={cooldown > 0}
           />
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </FormScroll>
+    </View>
   );
 }
 

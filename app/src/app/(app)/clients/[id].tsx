@@ -1,7 +1,8 @@
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { FormScroll } from '@/components/FormScroll';
 import { CardBlock } from '@/components/bento/Card';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
@@ -97,9 +98,9 @@ export default function ClientScreen() {
   const value = (v: string | null) => (v && v.trim() !== '' ? v : c.client.none);
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <BackHeader onBack={goBack} backLabel={strings.common.back} action={editAction} />
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 16 }} keyboardShouldPersistTaps="handled">
+      <FormScroll contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 16 }} keyboardShouldPersistTaps="handled">
         {failed && !client ? <AppAlert tone="error" text={c.client.errorLoad} /> : null}
         {client ? (
           <>
@@ -160,8 +161,8 @@ export default function ClientScreen() {
             )}
           </>
         ) : null}
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </FormScroll>
+    </View>
   );
 }
 

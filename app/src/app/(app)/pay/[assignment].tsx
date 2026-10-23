@@ -1,7 +1,8 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 
+import { FormScroll } from '@/components/FormScroll';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
@@ -94,9 +95,9 @@ export default function PayScreen() {
   const explanation = payExplanation(form, c.pay);
   const hours = parseHours(form.guaranteedHours);
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={c.pay.title(params.jobsite ?? '')} onBack={goBack} backLabel={strings.common.back} />
-      <ScrollView contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
+      <FormScroll contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
         <Segmented
           options={[
             { value: 'hourly', label: c.pay.hourly },
@@ -160,7 +161,7 @@ export default function PayScreen() {
         <View style={{ height: 4 }} />
         {failed ? <AppAlert tone="error" text={c.pay.errorSave} /> : null}
         <AppButton label={c.pay.save} onPress={() => void save()} disabled={saving} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </FormScroll>
+    </View>
   );
 }
