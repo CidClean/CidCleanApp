@@ -4,7 +4,7 @@ import { AppText } from './AppText';
 import type { WeekDay } from '@/lib/week';
 import { radius, useTheme } from '@/theme';
 
-/** Tira de 7 días con los días de visita en fondo de marca (D-048). */
+/** Tira de 7 días con los días de visita en fondo de marca (D-048); D-223: cuadros de 52px con esquinas de 16px. */
 export function WeekStrip({ days }: { days: WeekDay[] }) {
   const { colors, brand } = useTheme();
   return (
@@ -14,15 +14,13 @@ export function WeekStrip({ days }: { days: WeekDay[] }) {
           key={d.key}
           style={[
             styles.cell,
-            d.hasVisit
-              ? { backgroundColor: brand, borderColor: brand }
-              : { borderColor: colors.fieldBorder },
+            { backgroundColor: d.hasVisit ? brand : colors.surface },
           ]}
         >
           <AppText size={12} color={d.hasVisit ? '#FFFFFF' : colors.secondary} center>
             {d.label}
           </AppText>
-          <AppText weight="medium" color={d.hasVisit ? '#FFFFFF' : colors.secondary} center>
+          <AppText weight="bold" color={d.hasVisit ? '#FFFFFF' : colors.text} center>
             {String(d.dayNumber)}
           </AppText>
         </View>
@@ -32,6 +30,6 @@ export function WeekStrip({ days }: { days: WeekDay[] }) {
 }
 
 const styles = StyleSheet.create({
-  strip: { flexDirection: 'row', gap: 4, marginBottom: 10 },
-  cell: { flex: 1, borderWidth: 1, borderRadius: 8, paddingVertical: 6, alignItems: 'center' },
+  strip: { flexDirection: 'row', gap: 6 },
+  cell: { flex: 1, height: 52, borderRadius: radius.tile, alignItems: 'center', justifyContent: 'center' },
 });

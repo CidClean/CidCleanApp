@@ -6,7 +6,7 @@ import { Icon, type IconName } from '@/components/Icon';
 import { useStrings } from '@/i18n/useStrings';
 import { usePermissions } from '@/lib/session';
 import { visibleTabs, type TabKey } from '@/lib/visibility';
-import { iconStrokeWidth, useTheme } from '@/theme';
+import { iconStrokeWidth, radius, useTheme } from '@/theme';
 
 /** Iconos de la barra inferior (D-135, Tabler, trazo 1.5px). */
 const ICONS: Record<TabKey, IconName> = {
@@ -25,23 +25,20 @@ const ROUTE_TO_TAB: Record<string, TabKey> = {
 };
 
 /**
- * Barra inferior (D-029, D-132, D-169): solo iconos, el destino activo en color de marca y el resto en el secundario.
- * Solo aparecen los destinos permitidos.
+ * Barra inferior (D-029, D-132, D-169; D-223): solo iconos, flotante, blanca con esquinas de 24px y 64px de alto; el
+ * destino activo en un cuadro de marca de 48px con esquinas de 16px e icono blanco. Solo los destinos permitidos.
  */
 export function BottomBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { colors, brand } = useTheme();
+  // El margen alrededor de la barra flotante lleva el fondo crema de la pantalla.
   const strings = useStrings();
   const { access } = usePermissions();
   const allowed = visibleTabs(access);
 
   return (
-    <View
-      style={[
-        styles.bar,
-        { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: 10 + insets.bottom },
-      ]}
-    >
+    <View style={{ backgroundColor: colors.background, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 + insets.bottom }}>
+    <View style={[styles.bar, { backgroundColor: colors.card }]}>
       {allowed.map((tab) => {
         const index = state.routes.findIndex((r) => ROUTE_TO_TAB[r.name] === tab);
         if (index < 0) return null;
@@ -57,23 +54,24 @@ export function BottomBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
               const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
               if (!focused && !event.defaultPrevented) navigateToTab(route.key);
             }}
-            style={styles.item}
+            style={[styles.item, focused ? { backgroundColor: brand } : null]}
           >
-            <Icon name={ICONS[tab]} size={24} strokeWidth={iconStrokeWidth} color={focused ? brand : colors.secondary} />
+            <Icon name={ICONS[tab]} size={24} strokeWidth={iconStrokeWidth} color={focused ? '#FFFFFF' : colors.navInactive} />
           </Pressable>
         );
       })}
+    </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   bar: {
+    height: 64,
+    borderRadius: radius.card,
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingTop: 10,
-    paddingHorizontal: 12,
-    borderTopWidth: 0.5,
+    alignItems: 'center',
   },
-  item: { minWidth: 48, minHeight: 32, alignItems: 'center', justifyContent: 'center' },
+  item: { width: 48, height: 48, borderRadius: radius.tile, alignItems: 'center', justifyContent: 'center' },
 });

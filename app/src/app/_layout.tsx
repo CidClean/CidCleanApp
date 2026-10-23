@@ -1,4 +1,4 @@
-import { Manrope_400Regular, Manrope_500Medium, useFonts } from '@expo-google-fonts/manrope';
+import { Manrope_400Regular, Manrope_500Medium, Manrope_700Bold, Manrope_800ExtraBold, useFonts } from '@expo-google-fonts/manrope';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -20,7 +20,7 @@ function Routes() {
   const { status, termsPending, termsOffline } = useSession();
   const { scheme, colors } = useTheme();
 
-  const [fontsLoaded] = useFonts({ Manrope_400Regular, Manrope_500Medium });
+  const [fontsLoaded] = useFonts({ Manrope_400Regular, Manrope_500Medium, Manrope_700Bold, Manrope_800ExtraBold });
   const ready = fontsLoaded && status !== 'loading';
 
   useEffect(() => {

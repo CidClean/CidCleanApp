@@ -51,6 +51,21 @@ export const es = {
     slideToClockIn: 'Desliza para marcar entrada', // APROBADO (D-049)
     timeRange: (from: string, to: string) => `${from} a ${to}`, // APROBADO (muestra ronda 14): "6:00 PM a 9:00 PM"
     weekDays: ['L', 'M', 'X', 'J', 'V', 'S', 'D'], // APROBADO (D-048)
+    // D-223 (muestra estilo C).
+    greeting: (name: string) => `Hola, ${name}`, // APROBADO (D-223)
+    dateLine: (d: Date | string) => {
+      const x = d instanceof Date ? d : new Date();
+      return `${['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][x.getDay()]}, ${x.getDate()} de ${['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'][x.getMonth()]}`; // APROBADO (D-223: "Viernes, 23 de octubre")
+    },
+    profitLine: (m: string) => `Profit ${m}`, // APROBADO (D-223)
+    followUps: 'Seguimientos', // APROBADO (D-223)
+    followUpsSub: 'leads para hoy', // APROBADO (D-223)
+    walkthroughs: 'Walkthroughs', // APROBADO (D-223)
+    walkthroughsSub: 'agendados', // APROBADO (D-223)
+    walkthroughOngoing: 'Walkthrough en curso', // APROBADO (D-223)
+    walkthroughStep: (company: string, step: number) => `${company} · Paso ${step} de 5`, // APROBADO (D-223)
+    next: 'Próxima', // APROBADO (D-223)
+    yourWeek: 'Tu semana', // APROBADO (D-223)
   },
 
   profile: {

@@ -317,15 +317,16 @@ describe('Agendar walkthrough (D-072, D-078, D-104)', () => {
 });
 
 describe('Inicio del admin: pendientes de Ventas (D-111)', () => {
-  it('muestra seguimientos y walkthroughs con flecha y abre Pipeline', async () => {
+  it('muestra seguimientos y walkthroughs agendados en tarjetas de cifra (D-223) y abre Pipeline', async () => {
     mockPending.mockResolvedValue({ ok: true, data: { followUpsDue: 3, walkthroughsUpcoming: 2 } });
     await render(<HomeScreen />);
-    expect(await screen.findByText('Seguimientos de leads')).toBeTruthy();
-    expect(screen.getByText('3 pendientes')).toBeTruthy();
-    expect(screen.getByText('Walkthroughs agendados')).toBeTruthy();
-    expect(screen.getByText('2 agendados')).toBeTruthy();
+    expect(await screen.findByText('Seguimientos')).toBeTruthy();
+    expect(screen.getByText('3')).toBeTruthy();
+    expect(screen.getByText('leads para hoy')).toBeTruthy();
+    expect(screen.getByText('Walkthroughs')).toBeTruthy();
+    expect(screen.getByText('agendados')).toBeTruthy();
     expect(screen.queryByText('Todo al día')).toBeNull();
-    await fireEvent.press(screen.getByText('Seguimientos de leads'));
+    await fireEvent.press(screen.getByText('Seguimientos'));
     expect(mockNavigate).toHaveBeenCalledWith('/pipeline');
   });
 

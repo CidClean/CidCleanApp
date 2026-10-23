@@ -52,6 +52,20 @@ export const en: Strings = {
     slideToClockIn: 'Slide to clock in',
     timeRange: (from: string, to: string) => `${from} to ${to}`, // "6:00 PM to 9:00 PM"
     weekDays: ['M', 'T', 'W', 'T', 'F', 'S', 'S'], // staff home: week strip, Monday first
+    greeting: (name: string) => `Hi, ${name}`,
+    dateLine: (d: Date | string) => {
+      const x = d instanceof Date ? d : new Date();
+      return `${['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][x.getDay()]}, ${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][x.getMonth()]} ${x.getDate()}`;
+    },
+    profitLine: (m: string) => `Profit ${m}`,
+    followUps: 'Follow-ups',
+    followUpsSub: 'leads for today',
+    walkthroughs: 'Walkthroughs',
+    walkthroughsSub: 'scheduled',
+    walkthroughOngoing: 'Walkthrough in progress',
+    walkthroughStep: (company: string, step: number) => `${company} · Step ${step} of 5`,
+    next: 'Next',
+    yourWeek: 'Your week',
   },
 
   profile: {

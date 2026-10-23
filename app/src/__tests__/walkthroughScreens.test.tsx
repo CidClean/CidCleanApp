@@ -365,9 +365,10 @@ describe('Inicio: Walkthroughs en curso (D-212)', () => {
     const doc = newDoc({ siteId: 's1', leadId: 'l1', appointmentId: null, company: 'Gulf Coast Dental', siteLabel: '5th Ave S', contact: {} });
     await saveWalkthrough(doc);
     await render(<HomeScreen />);
-    expect(await screen.findByText('Walkthroughs en curso')).toBeTruthy();
-    expect(screen.getByText('Gulf Coast Dental · 5th Ave S')).toBeTruthy();
-    await fireEvent.press(screen.getByText('Walkthroughs en curso'));
+    // D-223: tarjeta "Walkthrough en curso" con la empresa y el paso.
+    expect(await screen.findByText('Walkthrough en curso')).toBeTruthy();
+    expect(screen.getByText('Gulf Coast Dental · Paso 1 de 5')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Walkthrough en curso'));
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/walkthrough/[id]', params: { id: doc.id } });
   });
 

@@ -3,12 +3,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/AppText';
-import { Chip } from '@/components/Chip';
 import { Icon } from '@/components/Icon';
-import { ListRow } from '@/components/ListRow';
+import { Bento, Card, useCardText } from '@/components/bento/Card';
+import { BucketArt, BuildingArt, SmallBucketArt } from '@/components/illustrations';
 import { SlideToMark } from '@/components/SlideToMark';
-import { TodayCard } from '@/components/TodayCard';
-import { TopBar } from '@/components/TopBar';
 import { WeekStrip } from '@/components/WeekStrip';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useStrings } from '@/i18n/useStrings';
@@ -19,9 +17,9 @@ import { useQuoteStrings } from '@/i18n/useQuoteStrings';
 import { useWalkthroughStrings } from '@/i18n/useWalkthroughStrings';
 import { canDoWalkthroughs, inProgress, type WalkthroughDoc } from '@/lib/walkthroughRules';
 import { listWalkthroughs } from '@/lib/walkthroughStore';
-import { usePermissions } from '@/lib/session';
+import { usePermissions, useSession } from '@/lib/session';
 import { homeKind, showsMonthFigures } from '@/lib/visibility';
-import { fetchWeekVisits, formatTime, pickTodayVisit, startOfWeekMonday, weekDays, type Visit } from '@/lib/week';
+import { fetchWeekVisits, formatTime, pickNextVisit, pickTodayVisit, startOfWeekMonday, weekDays, type Visit } from '@/lib/week';
 import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
 /** Inicio: el del admin para el Super Admin y quien tenga algún permiso; el del staff para quien no tenga ninguno (D-169). */
@@ -31,11 +29,13 @@ export default function HomeScreen() {
 }
 
 /**
- * Inicio del admin (D-111, D-164): una sola lista de pendientes por urgencia, solo de las áreas con permiso.
- * Por ahora la alimentan los seguimientos de leads y los walkthroughs agendados (hito 2); sin pendientes, "Todo al día".
+ * Inicio del admin (D-111, D-164, D-223 estilo C): saludo, tarjeta de marca con las cifras del mes, los pendientes
+ * por urgencia en tarjetas (los urgentes en ámbar), las cifras de seguimientos y walkthroughs agendados y el
+ * walkthrough en curso; sin pendientes, "Todo al día".
  */
 function AdminHome() {
   const { colors, status } = useTheme();
+  const { profile } = useSession();
   const strings = useStrings();
   const s = useSalesStrings();
   const router = useRouter();
@@ -89,78 +89,158 @@ function AdminHome() {
     leadId: r.leadId as string | undefined,
   }));
   const pending = sortPending([...quoteRows, ...salesPendingRows(access, sales, s)]);
+  const salesRows = salesPendingRows(access, sales, s);
+  const otherRows = sortPending(quoteRows);
+  const followUps = salesRows.find((r) => r.key === 'followUps') ? (sales?.followUpsDue ?? 0) : 0;
+  const scheduled = salesRows.find((r) => r.key === 'walkthroughs') ? (sales?.walkthroughsUpcoming ?? 0) : 0;
+  const nothing = pending.length === 0 && ongoing.length === 0;
+  const money0 = '$0'; // TEMPORAL: cifras en $0 hasta que Accounting tenga datos (hito 7)
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <TopBar title={strings.nav.home} />
-      <ScrollView contentContainerStyle={{ padding: 12 }}>
-        {showsMonthFigures(access) ? (
-          // TEMPORAL: cifras en $0 hasta que Accounting tenga datos
-          <View style={styles.stats}>
-            <View>
+      <ScrollView contentContainerStyle={styles.page}>
+        <Greeting name={profile?.fullName ?? ''} avatar />
+        {/* D-223 (estilo C): mosaico de 2 columnas; D-111 y D-131: pendientes por urgencia, solo de las áreas con permiso. */}
+        <Bento>
+          {showsMonthFigures(access) ? (
+            <Card tone="brand" wide style={styles.mainCard}>
+              <View style={{ gap: 6, flexShrink: 1 }}>
+                <AppText size={13} color="#FFFFFF" style={{ opacity: 0.85 }}>
+                  {strings.home.income}
+                </AppText>
+                <AppText weight="heavy" size={32} color="#FFFFFF">
+                  {money0}
+                </AppText>
+                <AppText size={13} color="#FFFFFF" style={{ opacity: 0.85 }}>
+                  {strings.home.profitLine(money0)}
+                </AppText>
+              </View>
+              <BuildingArt />
+            </Card>
+          ) : null}
+          {otherRows.map((row) => (
+            <Card
+              key={row.key}
+              tone={row.urgent ? 'attention' : 'plain'}
+              accessibilityLabel={row.title}
+              onPress={() =>
+                'leadId' in row && row.leadId ? router.push({ pathname: '/leads/[id]', params: { id: row.leadId } }) : router.navigate('/pipeline')
+              }
+              style={{ gap: 10 }}
+            >
+              <View style={[styles.iconTile, { backgroundColor: row.urgent ? colors.card : colors.brandSoft }]}>
+                <Icon name={row.urgent ? 'alert-triangle' : 'check'} size={20} strokeWidth={iconStrokeWidth} color={row.urgent ? colors.attentionText : colors.brandText} />
+              </View>
+              <AppText weight="bold" size={15}>
+                {row.title}
+              </AppText>
+              {row.detail ? (
+                <AppText size={12} color={row.urgent ? colors.attentionText : colors.secondary}>
+                  {row.urgent ? `${s.home.urgent} · ${row.detail}` : row.detail}
+                </AppText>
+              ) : null}
+            </Card>
+          ))}
+          {followUps > 0 ? (
+            <NumberCard tone="plain" label={strings.home.followUps} value={followUps} sub={strings.home.followUpsSub} onPress={() => router.navigate('/pipeline')} />
+          ) : null}
+          {scheduled > 0 ? (
+            <NumberCard tone="dark" label={strings.home.walkthroughs} value={scheduled} sub={strings.home.walkthroughsSub} onPress={() => router.navigate('/pipeline')} />
+          ) : null}
+          {ongoing.length > 0 ? (
+            <Card
+              wide
+              accessibilityLabel={wt.home.row}
+              style={styles.rowCard}
+              onPress={() =>
+                ongoing.length === 1
+                  ? router.push({ pathname: '/walkthrough/[id]', params: { id: ongoing[0].id } })
+                  : router.push('/walkthrough')
+              }
+            >
+              <SmallBucketArt />
+              <View style={{ flex: 1 }}>
+                <AppText weight="bold" size={15}>
+                  {ongoing.length === 1 ? strings.home.walkthroughOngoing : wt.home.row}
+                </AppText>
+                <AppText size={12} color={colors.secondary}>
+                  {ongoing.length === 1 ? strings.home.walkthroughStep(ongoing[0].company, ongoing[0].step) : wt.home.count(ongoing.length)}
+                </AppText>
+              </View>
+              <Icon name="chevron-right" size={20} strokeWidth={iconStrokeWidth} color={colors.secondary} />
+            </Card>
+          ) : null}
+          {nothing ? (
+            <Card wide style={styles.empty}>
+              <Icon name="circle-check" size={24} strokeWidth={iconStrokeWidth} color={status.success} />
+              <AppText weight="bold">{strings.home.caughtUp}</AppText>
               <AppText size={sample.noteSize} color={colors.secondary}>
-                {strings.home.income}
+                {strings.home.nothingToReview}
               </AppText>
-              <AppText weight="medium" size={18}>
-                $0
-              </AppText>
-            </View>
-            <View>
-              <AppText size={sample.noteSize} color={colors.secondary}>
-                {strings.home.profit}
-              </AppText>
-              <AppText weight="medium" size={18}>
-                $0
-              </AppText>
-            </View>
-          </View>
-        ) : null}
-        {/* Lista de pendientes por urgencia (D-111, D-131). Las demás áreas se suman en sus hitos. */}
-        {ongoing.length > 0 ? (
-          <ListRow
-            title={wt.home.row}
-            detail={ongoing.length === 1 ? `${ongoing[0].company} · ${ongoing[0].siteLabel}` : wt.home.count(ongoing.length)}
-            chevron
-            last={pending.length === 0}
-            onPress={() =>
-              ongoing.length === 1
-                ? router.push({ pathname: '/walkthrough/[id]', params: { id: ongoing[0].id } })
-                : router.push('/walkthrough')
-            }
-          />
-        ) : null}
-        {pending.map((row, i) => (
-          <ListRow
-            key={row.key}
-            title={row.title}
-            detail={row.detail}
-            right={row.urgent ? <Chip label={s.home.urgent} tone="warning" /> : undefined}
-            chevron={!row.urgent}
-            last={i === pending.length - 1}
-            onPress={() =>
-              'leadId' in row && row.leadId
-                ? router.push({ pathname: '/leads/[id]', params: { id: row.leadId } })
-                : router.navigate('/pipeline')
-            }
-          />
-        ))}
-        {pending.length === 0 && ongoing.length === 0 ? (
-          <View style={styles.empty}>
-            <Icon name="circle-check" size={24} strokeWidth={iconStrokeWidth} color={status.success} />
-            <AppText weight="medium">{strings.home.caughtUp}</AppText>
-            <AppText size={sample.noteSize} color={colors.secondary}>
-              {strings.home.nothingToReview}
-            </AppText>
-          </View>
-        ) : null}
+            </Card>
+          ) : null}
+        </Bento>
       </ScrollView>
     </View>
   );
 }
 
-/** Inicio del staff (D-165): visita de hoy (solo si hay), "Desliza para marcar entrada" con la tarjeta y la tira de la semana. */
+/** Saludo del estilo C (D-223): fecha de hoy en 13px gris cálido, "Hola, {nombre}" en 24px/800 y, en el admin, iniciales. */
+function Greeting({ name, avatar = false }: { name: string; avatar?: boolean }) {
+  const { colors, brand } = useTheme();
+  const strings = useStrings();
+  const first = name.trim().split(/\s+/)[0] ?? '';
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? '')
+    .join('');
+  return (
+    <View style={styles.greeting}>
+      <View style={{ gap: 2, flex: 1 }}>
+        <AppText size={13} color={colors.secondary}>
+          {strings.home.dateLine(new Date())}
+        </AppText>
+        <AppText weight="heavy" size={24} accessibilityRole="header">
+          {first ? strings.home.greeting(first) : strings.nav.home}
+        </AppText>
+      </View>
+      {avatar && initials ? (
+        <View style={[styles.avatar, { backgroundColor: brand }]}>
+          <AppText weight="bold" color="#FFFFFF">
+            {initials}
+          </AppText>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+/** Tarjeta de cifra (D-223): etiqueta 13px, cifra 26px/800 y línea 12px. */
+function NumberCard({ tone, label, value, sub, onPress }: { tone: 'plain' | 'dark'; label: string; value: number; sub: string; onPress: () => void }) {
+  const t = useCardText(tone);
+  return (
+    <Card tone={tone} onPress={onPress} accessibilityLabel={`${label}: ${value} ${sub}`} style={{ gap: 6 }}>
+      <AppText size={13} color={t.soft} style={{ opacity: t.softOpacity }}>
+        {label}
+      </AppText>
+      <AppText weight="heavy" size={26} color={t.main}>
+        {String(value)}
+      </AppText>
+      <AppText size={12} color={t.soft} style={{ opacity: t.softOpacity }}>
+        {sub}
+      </AppText>
+    </Card>
+  );
+}
+
+/** Inicio del staff (D-165, D-223 estilo C): visita de hoy (solo si hay) con "Desliza para marcar entrada", la próxima visita y la semana. */
 function StaffHome() {
   const { colors } = useTheme();
   const strings = useStrings();
+  const s = useSalesStrings();
+  const { profile } = useSession();
   const [visits, setVisits] = useState<Visit[]>([]);
   const now = useMemo(() => new Date(), []);
 
@@ -175,32 +255,67 @@ function StaffHome() {
   }, [now]);
 
   const today = pickTodayVisit(visits, now);
+  const next = pickNextVisit(visits, now);
   const days = weekDays(now, visits, strings.home.weekDays);
+  // Regla del dueño (D-223): el staff nunca ve sus horas contra el tope de 32 h; aquí no hay nada de eso.
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <TopBar title={strings.nav.home} />
-      <ScrollView contentContainerStyle={{ padding: 12 }}>
-        {today ? (
-          <>
-            <TodayCard
-              label={strings.home.today}
-              siteName={today.siteName}
-              range={strings.home.timeRange(formatTime(today.start), formatTime(today.end))}
-            />
-            {/* TEMPORAL: marcar entrada se conecta en la etapa 4 (Work) */}
-            <View style={{ marginBottom: 12 }}>
-              <SlideToMark label={strings.home.slideToClockIn} onComplete={() => {}} />
-            </View>
-          </>
-        ) : null}
-        <WeekStrip days={days} />
+      <ScrollView contentContainerStyle={styles.page}>
+        <Greeting name={profile?.fullName ?? ''} />
+        <Bento>
+          {today ? (
+            <Card tone="brand" wide style={{ gap: 10 }}>
+              <View style={styles.todayHead}>
+                <View style={{ gap: 6, flexShrink: 1 }}>
+                  <AppText size={13} color="#FFFFFF" style={{ opacity: 0.85 }}>
+                    {strings.home.today}
+                  </AppText>
+                  <AppText weight="heavy" size={22} color="#FFFFFF">
+                    {today.siteName}
+                  </AppText>
+                  <AppText size={14} color="#FFFFFF" style={{ opacity: 0.9 }}>
+                    {strings.home.timeRange(formatTime(today.start), formatTime(today.end))}
+                  </AppText>
+                </View>
+                <BucketArt />
+              </View>
+              {/* TEMPORAL: marcar entrada se conecta en el hito 6 (Work) */}
+              <SlideToMark label={strings.home.slideToClockIn} onComplete={() => {}} onBrand />
+            </Card>
+          ) : null}
+          {next ? (
+            <Card tone="attention" wide style={{ gap: 8 }}>
+              <AppText size={13} color={colors.attentionText}>
+                {strings.home.next}
+              </AppText>
+              <AppText weight="bold" size={16}>
+                {`${s.dayNames[next.start.getDay()]} ${next.start.getDate()} · ${formatTime(next.start)}`}
+              </AppText>
+              <AppText size={12} color={colors.secondary}>
+                {next.siteName}
+              </AppText>
+            </Card>
+          ) : null}
+          <Card wide style={{ gap: 12 }}>
+            <AppText size={13} color={colors.secondary}>
+              {strings.home.yourWeek}
+            </AppText>
+            <WeekStrip days={days} />
+          </Card>
+        </Bento>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  stats: { flexDirection: 'row', gap: 20, marginBottom: 6 },
+  page: { paddingHorizontal: 16, paddingBottom: 16 },
+  greeting: { paddingTop: 20, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  avatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  mainCard: { padding: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  iconTile: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  rowCard: { paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  todayHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 },
   empty: { alignItems: 'center', gap: 8, paddingVertical: 22 },
 });

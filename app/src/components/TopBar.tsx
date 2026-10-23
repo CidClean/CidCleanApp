@@ -43,7 +43,7 @@ export function TopBar({ title, onBack, backLabel, action, subtitle }: Props) {
           </Pressable>
         ) : null}
         <View style={styles.title}>
-          <AppText weight="medium" size={sample.barTextSize} color="#FFFFFF" accessibilityRole="header" numberOfLines={1}>
+          <AppText weight="heavy" size={sample.barTextSize} color="#FFFFFF" accessibilityRole="header" numberOfLines={1}>
             {title}
           </AppText>
           {subtitle}

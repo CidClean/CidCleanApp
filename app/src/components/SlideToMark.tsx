@@ -12,11 +12,12 @@ const TRACK_PADDING = 3;
  * Pista deslizable de 48px con perilla de marca (D-049). Llama a `onComplete` al llegar al final.
  * Hoy no se muestra: solo va con la tarjeta de la visita de hoy y todavía no hay visitas (etapa 4).
  */
-export function SlideToMark({ label, onComplete }: { label: string; onComplete: () => void }) {
+export function SlideToMark({ label, onComplete, onBrand = false }: { label: string; onComplete: () => void; onBrand?: boolean }) {
   const { colors, brand } = useTheme();
+  const knobWidth = onBrand ? 44 : KNOB_WIDTH;
   const [trackWidth, setTrackWidth] = useState(0);
   const x = useRef(new Animated.Value(0)).current;
-  const travel = Math.max(0, trackWidth - KNOB_WIDTH - TRACK_PADDING * 2 - 2);
+  const travel = Math.max(0, trackWidth - knobWidth - (onBrand ? 12 : TRACK_PADDING * 2 + 2));
   const travelRef = useRef(0);
   travelRef.current = travel;
   const doneRef = useRef(onComplete);
@@ -36,17 +37,24 @@ export function SlideToMark({ label, onComplete }: { label: string; onComplete: 
   return (
     <View
       onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
-      style={[styles.track, { borderColor: colors.fieldBorder }]}
+      style={onBrand ? styles.brandTrack : [styles.track, { borderColor: colors.fieldBorder }]}
     >
       <Animated.View
         {...pan.panHandlers}
         accessibilityRole="button"
         accessibilityLabel={label}
-        style={[styles.knob, { backgroundColor: brand, transform: [{ translateX: x }] }]}
+        style={[onBrand ? styles.brandKnob : [styles.knob, { backgroundColor: brand }], { transform: [{ translateX: x }] }]}
       >
-        <Icon name="logout" size={18} strokeWidth={iconStrokeWidth} color="#FFFFFF" />
+        <Icon name={onBrand ? 'arrow-right' : 'logout'} size={onBrand ? 22 : 18} strokeWidth={iconStrokeWidth} color={onBrand ? brand : '#FFFFFF'} />
       </Animated.View>
-      <AppText size={14} color={colors.secondary} center style={styles.label} pointerEvents="none">
+      <AppText
+        size={onBrand ? 15 : 14}
+        weight={onBrand ? 'bold' : 'regular'}
+        color={onBrand ? '#FFFFFF' : colors.secondary}
+        center
+        style={[styles.label, onBrand ? { left: 50 } : null]}
+        pointerEvents="none"
+      >
         {label}
       </AppText>
     </View>
@@ -71,4 +79,8 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   label: { position: 'absolute', left: 0, right: 0 },
+  // D-223 (muestra estilo C): sobre la tarjeta de marca, pista de 56px blanca al 18% con esquinas de 18px y perilla
+  // blanca de 44px con esquinas de 14px y flecha de marca.
+  brandTrack: { height: 56, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.18)', padding: 6, flexDirection: 'row', alignItems: 'center' },
+  brandKnob: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', zIndex: 1 },
 });

@@ -17,7 +17,7 @@ export function Sheet({ visible, onClose, children }: Props) {
         <View
           style={[
             styles.sheet,
-            { backgroundColor: colors.background, borderColor: colors.border, paddingBottom: 12 + insets.bottom },
+            { backgroundColor: colors.card, borderColor: colors.border, paddingBottom: 12 + insets.bottom },
           ]}
         >
           {children}
@@ -34,8 +34,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     borderTopWidth: 0.5,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 12,
+    borderTopLeftRadius: 24, // D-223
+    borderTopRightRadius: 24,
+    padding: 16,
   },
 });

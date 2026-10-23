@@ -70,3 +70,10 @@ export function formatTime(d: Date): string {
     .format(d)
     .replace(/[  ]/g, ' ');
 }
+
+/** D-223: la próxima visita después de hoy (tarjeta ámbar "Próxima" del inicio del staff). */
+export function pickNextVisit(visits: readonly Visit[], now: Date): Visit | null {
+  const today = dateKey(now);
+  const later = visits.filter((v) => dateKey(v.start) > today).sort((a, b) => a.start.getTime() - b.start.getTime());
+  return later[0] ?? null;
+}
