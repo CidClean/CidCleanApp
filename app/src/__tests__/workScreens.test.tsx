@@ -157,7 +157,7 @@ describe('Trabajo por aprobar (D-109)', () => {
   });
 });
 
-describe('Schedule: Tabla y Calendario (D-231)', () => {
+describe('Schedule: Detallado (D-231, D-235)', () => {
   const today = new Date();
   const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const visits = [
@@ -176,27 +176,26 @@ describe('Schedule: Tabla y Calendario (D-231)', () => {
     },
   ];
 
-  it('alterna Lista, Tabla (dos sentidos, Compartir) y Calendario', async () => {
+  it('Detallado: solo la tabla Empleado → días, por semana o por mes, con Compartir (D-235)', async () => {
     mockSchedule.mockResolvedValue({ ok: true, data: visits });
     mockShare.mockResolvedValue('unavailable');
     await render(<ScheduleScreen />);
     await fireEvent.press(await screen.findByText('Detallado'));
-    expect(await screen.findByText('6:00 PM · 1.5 h · Break TAX')).toBeTruthy();
-    await fireEvent.press(screen.getByText('Tabla'));
     expect(await screen.findByText('Rosemary')).toBeTruthy();
     expect(screen.getByText('Break TAX O…')).toBeTruthy();
     // La semana empieza en domingo (D-231): la primera columna es D.
     expect(screen.getByText(/^D \d+$/)).toBeTruthy();
-    await fireEvent.press(screen.getByText('Día → empleados'));
-    expect(await screen.findByText('Rosemary → Break TAX Office · 6:00 PM')).toBeTruthy();
+    expect(screen.queryByText('Lista')).toBeNull();
+    expect(screen.queryByText('Calendario')).toBeNull();
+    expect(screen.queryByText('Día → empleados')).toBeNull();
     await fireEvent.press(screen.getByText('Compartir'));
     await waitFor(() => expect(mockShare).toHaveBeenCalled());
     expect(String(mockShare.mock.calls[0][0])).toContain('Rosemary');
     expect(await screen.findByText('Compartir llega con la versión 1.3.0 de la app.')).toBeTruthy();
-    await fireEvent.press(screen.getByText('Calendario'));
     await fireEvent.press(screen.getByText('Mes'));
-    expect(await screen.findByText('Break…')).toBeTruthy();
-    await fireEvent.press(screen.getByText('Break…'));
+    // El mes va del 1 al último día.
+    expect(await screen.findByText(/ 1$/)).toBeTruthy();
+    await fireEvent.press(screen.getByText('Break TAX O…'));
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/schedule/visit/[id]', params: { id: 'v1', day: key } });
   });
 });

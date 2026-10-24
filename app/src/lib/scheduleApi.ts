@@ -174,6 +174,7 @@ export const clockOut = (p: { entryId: string; at: Date; lat: number | null; lng
 
 export type ToApprove = {
   id: string;
+  jobsiteId: string;
   jobsite: string;
   day: string;
   startsAt: Date;
@@ -188,6 +189,7 @@ export const fetchToApprove = () =>
   rpc('work_to_approve', {}, (d) =>
     ((d ?? []) as {
       id: string;
+      jobsite_id?: string;
       jobsite: string;
       day: string;
       starts_at: string;
@@ -199,6 +201,7 @@ export const fetchToApprove = () =>
       urgent: boolean;
     }[]).map<ToApprove>((r) => ({
       id: r.id,
+      jobsiteId: r.jobsite_id ?? '',
       jobsite: r.jobsite,
       day: r.day,
       startsAt: new Date(r.starts_at),

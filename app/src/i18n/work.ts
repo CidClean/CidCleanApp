@@ -134,6 +134,7 @@ export const workEs = {
   weekEmpty: 'Esta semana todavía no está guardada: marca quién va y guarda.', // D-200 (D-232: sin guardar se ve vacía)
   noTimeSite: 'Este jobsite no tiene hora ni duración de visita. Ponlas para armar su semana.', // D-234
   setTime: 'Poner hora', // APROBADO (D-234)
+  changeTime: 'Cambiar hora', // D-200 (D-235)
   setTimeTitle: (name: string) => `Hora de las visitas de ${name}`, // D-234
   errorNoTime: 'Un jobsite no tiene hora ni duración de visita. Toca "Poner hora" en su tarjeta.', // D-234
   errorNoDay: 'Marcaste un día que ese jobsite no trabaja.', // D-234
@@ -263,6 +264,7 @@ export const workEn: WorkStrings = {
   weekEmpty: "This week isn't saved yet: mark who goes and save.",
   noTimeSite: 'This jobsite has no visit time or length. Set them to plan its week.',
   setTime: 'Set time',
+  changeTime: 'Change time',
   setTimeTitle: (name: string) => `Visit time for ${name}`,
   errorNoTime: 'A jobsite has no visit time or length. Tap "Set time" on its card.',
   errorNoDay: "You marked a day that jobsite doesn't work.",

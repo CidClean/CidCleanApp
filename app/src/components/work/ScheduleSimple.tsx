@@ -30,7 +30,7 @@ export function simpleDays(range: SimpleRange, today: Date): string[] {
  * y las personas en fichas; hoy en tarjeta de marca; "Falta asignar personal" en ámbar. Tocar una tarjeta abre una
  * ventana al centro con casillas para cambiar quién va ese día (solo esa visita).
  */
-export function ScheduleSimple({ onError }: { onError: (text: string | null) => void }) {
+export function ScheduleSimple({ onError, jobsiteId }: { onError: (text: string | null) => void; jobsiteId?: string }) {
   const { colors, brand } = useTheme();
   const s = useSalesStrings();
   const t = useWorkStrings();
@@ -48,11 +48,12 @@ export function ScheduleSimple({ onError }: { onError: (text: string | null) => 
   const load = useCallback(async () => {
     const r = await fetchSchedule(days[0], days[days.length - 1]);
     if (r.ok) {
-      setVisits(r.data);
+      // Dentro de un jobsite solo se ven sus visitas (D-235).
+      setVisits(jobsiteId ? r.data.filter((v) => v.jobsiteId === jobsiteId) : r.data);
       onError(null);
     } else onError(t.errorLoad);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [days[0], days[days.length - 1]]);
+  }, [days[0], days[days.length - 1], jobsiteId]);
 
   useFocusEffect(
     useCallback(() => {

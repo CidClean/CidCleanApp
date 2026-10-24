@@ -44,6 +44,23 @@ export function shiftAnchor(view: ScheduleView, mode: CalendarMode, anchor: Date
   return new Date(anchor.getFullYear(), anchor.getMonth() + dir, 1);
 }
 
+/** Detallado (D-235): la tabla Empleado → días por semana (domingo a sábado) o por mes (del 1 al último día). */
+export type TableRange = 'week' | 'month';
+
+export function tableDays(range: TableRange, anchor: Date): string[] {
+  if (range === 'week') {
+    const sun = sundayOf(anchor);
+    return Array.from({ length: 7 }, (_, i) => dayKey(addDays(sun, i)));
+  }
+  const last = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0).getDate();
+  return Array.from({ length: last }, (_, i) => dayKey(new Date(anchor.getFullYear(), anchor.getMonth(), i + 1)));
+}
+
+/** Flechas de la tabla: semana ±7 días, mes ±1 mes. */
+export function shiftTable(range: TableRange, anchor: Date, dir: 1 | -1): Date {
+  return range === 'week' ? addDays(anchor, 7 * dir) : new Date(anchor.getFullYear(), anchor.getMonth() + dir, 1);
+}
+
 export type EmployeeRow = { id: string; name: string; cells: ScheduleVisit[][] };
 
 /**
@@ -143,7 +160,7 @@ export function scheduleHtml(mode: 'employee' | 'day', visits: readonly Schedule
   } else if (mode === 'employee') {
     const rows = employeeRows(visits, days, s.unstaffed);
     body = `<table><thead><tr><th class="name">${esc(s.employee)}</th>${days
-      .map((d, i) => `<th>${esc(s.dayHeaders[i] ?? '')}<br><small>${dateFromKey(d).getDate()}</small></th>`)
+      .map((d) => `<th>${esc(s.dayHeaders[dateFromKey(d).getDay()] ?? '')}<br><small>${dateFromKey(d).getDate()}</small></th>`)
       .join('')}</tr></thead><tbody>${rows
       .map((r) => `<tr><td class="name">${esc(r.name)}</td>${r.cells.map((c) => `<td>${c.map(cell).join('')}</td>`).join('')}</tr>`)
       .join('')}</tbody></table>`;

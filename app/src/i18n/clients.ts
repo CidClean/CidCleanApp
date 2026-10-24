@@ -43,7 +43,7 @@ export const clientsEs = {
     tabSummary: 'Resumen', // APROBADO (D-055)
     tabDocuments: 'Documentos', // APROBADO (D-055)
     tabStaff: 'Personal', // APROBADO (D-055)
-    tabSchedule: 'Horario', // APROBADO (D-055)
+    tabSchedule: 'Schedule y Work', // D-235 (reemplaza Horario)
     address: 'Dirección', // APROBADO (flujo)
     plusCode: 'Plus Code', // APROBADO (D-211)
     plusCodeHint: 'Por ejemplo: 66G8+4P Naples, Florida', // APROBADO (D-211)
@@ -225,7 +225,7 @@ export const clientsEn: ClientsStrings = {
     tabSummary: 'Summary',
     tabDocuments: 'Documents',
     tabStaff: 'Staff',
-    tabSchedule: 'Schedule',
+    tabSchedule: 'Schedule & Work',
     address: 'Address',
     plusCode: 'Plus Code',
     plusCodeHint: 'For example: 66G8+4P Naples, Florida',

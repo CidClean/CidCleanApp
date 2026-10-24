@@ -83,7 +83,7 @@ export function ScheduleTable({ mode, visits, days, onOpen }: Props) {
             {days.map((d, i) => (
               <View key={d} style={[styles.cell, styles.head, { alignItems: 'center' }]}>
                 <AppText size={12} weight="bold" color="#FFFFFF">
-                  {`${strings.home.weekDays[i] ?? ''} ${dateFromKey(d).getDate()}`}
+                  {`${strings.home.weekDays[dateFromKey(d).getDay()] ?? ''} ${dateFromKey(d).getDate()}`}
                 </AppText>
               </View>
             ))}

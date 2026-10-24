@@ -1,5 +1,5 @@
 import type { ScheduleVisit } from './scheduleApi';
-import { abbreviate, copyWeek, dayRows, employeeRows, firstHour, hourLabel, placeDay, sameCells, scheduleHtml, shiftAnchor, toggleCell, viewDays } from './scheduleViews';
+import { abbreviate, copyWeek, shiftTable, tableDays, dayRows, employeeRows, firstHour, hourLabel, placeDay, sameCells, scheduleHtml, shiftAnchor, toggleCell, viewDays } from './scheduleViews';
 
 const v = (id: string, day: string, h: number, minutes: number, staff: string[], jobsite = 'Break TAX Office'): ScheduleVisit => {
   const [y, m, d] = day.split('-').map(Number);
@@ -106,5 +106,19 @@ describe('semana por semana (D-232)', () => {
     expect(c[3]).toEqual(['a']);
     expect(toggleCell(c, 3, 'a')[3]).toEqual([]);
     expect(sameCells(site.cells, toggleCell(c, 3, 'a'))).toBe(true);
+  });
+});
+
+describe('tabla Empleado → días por semana o mes (D-235)', () => {
+  const anchor = new Date(2026, 9, 24);
+  it('semana de domingo a sábado', () => {
+    expect(tableDays('week', anchor)).toEqual(['2026-10-18', '2026-10-19', '2026-10-20', '2026-10-21', '2026-10-22', '2026-10-23', '2026-10-24']);
+  });
+  it('mes del 1 al último día y flechas', () => {
+    const d = tableDays('month', anchor);
+    expect(d[0]).toBe('2026-10-01');
+    expect(d).toHaveLength(31);
+    expect(shiftTable('month', anchor, 1).getMonth()).toBe(10);
+    expect(shiftTable('week', anchor, -1).getDate()).toBe(17);
   });
 });
