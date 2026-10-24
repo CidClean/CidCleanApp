@@ -1,21 +1,21 @@
-import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Linking, Platform, Pressable, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { FormScroll } from '@/components/FormScroll';
-import { AppAlert } from '@/components/AppAlert';
-import { AppButton } from '@/components/AppButton';
-import { AppField } from '@/components/AppField';
-import { AppText } from '@/components/AppText';
-import { Checkbox } from '@/components/Checkbox';
-import { CodeBoxes } from '@/components/CodeBoxes';
-import { Icon } from '@/components/Icon';
-import { Dialog } from '@/components/Dialog';
-import { TopBar } from '@/components/TopBar';
-import { QuoteView } from '@/components/quotes/QuoteView';
-import { getPortalStrings, type PortalStrings } from '@/i18n/quotes';
-import { CODE_LENGTH } from '@/lib/codeEntry';
+import { FormScroll } from "@/components/FormScroll";
+import { AppAlert } from "@/components/AppAlert";
+import { AppButton } from "@/components/AppButton";
+import { AppField } from "@/components/AppField";
+import { AppText } from "@/components/AppText";
+import { Checkbox } from "@/components/Checkbox";
+import { CodeBoxes } from "@/components/CodeBoxes";
+import { Icon } from "@/components/Icon";
+import { Dialog } from "@/components/Dialog";
+import { TopBar } from "@/components/TopBar";
+import { QuoteView } from "@/components/quotes/QuoteView";
+import { getPortalStrings, type PortalStrings } from "@/i18n/quotes";
+import { CODE_LENGTH } from "@/lib/codeEntry";
 import {
   decide,
   fetchPortalQuote,
@@ -27,19 +27,19 @@ import {
   verifyCode,
   type PortalQuote,
   type PortalState,
-} from '@/lib/portalApi';
-import { dateTime, isEmail, money } from '@/lib/quoteRules';
-import { iconStrokeWidth, radius, sample, useTheme } from '@/theme';
+} from "@/lib/portalApi";
+import { dateTime, isEmail, money } from "@/lib/quoteRules";
+import { iconStrokeWidth, radius, sample, useTheme } from "@/theme";
 
 type Step =
-  | { kind: 'loading' }
-  | { kind: 'closed'; state: PortalState }
-  | { kind: 'email' }
-  | { kind: 'code' }
-  | { kind: 'quote' }
-  | { kind: 'accept' }
-  | { kind: 'reason'; decision: 'rejected' | 'changes_requested' }
-  | { kind: 'done'; decision: 'accepted' | 'rejected' | 'changes_requested' };
+  | { kind: "loading" }
+  | { kind: "closed"; state: PortalState }
+  | { kind: "email" }
+  | { kind: "code" }
+  | { kind: "quote" }
+  | { kind: "accept" }
+  | { kind: "reason"; decision: "rejected" | "changes_requested" }
+  | { kind: "done"; decision: "accepted" | "rejected" | "changes_requested" };
 
 /**
  * Portal del cliente en quote.cidclean.com/q/<enlace> (D-041 a D-047, D-094, D-095, D-129, D-208, D-209), en el
@@ -48,11 +48,11 @@ type Step =
 export default function PortalScreen() {
   const { token } = useLocalSearchParams<{ token: string }>();
   const { colors } = useTheme();
-  const [lang, setLang] = useState<'es' | 'en'>('en');
+  const [lang, setLang] = useState<"es" | "en">("en");
   const t = getPortalStrings(lang);
-  const [step, setStep] = useState<Step>({ kind: 'loading' });
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
+  const [step, setStep] = useState<Step>({ kind: "loading" });
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [session, setSession] = useState<string | null>(null);
@@ -80,12 +80,12 @@ export default function PortalScreen() {
       const st = await portalState(token);
       if (cancelled) return;
       if (!st.ok) {
-        setStep({ kind: 'closed', state: 'not_found' });
+        setStep({ kind: "closed", state: "not_found" });
         return;
       }
       setLang(st.data.language);
       const saved = readPortalSession(token);
-      if (st.data.state !== 'open') {
+      if (st.data.state !== "open") {
         // D-220 d: quien ya decidió en este navegador vuelve a ver su pantalla final (D-047), no "ya decidido".
         const done = saved ? await fetchPortalQuote(saved) : null;
         if (cancelled) return;
@@ -93,18 +93,18 @@ export default function PortalScreen() {
           setQuote(done.data);
           setLang(done.data.language);
           setSession(saved);
-          setStep({ kind: 'done', decision: done.data.decision.kind });
+          setStep({ kind: "done", decision: done.data.decision.kind });
           return;
         }
-        setStep({ kind: 'closed', state: st.data.state });
+        setStep({ kind: "closed", state: st.data.state });
         return;
       }
       if (saved && (await loadQuote(saved))) {
         setSession(saved);
-        setStep({ kind: 'quote' });
+        setStep({ kind: "quote" });
         return;
       }
-      setStep({ kind: 'email' });
+      setStep({ kind: "email" });
     })();
     return () => {
       cancelled = true;
@@ -122,12 +122,19 @@ export default function PortalScreen() {
     const r = await requestCode(token, email.trim().toLowerCase());
     setBusy(false);
     if (r.ok) {
-      setCode('');
-      setStep({ kind: 'code' });
+      setCode("");
+      setStep({ kind: "code" });
       return;
     }
-    if (r.reason === 'closed') setStep({ kind: 'closed', state: 'expired' });
-    else setNotice(r.reason === 'rate_limited' ? t.rateLimited : r.reason === 'network' ? t.network : t.error);
+    if (r.reason === "closed") setStep({ kind: "closed", state: "expired" });
+    else
+      setNotice(
+        r.reason === "rate_limited"
+          ? t.rateLimited
+          : r.reason === "network"
+            ? t.network
+            : t.error,
+      );
   }
 
   async function checkCode(value: string) {
@@ -141,30 +148,45 @@ export default function PortalScreen() {
       setSession(r.data.session);
       await loadQuote(r.data.session);
       setBusy(false);
-      setStep({ kind: 'quote' });
+      setStep({ kind: "quote" });
       return;
     }
     setBusy(false);
-    setCode('');
-    if (r.reason === 'closed') setStep({ kind: 'closed', state: 'expired' });
-    else setNotice(r.reason === 'locked' ? t.locked : r.reason === 'network' ? t.network : t.wrongCode);
+    setCode("");
+    if (r.reason === "closed") setStep({ kind: "closed", state: "expired" });
+    else
+      setNotice(
+        r.reason === "locked"
+          ? t.locked
+          : r.reason === "network"
+            ? t.network
+            : t.wrongCode,
+      );
   }
 
-  async function openFile(kind: 'sow' | 'pdf' | 'terms') {
+  async function openFile(kind: "sow" | "pdf" | "terms") {
     if (!session) return;
     const r = await portalFileUrl(session, kind);
     if (!r.ok) {
-      setNotice(r.reason === 'session' ? null : t.error);
-      if (r.reason === 'session') setStep({ kind: 'email' });
+      setNotice(r.reason === "session" ? null : t.error);
+      if (r.reason === "session") setStep({ kind: "email" });
       return;
     }
     // D-041: el PDF se abre aparte; no se dibuja dentro de la página.
-    if (Platform.OS === 'web' && typeof window !== 'undefined') window.open(r.data.url, '_blank', 'noopener');
+    if (Platform.OS === "web" && typeof window !== "undefined")
+      window.open(r.data.url, "_blank", "noopener");
     else await Linking.openURL(r.data.url);
-    if (kind === 'sow') await loadQuote(session);
+    if (kind === "sow") await loadQuote(session);
   }
 
-  async function submit(d: { kind: 'accepted' | 'rejected' | 'changes_requested'; name?: string; title?: string; reason_id?: string | null; note?: string; read_confirmed?: boolean }) {
+  async function submit(d: {
+    kind: "accepted" | "rejected" | "changes_requested";
+    name?: string;
+    title?: string;
+    reason_id?: string | null;
+    note?: string;
+    read_confirmed?: boolean;
+  }) {
     if (!session || busy) return;
     setBusy(true);
     setNotice(null);
@@ -175,24 +197,36 @@ export default function PortalScreen() {
       setBusy(false);
       if (again.ok && again.data.decision) {
         setQuote(again.data);
-        setStep({ kind: 'done', decision: again.data.decision.kind });
+        setStep({ kind: "done", decision: again.data.decision.kind });
         return;
       }
-      if (r.reason === 'session') setStep({ kind: 'email' });
-      else setNotice(r.reason === 'network' ? t.network : t.error);
+      if (r.reason === "session") setStep({ kind: "email" });
+      else setNotice(r.reason === "network" ? t.network : t.error);
       return;
     }
     // La pantalla final se muestra siempre tras la respuesta; recargar la cotización solo actualiza la fecha y el nombre.
-    setStep({ kind: 'done', decision: d.kind });
+    setStep({ kind: "done", decision: d.kind });
     setBusy(false);
     const fresh = await fetchPortalQuote(session);
     if (fresh.ok) setQuote(fresh.data);
   }
 
-  const shell = (title: string, body: React.ReactNode, onBack?: () => void, bottom?: React.ReactNode) => (
+  const shell = (
+    title: string,
+    body: React.ReactNode,
+    onBack?: () => void,
+    bottom?: React.ReactNode,
+  ) => (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <TopBar title={title} onBack={onBack} backLabel={lang === 'es' ? 'Volver' : 'Back'} />
-      <FormScroll contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <TopBar
+        title={title}
+        onBack={onBack}
+        backLabel={lang === "es" ? "Volver" : "Back"}
+      />
+      <FormScroll
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.column}>
           {notice ? <AppAlert tone="error" text={notice} /> : null}
           {body}
@@ -202,17 +236,27 @@ export default function PortalScreen() {
     </View>
   );
 
-  if (step.kind === 'loading') return <View style={{ flex: 1, backgroundColor: colors.background }} />;
-  if (step.kind === 'closed') return shell(t.brand, <ClosedState state={step.state} t={t} />);
+  if (step.kind === "loading")
+    return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+  if (step.kind === "closed")
+    return shell(t.brand, <ClosedState state={step.state} t={t} />);
 
-  if (step.kind === 'email')
+  if (step.kind === "email")
     return shell(
       t.brand,
       <View>
-        <AppText weight="medium" size={sample.headingSize} style={{ marginBottom: 4 }}>
+        <AppText
+          weight="medium"
+          size={sample.headingSize}
+          style={{ marginBottom: 4 }}
+        >
           {t.emailTitle}
         </AppText>
-        <AppText size={sample.noteSize} color={colors.secondary} style={{ marginBottom: 12 }}>
+        <AppText
+          size={sample.noteSize}
+          color={colors.secondary}
+          style={{ marginBottom: 12 }}
+        >
           {t.emailNote}
         </AppText>
         <AppField
@@ -226,24 +270,43 @@ export default function PortalScreen() {
           onSubmitEditing={() => void sendCode()}
         />
         <View style={{ height: 4 }} />
-        <AppButton label={t.sendCode} onPress={() => void sendCode()} disabled={busy} />
+        <AppButton
+          label={t.sendCode}
+          onPress={() => void sendCode()}
+          disabled={busy}
+        />
       </View>,
     );
 
-  if (step.kind === 'code')
+  if (step.kind === "code")
     return shell(
       t.brand,
       <View>
-        <AppText weight="medium" size={sample.headingSize} style={{ marginBottom: 4 }}>
+        <AppText
+          weight="medium"
+          size={sample.headingSize}
+          style={{ marginBottom: 4 }}
+        >
           {t.codeTitle}
         </AppText>
         <AppText size={sample.noteSize} color={colors.secondary}>
           {t.codeNote}
         </AppText>
-        <CodeBoxes value={code} onChangeText={(v) => void checkCode(v.replace(/\D/g, ''))} inputRef={codeRef} disabled={busy} accessibilityLabel={t.codeTitle} />
-        <AppButton label={t.resend} variant="text" onPress={() => void sendCode()} disabled={busy} />
+        <CodeBoxes
+          value={code}
+          onChangeText={(v) => void checkCode(v.replace(/\D/g, ""))}
+          inputRef={codeRef}
+          disabled={busy}
+          accessibilityLabel={t.codeTitle}
+        />
+        <AppButton
+          label={t.resend}
+          variant="text"
+          onPress={() => void sendCode()}
+          disabled={busy}
+        />
       </View>,
-      () => setStep({ kind: 'email' }),
+      () => setStep({ kind: "email" }),
     );
 
   if (!quote) return null;
@@ -260,20 +323,34 @@ export default function PortalScreen() {
     total: Number(quote.total),
     expiresAt: quote.expires_at,
     validDays: 0,
-    extra: quote.extra ? { serviceDate: quote.service_date ?? null } : undefined,
+    extra: quote.extra
+      ? { serviceDate: quote.service_date ?? null }
+      : undefined,
   };
 
   // D-220 b: Aceptar cotización y Más opciones van en la misma pantalla del quote (sin el paso Continuar); siguen
   // bloqueados hasta abrir el SOW (D-042).
-  if (step.kind === 'quote')
+  if (step.kind === "quote")
     return shell(
       t.yourQuote,
       <View>
         <QuoteView data={view} t={t} language={lang} />
         <View style={{ gap: 8, marginTop: 14 }}>
-          <AppButton label={t.readSow} variant="outline" icon="file-text" onPress={() => void openFile('sow')} />
-          <AppButton label={t.downloadQuote} variant="text" onPress={() => void openFile('pdf')} />
-          {!quote.sow_opened ? (
+          {/* D-239: el quote de un extra va sin SOW. */}
+          {quote.extra ? null : (
+            <AppButton
+              label={t.readSow}
+              variant="outline"
+              icon="file-text"
+              onPress={() => void openFile("sow")}
+            />
+          )}
+          <AppButton
+            label={t.downloadQuote}
+            variant="text"
+            onPress={() => void openFile("pdf")}
+          />
+          {!quote.extra && !quote.sow_opened ? (
             <AppText size={sample.noteSize} color={colors.secondary}>
               {t.sowLocked}
             </AppText>
@@ -283,16 +360,28 @@ export default function PortalScreen() {
       undefined,
       <DecisionBar
         t={t}
-        unlocked={quote.sow_opened}
-        onAccept={() => setStep({ kind: 'accept' })}
-        onReason={(decision) => setStep({ kind: 'reason', decision })}
+        unlocked={quote.extra || quote.sow_opened}
+        onAccept={() => setStep({ kind: "accept" })}
+        onReason={(decision) => setStep({ kind: "reason", decision })}
       />,
     );
 
-  if (step.kind === 'accept')
-    return <AcceptStep t={t} quote={quote} shell={shell} busy={busy} onBack={() => setStep({ kind: 'quote' })} onTerms={() => void openFile('terms')} onSubmit={(name, title, ok) => void submit({ kind: 'accepted', name, title, read_confirmed: ok })} />;
+  if (step.kind === "accept")
+    return (
+      <AcceptStep
+        t={t}
+        quote={quote}
+        shell={shell}
+        busy={busy}
+        onBack={() => setStep({ kind: "quote" })}
+        onTerms={() => void openFile("terms")}
+        onSubmit={(name, title, ok) =>
+          void submit({ kind: "accepted", name, title, read_confirmed: ok })
+        }
+      />
+    );
 
-  if (step.kind === 'reason')
+  if (step.kind === "reason")
     return (
       <ReasonStep
         t={t}
@@ -300,15 +389,25 @@ export default function PortalScreen() {
         decision={step.decision}
         shell={shell}
         busy={busy}
-        onBack={() => setStep({ kind: 'quote' })}
-        onSubmit={(reason, note) => void submit({ kind: step.decision, reason_id: reason, note })}
+        onBack={() => setStep({ kind: "quote" })}
+        onSubmit={(reason, note) =>
+          void submit({ kind: step.decision, reason_id: reason, note })
+        }
       />
     );
 
-  return shell(t.brand, <DoneState t={t} lang={lang} quote={quote} decision={step.decision} />);
+  return shell(
+    t.brand,
+    <DoneState t={t} lang={lang} quote={quote} decision={step.decision} />,
+  );
 }
 
-type Shell = (title: string, body: React.ReactNode, onBack?: () => void, bottom?: React.ReactNode) => React.ReactElement;
+type Shell = (
+  title: string,
+  body: React.ReactNode,
+  onBack?: () => void,
+  bottom?: React.ReactNode,
+) => React.ReactElement;
 
 /**
  * Barra fija de la decisión (D-044, D-094) bajo el quote: botón de tres puntos con contorno (Más opciones: Negociar y
@@ -324,34 +423,56 @@ function DecisionBar({
   t: PortalStrings;
   unlocked: boolean;
   onAccept: () => void;
-  onReason: (d: 'rejected' | 'changes_requested') => void;
+  onReason: (d: "rejected" | "changes_requested") => void;
 }) {
   const { colors, brand } = useTheme();
   const insets = useSafeAreaInsets();
   const [menu, setMenu] = useState(false);
   return (
-    <View style={[styles.fix, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: 10 + insets.bottom }]}>
+    <View
+      style={[
+        styles.fix,
+        {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+          paddingBottom: 10 + insets.bottom,
+        },
+      ]}
+    >
       <View style={styles.column}>
-        <View style={{ flexDirection: 'row', gap: 10 }}>
+        <View style={{ flexDirection: "row", gap: 10 }}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t.moreOptions}
             accessibilityState={{ disabled: !unlocked }}
             onPress={unlocked ? () => setMenu(true) : undefined}
-            style={[styles.dots, { borderColor: unlocked ? brand : colors.border }]}
+            style={[
+              styles.dots,
+              { borderColor: unlocked ? brand : colors.border },
+            ]}
           >
-            <Icon name="dots" size={20} strokeWidth={iconStrokeWidth} color={unlocked ? colors.text : colors.secondary} />
+            <Icon
+              name="dots"
+              size={20}
+              strokeWidth={iconStrokeWidth}
+              color={unlocked ? colors.text : colors.secondary}
+            />
           </Pressable>
           <View style={{ flex: 1 }}>
-            <AppButton label={t.accept} icon={unlocked ? undefined : 'lock'} disabled={!unlocked} onPress={onAccept} />
+            <AppButton
+              label={t.accept}
+              icon={unlocked ? undefined : "lock"}
+              disabled={!unlocked}
+              onPress={onAccept}
+            />
           </View>
         </View>
       </View>
       <Dialog visible={menu} onClose={() => setMenu(false)}>
         {(
           [
-            ['changes_requested', t.negotiate, t.negotiateHint],
-            ['rejected', t.reject, t.rejectHint],
+            ["changes_requested", t.negotiate, t.negotiateHint],
+            ["rejected", t.reject, t.rejectHint],
           ] as const
         ).map(([kind, title, hint], i) => (
           <Pressable
@@ -361,7 +482,13 @@ function DecisionBar({
               setMenu(false);
               onReason(kind);
             }}
-            style={[styles.menuRow, { borderBottomColor: colors.border, borderBottomWidth: i === 0 ? 0.5 : 0 }]}
+            style={[
+              styles.menuRow,
+              {
+                borderBottomColor: colors.border,
+                borderBottomWidth: i === 0 ? 0.5 : 0,
+              },
+            ]}
           >
             <AppText weight="medium">{title}</AppText>
             <AppText size={sample.noteSize} color={colors.secondary}>
@@ -393,8 +520,8 @@ function AcceptStep({
   onSubmit: (name: string, title: string, confirmed: boolean) => void;
 }) {
   const { colors } = useTheme();
-  const [name, setName] = useState('');
-  const [title, setTitle] = useState('');
+  const [name, setName] = useState("");
+  const [title, setTitle] = useState("");
   const [ok, setOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasTerms = quote.terms_version !== null;
@@ -418,12 +545,37 @@ function AcceptStep({
           </AppText>
         </View>
       </View>
-      <AppField label={t.fullName} value={name} onChangeText={setName} autoCapitalize="words" autoComplete="name" />
-      <AppField label={t.jobTitle} value={title} onChangeText={setTitle} autoCapitalize="sentences" />
+      <AppField
+        label={t.fullName}
+        value={name}
+        onChangeText={setName}
+        autoCapitalize="words"
+        autoComplete="name"
+      />
+      <AppField
+        label={t.jobTitle}
+        value={title}
+        onChangeText={setTitle}
+        autoCapitalize="sentences"
+      />
       <View style={{ marginTop: 4 }}>
-        <Checkbox label={hasTerms ? t.confirmRead : t.confirmReadSowOnly} checked={ok} onChange={setOk} />
+        <Checkbox
+          label={
+            quote.extra
+              ? hasTerms
+                ? t.confirmTermsOnly
+                : t.confirmExtra
+              : hasTerms
+                ? t.confirmRead
+                : t.confirmReadSowOnly
+          }
+          checked={ok}
+          onChange={setOk}
+        />
       </View>
-      {hasTerms ? <AppButton label={t.readTerms} variant="text" onPress={onTerms} /> : null}
+      {hasTerms ? (
+        <AppButton label={t.readTerms} variant="text" onPress={onTerms} />
+      ) : null}
       {error ? <AppAlert tone="error" text={error} /> : null}
       <AppButton label={t.accept} onPress={go} disabled={busy} />
     </View>,
@@ -443,7 +595,7 @@ function ReasonStep({
 }: {
   t: PortalStrings;
   quote: PortalQuote;
-  decision: 'rejected' | 'changes_requested';
+  decision: "rejected" | "changes_requested";
   shell: Shell;
   busy: boolean;
   onBack: () => void;
@@ -451,18 +603,23 @@ function ReasonStep({
 }) {
   const { colors, brand } = useTheme();
   const [reason, setReason] = useState<string | null>(null);
-  const [note, setNote] = useState('');
+  const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   function go() {
-    if (decision === 'rejected' && !reason) return setError(t.needReason);
-    if (decision === 'changes_requested' && !reason && !note.trim()) return setError(t.needReasonOrNote);
+    if (decision === "rejected" && !reason) return setError(t.needReason);
+    if (decision === "changes_requested" && !reason && !note.trim())
+      return setError(t.needReasonOrNote);
     setError(null);
     onSubmit(reason, note.trim());
   }
   return shell(
-    decision === 'rejected' ? t.rejectTitle : t.negotiateTitle,
+    decision === "rejected" ? t.rejectTitle : t.negotiateTitle,
     <View>
-      <AppText size={sample.noteSize} color={colors.secondary} style={{ marginBottom: 8 }}>
+      <AppText
+        size={sample.noteSize}
+        color={colors.secondary}
+        style={{ marginBottom: 8 }}
+      >
         {t.whichReason}
       </AppText>
       <View style={styles.chips}>
@@ -474,16 +631,28 @@ function ReasonStep({
               accessibilityRole="radio"
               accessibilityState={{ checked: on }}
               onPress={() => setReason(on ? null : r.id)}
-              style={[styles.chip, on ? { backgroundColor: brand, borderColor: brand } : { borderColor: colors.border }]}
+              style={[
+                styles.chip,
+                on
+                  ? { backgroundColor: brand, borderColor: brand }
+                  : { borderColor: colors.border },
+              ]}
             >
-              <AppText size={12} color={on ? '#FFFFFF' : colors.text}>
+              <AppText size={12} color={on ? "#FFFFFF" : colors.text}>
                 {r.label}
               </AppText>
             </Pressable>
           );
         })}
       </View>
-      <AppField label={t.noteOptional} value={note} onChangeText={setNote} multiline textAlignVertical="top" style={{ minHeight: 80 }} />
+      <AppField
+        label={t.noteOptional}
+        value={note}
+        onChangeText={setNote}
+        multiline
+        textAlignVertical="top"
+        style={{ minHeight: 80 }}
+      />
       {error ? <AppAlert tone="error" text={error} /> : null}
       <AppButton label={t.submit} onPress={go} disabled={busy} />
     </View>,
@@ -496,23 +665,43 @@ function ResultIcon({ ok }: { ok: boolean }) {
   const c = ok ? status.success : colors.secondary;
   return (
     <View style={[styles.ok, { borderColor: c }]}>
-      <Icon name={ok ? 'check' : 'alert-triangle'} size={28} strokeWidth={iconStrokeWidth} color={c} />
+      <Icon
+        name={ok ? "check" : "alert-triangle"}
+        size={28}
+        strokeWidth={iconStrokeWidth}
+        color={c}
+      />
     </View>
   );
 }
 
 /** Pantalla final (D-047): marca de éxito y tarjeta con sitio, versión, fecha y hora y nombre. */
-function DoneState({ t, lang, quote, decision }: { t: PortalStrings; lang: 'es' | 'en'; quote: PortalQuote; decision: 'accepted' | 'rejected' | 'changes_requested' }) {
+function DoneState({
+  t,
+  lang,
+  quote,
+  decision,
+}: {
+  t: PortalStrings;
+  lang: "es" | "en";
+  quote: PortalQuote;
+  decision: "accepted" | "rejected" | "changes_requested";
+}) {
   const { colors } = useTheme();
-  if (decision !== 'accepted') {
+  if (decision !== "accepted") {
     return (
-      <View style={{ alignItems: 'center' }}>
+      <View style={{ alignItems: "center" }}>
         <ResultIcon ok />
         <AppText weight="medium" size={sample.headingSize} center>
-          {decision === 'rejected' ? t.rejectedTitle : t.changesTitle}
+          {decision === "rejected" ? t.rejectedTitle : t.changesTitle}
         </AppText>
-        <AppText size={sample.noteSize} color={colors.secondary} center style={{ marginTop: 4 }}>
-          {decision === 'rejected' ? t.rejectedBody : t.changesBody}
+        <AppText
+          size={sample.noteSize}
+          color={colors.secondary}
+          center
+          style={{ marginTop: 4 }}
+        >
+          {decision === "rejected" ? t.rejectedBody : t.changesBody}
         </AppText>
       </View>
     );
@@ -520,20 +709,39 @@ function DoneState({ t, lang, quote, decision }: { t: PortalStrings; lang: 'es' 
   const rows: [string, string][] = [
     [t.site, quote.site],
     [t.version, quote.version],
-    [t.acceptedAt, dateTime(quote.decision?.at ?? new Date().toISOString(), lang)],
-    [t.by, quote.decision?.name ?? ''],
+    [
+      t.acceptedAt,
+      dateTime(quote.decision?.at ?? new Date().toISOString(), lang),
+    ],
+    [t.by, quote.decision?.name ?? ""],
   ];
   return (
     <View>
-      <View style={{ alignItems: 'center' }}>
+      <View style={{ alignItems: "center" }}>
         <ResultIcon ok />
-        <AppText weight="medium" size={sample.headingSize} center style={{ marginBottom: 10 }}>
+        <AppText
+          weight="medium"
+          size={sample.headingSize}
+          center
+          style={{ marginBottom: 10 }}
+        >
           {t.acceptedTitle}
         </AppText>
       </View>
-      <View style={[styles.card, { backgroundColor: colors.card, marginBottom: 0 }]}>
+      <View
+        style={[styles.card, { backgroundColor: colors.card, marginBottom: 0 }]}
+      >
         {rows.map(([k, v], i) => (
-          <View key={k} style={[styles.cardRow, { borderBottomColor: colors.border, borderBottomWidth: i === rows.length - 1 ? 0 : 0.5 }]}>
+          <View
+            key={k}
+            style={[
+              styles.cardRow,
+              {
+                borderBottomColor: colors.border,
+                borderBottomWidth: i === rows.length - 1 ? 0 : 0.5,
+              },
+            ]}
+          >
             <AppText size={14}>{k}</AppText>
             <AppText size={14} weight="medium">
               {v}
@@ -548,22 +756,27 @@ function DoneState({ t, lang, quote, decision }: { t: PortalStrings; lang: 'es' 
 function ClosedState({ state, t }: { state: PortalState; t: PortalStrings }) {
   const { colors } = useTheme();
   const [title, body] =
-    state === 'expired'
+    state === "expired"
       ? [t.expiredTitle, t.expiredBody]
-      : state === 'superseded'
+      : state === "superseded"
         ? [t.supersededTitle, t.supersededBody]
-        : state === 'changes_requested'
+        : state === "changes_requested"
           ? [t.changesTitle, t.changesBody]
-          : state === 'decided'
+          : state === "decided"
             ? [t.decidedTitle, t.decidedBody]
             : [t.notFoundTitle, t.notFoundBody];
   return (
-    <View style={{ alignItems: 'center' }}>
-      <ResultIcon ok={state === 'changes_requested'} />
+    <View style={{ alignItems: "center" }}>
+      <ResultIcon ok={state === "changes_requested"} />
       <AppText weight="medium" size={sample.headingSize} center>
         {title}
       </AppText>
-      <AppText size={sample.noteSize} color={colors.secondary} center style={{ marginTop: 4 }}>
+      <AppText
+        size={sample.noteSize}
+        color={colors.secondary}
+        center
+        style={{ marginTop: 4 }}
+      >
         {body}
       </AppText>
     </View>
@@ -571,16 +784,56 @@ function ClosedState({ state, t }: { state: PortalState; t: PortalStrings }) {
 }
 
 const styles = StyleSheet.create({
-  scroll: { padding: 12, alignItems: 'center' },
-  column: { width: '100%', maxWidth: sample.screenMaxWidth - 24 },
-  fix: { borderTopWidth: 0.5, paddingTop: 10, paddingHorizontal: 12, alignItems: 'center' },
-  dots: { width: 44, minHeight: sample.buttonMinHeight, borderWidth: 1, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center' },
+  scroll: { padding: 12, alignItems: "center" },
+  column: { width: "100%", maxWidth: sample.screenMaxWidth - 24 },
+  fix: {
+    borderTopWidth: 0.5,
+    paddingTop: 10,
+    paddingHorizontal: 12,
+    alignItems: "center",
+  },
+  dots: {
+    width: 44,
+    minHeight: sample.buttonMinHeight,
+    borderWidth: 1,
+    borderRadius: radius.control,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   menuRow: { paddingVertical: 10 },
   // D-223: tarjetas blancas de 24px sobre el fondo crema.
-  card: { borderRadius: radius.card, paddingVertical: 14, paddingHorizontal: 16, marginBottom: 8 },
-  cardLine: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 2 },
-  cardRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, paddingVertical: 8 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
-  chip: { borderWidth: 1, borderRadius: radius.chip, paddingVertical: 2, paddingHorizontal: 10 },
-  ok: { width: 56, height: 56, borderRadius: 28, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', marginTop: 8, marginBottom: 10 },
+  card: {
+    borderRadius: radius.card,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+  },
+  cardLine: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: 2,
+  },
+  cardRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 8,
+    paddingVertical: 8,
+  },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 8 },
+  chip: {
+    borderWidth: 1,
+    borderRadius: radius.chip,
+    paddingVertical: 2,
+    paddingHorizontal: 10,
+  },
+  ok: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+    marginBottom: 10,
+  },
 });

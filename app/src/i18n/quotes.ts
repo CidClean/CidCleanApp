@@ -254,6 +254,8 @@ export const portalEs = {
   jobTitle: 'Cargo', // APROBADO (D-045)
   confirmRead: 'Confirmo que leí el SOW y acepto los términos', // APROBADO (D-045)
   confirmReadSowOnly: 'Confirmo que leí el SOW', // D-208 (D-209: sin términos publicados, solo el SOW)
+  confirmTermsOnly: 'Acepto los términos', // D-200 (D-239: extra sin SOW)
+  confirmExtra: 'Confirmo que acepto este servicio', // D-200 (D-239: extra sin SOW ni términos)
   readTerms: 'Leer los términos', // D-208
   rejectTitle: 'Rechazar cotización', // APROBADO (muestra ronda 4)
   negotiateTitle: 'Pedir cambios', // D-208
@@ -330,6 +332,8 @@ export const portalEn: PortalStrings = {
   jobTitle: 'Job title',
   confirmRead: 'I confirm I read the SOW and accept the terms',
   confirmReadSowOnly: 'I confirm I read the SOW',
+  confirmTermsOnly: 'I accept the terms',
+  confirmExtra: 'I confirm I accept this service',
   readTerms: 'Read the terms',
   rejectTitle: 'Reject quote',
   negotiateTitle: 'Request changes',

@@ -90,8 +90,8 @@ begin
   perform pg_temp.prueba('la lista del jobsite muestra el extra con su estado', 'draft|1.0',
     pg_temp.valor('ver', format('select status || ''|'' || version from jobsite_extra_quotes(%L)', js)));
 
-  -- Envío: SOW obligatorio como siempre; para un extra el envío trae cliente, jobsite y la marca extra.
-  perform pg_temp.prueba('sin SOW no se envía', 'ERR:22023', pg_temp.valor('ventas', format('select prepare_send_quote(%L)::text', v)));
+  -- Envío: el extra va sin SOW (D-239); el envío trae cliente, jobsite y la marca extra. La prueba sube un SOW igual
+  -- para cubrir también el caso con SOW.
   insert into storage.objects (bucket_id, name) values ('quote-files', q || '/' || v || '/sow-a.pdf');
   perform pg_temp.valor('ventas', format('select set_quote_sow(%L, %L)::text', v, q || '/' || v || '/sow-a.pdf'));
   perform pg_temp.prueba('preparar el envío de un extra', 'Cliente Extra|Sede Extra|true|2026-11-05|en',
