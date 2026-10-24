@@ -43,7 +43,7 @@ El walkthrough recoge la información específica de un sitio mientras se camina
 
 ## Ventas 3: Quote, SOW y portal del cliente
 
-El quote se arma desde el walkthrough y se envía por email a un portal seguro donde el cliente decide. Hay un quote por sitio. El quote es el punto de partida, no un invoice: define planes por temporada con su frecuencia y su precio, add-ons y ajustes, y de ahí el sistema calcula el ingreso esperado de cada mes (D-227).
+El quote se arma desde el walkthrough y se envía por email a un portal seguro donde el cliente decide. Hay un quote por sitio. El quote aceptado es el punto de partida del cobro, no un invoice. Un servicio extra para una cuenta (por ejemplo, un día más) es otro quote para esa cuenta, que el cliente acepta o no; también puede acordarse de palabra. El invoice se hace fuera de la app por ahora, con la tarifa del quote más los extras del periodo (D-237).
 
 - **Contenido:** services, add-ons, descuentos y tax (tasa predeterminada de 6%, editable). Cada servicio y add-on lleva una casilla "gravable" que decide el dueño.
 - **Envío:** por email, con acceso al portal mediante OTP.
