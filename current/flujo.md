@@ -43,7 +43,7 @@ El walkthrough recoge la información específica de un sitio mientras se camina
 
 ## Ventas 3: Quote, SOW y portal del cliente
 
-El quote se arma desde el walkthrough y se envía por email a un portal seguro donde el cliente decide. Hay un quote por sitio. El quote aceptado es el punto de partida del cobro, no un invoice. Un servicio extra para una cuenta (por ejemplo, un día más) es otro quote para esa cuenta, que el cliente acepta o no; también puede acordarse de palabra. El invoice se hace fuera de la app por ahora, con la tarifa del quote más los extras del periodo (D-237).
+El quote se arma desde el walkthrough y se envía por email a un portal seguro donde el cliente decide. Hay un quote por sitio. El quote aceptado es el punto de partida del cobro, no un invoice. Un servicio extra para una cuenta (por ejemplo, un día más) es otro quote para esa cuenta, que el cliente acepta o no; también puede acordarse de palabra. El invoice se hace fuera de la app por ahora, con la tarifa del quote más los extras del periodo (D-237). El quote de un extra se hace desde el jobsite con "Nuevo quote", sin walkthrough, y va al portal como cualquier otro; si el cliente lo acepta, su monto se suma al ingreso esperado del mes del servicio (D-238).
 
 - **Contenido:** services, add-ons, descuentos y tax (tasa predeterminada de 6%, editable). Cada servicio y add-on lleva una casilla "gravable" que decide el dueño.
 - **Envío:** por email, con acceso al portal mediante OTP.
@@ -123,7 +123,7 @@ El Schedule es lo planificado y el Work es lo realmente trabajado. Son independi
 
 Accounting registra ingresos, costo de personal y gastos, globales y por cuenta (una cuenta es un jobsite), y los resume en un dashboard.
 
-- **Ingresos:** cada mes se registra el ingreso esperado de cada jobsite. Al recibirlo se marca como recibido con la fecha real. El ingreso cuenta en el mes en que se registra, no en el que se cobra, y el dashboard muestra lo recibido y lo pendiente.
+- **Ingresos:** cada mes se registra el ingreso esperado de cada jobsite. Antes de marcarlo como recibido, quien tenga el permiso de ingresos puede ajustar el monto a mano con una nota obligatoria (por ejemplo, un extra hablado de palabra), y el cambio queda en el historial (D-238). Al recibirlo se marca como recibido con la fecha real. El ingreso cuenta en el mes en que se registra, no en el que se cobra, y el dashboard muestra lo recibido y lo pendiente.
 - **Personal:** el costo sale automático del trabajo aprobado (horas reales, garantizadas o tarifa fija), agrupado por mes, empleado y jobsite. La app calcula lo que se debe y no registra si ya se pagó.
 - **Gastos:** categoría, fecha y monto. Pueden ser de un jobsite o globales de Cid Clean. Los registra quien tenga el permiso, por defecto el dueño y los administradores.
 - **Gastos recurrentes:** seguro, vehículos y software se configuran una vez y se generan solos cada mes. Cada uno se puede pausar.
@@ -155,7 +155,7 @@ Cada notificación llega solo a quien tiene el permiso relacionado. Cada persona
 | Área | Notificaciones |
 | --- | --- |
 | Ventas | Seguimiento de lead pendiente · walkthrough agendado · quote por vencer o expirado · quote visto, aceptado o rechazado · nueva versión solicitada |
-| Schedule | Horario nuevo o cambiado · visita en las próximas horas · empleado sin confirmar o removido |
+| Schedule | Horario nuevo o cambiado · visita en las próximas horas · empleado removido (sin confirmación de visitas, D-214) |
 | Work | Trabajo pendiente de aprobar · clock in con GPS fuera de rango · clock in o out olvidado · trabajo aprobado |
 | Accounting | Ingreso esperado sin marcar como recibido · alerta de margen · gasto recurrente generado |
 | Empleados | Alerta de 32 h semanales · pago por hora por debajo del mínimo |
