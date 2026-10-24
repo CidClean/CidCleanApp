@@ -93,7 +93,7 @@ Cada empleado tiene un perfil con su tipo de trabajador, sus permisos y su pago 
 
 **Alertas**
 
-- **Margen:** salta cuando el costo proyectado de todo el personal de un jobsite iguala o supera lo que cobra el cliente. No hay porcentaje mínimo, y suministros y equipo no entran en esta alerta.
+- **Margen:** salta cuando el costo del trabajo aprobado del mes en curso en un jobsite iguala o supera lo que cobra el cliente (D-243; antes era el costo proyectado de todo el personal). No hay porcentaje mínimo, y suministros y equipo no entran en esta alerta.
 - **Salario mínimo:** a un empleado W-2 pagado por hora no se le puede asignar menos de $15/h, el mínimo de Florida desde el 30 de septiembre de 2026.
 - **Horas semanales:** no se permiten horas extra. La app avisa antes de llegar a 32 h semanales, sumando todos los jobsites. Aplica a todo el staff, W-2 y 1099.
 

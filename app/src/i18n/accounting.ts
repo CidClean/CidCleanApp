@@ -36,7 +36,7 @@ export const accountingEs = {
   recurringCount: (n: number) => (n === 1 ? '1 activo' : `${n} activos`), // D-200
   exportLine: 'CSV y PDF', // D-200
   marginRisk: 'Margen en riesgo', // APROBADO (D-060, D-097)
-  marginRiskLine: (names: string) => `Costo proyectado de personal igual o mayor que lo que cobra: ${names}`, // D-200 (D-010)
+  marginRiskLine: (names: string) => `El trabajo aprobado del mes ya iguala o pasa lo que cobra: ${names}`, // D-200 (D-243)
   errorLoad: 'No se pudo cargar Accounting. Inténtalo otra vez.', // D-200
   noAccess: 'No tienes permiso para ver esto.', // D-200
   // Ingresos (D-063, D-064, D-238)
@@ -168,7 +168,7 @@ export const accountingEn: AccountingStrings = {
   recurringCount: (n: number) => (n === 1 ? '1 active' : `${n} active`),
   exportLine: 'CSV and PDF',
   marginRisk: 'Margin at risk',
-  marginRiskLine: (names: string) => `Projected staff cost equal to or above what the client pays: ${names}`,
+  marginRiskLine: (names: string) => `This month's approved work already equals or exceeds what the client pays: ${names}`,
   errorLoad: "Accounting couldn't load. Try again.",
   noAccess: "You don't have permission to see this.",
   incomeTitle: (period: string) => `Income · ${period}`,
