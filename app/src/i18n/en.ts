@@ -159,6 +159,13 @@ export const en: Strings = {
     resendInvitation: 'Resend invitation', // outline button under the app access row
     accessSince: (date: string) => `Yes · since ${date}`, // app access row once the person has signed in
     invitationResent: 'Invitation resent.', // notice after resending
+    inviteToApp: 'Invite to the app',
+    inviteTitle: (name: string) => `Invite ${name}`,
+    inviteNote: 'They get an email to sign in to the app. Use an email they check.',
+    sendInvitation: 'Send invitation',
+    inviteEmailError: 'Enter a valid email.',
+    inviteSent: 'Invitation sent.',
+    inviteError: "Couldn't give access. Try again.",
     invitationFailed: "The employee was created, but the invitation couldn't be sent. Tap Resend invitation.", // notice after creating
     errorSave: "Couldn't save. Try again.", // red notice in edit mode
     errorToggle: "Couldn't change the status. Try again.", // red notice after the switch

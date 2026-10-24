@@ -155,6 +155,14 @@ export function canToggleActive(access: Access, target: Pick<Employee, 'id' | 'i
 }
 
 /** Botón Reenviar invitación (D-172): con el permiso de crear y mientras no haya primer ingreso. */
+/** D-242: dar acceso a la app a quien se creó sin acceso (mismo permiso que crear). */
+export function canGrantAccess(
+  access: Access,
+  target: Pick<Employee, 'hasAppAccess' | 'firstLoginAt' | 'active' | 'isSuperAdmin'>,
+): boolean {
+  return can(access, 'empleados_invitar_crear') && target.active && !target.isSuperAdmin && accessState(target).kind === 'none';
+}
+
 export function canResendInvitation(access: Access, target: Pick<Employee, 'hasAppAccess' | 'firstLoginAt' | 'active'>): boolean {
   return can(access, 'empleados_invitar_crear') && target.active && accessState(target).kind === 'pending';
 }

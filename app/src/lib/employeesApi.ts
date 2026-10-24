@@ -107,6 +107,18 @@ export async function createEmployee(form: NewEmployeeForm): Promise<ApiResult<{
   }
 }
 
+/** D-242: guarda el correo y el acceso (grant_app_access) y manda la invitación (resend-invitation). */
+export async function grantAppAccess(profileId: string, email: string): Promise<ApiResult<'sent' | 'failed'>> {
+  try {
+    const { error } = await supabase.rpc('grant_app_access', { p_profile: profileId, p_email: email.trim() });
+    if (error) return { ok: false, reason: failureFromCode(error.code) };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+  const sent = await resendInvitation(profileId);
+  return { ok: true, data: sent.ok ? 'sent' : 'failed' };
+}
+
 export async function resendInvitation(profileId: string): Promise<ApiResult<null>> {
   try {
     const { error } = await supabase.functions.invoke('resend-invitation', { body: { profile_id: profileId } });

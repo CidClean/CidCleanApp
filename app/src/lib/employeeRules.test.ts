@@ -2,6 +2,7 @@ import {
   accessState,
   canCreateEmployees,
   canEditEmployee,
+  canGrantAccess,
   canResendInvitation,
   canToggleActive,
   createEmployeeBody,
@@ -152,6 +153,15 @@ describe('Quién ve y usa qué según sus permisos (D-169, D-125)', () => {
     expect(canResendInvitation(creator, employee({ firstLoginAt: '2026-10-12T15:00:00Z' }))).toBe(false);
     expect(canResendInvitation(creator, employee({ hasAppAccess: false }))).toBe(false);
     expect(canResendInvitation(creator, employee({ active: false }))).toBe(false);
+  });
+
+  test('Invitar a la app (D-242): a quien se creó sin acceso, activo y no Super Admin', () => {
+    const creator = access(false, ['empleados_invitar_crear']);
+    expect(canGrantAccess(creator, employee({ hasAppAccess: false }))).toBe(true);
+    expect(canGrantAccess(creator, employee())).toBe(false);
+    expect(canGrantAccess(access(false, ['empleados_ver']), employee({ hasAppAccess: false }))).toBe(false);
+    expect(canGrantAccess(creator, employee({ hasAppAccess: false, active: false }))).toBe(false);
+    expect(canGrantAccess(creator, employee({ hasAppAccess: false, isSuperAdmin: true }))).toBe(false);
   });
 
   test('Documentos solo de los 1099 y solo con empleados_gestionar_documentos (D-193): ver pagos ya no basta', () => {

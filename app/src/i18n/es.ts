@@ -160,6 +160,13 @@ export const es = {
     resendInvitation: 'Reenviar invitación', // APROBADO (D-172)
     accessSince: (date: string) => `Sí · desde ${date}`, // APROBADO (D-184)
     invitationResent: 'Invitación reenviada.', // SIN APROBAR
+    inviteToApp: 'Invitar a la app', // D-200 (D-242)
+    inviteTitle: (name: string) => `Invitar a ${name}`, // D-200 (D-242)
+    inviteNote: 'Le llega un correo para entrar a la app. Usa el correo que revisa.', // D-200 (D-242)
+    sendInvitation: 'Enviar invitación', // D-200 (D-242)
+    inviteEmailError: 'Escribe un correo válido.', // D-200 (patrón D-156)
+    inviteSent: 'Invitación enviada.', // D-200 (D-242)
+    inviteError: 'No se pudo dar el acceso. Inténtalo otra vez.', // D-200 (patrón D-178)
     invitationFailed: 'El empleado se creó, pero no se pudo enviar la invitación. Toca Reenviar invitación.', // SIN APROBAR
     errorSave: 'No se pudo guardar. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
     errorToggle: 'No se pudo cambiar el estado. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)

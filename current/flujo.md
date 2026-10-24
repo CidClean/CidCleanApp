@@ -84,7 +84,7 @@ Cada empleado tiene un perfil con su tipo de trabajador, sus permisos y su pago 
 - Si tiene acceso a la app. Si no, un supervisor o admin registra su trabajo.
 - Idioma: inglés por defecto, o español.
 - Los 1099 guardan sus documentos (W-9 y certificado de seguro).
-- Al crear un empleado con acceso a la app se le envía la invitación sola; mientras no entre, su perfil lo muestra y permite reenviarla (D-172). Desactivarlo conserva su historial (D-173).
+- Al crear un empleado con acceso a la app se le envía la invitación sola; mientras no entre, su perfil lo muestra y permite reenviarla (D-172). A un empleado creado sin acceso se le puede dar después con "Invitar a la app" en su perfil, escribiendo su correo (D-242). Desactivarlo conserva su historial (D-173).
 
 **Pago por jobsite** (un mismo empleado puede tener pagos distintos en varios jobsites)
 

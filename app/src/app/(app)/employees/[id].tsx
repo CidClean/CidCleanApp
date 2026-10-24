@@ -4,6 +4,8 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FormScroll } from '@/components/FormScroll';
+import { Dialog } from '@/components/Dialog';
+import { DialogButtons } from '@/components/work/SimpleParts';
 import { CardBlock } from '@/components/bento/Card';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
@@ -31,6 +33,7 @@ import { roleLabel, subtitle, typeLabel } from '@/lib/employeeLabels';
 import {
   accessState,
   canEditEmployee,
+  canGrantAccess,
   canResendInvitation,
   canToggleActive,
   documentRows,
@@ -49,6 +52,7 @@ import {
   fetchEmployee,
   fetchEmployeePermissions,
   fetchTemplatePermissions,
+  grantAppAccess,
   resendInvitation,
   saveEmployeePermissions,
   setEmployeeActive,
@@ -75,7 +79,10 @@ type UploadStep = { step: 'kind' } | { step: 'source'; kind: DocumentKind } | nu
 
 /** Perfil del empleado (D-057, D-172 a D-175, D-181 a D-184): encabezado con interruptor Activo y pestañas Datos, Permisos y Pagos. */
 export default function EmployeeProfileScreen() {
-  const { id, invitation } = useLocalSearchParams<{ id: string; invitation?: string }>();
+  const { id, invitation } = useLocalSearchParams<{
+    id: string;
+    invitation?: string;
+  }>();
   const goBack = useGoBack();
   const router = useRouter();
   const { colors } = useTheme();
@@ -99,6 +106,12 @@ export default function EmployeeProfileScreen() {
   const [toggleError, setToggleError] = useState(false);
 
   const [resend, setResend] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  // D-242: invitar a la app a quien se creó sin acceso.
+  const [inviting, setInviting] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteBusy, setInviteBusy] = useState(false);
+  const [inviteDone, setInviteDone] = useState<'sent' | 'failed' | null>(null);
 
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [upload, setUpload] = useState<UploadStep>(null);
@@ -267,6 +280,26 @@ export default function EmployeeProfileScreen() {
     setResend(result.ok ? 'sent' : 'error');
   }
 
+  async function sendAccess() {
+    if (!employee || inviteBusy) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inviteEmail.trim())) {
+      setInviteError(strings.employee.inviteEmailError);
+      return;
+    }
+    setInviteBusy(true);
+    const result = await grantAppAccess(employee.id, inviteEmail);
+    setInviteBusy(false);
+    if (!result.ok) {
+      setInviteError(
+        result.reason === 'email_taken' ? strings.newEmployee.errorEmailTaken : strings.employee.inviteError,
+      );
+      return;
+    }
+    setInviting(false);
+    setInviteDone(result.data);
+    await load();
+  }
+
   async function afterPick(kind: DocumentKind, picked: PickResult) {
     if (!employee) return;
     if (picked.kind === 'denied') {
@@ -340,8 +373,16 @@ export default function EmployeeProfileScreen() {
   const topAction =
     tab === 'data' && employee && canEdit
       ? editing
-        ? { label: strings.common.cancel, onPress: () => setEditing(false), accessibilityLabel: strings.common.cancel }
-        : { label: strings.common.edit, onPress: startEditing, accessibilityLabel: strings.common.edit }
+        ? {
+            label: strings.common.cancel,
+            onPress: () => setEditing(false),
+            accessibilityLabel: strings.common.cancel,
+          }
+        : {
+            label: strings.common.edit,
+            onPress: startEditing,
+            accessibilityLabel: strings.common.edit,
+          }
       : undefined;
 
   return (
@@ -360,7 +401,16 @@ export default function EmployeeProfileScreen() {
             {toggleError ? <AppAlert tone="error" text={strings.employee.errorToggle} /> : null}
 
             {/* D-226: el encabezado del perfil en una tarjeta blanca de 24px. */}
-            <View style={[styles.header, { backgroundColor: colors.card, borderRadius: radius.card, padding: 16 }]}>
+            <View
+              style={[
+                styles.header,
+                {
+                  backgroundColor: colors.card,
+                  borderRadius: radius.card,
+                  padding: 16,
+                },
+              ]}
+            >
               <View style={styles.who}>
                 <Avatar name={employee.fullName} size={48} />
                 <View style={{ flex: 1 }}>
@@ -423,7 +473,9 @@ export default function EmployeeProfileScreen() {
             ) : null}
 
             {/* Pagos (D-194, D-210): sin empleados_ver_pagos, el aviso y ninguna cifra; con el permiso, su pago en cada jobsite. */}
-            {tab === 'pay' && canSeePay(access) && employee ? <EmployeePay profileId={employee.id} workerType={employee.workerType} /> : null}
+            {tab === 'pay' && canSeePay(access) && employee ? (
+              <EmployeePay profileId={employee.id} workerType={employee.workerType} />
+            ) : null}
             {tab === 'pay' && !canSeePay(access) ? (
               <View style={styles.noPay}>
                 <Icon name="lock" size={26} strokeWidth={iconStrokeWidth} color={colors.secondary} />
@@ -439,6 +491,13 @@ export default function EmployeeProfileScreen() {
                 canResend={canResendInvitation(access, employee)}
                 resend={resend}
                 onResend={() => void sendInvitation()}
+                canInvite={canGrantAccess(access, employee)}
+                inviteDone={inviteDone}
+                onInvite={() => {
+                  setInviteEmail(employee.email ?? '');
+                  setInviteError(null);
+                  setInviting(true);
+                }}
               />
             ) : null}
 
@@ -473,7 +532,10 @@ export default function EmployeeProfileScreen() {
                     />
                   </View>
                 ) : null}
-                <DataRow label={strings.newEmployee.role} value={roleLabel(strings, employee.role, employee.isSuperAdmin)} />
+                <DataRow
+                  label={strings.newEmployee.role}
+                  value={roleLabel(strings, employee.role, employee.isSuperAdmin)}
+                />
                 <View style={{ paddingTop: 8 }}>
                   <SelectField
                     label={strings.newEmployee.language}
@@ -520,9 +582,7 @@ export default function EmployeeProfileScreen() {
                 {documentError ? (
                   <AppAlert
                     tone="error"
-                    text={
-                      documentError === 'camera' ? strings.employee.errorCamera : strings.employee.errorUpload
-                    }
+                    text={documentError === 'camera' ? strings.employee.errorCamera : strings.employee.errorUpload}
                   />
                 ) : null}
                 <AppButton
@@ -545,7 +605,11 @@ export default function EmployeeProfileScreen() {
         <View
           style={[
             styles.saveBar,
-            { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: 10 + insets.bottom },
+            {
+              backgroundColor: colors.surface,
+              borderTopColor: colors.border,
+              paddingBottom: 10 + insets.bottom,
+            },
           ]}
         >
           <AppButton
@@ -575,9 +639,7 @@ export default function EmployeeProfileScreen() {
 
       <Sheet visible={templateAsk !== null} onClose={() => setTemplateAsk(null)}>
         <AppText weight="medium" size={sample.headingSize} center>
-          {strings.permissions.applyTitle(
-            templateAsk ? roleLabel(strings, templateAsk) : '',
-          )}
+          {strings.permissions.applyTitle(templateAsk ? roleLabel(strings, templateAsk) : '')}
         </AppText>
         <AppText size={sample.noteSize} color={colors.secondary} center style={{ marginTop: 4 }}>
           {strings.permissions.applyBody(employee?.fullName ?? '')}
@@ -624,7 +686,11 @@ export default function EmployeeProfileScreen() {
         <View style={{ gap: 8 }}>
           {upload?.step === 'kind' ? (
             <>
-              <AppButton label={strings.employee.w9} variant="outline" onPress={() => setUpload({ step: 'source', kind: 'w9' })} />
+              <AppButton
+                label={strings.employee.w9}
+                variant="outline"
+                onPress={() => setUpload({ step: 'source', kind: 'w9' })}
+              />
               <AppButton
                 label={strings.employee.insuranceCertificate}
                 variant="outline"
@@ -633,14 +699,74 @@ export default function EmployeeProfileScreen() {
             </>
           ) : (
             <>
-              <AppButton label={strings.employee.takePhoto} variant="outline" onPress={() => void pickAndUpload('camera')} />
-              <AppButton label={strings.employee.chooseFile} variant="outline" onPress={() => void pickAndUpload('file')} />
+              <AppButton
+                label={strings.employee.takePhoto}
+                variant="outline"
+                onPress={() => void pickAndUpload('camera')}
+              />
+              <AppButton
+                label={strings.employee.chooseFile}
+                variant="outline"
+                onPress={() => void pickAndUpload('file')}
+              />
             </>
           )}
           <AppButton label={strings.common.cancel} variant="text" onPress={() => setUpload(null)} />
         </View>
       </Sheet>
+      <InviteDialog
+        visible={inviting}
+        name={employee?.fullName ?? ''}
+        email={inviteEmail}
+        error={inviteError}
+        busy={inviteBusy}
+        strings={strings}
+        onChange={setInviteEmail}
+        onClose={() => setInviting(false)}
+        onSend={() => void sendAccess()}
+      />
     </View>
+  );
+}
+
+function InviteDialog(props: {
+  visible: boolean;
+  name: string;
+  email: string;
+  error: string | null;
+  busy: boolean;
+  strings: Strings;
+  onChange: (v: string) => void;
+  onClose: () => void;
+  onSend: () => void;
+}) {
+  const { colors } = useTheme();
+  const t = props.strings.employee;
+  return (
+    <Dialog visible={props.visible} onClose={props.onClose}>
+      <AppText weight="heavy" size={17}>
+        {t.inviteTitle(props.name)}
+      </AppText>
+      <AppText size={sample.noteSize} color={colors.secondary}>
+        {t.inviteNote}
+      </AppText>
+      {props.error ? <AppAlert tone="error" text={props.error} /> : null}
+      <AppField
+        label={t.email}
+        value={props.email}
+        onChangeText={props.onChange}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoComplete="email"
+      />
+      <DialogButtons
+        cancel={props.strings.common.cancel}
+        save={t.sendInvitation}
+        onCancel={props.onClose}
+        onSave={props.onSend}
+        disabled={props.busy}
+      />
+    </Dialog>
   );
 }
 
@@ -663,6 +789,9 @@ function DataSection({
   canResend,
   resend,
   onResend,
+  canInvite,
+  inviteDone,
+  onInvite,
 }: {
   employee: Employee;
   strings: Strings;
@@ -670,30 +799,44 @@ function DataSection({
   canResend: boolean;
   resend: 'idle' | 'sending' | 'sent' | 'error';
   onResend: () => void;
+  canInvite: boolean;
+  inviteDone: 'sent' | 'failed' | null;
+  onInvite: () => void;
 }) {
   const { colors } = useTheme();
   const state = accessState(employee);
   return (
     <View>
       <CardBlock>
-      <DataRow label={strings.newEmployee.name} value={employee.fullName} />
-      <DataRow label={strings.employee.phone} value={employee.phone ? formatPhone(employee.phone) : '—'} />
-      <DataRow label={strings.employee.email} value={employee.email ?? '—'} />
-      {employee.workerType !== null ? (
-        <DataRow label={strings.newEmployee.type} value={typeLabel(strings, employee.workerType)} />
-      ) : null}
-      <DataRow label={strings.newEmployee.role} value={roleLabel(strings, employee.role, employee.isSuperAdmin)} />
-      <DataRow
-        label={strings.newEmployee.language}
-        value={employee.language === 'es' ? strings.profile.spanish : strings.profile.english}
-      />
-      <DataRow
-        label={strings.employee.appAccess}
-        value={accessText(employee, strings, locale)}
-        last
-        right={state.kind === 'pending' ? <Chip label={strings.employee.pendingChip} tone="warning" /> : undefined}
-      />
+        <DataRow label={strings.newEmployee.name} value={employee.fullName} />
+        <DataRow label={strings.employee.phone} value={employee.phone ? formatPhone(employee.phone) : '—'} />
+        <DataRow label={strings.employee.email} value={employee.email ?? '—'} />
+        {employee.workerType !== null ? (
+          <DataRow label={strings.newEmployee.type} value={typeLabel(strings, employee.workerType)} />
+        ) : null}
+        <DataRow label={strings.newEmployee.role} value={roleLabel(strings, employee.role, employee.isSuperAdmin)} />
+        <DataRow
+          label={strings.newEmployee.language}
+          value={employee.language === 'es' ? strings.profile.spanish : strings.profile.english}
+        />
+        <DataRow
+          label={strings.employee.appAccess}
+          value={accessText(employee, strings, locale)}
+          last
+          right={state.kind === 'pending' ? <Chip label={strings.employee.pendingChip} tone="warning" /> : undefined}
+        />
       </CardBlock>
+      {canInvite ? (
+        <View style={{ marginTop: 8 }}>
+          <AppButton label={strings.employee.inviteToApp} variant="outline" icon="mail" onPress={onInvite} />
+        </View>
+      ) : null}
+      {inviteDone === 'sent' ? (
+        <AppText size={sample.noteSize} color={colors.secondary} style={{ marginTop: 6 }}>
+          {strings.employee.inviteSent}
+        </AppText>
+      ) : null}
+      {inviteDone === 'failed' ? <AppAlert text={strings.employee.invitationFailed} /> : null}
       {canResend ? (
         <View style={{ marginTop: 8 }}>
           {resend === 'error' ? <AppAlert tone="error" text={strings.employee.errorResend} /> : null}
@@ -715,7 +858,13 @@ function DataSection({
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 6 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 6,
+  },
   who: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
   toggle: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   sectionLabel: { marginTop: 10, marginBottom: 2 },
