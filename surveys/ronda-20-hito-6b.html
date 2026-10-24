@@ -1,0 +1,61 @@
+<title>Ronda 20: cobro por planes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* Una columna de preguntas con la recomendación ya marcada; colores de Cid Clean (C1). */
+:root{--bg:#FBF6EF;--card:#FFFFFF;--fg:#1E2A28;--sc:#6B5F52;--bd:#E8DCC9;--b:#0F766E;--bt:#FFFFFF;--soft:#DDEFEC;
+  --display:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141A19;--card:#1E2725;--fg:#EEF2F1;--sc:#A9B3B1;--bd:#33403D;--b:#4FB8AC;--bt:#0B1514;--soft:#1F3532;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141A19;--card:#1E2725;--fg:#EEF2F1;--sc:#A9B3B1;--bd:#33403D;--b:#4FB8AC;--bt:#0B1514;--soft:#1F3532;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--display);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.w{max-width:640px;margin:0 auto;padding-block:20px 32px;display:flex;flex-direction:column}
+h1{font-size:24px;font-weight:800;margin:0 0 6px;text-wrap:balance}
+h2{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--b);margin:28px 0 4px}
+.i{font-size:14px;color:var(--sc);line-height:1.5;margin:0}
+.ex{background:var(--card);border-radius:20px;padding:14px 16px;margin-top:14px;font-size:13px;line-height:1.5;color:var(--sc)}
+.ex b{color:var(--fg)}
+.q{margin:16px 0 8px;font-size:15px;font-weight:700;line-height:1.4}
+label{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--bd);border-radius:14px;margin-bottom:6px;font-size:14px;line-height:1.45;cursor:pointer;background:var(--card)}
+label:has(input:checked){border-color:var(--b);background:var(--soft)}
+label input{margin-top:3px;accent-color:var(--b)}
+.r{font-size:11px;font-weight:700;color:var(--b);white-space:nowrap;margin-top:2px}
+button{width:100%;min-height:48px;border:0;border-radius:16px;background:var(--b);color:var(--bt);font:700 15px var(--display);margin-top:22px;cursor:pointer}
+button:focus-visible,label:focus-within{outline:2px solid var(--b);outline-offset:2px}
+textarea{width:100%;box-sizing:border-box;min-height:160px;margin-top:12px;border-radius:14px;border:1px solid var(--bd);background:var(--card);color:var(--fg);padding:12px;font:13px var(--display)}
+</style>
+<div class="w">
+<h1>Ronda 20: cobro por planes</h1>
+<p class="i">Lo que falta decidir del hito 6b. Ya está aprobado (D-227) que cada jobsite tiene temporadas con fecha, frecuencia y precio, que todo cambio después de aceptar va con un quote nuevo y que cada mes la app calcula el ingreso esperado con su desglose. Cada pregunta trae marcada mi recomendación; cambia solo lo que no te guste y al final copia el texto al chat.</p>
+<div class="ex"><b>Ejemplo:</b> un club que de noviembre a abril se limpia 6 veces por semana a $2,400/mes y de mayo a octubre 2 veces por semana a $900/mes. Si la temporada cambia el 15 de mayo, mayo se cobra parte con cada precio, según las visitas de cada tramo.</div>
+<div id="s"></div>
+<button id="go" type="button">Generar texto con mis elecciones</button>
+<textarea id="t" readonly hidden></textarea>
+<button id="cp" type="button" hidden>Copiar texto</button>
+</div>
+<script>
+const Q=[
+["Temporadas","unidad","¿En qué unidad se escribe el precio de cada temporada?",["Cada temporada elige: mes, semana o visita (por defecto mes)","Siempre mensual","Siempre por visita"],0],
+["Temporadas","repetir","¿Las temporadas se repiten cada año?",["Sí: se repiten por fechas cada año (por ejemplo 1 nov – 30 abr) hasta que un quote nuevo las cambie","No: cada temporada tiene fechas de un solo año"],0],
+["Temporadas","fin","Una temporada sin fecha de fin:",["Sigue vigente hasta que un quote nuevo la cambie","No se permite: toda temporada lleva fecha de fin"],0],
+["Temporadas","hueco","Entre dos temporadas puede quedar un tramo sin servicio (por ejemplo, el cliente cierra en verano):",["Sí: ese tramo no tiene visitas ni cobro","No: las temporadas siempre van pegadas"],0],
+["Temporadas","inicio","Al empezar un quote:",["Trae una temporada sin fin con la frecuencia del walkthrough, y \"Agregar temporada\" suma otra","Se arman las temporadas desde cero"],0],
+["Cálculo de cada mes","base","El prorrateo por visitas cuenta:",["Las visitas que da la frecuencia del plan (no cambia si mueves gente o días en Semana)","Las visitas guardadas en Semana ese mes"],0],
+["Cálculo de cada mes","regla","Reglas de prorrateo a elegir en cada línea:",["Por visitas (por defecto) o por días del calendario","Solo por visitas"],0],
+["Cálculo de cada mes","cuando","El ingreso esperado del mes:",["Se crea el día 1 y se recalcula mientras nadie lo marque como recibido","Se crea al cerrar el mes, el último día"],0],
+["Cálculo de cada mes","pausa","Si el jobsite se pausa:",["Los días pausados no se cobran (se prorratea)","Se cobra el mes completo igual"],0],
+["Add-ons, descuentos y ajustes","desc","Descuentos:",["Monto fijo o porcentaje, a elegir","Solo monto fijo","Solo porcentaje"],0],
+["Add-ons, descuentos y ajustes","desctax","El descuento se resta:",["Antes del tax (baja lo gravable)","Después del tax"],0],
+["Add-ons, descuentos y ajustes","extra","Precio sugerido de un día extra:",["El precio por visita del plan vigente, y se puede cambiar","Se escribe a mano cada vez"],0],
+["Add-ons, descuentos y ajustes","rige","Un quote nuevo después de aceptar (día extra, add-on o cambio de temporada) rige:",["Desde la fecha que se elija en el quote; los meses anteriores no cambian","Desde el día en que el cliente lo acepta"],0],
+["Dónde se ve","jobsite","En el jobsite:",["Una tarjeta \"Planes y cobro\" con la línea de temporadas y el desglose de cada mes","Solo en Accounting (hito 7)"],0],
+["Dónde se ve","portal","En el portal y el PDF del quote, el cliente ve:",["Cada temporada con fechas, frecuencia y precio, más add-ons, descuentos, tax y el total estimado del primer mes","Solo el precio de cada temporada"],0],
+["Dónde se ve","previos","Jobsites que ya existen (aceptados o previos a la app):",["Su tarifa mensual actual pasa a ser un plan mensual sin fin; los previos a la app se siguen editando directo","Hay que rearmarlos a mano"],0]
+];
+const s=document.getElementById('s');let g='';
+Q.forEach((q,k)=>{if(q[0]!==g){g=q[0];const h=document.createElement('h2');h.textContent=g;s.appendChild(h);}
+const p=document.createElement('p');p.className='q';p.textContent=(k+1)+'. '+q[2];s.appendChild(p);
+q[3].forEach((o,i)=>{const l=document.createElement('label');l.innerHTML='<input type="radio" id="'+q[1]+i+'" name="'+q[1]+'" value="'+i+'"'+(i===q[4]?' checked':'')+'><span style="flex:1"></span>'+(i===q[4]?'<span class="r">Recomendado</span>':'');l.querySelector('span').textContent=o;s.appendChild(l);});});
+document.getElementById('go').onclick=()=>{const ch=[];Q.forEach((q,k)=>{const v=+document.querySelector('input[name="'+q[1]+'"]:checked').value;if(v!==q[4])ch.push((k+1)+'. '+q[2]+' '+q[3][v]);});
+const t=document.getElementById('t');t.value='Ronda 20: acepto todas las recomendaciones'+(ch.length?' salvo estas: '+ch.join(' | '):'.');t.hidden=false;document.getElementById('cp').hidden=false;t.select();};
+document.getElementById('cp').onclick=()=>{const t=document.getElementById('t');t.select();try{if(navigator.clipboard)navigator.clipboard.writeText(t.value).catch(()=>{document.execCommand('copy')});else document.execCommand('copy');}catch(e){}};
+</script>
