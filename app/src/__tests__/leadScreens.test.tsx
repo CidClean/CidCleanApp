@@ -9,6 +9,11 @@ let mockAccess: { isSuperAdmin: boolean; permissions: Set<string> } = { isSuperA
 let mockParams: Record<string, string> = { id: 'l1' };
 
 // Hito 6: el Inicio y el Horario del jobsite leen el schedule; en estas pruebas no hay visitas.
+// Hito 7: el Inicio, el Menú y el jobsite leen cifras de Accounting.
+jest.mock('@/lib/accountingApi', () => ({
+  fetchDashboard: jest.fn(async () => ({ ok: false, reason: 'network' })),
+  fetchRecurring: jest.fn(async () => ({ ok: true, data: [] })),
+}));
 jest.mock('@/lib/scheduleApi', () => {
   const empty = { ok: true, data: null };
   return {

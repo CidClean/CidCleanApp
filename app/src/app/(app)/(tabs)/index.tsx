@@ -29,6 +29,8 @@ import { dayKey } from '@/lib/leadRules';
 import { clockIn, clockOut, fetchMySchedule, fetchWorkPending, type MyVisit, type WorkPending } from '@/lib/scheduleApi';
 import { pickNext, pickToday, weekRange } from '@/lib/scheduleRules';
 import { syncWorkQueue } from '@/lib/workQueue';
+import { fetchDashboard } from '@/lib/accountingApi';
+import { monthKeyOf, money } from '@/lib/accountingRules';
 import { iconStrokeWidth, illustrations, sample, useTheme } from '@/theme';
 
 /** Inicio: el del admin para el Super Admin y quien tenga algún permiso; el del staff para quien no tenga ninguno (D-169). */
@@ -129,7 +131,23 @@ function AdminHome() {
       ].filter(Boolean) as { key: string; text: string; urgent: boolean; tab: string }[])
     : [];
   const nothing = pending.length === 0 && ongoing.length === 0 && workCards.length === 0 && !myToday;
-  const money0 = '$0'; // TEMPORAL: cifras en $0 hasta que Accounting tenga datos (hito 7)
+  // Hito 7: cifras reales del mes (ingreso esperado y profit sobre lo esperado, D-215) con el dashboard global.
+  // Sin datos, $0.00 (D-225). Nunca hay horas contra el tope de 32 h aquí (D-223).
+  const seesFigures = showsMonthFigures(access);
+  const [figures, setFigures] = useState<{ income: number; profit: number } | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      if (!seesFigures) return;
+      let cancelled = false;
+      const m = monthKeyOf(new Date());
+      void fetchDashboard({ from: m, to: m }, null).then((r) => {
+        if (!cancelled && r.ok) setFigures({ income: r.data.expected, profit: r.data.profit });
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [seesFigures]),
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -137,17 +155,17 @@ function AdminHome() {
         <Greeting name={profile?.fullName ?? ''} avatar />
         {/* D-223 (estilo C): mosaico de 2 columnas; D-111 y D-131: pendientes por urgencia, solo de las áreas con permiso. */}
         <Bento>
-          {showsMonthFigures(access) ? (
+          {seesFigures ? (
             <Card tone="brand" wide style={[styles.mainCard, illustrations ? styles.mainCardArt : null]}>
               <View style={{ gap: 6, flexShrink: 1, paddingBottom: illustrations ? 18 : 0 }}>
                 <AppText size={13} color="#FFFFFF" style={{ opacity: 0.85 }}>
                   {strings.home.income}
                 </AppText>
                 <AppText weight="heavy" size={32} color="#FFFFFF">
-                  {money0}
+                  {money(figures?.income ?? 0)}
                 </AppText>
                 <AppText size={13} color="#FFFFFF" style={{ opacity: 0.85 }}>
-                  {strings.home.profitLine(money0)}
+                  {strings.home.profitLine(money(figures?.profit ?? 0))}
                 </AppText>
               </View>
               <OfficeArt />

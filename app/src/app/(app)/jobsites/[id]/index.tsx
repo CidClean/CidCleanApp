@@ -33,6 +33,7 @@ import {
 } from "@/components/illustrations";
 import { useSalesStrings } from "@/i18n/useSalesStrings";
 import { JobsiteExtras } from "@/components/quotes/JobsiteExtras";
+import { AccountMonthCard } from "@/components/accounting/AccountMonthCard";
 import { UsDateField } from "@/components/UsDateField";
 import type { ClientsStrings } from "@/i18n/clients";
 import { useClientsStrings } from "@/i18n/useClientsStrings";
@@ -259,6 +260,8 @@ export default function JobsiteScreen() {
                   ) : null}
                 </Bento>
                 <View style={{ height: 12 }} />
+                {/* Orden 27: lo del mes de la cuenta, si quien mira ve tarifas y el dashboard por cuenta. */}
+                <AccountMonthCard jobsiteId={jobsite.id} />
               </>
             ) : null}
             {tab === "summary" ? (

@@ -12,6 +12,10 @@ import { useStrings } from '@/i18n/useStrings';
 import { roleLabel } from '@/lib/employeeLabels';
 import type { RoleKey } from '@/lib/employeeRules';
 import { fetchEmployees } from '@/lib/employeesApi';
+import { fetchDashboard } from '@/lib/accountingApi';
+import { monthKeyOf, money } from '@/lib/accountingRules';
+import { useAccountingStrings } from '@/i18n/useAccountingStrings';
+import { showsMonthFigures } from '@/lib/visibility';
 import { usePermissions, useSession } from '@/lib/session';
 import { visibleMenuItems, type MenuKey } from '@/lib/visibility';
 import { iconStrokeWidth, illustrations, radius, useTheme } from '@/theme';
@@ -32,6 +36,23 @@ export default function MenuScreen() {
   const [confirming, setConfirming] = useState(false);
   const [activeEmployees, setActiveEmployees] = useState<number | null>(null);
   const seesEmployees = items.includes('employees');
+  // D-226: dato vivo de Accounting, "Profit del mes", solo con el dashboard global.
+  const a = useAccountingStrings();
+  const seesProfit = items.includes('accounting') && showsMonthFigures(access);
+  const [profit, setProfit] = useState<number | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      if (!seesProfit) return;
+      let cancelled = false;
+      const m = monthKeyOf(new Date());
+      void fetchDashboard({ from: m, to: m }, null).then((r) => {
+        if (!cancelled && r.ok) setProfit(r.data.profit);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [seesProfit]),
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -52,6 +73,7 @@ export default function MenuScreen() {
     else if (key === 'settings') router.push('/settings');
     else if (key === 'history') router.push('/history');
     else if (key === 'scheduleWork') router.push('/schedule');
+    else if (key === 'accounting') router.push('/accounting');
     else router.push({ pathname: '/section/[key]', params: { key } });
   }
 
@@ -104,7 +126,7 @@ export default function MenuScreen() {
             </Card>
           ) : null}
           {items.includes('employees') ? tile('employees', 'plain', <PeopleIcon />, activeEmployees === null ? null : strings.menu.activeEmployees(activeEmployees)) : null}
-          {items.includes('accounting') ? tile('accounting', 'dark', <ChartIcon />, null) : null}
+          {items.includes('accounting') ? tile('accounting', 'dark', <ChartIcon />, profit === null ? null : `${a.profitMonth} · ${money(profit)}`) : null}
           {tile('notifications', 'attention', <BellIcon />, null)}
           {items.includes('history') ? tile('history', 'plain', <ClockIcon />, strings.menu.historyLine) : null}
           {items.includes('settings') ? (
