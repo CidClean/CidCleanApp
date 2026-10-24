@@ -87,3 +87,16 @@ PDF del resumen del walkthrough. `verify_jwt` activado. Recibe `walkthrough_id`,
 ```
 npx supabase@latest functions deploy walkthrough-pdf --project-ref <ref> --use-api
 ```
+
+## Hito 7 (órdenes 26 y 28): por desplegar
+
+- `send-quote` y `quote-portal` (cambios de la orden 26, D-238): el PDF de un quote de extra dice "Total" (no "Total mensual") y muestra la fecha del servicio en vez de la frecuencia; el snapshot guarda `extra` y `service_date`; el aviso a quien envió un extra dice "Cuentas y el jobsite". Sin desplegar, todo sigue funcionando: el portal ya toma `extra` y `service_date` de la base (`portal_quote`), y al aceptar un extra la base no crea jobsite (la función no copia el SOW porque `jobsite_id` llega en null).
+- `send-notifications` (nueva, orden 28): manda por correo los avisos, desde `no-reply@auth.cidclean.com` con `RESEND_API_KEY` (la misma llave de las funciones, limitada a `auth.cidclean.com`). Solo la llama la service role (compara el Bearer con `SUPABASE_SERVICE_ROLE_KEY`). Cada llamada manda los inmediatos y, desde las 8:00 AM de Naples, el resumen diario de lo acumulado (un correo por persona). Los textos salen de la base (`notification_text`). Un aviso de más de 1 día (o 2 días en el resumen) ya no se manda por correo: queda solo en la app.
+- Cron del correo: `supabase/scripts/notificaciones-cron.sql` (no aplicado): habilita `pg_net`, lee la service role de Vault (`cidclean_service_role_key`, guardarla antes) y llama a `send-notifications` cada 5 minutos.
+- Crons ya aplicados por las migraciones: `cidclean-accounting` (`20 10 * * *`, `generate_accounting()`) y `cidclean-avisos` (`*/15 * * * *`, `notifications_scan()`, solo crea avisos en la base; no manda correos).
+
+```
+npx supabase@latest functions deploy send-quote --project-ref <ref> --use-api
+npx supabase@latest functions deploy quote-portal --project-ref <ref> --use-api --no-verify-jwt
+npx supabase@latest functions deploy send-notifications --project-ref <ref> --use-api
+```

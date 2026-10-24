@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -10,6 +11,7 @@ import { Sheet } from '@/components/Sheet';
 import { SignOutDialog } from '@/components/SignOutDialog';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
+import { useNotificationsStrings } from '@/i18n/useNotificationsStrings';
 import { useGoBack } from '@/lib/navigation';
 import type { Locale } from '@/i18n';
 import { useSession } from '@/lib/session';
@@ -19,6 +21,8 @@ import { iconStrokeWidth, sample, useTheme } from '@/theme';
 /** Mi perfil (D-166, D-222): Nombre, Correo (solo lectura), Idioma, Tema y Cerrar sesión con la ventana al centro. */
 export default function ProfileScreen() {
   const { colors, status, brand } = useTheme();
+  const router = useRouter();
+  const nt = useNotificationsStrings();
   const goBack = useGoBack();
   const strings = useStrings();
   const { profile, locale, setLanguage } = useSession();
@@ -69,6 +73,8 @@ export default function ProfileScreen() {
         ) : null}
         {/* D-222 b: tema por teléfono, junto a Idioma. */}
         <ListRow title={strings.profile.theme} detail={themeLabel(theme)} chevron onPress={() => setPickingTheme(true)} />
+        {/* D-085, D-215: canales de los avisos. */}
+        <ListRow title={nt.settingsRow} chevron onPress={() => router.push('/notifications/settings')} />
         <Pressable accessibilityRole="button" onPress={() => setConfirming(true)} style={[styles.signOutRow, { borderBottomWidth: 0 }]}>
           <AppText weight="medium">{strings.profile.signOut}</AppText>
           <Icon name="chevron-right" size={18} strokeWidth={iconStrokeWidth} color={colors.text} />

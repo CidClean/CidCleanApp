@@ -15,6 +15,8 @@ import { fetchEmployees } from '@/lib/employeesApi';
 import { fetchDashboard } from '@/lib/accountingApi';
 import { monthKeyOf, money } from '@/lib/accountingRules';
 import { useAccountingStrings } from '@/i18n/useAccountingStrings';
+import { useNotificationsStrings } from '@/i18n/useNotificationsStrings';
+import { fetchUnreadCount } from '@/lib/notificationsApi';
 import { showsMonthFigures } from '@/lib/visibility';
 import { usePermissions, useSession } from '@/lib/session';
 import { visibleMenuItems, type MenuKey } from '@/lib/visibility';
@@ -22,9 +24,9 @@ import { iconStrokeWidth, illustrations, radius, useTheme } from '@/theme';
 
 /**
  * Menú (D-134, D-222, D-226; muestra surveys/estilo-c1-pantallas/Menu.html): perfil arriba, mosaico de tarjetas
- * con icono ilustrado y un dato vivo (Schedule y Work grande en marca; Empleados, Accounting, Notificaciones e
- * Historial), Ajustes en fila y Cerrar sesión como botón al final. Solo los destinos con permiso. Un dato que aún
- * no existe (visitas de la semana, profit, avisos sin leer) no se muestra.
+ * con icono ilustrado y un dato vivo (Schedule y Work grande en marca; Empleados, Accounting con el Profit del mes,
+ * Notificaciones con los sin leer, e Historial), Ajustes en fila y Cerrar sesión como botón al final. Solo los
+ * destinos con permiso. Un dato que aún no existe (visitas de la semana) no se muestra.
  */
 export default function MenuScreen() {
   const router = useRouter();
@@ -40,6 +42,18 @@ export default function MenuScreen() {
   const a = useAccountingStrings();
   const seesProfit = items.includes('accounting') && showsMonthFigures(access);
   const [profit, setProfit] = useState<number | null>(null);
+  // Orden 28: contador de avisos sin leer (muestra D-226: "3 sin leer").
+  const nt = useNotificationsStrings();
+  const [unread, setUnread] = useState<number | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      void fetchUnreadCount().then((n) => !cancelled && setUnread(n));
+      return () => {
+        cancelled = true;
+      };
+    }, []),
+  );
   useFocusEffect(
     useCallback(() => {
       if (!seesProfit) return;
@@ -74,7 +88,7 @@ export default function MenuScreen() {
     else if (key === 'history') router.push('/history');
     else if (key === 'scheduleWork') router.push('/schedule');
     else if (key === 'accounting') router.push('/accounting');
-    else router.push({ pathname: '/section/[key]', params: { key } });
+    else if (key === 'notifications') router.push('/notifications');
   }
 
   const name = profile?.fullName ?? '';
@@ -127,7 +141,7 @@ export default function MenuScreen() {
           ) : null}
           {items.includes('employees') ? tile('employees', 'plain', <PeopleIcon />, activeEmployees === null ? null : strings.menu.activeEmployees(activeEmployees)) : null}
           {items.includes('accounting') ? tile('accounting', 'dark', <ChartIcon />, profit === null ? null : `${a.profitMonth} · ${money(profit)}`) : null}
-          {tile('notifications', 'attention', <BellIcon />, null)}
+          {tile('notifications', 'attention', <BellIcon />, unread ? nt.unread(unread) : null)}
           {items.includes('history') ? tile('history', 'plain', <ClockIcon />, strings.menu.historyLine) : null}
           {items.includes('settings') ? (
             <Card wide onPress={() => open('settings')} accessibilityLabel={strings.nav.settings} style={styles.row}>
