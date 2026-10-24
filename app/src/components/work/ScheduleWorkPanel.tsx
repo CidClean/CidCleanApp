@@ -122,7 +122,7 @@ export function ScheduleWorkPanel({
   async function share() {
     setNotice(null);
     const html = scheduleHtml("employee", visits ?? [], days, {
-      title: t.pdfTitle,
+      title: range === 'month' ? t.pdfTitleMonth : t.pdfTitle,
       range: rangeTitle,
       employee: t.employee,
       unstaffed: t.unstaffed,
@@ -131,7 +131,7 @@ export function ScheduleWorkPanel({
       dayTitle,
       hours: t.hours,
     });
-    const r = await sharePdf(html, t.pdfTitle);
+    const r = await sharePdf(html, range === 'month' ? t.pdfTitleMonth : t.pdfTitle);
     if (r === "unavailable") setNotice(t.shareSoon);
     else if (r === "error") setNotice(t.shareError);
   }

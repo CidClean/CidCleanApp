@@ -1,5 +1,5 @@
 import type { ScheduleVisit } from './scheduleApi';
-import { abbreviate, copyWeek, shiftTable, tableDays, dayRows, employeeRows, firstHour, hourLabel, placeDay, sameCells, scheduleHtml, shiftAnchor, toggleCell, viewDays } from './scheduleViews';
+import { abbreviate, copyWeek, shiftTable, tableDays, weekBlocks, dayRows, employeeRows, firstHour, hourLabel, placeDay, sameCells, scheduleHtml, shiftAnchor, toggleCell, viewDays } from './scheduleViews';
 
 const v = (id: string, day: string, h: number, minutes: number, staff: string[], jobsite = 'Break TAX Office'): ScheduleVisit => {
   const [y, m, d] = day.split('-').map(Number);
@@ -120,5 +120,18 @@ describe('tabla Empleado → días por semana o mes (D-235)', () => {
     expect(d).toHaveLength(31);
     expect(shiftTable('month', anchor, 1).getMonth()).toBe(10);
     expect(shiftTable('week', anchor, -1).getDate()).toBe(17);
+  });
+});
+
+describe('mes en bloques semanales (D-236)', () => {
+  it('octubre 2026: 5 bloques de domingo a sábado, días fuera del mes marcados', () => {
+    const b = weekBlocks(tableDays('month', new Date(2026, 9, 24)));
+    expect(b).toHaveLength(5);
+    expect(b[0].days[0]).toBe('2026-09-27');
+    expect(b[0].inRange).toEqual([false, false, false, false, true, true, true]);
+    expect(b[4].days[6]).toBe('2026-10-31');
+  });
+  it('una semana es un solo bloque', () => {
+    expect(weekBlocks(tableDays('week', new Date(2026, 9, 24)))).toHaveLength(1);
   });
 });

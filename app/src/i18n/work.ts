@@ -106,6 +106,7 @@ export const workEs = {
   shareSoon: 'Compartir llega con la versión 1.3.0 de la app.', // D-200 (en el APK 1.2.0 no está el módulo)
   shareError: 'No se pudo compartir. Inténtalo otra vez.', // D-200
   pdfTitle: 'Horario semanal', // D-200: título del PDF
+  pdfTitleMonth: 'Horario del mes', // D-200 (D-236)
   calDay: 'Día', // APROBADO (D-231)
   cal3: '3 días', // APROBADO (D-231)
   calWeek: 'Semana', // APROBADO (D-231)
@@ -237,6 +238,7 @@ export const workEn: WorkStrings = {
   shareSoon: 'Sharing comes with version 1.3.0 of the app.',
   shareError: "Couldn't share. Try again.",
   pdfTitle: 'Weekly schedule',
+  pdfTitleMonth: 'Monthly schedule',
   calDay: 'Day',
   cal3: '3 days',
   calWeek: 'Week',
