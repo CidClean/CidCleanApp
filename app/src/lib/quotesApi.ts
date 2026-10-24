@@ -133,7 +133,9 @@ export async function fetchSuggestions(): Promise<Suggestions> {
 export type QuotePending = {
   kind: 'accepted' | 'rejected' | 'changes_requested' | 'expiring';
   versionId: string;
-  leadId: string;
+  /** null en un quote de extra (va al jobsite, D-238). */
+  leadId: string | null;
+  jobsiteId: string | null;
   company: string;
   site: string;
 };
@@ -142,10 +144,11 @@ export async function fetchQuotePending(): Promise<QuotePending[]> {
   try {
     const { data, error } = await supabase.rpc('home_quote_pending');
     if (error) return [];
-    return ((data ?? []) as { kind: QuotePending['kind']; version_id: string; lead_id: string; company: string; site: string }[]).map((r) => ({
+    return ((data ?? []) as { kind: QuotePending['kind']; version_id: string; lead_id: string | null; jobsite_id: string | null; company: string; site: string }[]).map((r) => ({
       kind: r.kind,
       versionId: r.version_id,
-      leadId: r.lead_id,
+      leadId: r.lead_id ?? null,
+      jobsiteId: r.jobsite_id ?? null,
       company: r.company,
       site: r.site,
     }));
@@ -160,6 +163,87 @@ export async function fetchQuoteFileUrl(path: string): Promise<ApiResult<{ url: 
     const signed = await supabase.storage.from('quote-files').createSignedUrl(path, 60);
     if (signed.error || !signed.data) return { ok: false, reason: 'forbidden' };
     return { ok: true, data: { url: signed.data.signedUrl } };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+// --- Quote de extra desde el jobsite (hito 7, D-238; migración 20261027000002) --------------------------------
+
+export type ExtraQuote = SiteQuote & { jobsiteId: string; jobsite: string; company: string; language: 'es' | 'en' };
+
+/** "Nuevo quote" del jobsite: el borrador sin enviar que ya exista o uno nuevo. Devuelve el id del quote. */
+export async function createExtraQuote(jobsiteId: string): Promise<ApiResult<string>> {
+  try {
+    const { data, error } = await supabase.rpc('create_extra_quote', { p_jobsite: jobsiteId });
+    if (error) return { ok: false, reason: failureFromCode(error.code) };
+    return { ok: true, data: String(data) };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+export async function fetchExtraQuote(quoteId: string): Promise<ApiResult<ExtraQuote>> {
+  try {
+    const { data, error } = await supabase.rpc('get_extra_quote', { p_quote: quoteId });
+    if (error) return { ok: false, reason: failureFromCode(error.code) };
+    const d = (data ?? {}) as Record<string, unknown>;
+    return {
+      ok: true,
+      data: {
+        quoteId: String(d.quote_id),
+        walkthroughClosed: true,
+        versions: ((d.versions ?? []) as Record<string, unknown>[]).map(toVersion),
+        frequency: null,
+        address: (d.address as string | null) ?? null,
+        jobsiteId: String(d.jobsite_id),
+        jobsite: String(d.jobsite ?? ''),
+        company: String(d.company ?? ''),
+        language: d.language === 'es' ? 'es' : 'en',
+      },
+    };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+export async function setQuoteServiceDate(versionId: string, date: string | null): Promise<ApiResult<null>> {
+  try {
+    const { error } = await supabase.rpc('set_quote_service_date', { p_version: versionId, p_date: date });
+    if (error) return { ok: false, reason: failureFromCode(error.code) };
+    return { ok: true, data: null };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+export type ExtraQuoteRow = {
+  quoteId: string;
+  version: string;
+  status: QuoteStatus;
+  total: number | null;
+  serviceDate: string | null;
+  sentAt: string | null;
+  createdAt: string;
+};
+
+/** Quotes de extra del jobsite con el estado de su última versión. */
+export async function fetchJobsiteExtras(jobsiteId: string): Promise<ApiResult<ExtraQuoteRow[]>> {
+  try {
+    const { data, error } = await supabase.rpc('jobsite_extra_quotes', { p_jobsite: jobsiteId });
+    if (error) return { ok: false, reason: failureFromCode(error.code) };
+    return {
+      ok: true,
+      data: ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+        quoteId: String(r.quote_id),
+        version: String(r.version),
+        status: r.status as QuoteStatus,
+        total: r.total === null || r.total === undefined ? null : Number(r.total),
+        serviceDate: (r.service_date as string | null) ?? null,
+        sentAt: (r.sent_at as string | null) ?? null,
+        createdAt: String(r.created_at),
+      })),
+    };
   } catch {
     return { ok: false, reason: 'network' };
   }

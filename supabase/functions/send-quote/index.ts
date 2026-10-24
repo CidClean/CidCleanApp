@@ -54,7 +54,10 @@ Deno.serve(async (req) => {
     const ruta = `${p.quote_id}/${p.version_id}/quote-${p.version}.pdf`;
     const up = await servicio.storage.from('quote-files').upload(ruta, pdf, { contentType: 'application/pdf', upsert: true });
     if (up.error) return responder(500, { error: 'server_error' });
-    const snapshot = { language: l, company: p.company, site: p.site, address: p.address, frequency: p.frequency };
+    const snapshot = {
+      language: l, company: p.company, site: p.site, address: p.address, frequency: p.frequency,
+      extra: p.extra === true, service_date: p.service_date ?? null,
+    };
     const { data: c, error: e2 } = await servicio.rpc('confirm_send_quote', {
       p_version: p.version_id, p_actor: actor, p_pdf_path: ruta, p_snapshot: snapshot,
     });

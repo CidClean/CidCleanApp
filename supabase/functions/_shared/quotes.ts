@@ -67,6 +67,9 @@ export const T = {
     subtotal: 'Subtotal',
     tax: (rate: number) => `Tax (${rate}%)`,
     total: 'Total mensual',
+    // D-238 (D-200): un quote de extra no es mensual.
+    totalOnce: 'Total',
+    serviceDate: 'Fecha del servicio',
     date: 'Fecha',
     validUntil: 'Válida hasta',
     frequency: 'Frecuencia',
@@ -90,6 +93,8 @@ export const T = {
     subtotal: 'Subtotal',
     tax: (rate: number) => `Tax (${rate}%)`,
     total: 'Monthly total',
+    totalOnce: 'Total',
+    serviceDate: 'Service date',
     date: 'Date',
     validUntil: 'Valid until',
     frequency: 'Frequency',
@@ -114,12 +119,14 @@ export const DECISION = {
     rejected: (c: string, s: string) => `${c} rechazó el quote de ${s}`,
     changes_requested: (c: string, s: string) => `${c} pidió cambios al quote de ${s}`,
     body: (v: string) => `Versión ${v}. Míralo en la app: Pipeline, el lead y la pestaña Sitios.`,
+    bodyExtra: (v: string) => `Versión ${v}. Míralo en la app: Cuentas y el jobsite.`,
   },
   en: {
     accepted: (c: string, s: string) => `${c} accepted the quote for ${s}`,
     rejected: (c: string, s: string) => `${c} rejected the quote for ${s}`,
     changes_requested: (c: string, s: string) => `${c} requested changes to the quote for ${s}`,
     body: (v: string) => `Version ${v}. See it in the app: Pipeline, the lead and the Sites tab.`,
+    bodyExtra: (v: string) => `Version ${v}. See it in the app: Accounts and the jobsite.`,
   },
 };
 
@@ -150,11 +157,19 @@ export function correoCodigo(l: Lang, code: string) {
   return { subject: t.codeSubject(code), html, text: `${t.codeBody(code)}\n\n${t.codeIgnore}` };
 }
 
-export function correoDecision(l: Lang, kind: 'accepted' | 'rejected' | 'changes_requested', company: string, site: string, version: string) {
+export function correoDecision(
+  l: Lang,
+  kind: 'accepted' | 'rejected' | 'changes_requested',
+  company: string,
+  site: string,
+  version: string,
+  extra = false,
+) {
   const t = DECISION[l];
   const subject = t[kind](company, site);
-  const html = plantilla(`<p style="margin:0 0 8px;font-weight:600">${escaparHtml(subject)}</p><p style="margin:0;color:#6B6B6B">${escaparHtml(t.body(version))}</p>`);
-  return { subject, html, text: `${subject}\n${t.body(version)}` };
+  const body = extra ? t.bodyExtra(version) : t.body(version);
+  const html = plantilla(`<p style="margin:0 0 8px;font-weight:600">${escaparHtml(subject)}</p><p style="margin:0;color:#6B6B6B">${escaparHtml(body)}</p>`);
+  return { subject, html, text: `${subject}\n${body}` };
 }
 
 /** Envía un correo con la llave de envío de mail.cidclean.com. Devuelve si Resend lo aceptó. */
@@ -215,6 +230,9 @@ export type PdfData = {
   total: number;
   sent_at: string;
   expires_at: string;
+  /** Quote de extra (D-238): total de una vez y fecha del servicio en vez de la frecuencia. */
+  extra?: boolean;
+  service_date?: string | null;
 };
 
 /** PDF de una página (D-209): sitio, servicios, add-ons, descuentos, tax, total mensual, vigencia, versión y frecuencia. */
@@ -255,7 +273,9 @@ export async function pdfQuote(d: PdfData): Promise<Uint8Array> {
   const info: [string, string][] = [
     [t.date, fecha(d.sent_at, d.language)],
     [t.validUntil, fecha(d.expires_at, d.language)],
-    [t.frequency, frecuencia(d.frequency, d.language)],
+    d.extra
+      ? [t.serviceDate, d.service_date ? fecha(`${d.service_date}T12:00:00Z`, d.language) : '']
+      : [t.frequency, frecuencia(d.frequency, d.language)],
   ];
   for (const [k, v] of info) {
     txt(k, M, y, 10, fonts.regular, SECONDARY);
@@ -298,7 +318,7 @@ export async function pdfQuote(d: PdfData): Promise<Uint8Array> {
   }
   page.drawLine({ start: { x: W - M - 250, y: y + 10 }, end: { x: W - M, y: y + 10 }, thickness: 0.5, color: BORDER });
   y -= 10;
-  txt(t.total, W - M - 250, y, 13, fonts.medium);
+  txt(d.extra ? t.totalOnce : t.total, W - M - 250, y, 13, fonts.medium);
   right(money(d.total), y, 16, fonts.medium, BRAND);
 
   txt(`${t.footer} · ${t.version} ${d.version}`, M, 36, 9, fonts.regular, SECONDARY);

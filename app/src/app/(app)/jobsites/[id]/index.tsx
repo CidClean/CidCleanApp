@@ -32,6 +32,7 @@ import {
   PeopleIcon,
 } from "@/components/illustrations";
 import { useSalesStrings } from "@/i18n/useSalesStrings";
+import { JobsiteExtras } from "@/components/quotes/JobsiteExtras";
 import { UsDateField } from "@/components/UsDateField";
 import type { ClientsStrings } from "@/i18n/clients";
 import { useClientsStrings } from "@/i18n/useClientsStrings";
@@ -268,6 +269,13 @@ export default function JobsiteScreen() {
                 margin={margin}
                 day={day}
                 onChanged={load}
+              />
+            ) : null}
+            {/* D-238: quotes de extra de la cuenta y "Nuevo quote". */}
+            {tab === "summary" ? (
+              <JobsiteExtras
+                jobsiteId={jobsite.id}
+                terminated={jobsite.status === "terminated"}
               />
             ) : null}
             {tab === "documents" ? (

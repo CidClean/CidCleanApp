@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
         console.error('copiar SOW', e);
       }
       try {
-        if (d.sender_email) await enviarCorreo(d.sender_email, correoDecision(lang(d.sender_language), kind, d.company, d.site, d.version));
+        if (d.sender_email) await enviarCorreo(d.sender_email, correoDecision(lang(d.sender_language), kind, d.company, d.site, d.version, d.extra === true));
       } catch (e) {
         console.error('aviso a quien envió', e);
       }

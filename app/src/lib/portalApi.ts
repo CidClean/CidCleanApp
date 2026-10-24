@@ -33,6 +33,9 @@ export type PortalQuote = {
   expires_at: string;
   sow_opened: boolean;
   terms_version: number | null;
+  /** Quote de extra de una cuenta (D-238) y su fecha del servicio (AAAA-MM-DD). */
+  extra?: boolean;
+  service_date?: string | null;
   reasons: { id: string; label: string }[];
   decision: { kind: 'accepted' | 'rejected' | 'changes_requested'; name: string | null; at: string } | null;
 };

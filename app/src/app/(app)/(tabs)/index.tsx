@@ -95,7 +95,8 @@ function AdminHome() {
     title: q.home[r.kind](r.company),
     detail: q.home.detail(r.site),
     urgent: r.kind === 'expiring',
-    leadId: r.leadId as string | undefined,
+    leadId: r.leadId ?? undefined,
+    jobsiteId: r.jobsiteId ?? undefined,
   }));
   const pending = sortPending([...quoteRows, ...salesPendingRows(access, sales, s)]);
   const salesRows = salesPendingRows(access, sales, s);
@@ -173,7 +174,11 @@ function AdminHome() {
               tone={row.urgent ? 'attention' : 'plain'}
               accessibilityLabel={row.title}
               onPress={() =>
-                'leadId' in row && row.leadId ? router.push({ pathname: '/leads/[id]', params: { id: row.leadId } }) : router.navigate('/pipeline')
+                'leadId' in row && row.leadId
+                  ? router.push({ pathname: '/leads/[id]', params: { id: row.leadId } })
+                  : 'jobsiteId' in row && row.jobsiteId
+                    ? router.push({ pathname: '/jobsites/[id]', params: { id: row.jobsiteId } })
+                    : router.navigate('/pipeline')
               }
               style={{ gap: 10 }}
             >

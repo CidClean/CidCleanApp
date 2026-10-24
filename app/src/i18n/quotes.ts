@@ -20,6 +20,16 @@ export const quotesEs = {
   // Pestaña Sitios del lead
   sectionTitle: 'Quotes', // D-208
   siteQuote: (site: string) => `Quote · ${site}`, // D-208 (muestra ronda 9: "Quote · Gulf Coast Dental")
+  // Quote de extra desde el jobsite (hito 7, D-238)
+  extraTitle: (site: string) => `Quote de extra · ${site}`, // D-200
+  newExtra: 'Nuevo quote', // APROBADO (D-238)
+  extrasTitle: 'Quotes de extra', // D-200
+  noExtras: 'Sin quotes de extra.', // D-200
+  extraRow: (version: string) => `Extra · versión ${version}`, // D-200
+  totalOnce: 'Total', // D-200
+  serviceDate: 'Fecha del servicio', // D-200 (D-238)
+  serviceDateNote: 'Si el cliente lo acepta, se suma al ingreso esperado del mes del servicio; sin fecha, al mes en que lo acepte.', // D-200
+  errorNewExtra: 'No se pudo crear el quote. Inténtalo otra vez.', // D-200
   noQuoteYet: 'Sin quote', // D-208
   needWalkthrough: 'El quote se arma cuando el walkthrough del sitio esté cerrado.', // D-208
   version: (v: string) => `Versión ${v}`, // APROBADO (muestra ronda 4: "Versión 1.0")
@@ -111,6 +121,15 @@ export const quotesEn: QuoteStrings = {
   },
   sectionTitle: 'Quotes',
   siteQuote: (site: string) => `Quote · ${site}`,
+  extraTitle: (site: string) => `Extra quote · ${site}`,
+  newExtra: 'New quote',
+  extrasTitle: 'Extra quotes',
+  noExtras: 'No extra quotes.',
+  extraRow: (version: string) => `Extra · version ${version}`,
+  totalOnce: 'Total',
+  serviceDate: 'Service date',
+  serviceDateNote: "If the client accepts it, it's added to the expected income of the service month; with no date, to the month it's accepted.",
+  errorNewExtra: "The quote couldn't be created. Try again.",
   noQuoteYet: 'No quote',
   needWalkthrough: "The quote is built once the site's walkthrough is closed.",
   version: (v: string) => `Version ${v}`,
@@ -212,6 +231,10 @@ export const portalEs = {
   subtotal: 'Subtotal', // APROBADO (muestra ronda 4)
   tax: (rate: string) => `Tax ${rate}%`, // APROBADO (muestra ronda 4)
   total: 'Total mensual', // APROBADO (muestra ronda 4)
+  // Quote de extra (D-238): un servicio de una vez, no una cuota mensual.
+  extraFee: 'Total del servicio', // D-200
+  totalOnce: 'Total', // D-200
+  serviceDate: (d: string) => `Fecha del servicio: ${d}`, // D-200
   frequency: 'Frecuencia', // D-208
   site: 'Sitio', // APROBADO (muestra ronda 4)
   version: 'Versión', // APROBADO (muestra ronda 4)
@@ -285,6 +308,9 @@ export const portalEn: PortalStrings = {
   subtotal: 'Subtotal',
   tax: (rate: string) => `Tax ${rate}%`,
   total: 'Monthly total',
+  extraFee: 'Service total',
+  totalOnce: 'Total',
+  serviceDate: (d: string) => `Service date: ${d}`,
   frequency: 'Frequency',
   site: 'Site',
   version: 'Version',

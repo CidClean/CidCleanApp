@@ -59,7 +59,7 @@ describe('armado', () => {
 const v = (o: Partial<QuoteVersion>): QuoteVersion => ({
   id: 'v', version: '1.0', minor: 0, status: 'draft', lines: L({}), taxRate: 6, validDays: 30, totals: null, contactEmail: 'c@x.com',
   recipients: [], hasSow: false, sowPath: null, pdfPath: null, sentAt: null, sentBy: null, expiresAt: null, viewedAt: null, decidedAt: null,
-  decision: null, ...o,
+  decision: null, serviceDate: null, ...o,
 });
 
 describe('acciones según estado y permisos (D-007, D-209)', () => {

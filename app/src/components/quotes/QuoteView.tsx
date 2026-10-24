@@ -23,6 +23,8 @@ export type QuoteViewData = {
   /** Vencimiento; null en la vista previa de un borrador (se calcula al enviar). */
   expiresAt: string | null;
   validDays: number;
+  /** Quote de extra (D-238): total de una vez y fecha del servicio (AAAA-MM-DD) en vez de cuota mensual. */
+  extra?: { serviceDate: string | null };
 };
 
 /**
@@ -66,7 +68,7 @@ export function QuoteView({ data, t, language }: { data: QuoteViewData; t: Porta
         {data.site === data.address ? data.site : `${data.site} · ${data.address}`}
       </AppText>
       <AppText size={sample.noteSize} color={colors.secondary}>
-        {t.monthly}
+        {data.extra ? t.extraFee : t.monthly}
       </AppText>
       <AppText weight="medium" size={sample.titleSize} style={{ lineHeight: 31 }}>
         {money(fee)}
@@ -74,7 +76,12 @@ export function QuoteView({ data, t, language }: { data: QuoteViewData; t: Porta
       <AppText size={sample.noteSize} color={colors.secondary} style={{ marginBottom: 6 }}>
         {valid}
       </AppText>
-      {data.frequency ? (
+      {data.extra?.serviceDate ? (
+        <AppText size={sample.noteSize} style={{ marginBottom: 10 }}>
+          {t.serviceDate(shortDate(`${data.extra.serviceDate}T12:00:00`, language))}
+        </AppText>
+      ) : null}
+      {!data.extra && data.frequency ? (
         <AppText size={sample.noteSize} style={{ marginBottom: 10 }}>
           {frequencyText(data.frequency, language)}
         </AppText>
@@ -92,7 +99,7 @@ export function QuoteView({ data, t, language }: { data: QuoteViewData; t: Porta
         <Row label={t.subtotal} value={money(data.subtotal)} />
         {data.discount > 0 ? <Row label={t.discounts} value={'−' + money(data.discount)} /> : null}
         <Row label={t.tax(String(data.taxRate))} value={money(data.tax)} />
-        <Row label={t.total} value={money(data.total)} last strong />
+        <Row label={data.extra ? t.totalOnce : t.total} value={money(data.total)} last strong />
       </View>
     </View>
   );

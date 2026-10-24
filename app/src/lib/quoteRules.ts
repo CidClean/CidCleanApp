@@ -47,6 +47,8 @@ export type QuoteVersion = {
   viewedAt: string | null;
   decidedAt: string | null;
   decision: QuoteDecision | null;
+  /** Quote de extra (D-238): fecha del servicio, AAAA-MM-DD. */
+  serviceDate: string | null;
 };
 
 export type SiteQuote = {
@@ -241,6 +243,7 @@ export function toVersion(r: Record<string, unknown>): QuoteVersion {
     pdfPath: (r.pdf_path as string | null) ?? null,
     sentAt: (r.sent_at as string | null) ?? null,
     sentBy: (r.sent_by as string | null) ?? null,
+    serviceDate: (r.service_date as string | null) ?? null,
     expiresAt: (r.expires_at as string | null) ?? null,
     viewedAt: (r.viewed_at as string | null) ?? null,
     decidedAt: (r.decided_at as string | null) ?? null,

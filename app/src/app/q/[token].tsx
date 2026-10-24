@@ -260,6 +260,7 @@ export default function PortalScreen() {
     total: Number(quote.total),
     expiresAt: quote.expires_at,
     validDays: 0,
+    extra: quote.extra ? { serviceDate: quote.service_date ?? null } : undefined,
   };
 
   // D-220 b: Aceptar cotización y Más opciones van en la misma pantalla del quote (sin el paso Continuar); siguen
@@ -411,7 +412,7 @@ function AcceptStep({
           {quote.company} · {quote.site}
         </AppText>
         <View style={styles.cardLine}>
-          <AppText size={14}>{t.total}</AppText>
+          <AppText size={14}>{quote.extra ? t.totalOnce : t.total}</AppText>
           <AppText size={14} weight="medium">
             {money(Number(quote.total))}
           </AppText>
