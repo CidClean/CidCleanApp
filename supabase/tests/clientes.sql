@@ -146,8 +146,9 @@ begin
   -- Asignar personal (sin cifras) y pago
   perform pg_temp.prueba('quien solo ve clientes no asigna', 'ERR:42501',
     pg_temp.valor('ver', format('select assign_employee(%L, %L, %s)::text', js, w2, hoy)));
-  perform pg_temp.prueba('no se asigna con fecha pasada', 'ERR:22023',
-    pg_temp.valor('sup', format('select assign_employee(%L, %L, %s)::text', js, w2, ayer)));
+  -- D-241: en un previo sí se puede (ver fechas_previos.sql); en un cliente con quote no.
+  perform pg_temp.prueba('no se asigna con fecha pasada en un cliente con quote', 'ERR:22023',
+    pg_temp.valor('sup', format('select assign_employee(%L, %L, %s)::text', js2, w2, ayer)));
   r := pg_temp.valor('sup', format('select assign_employee(%L, %L, %s)::text', js, w2, hoy));
   perform pg_temp.prueba('el supervisor (schedule) asigna sin ver cifras', 'ok', case when r like 'ERR%' then r else 'ok' end);
   asig := r::uuid;
@@ -163,8 +164,7 @@ begin
     pg_temp.valor('pagos', 'select count(*) from assignment_pay'));
   perform pg_temp.prueba('un W-2 por hora no baja de $15.00 (D-061)', 'ERR:23514',
     pg_temp.valor('pagos', format($q$ select set_assignment_pay(%L, 'hourly', 14, null, null, null, %s)::text $q$, asig, hoy)));
-  perform pg_temp.prueba('el pago no empieza antes de hoy (sin retroactivo)', 'ERR:22023',
-    pg_temp.valor('pagos', format($q$ select set_assignment_pay(%L, 'hourly', 18, 3, null, null, %s)::text $q$, asig, ayer)));
+  -- D-241: el pago con fecha pasada se prueba en fechas_previos.sql (previo sí, cliente con quote no).
   perform pg_temp.prueba('quien asigna pago define $18.00/h con 3 h garantizadas', '',
     pg_temp.valor('pagos', format($q$ select set_assignment_pay(%L, 'hourly', 18, 3, null, null, %s)::text $q$, asig, hoy)));
   perform pg_temp.valor('pagos', format($q$ select set_assignment_pay(%L, 'hourly', 20, null, null, null, %s)::text $q$, asig, manana));
