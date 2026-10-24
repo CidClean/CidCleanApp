@@ -10,8 +10,8 @@ import { TopBar } from '@/components/TopBar';
 import { UsDateField } from '@/components/UsDateField';
 import { useClientsStrings } from '@/i18n/useClientsStrings';
 import { useStrings } from '@/i18n/useStrings';
-import { canAssign } from '@/lib/clientRules';
-import { assignEmployee, fetchAssignableEmployees, fetchAssignableJobsites, type Option } from '@/lib/clientsApi';
+import { canAssign, startDateError } from '@/lib/clientRules';
+import { assignEmployee, fetchAssignableEmployees, fetchAssignableJobsites, fetchLegacyJobsiteIds, type Option } from '@/lib/clientsApi';
 import { dayKey, formatUsDate, parseUsDate } from '@/lib/leadRules';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions } from '@/lib/session';
@@ -35,6 +35,12 @@ export default function AssignScreen() {
   const [start, setStart] = useState(formatUsDate(dayKey(today)));
   const [error, setError] = useState<'start' | 'save' | null>(null);
   const [saving, setSaving] = useState(false);
+  // D-241: en jobsites de clientes previos la fecha de inicio puede ser pasada.
+  const [legacyIds, setLegacyIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    void fetchLegacyJobsiteIds().then((r) => r.ok && setLegacyIds(r.data));
+  }, []);
+  const legacy = legacyIds.has(byJobsite ? (params.jobsite as string) : choice);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,7 +63,7 @@ export default function AssignScreen() {
   async function submit() {
     if (saving || !choice) return;
     const key = parseUsDate(start);
-    if (!key || key === 'invalid' || key < dayKey(today)) {
+    if (!key || key === 'invalid' || startDateError(key, today, legacy)) {
       setError('start');
       return;
     }
@@ -99,6 +105,7 @@ export default function AssignScreen() {
             setError(null);
           }}
           error={error === 'start' ? c.assign.errorStart : null}
+          allowPast={legacy}
         />
         {error === 'save' ? <AppAlert tone="error" text={c.assign.errorSave} /> : null}
         <AppButton label={c.assign.submit} onPress={() => void submit()} disabled={saving || !choice} />

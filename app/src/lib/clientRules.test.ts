@@ -1,3 +1,4 @@
+import { dayKey } from './leadRules';
 import {
   cityFrom,
   emptyJobsiteForm,
@@ -10,6 +11,7 @@ import {
   statusChangeNeedsConfirm,
   statusOptions,
   validateJobsite,
+  startDateError,
   validatePay,
   visitsPerMonth,
   type Jobsite,
@@ -55,6 +57,23 @@ describe('Pago por jobsite (D-059, D-061, D-096, D-100, D-210)', () => {
   });
   it('sin efecto retroactivo: la fecha de inicio no puede ser pasada', () => {
     expect(validatePay({ ...base, hourlyRate: '18', from: '10/22/2026' }, 'w2', today)).toEqual({ from: 'past' });
+  });
+  it('D-241: en un jobsite de cliente previo el pago puede empezar en una fecha pasada', () => {
+    expect(validatePay({ ...base, hourlyRate: '20', from: '09/17/2026' }, 'w2', today, true)).toEqual({});
+    expect(validatePay({ ...base, hourlyRate: '20', from: '09/17/2026' }, 'w2', today, false)).toEqual({ from: 'past' });
+    expect(validatePay({ ...base, hourlyRate: '14', from: '09/17/2026' }, 'w2', today, true)).toEqual({ hourlyRate: 'minWage' });
+  });
+});
+
+describe('Fechas de inicio (D-210, D-241)', () => {
+  it('pasada solo en jobsites de clientes previos; hoy y futuro siempre', () => {
+    const hoy = dayKey(today);
+    expect(startDateError('2026-09-17', new Date(2026, 9, 24), true)).toBeNull();
+    expect(startDateError('2026-09-17', new Date(2026, 9, 24), false)).toBe('past');
+    expect(startDateError(hoy, today, false)).toBeNull();
+    expect(startDateError('2099-01-01', today, false)).toBeNull();
+    expect(startDateError(null, today, true)).toBe('invalid');
+    expect(startDateError('invalid', today, true)).toBe('invalid');
   });
   it('costo mensual: horas garantizadas, tarifa fija por visita, semana o mes', () => {
     expect(payMonthlyCost({ kind: 'hourly', hourlyRate: 18, guaranteedHours: 3, fixedAmount: null, fixedPeriod: null }, 2.2, 10)).toBe(540);

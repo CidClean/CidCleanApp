@@ -67,6 +67,17 @@ export function atTime(key: string, hours: number, minutes: number): Date {
   return d;
 }
 
+/**
+ * D-241: el turno que cruza la medianoche. Si la salida queda antes o igual que la entrada (11:00 PM → 3:00 AM), es del
+ * día siguiente.
+ */
+export function clockOutAfter(clockIn: Date, clockOut: Date): Date {
+  if (clockOut.getTime() > clockIn.getTime()) return clockOut;
+  const next = new Date(clockOut);
+  next.setDate(next.getDate() + 1);
+  return next;
+}
+
 /** Visitas por día, en orden. */
 export function groupByDay<T extends { day: string; startsAt: Date }>(visits: readonly T[]): { day: string; visits: T[] }[] {
   const map = new Map<string, T[]>();

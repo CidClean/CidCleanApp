@@ -24,7 +24,7 @@ import {
   type PayErrors,
   type PayForm,
 } from '@/lib/clientRules';
-import { fetchPay, setAssignmentPay } from '@/lib/clientsApi';
+import { fetchLegacyJobsiteIds, fetchPay, setAssignmentPay } from '@/lib/clientsApi';
 import { formatUsDate } from '@/lib/leadRules';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions } from '@/lib/session';
@@ -37,7 +37,7 @@ import { sample, useTheme } from '@/theme';
  * inicio, sin efecto retroactivo) y Guardar. A un W-2 por hora no se le guarda menos de $15.00 (D-096).
  */
 export default function PayScreen() {
-  const params = useLocalSearchParams<{ assignment: string; jobsite?: string; jobsiteId?: string; profile?: string; workerType?: string }>();
+  const params = useLocalSearchParams<{ assignment: string; jobsite?: string; jobsiteId?: string; site?: string; profile?: string; workerType?: string }>();
   const goBack = useGoBack();
   const { colors } = useTheme();
   const strings = useStrings();
@@ -49,6 +49,13 @@ export default function PayScreen() {
   const [failed, setFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const workerType = params.workerType === 'w2' || params.workerType === '1099' ? params.workerType : null;
+  // D-241: en jobsites de clientes previos el pago puede empezar en una fecha pasada.
+  const [legacy, setLegacy] = useState(false);
+  const siteId = params.jobsiteId ?? params.site;
+  useEffect(() => {
+    if (!siteId) return;
+    void fetchLegacyJobsiteIds().then((r) => r.ok && setLegacy(r.data.has(siteId)));
+  }, [siteId]);
 
   // Parte con el pago vigente, si hay; la fecha nueva siempre parte en hoy.
   useEffect(() => {
@@ -77,7 +84,7 @@ export default function PayScreen() {
 
   async function save() {
     if (saving) return;
-    const found = validatePay(form, workerType, today);
+    const found = validatePay(form, workerType, today, legacy);
     setErrors(found);
     setFailed(false);
     if (hasPayErrors(found)) return;
@@ -156,6 +163,7 @@ export default function PayScreen() {
           label={c.pay.from}
           value={form.from}
           onChange={(v) => set('from', v)}
+          allowPast={legacy}
           error={errors.from === 'past' ? c.pay.errorPast : errors.from ? c.pay.errorDate : null}
         />
         <View style={{ height: 4 }} />

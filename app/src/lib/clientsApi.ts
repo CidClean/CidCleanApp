@@ -111,6 +111,14 @@ export const fetchJobsites = (clientId?: string) =>
     return { ok: true, data: (data as unknown as JobsiteRow[]).map(rowToJobsite) };
   });
 
+/** D-241: ids de los jobsites de clientes "Previo a la app" (en ellos se pueden poner fechas pasadas). */
+export const fetchLegacyJobsiteIds = () =>
+  run<Set<string>>(async () => {
+    const { data, error } = await supabase.from('jobsites').select('id, clients!inner(legacy)').eq('clients.legacy', true);
+    if (error) return { ok: false, reason: failureFrom(error.code) };
+    return { ok: true, data: new Set((data as { id: string }[]).map((r) => r.id)) };
+  });
+
 export const fetchJobsite = (id: string) =>
   run<Jobsite>(async () => {
     const { data, error } = await supabase.from('jobsites').select(JOBSITE_COLUMNS).eq('id', id).maybeSingle();

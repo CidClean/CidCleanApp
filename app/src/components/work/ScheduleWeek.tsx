@@ -28,7 +28,6 @@ import { formatTime } from "@/lib/week";
 import { iconStrokeWidth, useTheme } from "@/theme";
 
 // Letras de la cuadrícula tal como la muestra aprobada (D-232).
-const DOW = ["D", "L", "M", "M", "J", "V", "S"];
 
 type Person = { id: string; name: string };
 
@@ -297,7 +296,7 @@ export function ScheduleWeek({
                   <View style={{ gap: 4 }}>
                     <View style={styles.wk}>
                       <View style={styles.name} />
-                      {DOW.map((d, i) => (
+                      {s.schedule.weekDays.map((d, i) => (
                         <AppText
                           key={i}
                           size={11}
@@ -323,7 +322,7 @@ export function ScheduleWeek({
                             {p.name}
                           </AppText>
                         </View>
-                        {DOW.map((_, i) => {
+                        {s.schedule.weekDays.map((_, i) => {
                           const works = j.days.includes(i);
                           const on = cells[i]?.includes(p.id) ?? false;
                           const locked = j.locked.includes(i);

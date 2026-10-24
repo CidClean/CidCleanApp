@@ -71,6 +71,7 @@ jest.mock('@/lib/clientsApi', () => ({
   fetchDocuments: async () => ({ ok: true, data: [{ id: 'd1', kind: 'contract', title: null, version: 2, uploadedAt: '2026-10-20T15:00:00Z' }] }),
   fetchJobsiteStaff: async () => ({ ok: true, data: [{ assignmentId: 'a1', profileId: 'p1', fullName: 'María López', workerType: 'w2', startDate: '2026-10-01', endDate: null }] }),
   fetchPay: (...a: unknown[]) => mockFetchPay(...a),
+  fetchLegacyJobsiteIds: async () => ({ ok: true, data: new Set<string>() }),
   setAssignmentPay: (...a: unknown[]) => mockSetPay(...a),
   endAssignment: jest.fn(),
   choosePdf: jest.fn(),

@@ -235,7 +235,17 @@ export function emptyPayForm(today: Date, us: (key: string) => string): PayForm 
 
 export type PayErrors = { hourlyRate?: 'invalid' | 'minWage'; guaranteedHours?: true; fixedAmount?: true; from?: 'invalid' | 'past' };
 
-export function validatePay(f: PayForm, workerType: 'w2' | '1099' | null, today: Date): PayErrors {
+/**
+ * D-241: una fecha de inicio (asignación de personal, su pago, una visita) puede ser pasada solo en un jobsite de un
+ * cliente "Previo a la app"; en los demás no (D-210: sin efecto retroactivo).
+ */
+export function startDateError(key: string | null, today: Date, legacy: boolean): 'invalid' | 'past' | null {
+  if (key === null || key === 'invalid') return 'invalid';
+  if (!legacy && key < dayKey(today)) return 'past';
+  return null;
+}
+
+export function validatePay(f: PayForm, workerType: 'w2' | '1099' | null, today: Date, legacy = false): PayErrors {
   const e: PayErrors = {};
   if (f.kind === 'hourly') {
     const rate = parseMoney(f.hourlyRate);
@@ -244,9 +254,8 @@ export function validatePay(f: PayForm, workerType: 'w2' | '1099' | null, today:
     else if (workerType === 'w2' && rate < MIN_WAGE_W2) e.hourlyRate = 'minWage';
     if (f.guaranteedHours.trim() !== '' && parseHours(f.guaranteedHours) === null) e.guaranteedHours = true;
   } else if (parseMoney(f.fixedAmount) === null) e.fixedAmount = true;
-  const from = parseUsDate(f.from);
-  if (from === null || from === 'invalid') e.from = 'invalid';
-  else if (from < dayKey(today)) e.from = 'past'; // D-210: sin efecto retroactivo
+  const from = startDateError(parseUsDate(f.from), today, legacy); // D-210 sin efecto retroactivo; D-241 previos sí
+  if (from) e.from = from;
   return e;
 }
 

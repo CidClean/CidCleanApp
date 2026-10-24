@@ -80,7 +80,7 @@ export function EmployeePay({ profileId, workerType }: { profileId: string; work
                 ? () =>
                     router.push({
                       pathname: '/pay/[assignment]',
-                      params: { assignment: r.assignmentId, jobsite: r.jobsiteName, profile: profileId, workerType: workerType ?? '' },
+                      params: { assignment: r.assignmentId, jobsite: r.jobsiteName, site: r.jobsiteId, profile: profileId, workerType: workerType ?? '' },
                     })
                 : undefined
             }

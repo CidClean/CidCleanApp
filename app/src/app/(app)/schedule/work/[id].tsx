@@ -21,7 +21,7 @@ import { useWorkStrings } from '@/i18n/useWorkStrings';
 import { dateFromKey, formatShortDate } from '@/lib/leadRules';
 import { useGoBack } from '@/lib/navigation';
 import { approveVisit, editWorkEntry, fetchVisitWork, recordWork, reviewGps, type VisitWork, type WorkEntry } from '@/lib/scheduleApi';
-import { atTime, formatMinutes, workedMinutes } from '@/lib/scheduleRules';
+import { atTime, clockOutAfter, formatMinutes, workedMinutes } from '@/lib/scheduleRules';
 import { usePermissions } from '@/lib/session';
 import { can, canAny } from '@/lib/visibility';
 import { formatTime } from '@/lib/week';
@@ -82,11 +82,8 @@ export default function WorkScreen() {
   async function saveHours() {
     if (!work || !editing || !inTime) return;
     const cin = atTime(work.day, inTime.hours, inTime.minutes);
-    const cout = outTime ? atTime(work.day, outTime.hours, outTime.minutes) : null;
-    if (cout && cout <= cin) {
-      setError(t.errorHours);
-      return;
-    }
+    // D-241: una salida antes o igual que la entrada es del día siguiente (turno de 11:00 PM a 3:00 AM).
+    const cout = outTime ? clockOutAfter(cin, atTime(work.day, outTime.hours, outTime.minutes)) : null;
     setBusy(true);
     const r =
       editing.kind === 'edit'

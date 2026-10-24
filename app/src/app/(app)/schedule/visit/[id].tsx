@@ -29,6 +29,7 @@ import {
   type StaffChip,
 } from '@/lib/scheduleApi';
 import { atTime, formatMinutes, weekWarning } from '@/lib/scheduleRules';
+import { fetchLegacyJobsiteIds } from '@/lib/clientsApi';
 import { usePermissions } from '@/lib/session';
 import { can } from '@/lib/visibility';
 import { sample, useTheme } from '@/theme';
@@ -56,6 +57,11 @@ export default function VisitScreen() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  // D-241: en jobsites de clientes previos la visita se puede mover a un día pasado.
+  const [legacyIds, setLegacyIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    void fetchLegacyJobsiteIds().then((r) => r.ok && setLegacyIds(r.data));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -139,7 +145,7 @@ export default function VisitScreen() {
           <>
             {!locked ? (
               <>
-                <UsDateField label={t.day} value={date} onChange={setDate} />
+                <UsDateField label={t.day} value={date} onChange={setDate} allowPast={visit ? legacyIds.has(visit.jobsiteId) : false} />
                 <ClockField label={t.time} value={time} onChange={setTime} />
                 <HoursField label={t.duration} value={minutes} onChange={setMinutes} />
               </>

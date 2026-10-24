@@ -18,6 +18,7 @@ import { dayKey, formatUsDate, parseUsDate } from '@/lib/leadRules';
 import { useGoBack } from '@/lib/navigation';
 import { addVisit } from '@/lib/scheduleApi';
 import { atTime } from '@/lib/scheduleRules';
+import { startDateError } from '@/lib/clientRules';
 import { usePermissions } from '@/lib/session';
 import { can } from '@/lib/visibility';
 import { useTheme } from '@/theme';
@@ -30,7 +31,7 @@ export default function NewVisitScreen() {
   const strings = useStrings();
   const t = useWorkStrings();
   const { access } = usePermissions();
-  const [jobsites, setJobsites] = useState<{ id: string; name: string }[]>([]);
+  const [jobsites, setJobsites] = useState<{ id: string; name: string; legacy: boolean }[]>([]);
   const [jobsite, setJobsite] = useState('');
   const [date, setDate] = useState(formatUsDate(dayKey(new Date())));
   const [time, setTime] = useState<Clock | null>(null);
@@ -42,18 +43,20 @@ export default function NewVisitScreen() {
   useEffect(() => {
     void fetchJobsites().then((r) => {
       if (!r.ok) return;
-      const active = r.data.filter((j) => j.status === 'active').map((j) => ({ id: j.id, name: `${j.clientName} · ${j.name}` }));
+      const active = r.data.filter((j) => j.status === 'active').map((j) => ({ id: j.id, name: `${j.clientName} · ${j.name}`, legacy: j.clientLegacy }));
       setJobsites(active);
       setJobsite((cur) => cur || (active[0]?.id ?? ''));
     });
   }, []);
 
   if (!can(access, 'schedule_ver_editar')) return <Redirect href="/" />;
+  // D-241: en jobsites de clientes previos la visita puede ser de un día pasado.
+  const legacy = jobsites.find((j) => j.id === jobsite)?.legacy ?? false;
 
   async function create() {
     const key = parseUsDate(date);
     const mins = Number(minutes);
-    if (!jobsite || !key || key === 'invalid' || !time || !(mins >= 15 && mins <= 1440)) {
+    if (!jobsite || !key || key === 'invalid' || startDateError(key, new Date(), legacy) || !time || !(mins >= 15 && mins <= 1440)) {
       setError(t.errorDuration);
       return;
     }
@@ -75,7 +78,7 @@ export default function NewVisitScreen() {
         {jobsites.length > 0 ? (
           <SelectField label={t.jobsite} options={jobsites.map((j) => ({ value: j.id, label: j.name }))} value={jobsite} onChange={setJobsite} />
         ) : null}
-        <UsDateField label={t.day} value={date} onChange={setDate} />
+        <UsDateField label={t.day} value={date} onChange={setDate} allowPast={legacy} />
         <ClockField label={t.time} value={time} onChange={setTime} />
         <HoursField label={t.duration} value={minutes} onChange={setMinutes} />
         <AppButton label={t.save} onPress={() => void create()} disabled={busy || !jobsite} />
