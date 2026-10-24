@@ -48,8 +48,9 @@ async function enviar(to: string, subject: string, html: string, text: string): 
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return responder(405, { error: 'method_not_allowed' });
-  const clave = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-  if (!clave || req.headers.get('Authorization') !== `Bearer ${clave}`) return responder(403, { error: 'forbidden' });
+  // Solo el cron de la base: trae en x-cidclean-cron el secreto CIDCLEAN_CRON_SECRET (guardado también en Vault).
+  const clave = Deno.env.get('CIDCLEAN_CRON_SECRET') ?? '';
+  if (clave.length < 32 || req.headers.get('x-cidclean-cron') !== clave) return responder(403, { error: 'forbidden' });
   const db = clienteDeServicio();
   let enviados = 0;
   let fallidos = 0;
