@@ -50,7 +50,9 @@ export default function PayScreen() {
   const [saving, setSaving] = useState(false);
   const workerType = params.workerType === 'w2' || params.workerType === '1099' ? params.workerType : null;
   // D-241: en jobsites de clientes previos el pago puede empezar en una fecha pasada.
-  const [legacy, setLegacy] = useState(false);
+  const [legacySite, setLegacy] = useState(false);
+  // D-244: el Super Admin puede poner una fecha pasada en cualquier jobsite.
+  const legacy = access.isSuperAdmin || legacySite;
   const siteId = params.jobsiteId ?? params.site;
   useEffect(() => {
     if (!siteId) return;

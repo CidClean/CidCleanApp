@@ -51,7 +51,8 @@ export default function NewVisitScreen() {
 
   if (!can(access, 'schedule_ver_editar')) return <Redirect href="/" />;
   // D-241: en jobsites de clientes previos la visita puede ser de un día pasado.
-  const legacy = jobsites.find((j) => j.id === jobsite)?.legacy ?? false;
+  // D-244: el Super Admin puede poner un día pasado en cualquier jobsite.
+  const legacy = access.isSuperAdmin || (jobsites.find((j) => j.id === jobsite)?.legacy ?? false);
 
   async function create() {
     const key = parseUsDate(date);

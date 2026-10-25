@@ -40,7 +40,8 @@ export default function AssignScreen() {
   useEffect(() => {
     void fetchLegacyJobsiteIds().then((r) => r.ok && setLegacyIds(r.data));
   }, []);
-  const legacy = legacyIds.has(byJobsite ? (params.jobsite as string) : choice);
+  // D-244: el Super Admin puede poner una fecha pasada en cualquier jobsite.
+  const legacy = access.isSuperAdmin || legacyIds.has(byJobsite ? (params.jobsite as string) : choice);
 
   useEffect(() => {
     let cancelled = false;

@@ -145,7 +145,7 @@ export default function VisitScreen() {
           <>
             {!locked ? (
               <>
-                <UsDateField label={t.day} value={date} onChange={setDate} allowPast={visit ? legacyIds.has(visit.jobsiteId) : false} />
+                <UsDateField label={t.day} value={date} onChange={setDate} allowPast={access.isSuperAdmin || (visit ? legacyIds.has(visit.jobsiteId) : false)} />
                 <ClockField label={t.time} value={time} onChange={setTime} />
                 <HoursField label={t.duration} value={minutes} onChange={setMinutes} />
               </>
