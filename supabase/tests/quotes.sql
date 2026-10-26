@@ -100,6 +100,14 @@ select pg_temp.prueba('renglones: sin nombre, monto negativo o % mayor a 100 no 
   quote_lines_valid('{"services":[{"label":"A","amount":-1,"taxable":true}]}')::text || '|' ||
   quote_lines_valid('{"services":[],"discounts":[{"label":"A","kind":"percent","value":101}]}')::text || '|' ||
   quote_lines_valid('{"services":[{"label":"A","amount":1.5,"taxable":false}],"addons":[],"discounts":[{"label":"B","kind":"amount","value":1}]}')::text);
+-- D-251 (migración 20261027000013): descripción opcional de hasta 200 caracteres en servicios y add-ons.
+select pg_temp.prueba('descripción: opcional, texto de hasta 200; más larga, no texto o en un descuento no es válida', 'true|true|true|false|false|false',
+  quote_lines_valid('{"services":[{"label":"A","description":"Pisos y baños","amount":1,"taxable":true}]}')::text || '|' ||
+  quote_lines_valid(jsonb_build_object('addons', jsonb_build_array(jsonb_build_object('label','B','description',repeat('x',200),'amount',1,'taxable',true))))::text || '|' ||
+  quote_lines_valid('{"services":[{"label":"A","description":null,"amount":1,"taxable":true}]}')::text || '|' ||
+  quote_lines_valid(jsonb_build_object('services', jsonb_build_array(jsonb_build_object('label','A','description',repeat('x',201),'amount',1,'taxable',true))))::text || '|' ||
+  quote_lines_valid('{"services":[{"label":"A","description":5,"amount":1,"taxable":true}]}')::text || '|' ||
+  quote_lines_valid('{"services":[],"discounts":[{"label":"D","description":"x","kind":"amount","value":1}]}')::text);
 
 -- B. Armado --------------------------------------------------------------------------------------------
 do $$

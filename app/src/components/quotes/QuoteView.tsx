@@ -11,8 +11,8 @@ export type QuoteViewData = {
   address: string;
   frequency: Frequency | null;
   lines: {
-    services: { label: string; amount: number | null }[];
-    addons: { label: string; amount: number | null }[];
+    services: { label: string; description?: string; amount: number | null }[];
+    addons: { label: string; description?: string; amount: number | null }[];
     discounts: { label: string; kind: 'amount' | 'percent'; value: number | null }[];
   };
   taxRate: number;
@@ -37,27 +37,40 @@ export function QuoteView({ data, t, language }: { data: QuoteViewData; t: Porta
   const valid = data.expiresAt
     ? t.validUntil(shortDate(data.expiresAt, language))
     : t.validUntil(shortDate(new Date(Date.now() + data.validDays * 86400000).toISOString(), language));
-  const Row = ({ label, value, last = false, strong = false }: { label: string; value: string; last?: boolean; strong?: boolean }) => (
+  const Row = ({ label, detail, value, last = false, strong = false }: { label: string; detail?: string; value: string; last?: boolean; strong?: boolean }) => (
     <View style={[styles.ln, { borderBottomColor: colors.border, borderBottomWidth: last ? 0 : 0.5 }]}>
-      <AppText size={14} style={{ flex: 1 }} weight={strong ? 'medium' : 'regular'}>
-        {label}
-      </AppText>
+      <View style={{ flex: 1 }}>
+        <AppText size={14} weight={strong ? 'medium' : 'regular'}>
+          {label}
+        </AppText>
+        {/* D-251: la descripción opcional debajo del nombre. */}
+        {detail ? (
+          <AppText size={sample.noteSize} color={colors.secondary}>
+            {detail}
+          </AppText>
+        ) : null}
+      </View>
       <AppText size={14} weight="medium">
         {value}
       </AppText>
     </View>
   );
-  const Section = ({ title, rows }: { title: string; rows: { label: string; value: string }[] }) =>
+  const Section = ({ title, rows }: { title: string; rows: { label: string; detail?: string; value: string }[] }) =>
     rows.length === 0 ? null : (
       <View style={{ marginBottom: 6 }}>
         <AppText size={sample.labelSize} color={colors.secondary} style={{ marginTop: 6 }}>
           {title}
         </AppText>
         {rows.map((r, i) => (
-          <Row key={i} label={r.label} value={r.value} />
+          <Row key={i} label={r.label} detail={r.detail} value={r.value} />
         ))}
       </View>
     );
+  const item = (l: { label: string; description?: string; amount: number | null }) => ({
+    label: l.label,
+    detail: l.description?.trim() || undefined,
+    value: money(l.amount ?? 0),
+  });
   // D-223: el quote va sobre una tarjeta blanca de 24px (app y portal).
   return (
     <View style={{ backgroundColor: colors.card, borderRadius: radius.card, padding: 16 }}>
@@ -86,8 +99,8 @@ export function QuoteView({ data, t, language }: { data: QuoteViewData; t: Porta
           {frequencyText(data.frequency, language)}
         </AppText>
       ) : null}
-      <Section title={t.services} rows={data.lines.services.map((l) => ({ label: l.label, value: money(l.amount ?? 0) }))} />
-      <Section title={t.addons} rows={data.lines.addons.map((l) => ({ label: l.label, value: money(l.amount ?? 0) }))} />
+      <Section title={t.services} rows={data.lines.services.map(item)} />
+      <Section title={t.addons} rows={data.lines.addons.map(item)} />
       <Section
         title={t.discounts}
         rows={data.lines.discounts.map((d) => ({

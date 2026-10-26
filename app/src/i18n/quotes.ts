@@ -45,6 +45,7 @@ export const quotesEs = {
   addAddon: 'Agregar add-on', // D-208
   addDiscount: 'Agregar descuento', // D-208
   lineName: 'Nombre', // D-208
+  lineDescription: 'Descripción (opcional)', // D-251 ("Description" opcional); D-200: "(opcional)"
   amount: 'Monto', // APROBADO (D-100: campo Monto)
   percent: 'Porcentaje', // D-208
   discountAmount: 'Monto', // D-208
@@ -144,6 +145,7 @@ export const quotesEn: QuoteStrings = {
   addAddon: 'Add add-on',
   addDiscount: 'Add discount',
   lineName: 'Name',
+  lineDescription: 'Description (optional)',
   amount: 'Amount',
   percent: 'Percent',
   discountAmount: 'Amount',

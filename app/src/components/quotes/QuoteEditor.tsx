@@ -29,6 +29,7 @@ import {
   discountAmount,
   formatAmountInput,
   isEmail,
+  LINE_DESCRIPTION_MAX,
   money,
   parseAmount,
   quoteActions,
@@ -900,6 +901,25 @@ function Builder({
                   />
                 </View>
               </View>
+              {sec !== "discounts" ? (
+                // D-251: descripción opcional debajo del nombre (máximo 200 caracteres, D-200).
+                <AppField
+                  label={q.lineDescription}
+                  value={"taxable" in line ? (line.description ?? "") : ""}
+                  onChangeText={(v) => {
+                    const lines = {
+                      ...draft.lines,
+                      [sec]: draft.lines[sec].map((l, j) =>
+                        j === i ? { ...l, description: v } : l,
+                      ),
+                    } as QuoteLines;
+                    setDraft({ ...draft, lines });
+                  }}
+                  maxLength={LINE_DESCRIPTION_MAX}
+                  multiline
+                  autoCapitalize="sentences"
+                />
+              ) : null}
               <View style={styles.lineFoot}>
                 {sec === "discounts" && "kind" in line ? (
                   <View style={{ width: 200 }}>
@@ -1052,13 +1072,15 @@ function SentVersion({
       `${q.serviceDate}: ${shortDate(`${v.serviceDate}T12:00:00`, locale)}`,
     );
   const d = v.decision;
-  const rows: { label: string; value: string }[] = [
+  const rows: { label: string; detail?: string; value: string }[] = [
     ...v.lines.services.map((l) => ({
       label: l.label,
+      detail: l.description?.trim() || undefined,
       value: l.amount === null ? "" : money(l.amount),
     })),
     ...v.lines.addons.map((l) => ({
       label: l.label,
+      detail: l.description?.trim() || undefined,
       value: l.amount === null ? "" : money(l.amount),
     })),
     ...v.lines.discounts.map((l) => ({
@@ -1085,9 +1107,14 @@ function SentVersion({
             { borderBottomColor: colors.border, borderBottomWidth: 0.5 },
           ]}
         >
-          <AppText size={14} style={{ flex: 1 }}>
-            {r.label}
-          </AppText>
+          <View style={{ flex: 1 }}>
+            <AppText size={14}>{r.label}</AppText>
+            {r.detail ? (
+              <AppText size={sample.noteSize} color={colors.secondary}>
+                {r.detail}
+              </AppText>
+            ) : null}
+          </View>
           <AppText size={14} weight="medium">
             {r.value}
           </AppText>

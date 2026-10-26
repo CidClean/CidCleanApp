@@ -9,7 +9,9 @@ export const QUOTE_STATUSES: readonly QuoteStatus[] = [
   'draft', 'sent', 'viewed', 'accepted', 'rejected', 'changes_requested', 'expired', 'superseded',
 ];
 
-export type ItemLine = { label: string; amount: number | null; taxable: boolean };
+/** description: opcional (D-251), máximo 200 caracteres (D-200); sale debajo del nombre en el correo, el PDF y el portal. */
+export type ItemLine = { label: string; description?: string; amount: number | null; taxable: boolean };
+export const LINE_DESCRIPTION_MAX = 200;
 export type DiscountLine = { label: string; kind: 'amount' | 'percent'; value: number | null };
 export type QuoteLines = { services: ItemLine[]; addons: ItemLine[]; discounts: DiscountLine[] };
 export type Totals = { subtotal: number; discount: number; tax: number; total: number };
@@ -91,6 +93,7 @@ export function validateLines(lines: QuoteLines): LinesErrors {
   (['services', 'addons'] as const).forEach((sec) =>
     lines[sec].forEach((l, i) => {
       if (l.label.trim() === '' || l.amount === null || !(l.amount >= 0) || l.amount > 10_000_000) bad.add(`${sec}.${i}`);
+      if ((l.description ?? '').trim().length > LINE_DESCRIPTION_MAX) bad.add(`${sec}.${i}`);
     }),
   );
   lines.discounts.forEach((d, i) => {
@@ -99,11 +102,19 @@ export function validateLines(lines: QuoteLines): LinesErrors {
   return lines.services.length === 0 ? { noService: true, lines: bad } : { lines: bad };
 }
 
+/** Una línea de servicio o add-on para la base: la descripción solo si tiene texto (D-251). */
+function itemForSave(l: ItemLine) {
+  const description = (l.description ?? '').trim();
+  return description
+    ? { label: l.label.trim(), description, amount: l.amount ?? 0, taxable: l.taxable }
+    : { label: l.label.trim(), amount: l.amount ?? 0, taxable: l.taxable };
+}
+
 /** Lo que se guarda en la base (labels sin espacios de más). */
 export function linesForSave(lines: QuoteLines) {
   return {
-    services: lines.services.map((l) => ({ label: l.label.trim(), amount: l.amount ?? 0, taxable: l.taxable })),
-    addons: lines.addons.map((l) => ({ label: l.label.trim(), amount: l.amount ?? 0, taxable: l.taxable })),
+    services: lines.services.map(itemForSave),
+    addons: lines.addons.map(itemForSave),
     discounts: lines.discounts.map((d) => ({ label: d.label.trim(), kind: d.kind, value: d.value ?? 0 })),
   };
 }
@@ -216,7 +227,11 @@ export function toVersion(r: Record<string, unknown>): QuoteVersion {
   const lines = (r.lines ?? {}) as Partial<Record<keyof QuoteLines, Record<string, unknown>[]>>;
   const num = (v: unknown) => (v === null || v === undefined ? null : Number(v));
   const items = (arr: Record<string, unknown>[] | undefined): ItemLine[] =>
-    (arr ?? []).map((x) => ({ label: String(x.label ?? ''), amount: num(x.amount), taxable: x.taxable === true }));
+    (arr ?? []).map((x) => {
+      const line: ItemLine = { label: String(x.label ?? ''), amount: num(x.amount), taxable: x.taxable === true };
+      if (typeof x.description === 'string' && x.description.trim()) line.description = x.description;
+      return line;
+    });
   const d = r.decision as Record<string, unknown> | null;
   const total = num(r.total);
   return {

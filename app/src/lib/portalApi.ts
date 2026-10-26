@@ -20,8 +20,8 @@ export type PortalQuote = {
   address: string;
   frequency: { kind: 'daily' | 'weekly' | 'other'; days: number[]; other: string } | null;
   lines: {
-    services: { label: string; amount: number; taxable: boolean }[];
-    addons: { label: string; amount: number; taxable: boolean }[];
+    services: { label: string; description?: string; amount: number; taxable: boolean }[];
+    addons: { label: string; description?: string; amount: number; taxable: boolean }[];
     discounts: { label: string; kind: 'amount' | 'percent'; value: number }[];
   };
   tax_rate: number;

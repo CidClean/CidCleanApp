@@ -116,6 +116,15 @@ describe('Quote en la app (D-077, D-208, D-209)', () => {
     expect(screen.getAllByText('$1,000.00').length).toBeGreaterThan(0);
   });
 
+  test('D-251: cada servicio tiene Descripción opcional de hasta 200 caracteres', async () => {
+    await render(<SiteQuoteScreen />);
+    await fireEvent.press(await screen.findByText('Limpieza general'));
+    const field = screen.getByLabelText(q.lineDescription);
+    expect(field.props.maxLength).toBe(200);
+    await fireEvent.changeText(field, 'Pisos, baños y cocina');
+    expect(screen.getByDisplayValue('Pisos, baños y cocina')).toBeTruthy();
+  });
+
   test('Enviar sin SOW no llama al servidor y lo dice', async () => {
     mockFetchSiteQuote.mockResolvedValue(siteQuote([version({ lines: { services: [{ label: 'A', amount: 10, taxable: true }], addons: [], discounts: [] } })]));
     await render(<SiteQuoteScreen />);
@@ -215,6 +224,15 @@ describe('Portal del cliente (D-041 a D-047, D-094, D-095, D-209)', () => {
     expect(screen.getByText(p.tax('6'))).toBeTruthy();
     expect(screen.getByText('$1,961.00')).toBeTruthy();
     expect(screen.getByText('Semanal: Lun, Mié, Vie · 3 veces por semana')).toBeTruthy();
+  });
+
+  test('D-251: la descripción de la línea sale debajo del nombre en el portal', async () => {
+    mockPortal.quote.mockResolvedValue({
+      ok: true,
+      data: portalQuote({ lines: { services: [{ label: 'Limpieza regular', description: 'Oficinas y baños', amount: 1850, taxable: true }], addons: [], discounts: [] } }),
+    });
+    await enter();
+    expect(screen.getByText('Oficinas y baños')).toBeTruthy();
   });
 
   test('correo inválido: no pide código', async () => {

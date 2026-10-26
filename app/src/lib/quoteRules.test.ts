@@ -2,6 +2,8 @@ import {
   cleanRecipients,
   computeTotals,
   frequencyText,
+  LINE_DESCRIPTION_MAX,
+  linesForSave,
   parseAmount,
   quoteActions,
   sendBlockers,
@@ -102,5 +104,24 @@ describe('textos', () => {
     expect(r.totals).toBeNull();
     expect(r.lines.services[0]).toEqual({ label: 'A', amount: null, taxable: true });
     expect(r.hasSow).toBe(true);
+  });
+});
+
+describe('descripción opcional de cada línea (D-251; máximo 200, D-200)', () => {
+  const base = { services: [{ label: ' Limpieza ', description: '  Pisos y baños ', amount: 100, taxable: true }], addons: [{ label: 'Vidrios', description: '   ', amount: 20, taxable: false }], discounts: [] };
+  test('se guarda recortada y solo si tiene texto', () => {
+    const out = linesForSave(base);
+    expect(out.services[0]).toEqual({ label: 'Limpieza', description: 'Pisos y baños', amount: 100, taxable: true });
+    expect(out.addons[0]).toEqual({ label: 'Vidrios', amount: 20, taxable: false });
+  });
+  test('más de 200 caracteres marca la línea', () => {
+    const long = { ...base, services: [{ ...base.services[0], description: 'x'.repeat(LINE_DESCRIPTION_MAX + 1) }] };
+    expect(validateLines(long).lines.has('services.0')).toBe(true);
+    expect(validateLines(base).lines.size).toBe(0);
+  });
+  test('toVersion la lee de la base', () => {
+    const r = toVersion({ id: 'x', version: '1.0', minor: 0, status: 'draft', lines: { services: [{ label: 'A', description: 'Detalle', amount: 1, taxable: true }, { label: 'B', amount: 2, taxable: true }] } });
+    expect(r.lines.services[0].description).toBe('Detalle');
+    expect(r.lines.services[1].description).toBeUndefined();
   });
 });
