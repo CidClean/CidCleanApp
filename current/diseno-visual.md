@@ -128,7 +128,9 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Admin: pestañas Permisos y Pagos | Las ven todos los que ven la lista; Permisos en solo lectura sin el permiso; Pagos sin el permiso muestra "No tienes permiso para ver pagos" sin cifras | D-194 | ronda 16 |
 | Visor de PDF | Términos y documentos 1099 se leen dentro de la app, sin guardar el archivo en el teléfono | D-196 | ronda 16 |
 | Admin: botón Nuevo empleado | Icono + a la derecha de la barra del título de la lista de Empleados; solo con `empleados_invitar_crear` | D-185 | [`ronda-15-empleados-y-pendientes.md`](../surveys/ronda-15-empleados-y-pendientes.md) |
-| Correo de invitación | Bilingüe, texto en D-186 | D-186 | ronda 15 |
+| Correos | Siempre en inglés, con la marca: logo, tarjeta blanca de 24 px sobre `#FBF6EF`, pie con Cid Clean LLC, cidclean.com, teléfono, correo y redes; Reply-To info@cidclean.com | D-247, D-249, D-250 | marca-aprobado |
+| PDFs | Encabezado con logo y Cid Clean LLC, pie con contacto; quote como `quote-pdf-aprobado.pdf` | D-250 | marca-aprobado |
+| Animaciones | Cargando, Listo y Apertura con el logo por capas; con reducir movimiento, logo fijo | D-250 | marca-aprobado |
 | Admin: después de crear | Se abre el perfil del empleado, pestaña Datos | D-181 | [`ronda-15-empleados-y-pendientes.md`](../surveys/ronda-15-empleados-y-pendientes.md) |
 | Admin: reactivar | Misma hoja que desactivar: "¿Reactivar a {nombre}?" con Cancelar y Reactivar sólido | D-182 | ronda 15 |
 | Admin: subir documento | Elegir entre foto con la cámara o archivo del teléfono (foto o PDF) | D-183 | ronda 15 |
