@@ -1,5 +1,5 @@
 // Genera supabase/functions/_shared/invitacion.ts a partir de supabase/email-templates/invitacion.html.
-// La plantilla HTML es la única fuente del correo de invitación (D-186); el .ts es solo su copia para la Edge Function.
+// La plantilla HTML es la única fuente del correo de invitación (D-186 en inglés, D-247; estilo D-250); el .ts es solo su copia para la Edge Function.
 // Uso: node supabase/scripts/generar-invitacion.mjs
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

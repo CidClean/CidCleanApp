@@ -17,14 +17,14 @@ Decisión: D-160. El código de entrada del staff sale por Resend desde el domin
 | `smtp_admin_email` | `no-reply@auth.cidclean.com` |
 | `smtp_sender_name` | `Cid Clean` |
 | `rate_limit_email_sent` | `30` (correos por hora; con el correo por defecto de Supabase era 2) |
-| `mailer_subjects_magic_link` | `Tu código de Cid Clean / Your Cid Clean code` |
+| `mailer_subjects_magic_link` | `Your Cid Clean code` (D-247; antes `Tu código de Cid Clean / Your Cid Clean code`) |
 | `mailer_templates_magic_link_content` | el contenido de `supabase/email-templates/magic-link.html` |
 
 Sin cambios: `disable_signup` sigue en `true` (registro cerrado), `mailer_otp_length` en `6` y `mailer_otp_exp` en `600` (10 minutos).
 
 ## La plantilla
 
-El correo del código usa la plantilla "Magic Link" de Supabase. Su fuente vive en `supabase/email-templates/magic-link.html` (español e inglés, `{{ .Token }}` en grande, 10 minutos de vigencia, sin enlaces ni imágenes). Si se cambia el archivo, se vuelve a aplicar con el `PATCH` de arriba, solo con los dos campos `mailer_*_magic_link`.
+El correo del código usa la plantilla "Magic Link" de Supabase. Su fuente vive en `supabase/email-templates/magic-link.html` (desde la orden 32: solo inglés con el estilo de D-250, logo del bucket público `brand`, `{{ .Token }}` grande en la tarjeta `#DDEFEC`, 10 minutos de vigencia y el pie de contacto). Si se cambia el archivo, se vuelve a aplicar con el `PATCH` de arriba, solo con los dos campos `mailer_*_magic_link`.
 
 ## Cómo rotar la llave de envío
 
@@ -41,3 +41,7 @@ La cuenta de Resend tiene otro dominio ajeno (`auth.breaktaxgroup.com`) y otras 
 - `PATCH` de la configuración: respuesta 200; la lectura posterior confirmó el servidor SMTP, usuario, remitente, nombre, límite, asunto y que la plantilla es igual al archivo.
 - Envío de prueba por Resend con la llave nueva a `delivered@resend.dev`: respuesta 200, id `01a15efd-8603-7d87-828e-8b2909cffb2c`.
 - No se envió ningún código de Auth a un correo real: esa prueba la hace el dueño.
+
+## Orden 32 (pendiente del arquitecto)
+
+La plantilla `magic-link.html` y el asunto `Your Cid Clean code` están listos pero **no se subieron** a la configuración de Auth: hay que aplicar el `PATCH` de arriba con `mailer_subjects_magic_link` y `mailer_templates_magic_link_content`, después de crear el bucket `brand` (`bucket-brand.md`) para que se vea el logo.

@@ -2,7 +2,7 @@
 // funciones de la base que solo puede llamar la service role (portal_*). Nunca devuelve datos internos.
 // Acciones: state, request, verify, quote, file, decide.
 import { clienteDeServicio, responder } from '../_shared/comun.ts';
-import { codigo, correoCodigo, correoDecision, enviarCorreo, lang, sha256, tokenAleatorio } from '../_shared/quotes.ts';
+import { codigo, correoCodigo, correoDecision, enviarCorreo, sha256, tokenAleatorio } from '../_shared/quotes.ts';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -49,8 +49,8 @@ Deno.serve(async (req) => {
       if (data === 'closed') return r(409, { error: 'closed' });
       if (data === 'rate_limited') return r(429, { error: 'rate_limited' });
       if (data === 'sent') {
-        const { data: st } = await db.rpc('portal_state', { p_token: token });
-        await enviarCorreo(email, correoCodigo(lang(st?.language), code));
+        // Siempre en inglés (D-247); el portal sigue en el idioma del lead.
+        await enviarCorreo(email, correoCodigo(code));
       }
       // Misma respuesta para un correo que no es del quote: no se revela quién lo recibió (como D-150).
       return r(200, { ok: true });
@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
         console.error('copiar SOW', e);
       }
       try {
-        if (d.sender_email) await enviarCorreo(d.sender_email, correoDecision(lang(d.sender_language), kind, d.company, d.site, d.version, d.extra === true));
+        if (d.sender_email) await enviarCorreo(d.sender_email, correoDecision(kind, d.company, d.site, d.version, d.extra === true));
       } catch (e) {
         console.error('aviso a quien envió', e);
       }

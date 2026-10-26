@@ -1,17 +1,30 @@
 // Envía un quote (D-209): verify_jwt activado. Con el JWT de quien envía, prepare_send_quote valida el permiso
 // (quotes_enviar), el SOW y los destinatarios; el servidor genera el PDF de una página, lo guarda con la versión,
 // confirma el envío (enlace, vencimiento, reemplazo de la versión anterior) y manda el correo a cada destinatario
-// desde quotes@mail.cidclean.com con respuesta a admin@cidclean.com. { resend: true } reenvía el correo de una
-// versión ya enviada (por ejemplo si falló).
+// desde quotes@mail.cidclean.com con respuesta a info@cidclean.com (D-249), siempre en inglés y con el PDF adjunto
+// (D-247, D-250). El PDF sigue en el idioma del lead. { resend: true } reenvía el correo de una versión ya enviada
+// (por ejemplo si falló).
 import { CORS, clienteDeQuienLlama, clienteDeServicio, errorDeBase, responder } from '../_shared/comun.ts';
-import { correoQuote, enviarCorreo, fecha, lang, pdfQuote } from '../_shared/quotes.ts';
+import { correoQuote, enviarCorreo, fecha, lang, pdfQuote, type QuoteMail } from '../_shared/quotes.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-async function enviarATodos(destinos: string[], l: 'es' | 'en', d: { company: string; site: string; expires: string; link: string }) {
+async function enviarATodos(destinos: string[], d: QuoteMail, pdf: Uint8Array | null, version: string) {
+  const m = correoQuote(d);
+  const adjuntos = pdf ? [{ filename: `Cid Clean quote ${version}.pdf`, content: pdf }] : [];
   let enviados = 0;
-  for (const to of destinos) if (await enviarCorreo(to, correoQuote(l, d))) enviados++;
+  for (const to of destinos) if (await enviarCorreo(to, m, adjuntos)) enviados++;
   return { sent: enviados, failed: destinos.length - enviados };
+}
+
+// deno-lint-ignore no-explicit-any
+function datosCorreo(x: any, expires: string, link: string): QuoteMail {
+  return {
+    company: x.company, site: x.site, address: x.address ?? null, contactName: x.contact_name ?? null,
+    frequency: x.frequency ?? null, visitTime: x.visit_time ?? null, lines: x.lines ?? null,
+    total: x.total == null ? null : Number(x.total), extra: x.extra === true, serviceDate: x.service_date ?? null,
+    expires: fecha(expires, 'en'), link,
+  };
 }
 
 Deno.serve(async (req) => {
@@ -34,10 +47,12 @@ Deno.serve(async (req) => {
       const e = errorDeBase(error.code);
       return responder(e.status, { error: e.error });
     }
-    const l = lang(data.language);
-    const r = await enviarATodos(data.recipients, l, {
-      company: data.company, site: data.site, expires: fecha(data.expires_at, l), link: `${base}/q/${data.token}`,
-    });
+    let pdf: Uint8Array | null = null;
+    if (data.pdf_path) {
+      const f = await servicio.storage.from('quote-files').download(data.pdf_path);
+      if (f.data) pdf = new Uint8Array(await f.data.arrayBuffer());
+    }
+    const r = await enviarATodos(data.recipients, datosCorreo(data, data.expires_at, `${base}/q/${data.token}`), pdf, data.version);
     return responder(200, r);
   }
 
@@ -65,9 +80,7 @@ Deno.serve(async (req) => {
       const e = errorDeBase(e2.code);
       return responder(e.status, { error: e.error });
     }
-    const r = await enviarATodos(p.recipients, l, {
-      company: p.company, site: p.site, expires: fecha(c.expires_at, l), link: `${base}/q/${c.token}`,
-    });
+    const r = await enviarATodos(p.recipients, datosCorreo(p, c.expires_at, `${base}/q/${c.token}`), pdf, p.version);
     return responder(200, r);
   } catch (_e) {
     return responder(500, { error: 'server_error' });

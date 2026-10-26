@@ -9,7 +9,7 @@ Funciones: `create-employee`, `resend-invitation` (D-171, D-172, D-186) y `open-
 
 ## Correo de invitación
 
-La fuente es `supabase/email-templates/invitacion.html` (texto de D-186, `{{name}}` es el nombre). La función usa `supabase/functions/_shared/invitacion.ts`, que se genera con `node supabase/scripts/generar-invitacion.mjs`; hay que volver a generarlo y a desplegar si cambia la plantilla. El correo sale de `no-reply@auth.cidclean.com` con el asunto "Te invitamos a Cid Clean / You're invited to Cid Clean". No lleva enlaces.
+La fuente es `supabase/email-templates/invitacion.html` (texto en inglés de D-186, solo inglés desde D-247, con el estilo de D-250; `{{name}}` es el nombre). La función usa `supabase/functions/_shared/invitacion.ts`, que se genera con `node supabase/scripts/generar-invitacion.mjs`; hay que volver a generarlo y a desplegar si cambia la plantilla. El correo sale de `no-reply@auth.cidclean.com` con el asunto "You're invited to Cid Clean". No lleva enlaces salvo los del pie (sitio web, teléfono, correo y redes).
 
 ## Despliegue
 
@@ -52,7 +52,7 @@ npx supabase@latest functions deploy open-jobsite-document --project-ref <ref> -
 
 - `send-quote` (`verify_jwt` activado): con el JWT de quien envía, `prepare_send_quote` valida `quotes_enviar`, el SOW y los destinatarios; la función genera el PDF de una página (pdf-lib con Manrope, que baja de Google Fonts; si no hay red usa Helvetica), lo guarda en `quote-files/<quote>/<versión>/quote-<versión>.pdf`, confirma el envío (`confirm_send_quote`, solo service role) y manda el correo a cada destinatario. `{ resend: true }` reenvía el correo de una versión ya enviada. Devuelve `{ sent, failed }`.
 - `quote-portal` (**sin** `verify_jwt`: lo usa el cliente sin cuenta; desplegar con `--no-verify-jwt`): acciones `state`, `request`, `verify`, `quote`, `file` y `decide`. Solo llama a las funciones `portal_*`, que no puede ejecutar ningún rol de la API. Responde igual a un correo que no es del quote (no revela destinatarios). Al aceptar copia el SOW a `jobsite-docs/<jobsite>/` y avisa por correo a quien envió.
-- Correo: `Cid Clean <quotes@mail.cidclean.com>`, respuesta a `admin@cidclean.com`. Dominio `mail.cidclean.com` creado y verificado en Resend; sus 4 registros (DKIM `resend._domainkey.mail`, MX y TXT `send.mail`, CNAME `rsend.mail`) están en Cloudflare con el comentario "Resend mail.cidclean.com". No se tocaron los de Vercel ni Zoho.
+- Correo: `Cid Clean <quotes@mail.cidclean.com>`, respuesta a `info@cidclean.com` (D-249; antes `admin@cidclean.com`). Dominio `mail.cidclean.com` creado y verificado en Resend; sus 4 registros (DKIM `resend._domainkey.mail`, MX y TXT `send.mail`, CNAME `rsend.mail`) están en Cloudflare con el comentario "Resend mail.cidclean.com". No se tocaron los de Vercel ni Zoho.
 - Secretos de las funciones: `RESEND_QUOTES_KEY` (llave `cidclean-quotes`, solo envío, limitada a `mail.cidclean.com`), `PORTAL_CODE_PEPPER` (aleatorio; con él se guarda el hash del código del cliente) y `PORTAL_BASE_URL` (`https://quote.cidclean.com`).
 
 ```
@@ -100,3 +100,12 @@ npx supabase@latest functions deploy send-quote --project-ref <ref> --use-api
 npx supabase@latest functions deploy quote-portal --project-ref <ref> --use-api --no-verify-jwt
 npx supabase@latest functions deploy send-notifications --project-ref <ref> --use-api --no-verify-jwt
 ```
+
+## Orden 32: correos con la marca (D-247, D-249, D-250)
+
+- `_shared/correo.ts`: armazón común (logo de 44 px del bucket público `brand`, "Cid Clean", tarjeta blanca de 24 px, pie con Cid Clean LLC, cidclean.com, teléfono, correo y redes) y su texto plano. Todos los correos salen en inglés.
+- `send-quote`: asunto "Your Cid Clean quote for {company}", saludo con el primer nombre del contacto (sin nombre si no hay), sitio y dirección, días (y hora si existe), servicios y add-ons (con su descripción si la línea la trae), total con tax en la tarjeta `#0F766E` ("Total" y fecha del servicio en un extra, D-238), botón "View quote", aviso del código y vigencia y firma "Cid Clean LLC". El PDF va adjunto (`Cid Clean quote {versión}.pdf`); al reenviar se baja de `quote-files`.
+- `quote-portal`: código con asunto "Your Cid Clean code: {code}"; aviso de decisión a quien envió, en inglés.
+- `send-notifications`: avisos y resumen con el mismo armazón; los textos salen en inglés porque `claim_notification_emails` pide `notification_text` en `en` (migración `20261027000012`). La bandeja de la app sigue en el idioma del perfil.
+- Necesita la migración `20261027000012_correos_en_ingles.sql` (contacto y datos del correo en `prepare_send_quote` y `quote_mail_data`). Sin ella el correo sale sin nombre y, al reenviar, sin servicios ni total.
+- Pendiente del arquitecto: crear el bucket (`bucket-brand.md`), aplicar la migración y desplegar `send-quote`, `quote-portal` (`--no-verify-jwt`), `send-notifications`, `create-employee` y `resend-invitation`.

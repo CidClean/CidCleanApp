@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 
+import { pieTexto } from './correo.ts';
 import { INVITACION_HTML } from './invitacion.ts';
 
 export const CORS = {
@@ -31,17 +32,15 @@ function escaparHtml(texto: string): string {
   return texto.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/** Correo de invitación (D-186): bilingüe, sin enlaces, desde no-reply@auth.cidclean.com. */
+/** Correo de invitación (D-186 en inglés, D-247; estilo D-250): sin enlaces, desde no-reply@auth.cidclean.com. */
 export async function enviarInvitacion(correo: string, nombre: string): Promise<boolean> {
   const html = INVITACION_HTML.replaceAll('{{name}}', escaparHtml(nombre));
   const texto = [
-    `Hola ${nombre}, te agregaron a la app de Cid Clean.`,
-    'Abre la app, escribe este correo y te enviaremos un código de 6 dígitos para entrar.',
-    'Si no esperabas esta invitación, ignora este correo.',
-    '',
     `Hi ${nombre}, you've been added to the Cid Clean app.`,
     "Open the app, enter this email and we'll send you a 6-digit code to sign in.",
     "If you weren't expecting this invitation, ignore this email.",
+    '',
+    pieTexto(),
   ].join('\n');
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -49,7 +48,7 @@ export async function enviarInvitacion(correo: string, nombre: string): Promise<
     body: JSON.stringify({
       from: 'Cid Clean <no-reply@auth.cidclean.com>',
       to: [correo],
-      subject: "Te invitamos a Cid Clean / You're invited to Cid Clean",
+      subject: "You're invited to Cid Clean", // D-247: el asunto en inglés de D-186
       html,
       text: texto,
     }),

@@ -4,13 +4,15 @@
 import { PDFDocument, rgb, StandardFonts, type PDFFont } from 'npm:pdf-lib@1.17.1';
 import fontkit from 'npm:@pdf-lib/fontkit@1.1.1';
 
+import { correoHtml, EMPRESA, esc, filas, nota, parrafo, pieTexto, titulo, boton, codigoGrande, firma } from './correo.ts';
+
 export type Lang = 'es' | 'en';
-export type Line = { label: string; amount?: number; taxable?: boolean; kind?: 'amount' | 'percent'; value?: number };
+export type Line = { label: string; description?: string; amount?: number; taxable?: boolean; kind?: 'amount' | 'percent'; value?: number };
 export type Lines = { services: Line[]; addons: Line[]; discounts: Line[] };
 export type Frequency = { kind: 'daily' | 'weekly' | 'other'; days: number[]; other: string } | null;
 
 export const FROM = 'Cid Clean <quotes@mail.cidclean.com>';
-export const REPLY_TO = 'admin@cidclean.com';
+export const REPLY_TO = 'info@cidclean.com'; // D-249
 const BRAND = rgb(15 / 255, 118 / 255, 110 / 255);
 const TEXT = rgb(26 / 255, 26 / 255, 26 / 255);
 const SECONDARY = rgb(107 / 255, 107 / 255, 107 / 255);
@@ -75,15 +77,6 @@ export const T = {
     frequency: 'Frecuencia',
     version: 'Versión',
     footer: 'Cid Clean · Naples, Florida',
-    mailSubject: (site: string) => `Tu cotización de Cid Clean: ${site}`,
-    mailIntro: (company: string, site: string) => `Preparamos la cotización para ${company} · ${site}.`,
-    mailValid: (date: string) => `Vence el ${date}.`,
-    mailButton: 'Ver cotización',
-    mailCode: 'Para verla te pediremos un código que enviaremos a este correo.',
-    mailReply: 'Si tienes preguntas, responde a este correo.',
-    codeSubject: (code: string) => `Tu código de Cid Clean: ${code}`,
-    codeBody: (code: string) => `Tu código para ver la cotización es ${code}. Vale 10 minutos.`,
-    codeIgnore: 'Si no lo pediste, ignora este correo.',
   },
   en: {
     quote: 'Quote',
@@ -100,86 +93,162 @@ export const T = {
     frequency: 'Frequency',
     version: 'Version',
     footer: 'Cid Clean · Naples, Florida',
-    mailSubject: (site: string) => `Your Cid Clean quote: ${site}`,
-    mailIntro: (company: string, site: string) => `We prepared the quote for ${company} · ${site}.`,
-    mailValid: (date: string) => `It expires on ${date}.`,
-    mailButton: 'View quote',
-    mailCode: "To view it, we'll ask for a code that we'll send to this email.",
-    mailReply: 'If you have questions, reply to this email.',
-    codeSubject: (code: string) => `Your Cid Clean code: ${code}`,
-    codeBody: (code: string) => `Your code to view the quote is ${code}. It's valid for 10 minutes.`,
-    codeIgnore: "If you didn't request it, ignore this email.",
   },
 };
 
-/** Avisos a quien envió el quote (D-209), en el idioma de su perfil. */
-export const DECISION = {
-  es: {
-    accepted: (c: string, s: string) => `${c} aceptó el quote de ${s}`,
-    rejected: (c: string, s: string) => `${c} rechazó el quote de ${s}`,
-    changes_requested: (c: string, s: string) => `${c} pidió cambios al quote de ${s}`,
-    body: (v: string) => `Versión ${v}. Míralo en la app: Pipeline, el lead y la pestaña Sitios.`,
-    bodyExtra: (v: string) => `Versión ${v}. Míralo en la app: Cuentas y el jobsite.`,
-  },
-  en: {
-    accepted: (c: string, s: string) => `${c} accepted the quote for ${s}`,
-    rejected: (c: string, s: string) => `${c} rejected the quote for ${s}`,
-    changes_requested: (c: string, s: string) => `${c} requested changes to the quote for ${s}`,
-    body: (v: string) => `Version ${v}. See it in the app: Pipeline, the lead and the Sites tab.`,
-    bodyExtra: (v: string) => `Version ${v}. See it in the app: Accounts and the jobsite.`,
-  },
+/** Día de la semana en inglés para el correo (0 = lunes). */
+const DAYS_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/** "Mon, Wed and Fri" (muestra de D-250); "Every day" para diaria; el texto libre para "otra". D-200 */
+export function diasCorreo(f: Frequency): string {
+  if (!f) return '';
+  if (f.kind === 'other') return f.other ?? '';
+  if (f.kind === 'daily') return 'Every day'; // D-200
+  const d = [...f.days].sort((a, b) => a - b).map((x) => DAYS_EN[x]);
+  return d.length <= 1 ? (d[0] ?? '') : `${d.slice(0, -1).join(', ')} and ${d[d.length - 1]}`;
+}
+
+/** "6:00 PM" desde "18:00" o "18:00:00". */
+export function horaCorreo(t: string | null | undefined): string {
+  const m = /^(\d{1,2}):(\d{2})/.exec(t ?? '');
+  if (!m) return '';
+  const h = Number(m[1]);
+  return `${h % 12 === 0 ? 12 : h % 12}:${m[2]} ${h < 12 ? 'AM' : 'PM'}`;
+}
+
+export type QuoteMail = {
+  company: string;
+  site: string;
+  address: string | null;
+  contactName: string | null;
+  frequency: Frequency;
+  visitTime?: string | null;
+  lines: Lines | null;
+  total: number | null;
+  extra: boolean;
+  serviceDate: string | null;
+  expires: string;
+  link: string;
 };
 
-function plantilla(cuerpo: string): string {
-  return `<!doctype html><html><body style="margin:0;background:#F4F4F4;font-family:Manrope,Arial,sans-serif;color:#1A1A1A">
-<div style="max-width:520px;margin:0 auto;padding:24px 16px"><div style="background:#FFFFFF;border:1px solid #E2E2E2;border-radius:12px;overflow:hidden">
-<div style="background:#0F766E;color:#FFFFFF;padding:14px 16px;font-size:18px;font-weight:600">Cid Clean</div>
-<div style="padding:16px;font-size:15px;line-height:1.5">${cuerpo}</div></div></div></body></html>`;
+/** Correo del quote al cliente (D-247, D-250; muestra surveys/marca-aprobado/quote-email.html). Siempre en inglés. */
+export function correoQuote(d: QuoteMail) {
+  const first = (d.contactName ?? '').trim().split(/\s+/)[0] ?? '';
+  const head = first ? `Your quote is ready, ${first}` : 'Your quote is ready';
+  const lugar = [d.site, d.address && d.address !== d.site ? d.address : null].filter(Boolean).join(' · ');
+  const cuando = d.extra
+    ? d.serviceDate ? `Service date · ${fecha(`${d.serviceDate}T12:00:00Z`, 'en')}` : '' // D-238
+    : [diasCorreo(d.frequency), horaCorreo(d.visitTime)].filter(Boolean).join(' · ');
+  const items = d.lines ? [...d.lines.services, ...d.lines.addons].map((l) => ({ title: l.label, detail: l.description ?? null })) : [];
+  const totalLabel = d.extra ? 'Total' : 'Monthly total';
+  const intro = `Thanks for walking us through your space. Here's a preview of what we put together for <b style="color:#1E2A28">${esc(d.company)}</b>.`;
+  const caja = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6EFE6;border-radius:18px"><tr><td style="padding:18px 18px 8px">
+<div style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8A4B0F">${esc(lugar)}</div>
+${cuando ? `<div style="font-size:14px;color:#6B5F52;margin:4px 0 6px">${esc(cuando)}</div>` : '<div style="height:6px"></div>'}
+${items.length ? filas(items) : ''}
+</td></tr>${d.total != null ? `<tr><td style="padding:0 18px 18px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0F766E;border-radius:14px"><tr>
+<td style="padding:14px 16px;color:#FFFFFF;font-size:14px">${totalLabel}<br><span style="font-size:12px;opacity:.85">tax included</span></td>
+<td align="right" style="padding:14px 16px;color:#FFFFFF;font-size:26px;font-weight:800">${money(d.total)}</td></tr></table></td></tr>` : ''}</table>`;
+  const aviso = `The full quote and the scope of work are on a secure page. We'll send a code to this email so only you can review and accept it. Valid until <b style="color:#1E2A28">${esc(d.expires)}</b>.`;
+  const html = correoHtml({
+    preview: `A preview of your Cid Clean quote for ${d.company}.`,
+    tarjeta: titulo(head) + parrafo(intro) + caja + boton('View quote', d.link) + nota(aviso) +
+      firma('Questions? Just reply to this email or call us.'),
+  });
+  const text = [
+    head,
+    '',
+    `Thanks for walking us through your space. Here's a preview of what we put together for ${d.company}.`,
+    '',
+    lugar,
+    ...(cuando ? [cuando] : []),
+    ...items.map((i) => `- ${i.title}${i.detail ? `: ${i.detail}` : ''}`),
+    ...(d.total != null ? ['', `${totalLabel} (tax included): ${money(d.total)}`] : []),
+    '',
+    `View quote: ${d.link}`,
+    '',
+    `The full quote and the scope of work are on a secure page. We'll send a code to this email so only you can review and accept it. Valid until ${d.expires}.`,
+    '',
+    'Questions? Just reply to this email or call us.',
+    EMPRESA.nombre,
+    '',
+    pieTexto(),
+  ].join('\n');
+  return { subject: `Your Cid Clean quote for ${d.company}`, html, text };
 }
 
-export function correoQuote(l: Lang, d: { company: string; site: string; expires: string; link: string }) {
-  const t = T[l];
-  const e = escaparHtml;
-  const html = plantilla(`<p style="margin:0 0 8px">${e(t.mailIntro(d.company, d.site))}</p>
-<p style="margin:0 0 16px;color:#6B6B6B">${e(t.mailValid(d.expires))}</p>
-<p style="margin:0 0 16px"><a href="${e(d.link)}" style="display:inline-block;background:#0F766E;color:#FFFFFF;text-decoration:none;padding:10px 18px;border-radius:12px;font-weight:600">${e(t.mailButton)}</a></p>
-<p style="margin:0 0 8px;font-size:13px;color:#6B6B6B">${e(t.mailCode)}</p>
-<p style="margin:0;font-size:13px;color:#6B6B6B">${e(t.mailReply)}</p>`);
-  const text = [t.mailIntro(d.company, d.site), t.mailValid(d.expires), '', `${t.mailButton}: ${d.link}`, '', t.mailCode, t.mailReply].join('\n');
-  return { subject: t.mailSubject(d.site), html, text };
+/** Código del portal (D-250; muestra surveys/marca-aprobado/code-email.html). */
+export function correoCodigo(code: string) {
+  const subject = `Your Cid Clean code: ${code}`;
+  const html = correoHtml({
+    preview: subject,
+    tarjeta: titulo('Your code to view the quote', 22).replace('margin:0 0 8px', 'margin:0 0 6px') +
+      parrafo("Enter this code on the quote page. It's valid for 10 minutes.").replace('margin:0 0 20px', 'margin:0 0 18px') +
+      codigoGrande(code) +
+      nota("If you didn't ask for this code, you can ignore this email. Nobody can accept your quote without it.", '16px'),
+  });
+  const text = [
+    'Your code to view the quote',
+    '',
+    "Enter this code on the quote page. It's valid for 10 minutes.",
+    '',
+    code,
+    '',
+    "If you didn't ask for this code, you can ignore this email. Nobody can accept your quote without it.",
+    '',
+    pieTexto(),
+  ].join('\n');
+  return { subject, html, text };
 }
 
-export function correoCodigo(l: Lang, code: string) {
-  const t = T[l];
-  const html = plantilla(`<p style="margin:0 0 12px">${escaparHtml(t.codeBody(code))}</p>
-<p style="margin:0 0 12px;font-size:28px;letter-spacing:6px;font-weight:600">${code}</p>
-<p style="margin:0;font-size:13px;color:#6B6B6B">${escaparHtml(t.codeIgnore)}</p>`);
-  return { subject: t.codeSubject(code), html, text: `${t.codeBody(code)}\n\n${t.codeIgnore}` };
-}
+/** Aviso a quien envió el quote (D-209), en inglés (D-247) con el estilo de D-250. Textos D-200. */
+const DECISION = {
+  accepted: (c: string, s: string) => `${c} accepted the quote for ${s}`,
+  rejected: (c: string, s: string) => `${c} rejected the quote for ${s}`,
+  changes_requested: (c: string, s: string) => `${c} requested changes to the quote for ${s}`,
+  body: (v: string) => `Version ${v}. See it in the app: Pipeline, the lead and the Sites tab.`,
+  bodyExtra: (v: string) => `Version ${v}. See it in the app: Accounts and the jobsite.`,
+};
 
 export function correoDecision(
-  l: Lang,
   kind: 'accepted' | 'rejected' | 'changes_requested',
   company: string,
   site: string,
   version: string,
   extra = false,
 ) {
-  const t = DECISION[l];
-  const subject = t[kind](company, site);
-  const body = extra ? t.bodyExtra(version) : t.body(version);
-  const html = plantilla(`<p style="margin:0 0 8px;font-weight:600">${escaparHtml(subject)}</p><p style="margin:0;color:#6B6B6B">${escaparHtml(body)}</p>`);
-  return { subject, html, text: `${subject}\n${body}` };
+  const subject = DECISION[kind](company, site);
+  const body = extra ? DECISION.bodyExtra(version) : DECISION.body(version);
+  const html = correoHtml({
+    preview: subject,
+    tarjeta: titulo(subject, 22) + nota(esc(body)).replace('font-size:13px', 'font-size:15px'),
+  });
+  return { subject, html, text: `${subject}\n${body}\n\n${pieTexto()}` };
 }
 
-/** Envía un correo con la llave de envío de mail.cidclean.com. Devuelve si Resend lo aceptó. */
-export async function enviarCorreo(to: string, m: { subject: string; html: string; text: string }): Promise<boolean> {
+/** Envía un correo con la llave de envío de mail.cidclean.com, con respuesta a info@cidclean.com (D-249) y adjuntos
+ * opcionales (el PDF del quote). Devuelve si Resend lo aceptó. */
+export async function enviarCorreo(
+  to: string,
+  m: { subject: string; html: string; text: string },
+  adjuntos: { filename: string; content: Uint8Array }[] = [],
+): Promise<boolean> {
+  const attachments = adjuntos.map((a) => ({ filename: a.filename, content: base64(a.content) }));
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${Deno.env.get('RESEND_QUOTES_KEY')}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: FROM, to: [to], reply_to: REPLY_TO, subject: m.subject, html: m.html, text: m.text }),
+    body: JSON.stringify({
+      from: FROM, to: [to], reply_to: REPLY_TO, subject: m.subject, html: m.html, text: m.text,
+      ...(attachments.length ? { attachments } : {}),
+    }),
   });
   return res.ok;
+}
+
+function base64(bytes: Uint8Array): string {
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(s);
 }
 
 export async function sha256(texto: string): Promise<string> {
