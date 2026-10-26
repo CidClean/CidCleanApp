@@ -52,7 +52,8 @@
           "locationWhenInUsePermission": "Cid Clean usa tu ubicación solo al marcar entrada y salida, para confirmar que estás en el sitio."
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,
