@@ -1,4 +1,5 @@
 import { Redirect } from 'expo-router';
+import { BrandLoading } from '@/components/brand/BrandLoading';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 
@@ -70,7 +71,9 @@ export default function HistoryScreen() {
         }}
         ListHeaderComponent={state === 'error' ? <AppAlert tone="error" text={strings.history.errorLoad} /> : undefined}
         ListEmptyComponent={
-          state === 'ready' ? (
+          state === 'loading' ? (
+            <BrandLoading size={56} center={false} label={strings.common.loading} />
+          ) : state === 'ready' ? (
             <AppText color={colors.secondary} center style={{ marginTop: 24 }}>
               {strings.history.empty}
             </AppText>

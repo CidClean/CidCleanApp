@@ -1,4 +1,5 @@
 import { useFocusEffect, useRouter } from 'expo-router';
+import { BrandLoading } from '@/components/brand/BrandLoading';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -70,6 +71,7 @@ export default function NotificationsScreen() {
       />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 24 }}>
         {failed ? <AppAlert tone="error" text={t.errorLoad} /> : null}
+        {rows === null && !failed ? <BrandLoading size={56} center={false} label={strings.common.loading} /> : null}
         {rows && rows.length === 0 ? (
           <AppText size={sample.noteSize} color={colors.secondary}>
             {t.empty}

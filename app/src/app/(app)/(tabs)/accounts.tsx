@@ -1,4 +1,5 @@
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
+import { BrandLoading } from '@/components/brand/BrandLoading';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -82,6 +83,7 @@ export default function AccountsScreen() {
           />
         ) : null}
         {failed ? <AppAlert tone="error" text={c.list.errorLoad} /> : null}
+        {groups === null && !failed ? <BrandLoading size={56} center={false} label={strings.common.loading} /> : null}
         {groups && groups.length === 0 ? (
           <AppText size={sample.noteSize} color={colors.secondary}>
             {c.list.empty}

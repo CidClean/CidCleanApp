@@ -1,4 +1,5 @@
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
+import { BrandLoading } from '@/components/brand/BrandLoading';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -66,6 +67,7 @@ export default function EmployeesScreen() {
           />
         ) : null}
         {failed ? <AppAlert tone="error" text={strings.employees.errorLoad} /> : null}
+        {employees === null && !failed ? <BrandLoading size={56} center={false} label={strings.common.loading} /> : null}
         {employees && employees.length > 0 ? (
         <CardBlock>
         {employees.map((e, i) => (

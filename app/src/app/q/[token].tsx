@@ -15,6 +15,8 @@ import { Dialog } from "@/components/Dialog";
 import { TopBar } from "@/components/TopBar";
 import { TitleHeader } from "@/components/bento/Header";
 import { BrandMark } from "@/components/brand/BrandMark";
+import { BrandLoading } from "@/components/brand/BrandLoading";
+import { showDone } from "@/components/brand/DoneOverlay";
 import { QuoteView } from "@/components/quotes/QuoteView";
 import { getPortalStrings, type PortalStrings } from "@/i18n/quotes";
 import { CODE_LENGTH } from "@/lib/codeEntry";
@@ -208,6 +210,7 @@ export default function PortalScreen() {
     }
     // La pantalla final se muestra siempre tras la respuesta; recargar la cotización solo actualiza la fecha y el nombre.
     setStep({ kind: "done", decision: d.kind });
+    if (d.kind === "accepted") showDone(); // D-250: "Listo" cuando el cliente acepta
     setBusy(false);
     const fresh = await fetchPortalQuote(session);
     if (fresh.ok) setQuote(fresh.data);
@@ -246,7 +249,11 @@ export default function PortalScreen() {
   );
 
   if (step.kind === "loading")
-    return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <BrandLoading label={lang === "es" ? "Cargando" : "Loading"} />
+      </View>
+    );
   if (step.kind === "closed")
     return shell(t.brand, <ClosedState state={step.state} t={t} />);
 

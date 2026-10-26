@@ -10,6 +10,7 @@ import { useStrings } from '@/i18n/useStrings';
 import { useWorkStrings } from '@/i18n/useWorkStrings';
 import { currentPosition, locationAvailable, type Position } from '@/lib/location';
 import { checkDistance, clockIn, clockOut, type MyVisit } from '@/lib/scheduleApi';
+import { showDone } from '@/components/brand/DoneOverlay';
 import { elapsed } from '@/lib/scheduleRules';
 import { newId } from '@/lib/walkthroughRules';
 import { formatTime } from '@/lib/week';
@@ -70,6 +71,7 @@ export function ClockCard({ visit, onChanged }: { visit: MyVisit; onChanged: () 
       await saveShift(s);
       setShift(s);
       setPhase({ kind: 'idle' });
+      showDone(); // D-250: "Listo" al marcar clock in con éxito
       onChanged();
       return;
     }
@@ -113,7 +115,7 @@ export function ClockCard({ visit, onChanged }: { visit: MyVisit; onChanged: () 
     if (!saved) {
       await enqueue({ kind: 'out', clientId: shift.clientId, entryId: shift.entryId, at: at.toISOString(), ...item });
       setNotice({ tone: 'warning', text: t.savedOffline });
-    }
+    } else showDone(); // D-250: "Listo" al marcar clock out con éxito
     await saveShift(null);
     setShift(null);
     setPhase({ kind: 'idle' });

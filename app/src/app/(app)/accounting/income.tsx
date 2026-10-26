@@ -1,4 +1,5 @@
 import { Redirect, useFocusEffect } from 'expo-router';
+import { BrandLoading } from '@/components/brand/BrandLoading';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -79,6 +80,7 @@ export default function IncomeScreen() {
       <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
         <PeriodBar period={period} onChange={setPeriod} />
         {error === 'load' ? <AppAlert tone="error" text={a.errorLoad} /> : null}
+        {rows === null && error !== 'load' ? <BrandLoading size={56} center={false} label={strings.common.loading} /> : null}
         {error === 'save' ? <AppAlert tone="error" text={a.errorSave} /> : null}
         <Card wide style={{ gap: 10, marginBottom: 12 }}>
           <View style={styles.summary}>

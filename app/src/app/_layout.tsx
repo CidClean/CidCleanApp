@@ -2,7 +2,11 @@ import { Manrope_400Regular, Manrope_500Medium, Manrope_700Bold, Manrope_800Extr
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Platform, View } from 'react-native';
+
+import { DoneOverlayHost } from '@/components/brand/DoneOverlay';
+import { OpeningAnimation } from '@/components/brand/OpeningAnimation';
 
 import { SessionProvider, useSession } from '@/lib/session';
 import { clearViewerCache } from '@/lib/viewerFile';
@@ -22,6 +26,9 @@ function Routes() {
 
   const [fontsLoaded] = useFonts({ Manrope_400Regular, Manrope_500Medium, Manrope_700Bold, Manrope_800ExtraBold });
   const ready = fontsLoaded && status !== 'loading';
+  // Orden 34 (D-250): animación de apertura al abrir la app, después de la pantalla nativa de inicio. No en el portal
+  // web (D-200: el cliente entra directo al quote).
+  const [opening, setOpening] = useState(Platform.OS !== 'web' && !PORTAL_ONLY);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
@@ -49,6 +56,7 @@ function Routes() {
 
   return (
     <ThemeProvider value={navTheme}>
+      <View style={{ flex: 1 }}>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
         {/* Portal del cliente (D-209): sin sesión del staff, siempre disponible. */}
@@ -70,6 +78,9 @@ function Routes() {
           <Stack.Screen name="viewer" />
         </Stack.Protected>
       </Stack>
+      <DoneOverlayHost />
+      {opening ? <OpeningAnimation onDone={() => setOpening(false)} /> : null}
+      </View>
     </ThemeProvider>
   );
 }

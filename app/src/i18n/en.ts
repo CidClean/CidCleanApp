@@ -94,6 +94,7 @@ export const en: Strings = {
   },
 
   common: {
+    loading: 'Loading',
     back: 'Back', // screen reader name of the back arrow in the top bar (D-180)
     edit: 'Edit', // employee profile, Details tab: text button on the right of the top bar (D-174)
     save: 'Save', // employee profile, Details tab in edit mode: solid button

@@ -1,4 +1,5 @@
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
+import { BrandLoading } from '@/components/brand/BrandLoading';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -97,6 +98,7 @@ export default function PipelineScreen() {
           </AppText>
         ) : null}
         {failed ? <AppAlert tone="error" text={s.list.errorLoad} /> : null}
+        {leads === null && !failed ? <BrandLoading size={56} center={false} label={strings.common.loading} /> : null}
         {allowed && leads ? (
           <>
             <View style={styles.stats}>

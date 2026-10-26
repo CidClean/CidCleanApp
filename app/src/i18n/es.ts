@@ -95,6 +95,7 @@ export const es = {
   },
 
   common: {
+    loading: 'Cargando', // D-200 (lector de pantalla de la animación Cargando, D-250)
     back: 'Volver', // SIN APROBAR: solo lo lee el lector de pantalla (nombre de la flecha de volver, D-180)
     edit: 'Editar', // APROBADO (D-174)
     save: 'Guardar', // APROBADO (orden de la ronda 15: botón Guardar del formulario, D-174)

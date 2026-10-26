@@ -1,8 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
+import { BrandLoading } from '@/components/brand/BrandLoading';
 import type { File } from 'expo-file-system';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Platform, StyleSheet, View } from 'react-native';
+import { Image, Platform, StyleSheet, View } from 'react-native';
 
 import { AppAlert } from '@/components/AppAlert';
 import { TopBar } from '@/components/TopBar';
@@ -97,9 +98,7 @@ export default function ViewerScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={title ?? ''} onBack={goBack} backLabel={strings.common.back} />
       {state.status === 'loading' ? (
-        <View style={styles.center}>
-          <ActivityIndicator color={colors.secondary} />
-        </View>
+        <BrandLoading label={strings.common.loading} />
       ) : null}
       {state.status === 'error' ? (
         <View style={{ padding: 12 }}>

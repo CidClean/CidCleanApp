@@ -1,4 +1,5 @@
 import { Redirect, useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { BrandLoading } from '@/components/brand/BrandLoading';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -458,6 +459,7 @@ export default function EmployeeProfileScreen() {
                 {mode !== 'locked' && permLoad === 'error' ? (
                   <AppAlert tone="error" text={strings.permissions.errorLoad} />
                 ) : null}
+                {mode !== 'locked' && permLoad === 'loading' ? <BrandLoading size={56} center={false} label={strings.common.loading} /> : null}
                 {mode === 'locked' || permLoad === 'ready' ? (
                   <PermissionsTab
                     strings={strings}

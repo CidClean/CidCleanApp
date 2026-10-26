@@ -21,6 +21,7 @@ import { useQuoteStrings } from "@/i18n/useQuoteStrings";
 import { useStrings } from "@/i18n/useStrings";
 import { fetchLead } from "@/lib/leadsApi";
 import { useGoBack } from "@/lib/navigation";
+import { showDone } from "@/components/brand/DoneOverlay";
 import {
   cleanRecipients,
   computeTotals,
@@ -327,6 +328,7 @@ export function QuoteEditor({ source }: { source: QuoteSource }) {
       await load();
       return;
     }
+    if (r.data.failed === 0) showDone(); // D-250: "Listo" al enviar un quote con éxito
     await load();
     setNotice(
       r.data.failed > 0

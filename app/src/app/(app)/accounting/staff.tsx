@@ -1,4 +1,5 @@
 import { Redirect, useFocusEffect } from 'expo-router';
+import { BrandLoading } from '@/components/brand/BrandLoading';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -69,6 +70,7 @@ export default function StaffCostScreen() {
           }}
         />
         {failed ? <AppAlert tone="error" text={a.errorLoad} /> : null}
+        {rows === null && !failed ? <BrandLoading size={56} center={false} label={strings.common.loading} /> : null}
         <Card wide style={{ marginBottom: 12, gap: 2 }}>
           <AppText size={13} color={colors.secondary}>
             {a.staff}
