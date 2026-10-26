@@ -14,6 +14,8 @@ jest.mock('@/lib/accountingApi', () => ({
   fetchDashboard: jest.fn(async () => ({ ok: false, reason: 'network' })),
   fetchRecurring: jest.fn(async () => ({ ok: true, data: [] })),
 }));
+// D-253: el Inicio del admin pide sus tarjetas a admin_home.
+jest.mock('@/lib/statisticsApi', () => ({ fetchAdminHome: jest.fn(async () => ({ ok: false, reason: 'network' })) }));
 jest.mock('@/lib/scheduleApi', () => {
   const empty = { ok: true, data: null };
   return {

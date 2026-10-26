@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { Bento, Card, useCardText } from '@/components/bento/Card';
-import { ApproveIcon, CalendarIcon, CartArt, OfficeArt, QuoteDueIcon, WalkthroughIcon } from '@/components/illustrations';
+import { ApproveIcon, CalendarIcon, QuoteDueIcon, WalkthroughIcon } from '@/components/illustrations';
 import { SlideToMark } from '@/components/SlideToMark';
 import { WeekStrip } from '@/components/WeekStrip';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
@@ -19,7 +19,7 @@ import { useWalkthroughStrings } from '@/i18n/useWalkthroughStrings';
 import { canDoWalkthroughs, inProgress, type WalkthroughDoc } from '@/lib/walkthroughRules';
 import { listWalkthroughs } from '@/lib/walkthroughStore';
 import { usePermissions, useSession } from '@/lib/session';
-import { canAny, homeKind, showsMonthFigures } from '@/lib/visibility';
+import { canAny, homeKind } from '@/lib/visibility';
 import { formatTime } from '@/lib/week';
 import { ClockCard } from '@/components/work/ClockCard';
 import { ListRow } from '@/components/ListRow';
@@ -29,9 +29,13 @@ import { dayKey } from '@/lib/leadRules';
 import { clockIn, clockOut, fetchMySchedule, fetchWorkPending, type MyVisit, type WorkPending } from '@/lib/scheduleApi';
 import { pickNext, pickToday, weekRange } from '@/lib/scheduleRules';
 import { syncWorkQueue } from '@/lib/workQueue';
-import { fetchDashboard } from '@/lib/accountingApi';
-import { monthKeyOf, money } from '@/lib/accountingRules';
-import { iconStrokeWidth, illustrations, sample, useTheme } from '@/theme';
+import { hoursText, money } from '@/lib/accountingRules';
+import { Pill } from '@/components/bento/Pill';
+import { useAccountingStrings } from '@/i18n/useAccountingStrings';
+import { useStatisticsStrings } from '@/i18n/useStatisticsStrings';
+import { fetchAdminHome } from '@/lib/statisticsApi';
+import { costShare, homeCards, type AdminHomeData, type HomeVisit } from '@/lib/statisticsRules';
+import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
 /** Inicio: el del admin para el Super Admin y quien tenga algún permiso; el del staff para quien no tenga ninguno (D-169). */
 export default function HomeScreen() {
@@ -40,9 +44,11 @@ export default function HomeScreen() {
 }
 
 /**
- * Inicio del admin (D-111, D-164, D-223 estilo C): saludo, tarjeta de marca con las cifras del mes, los pendientes
- * por urgencia en tarjetas (los urgentes en ámbar), las cifras de seguimientos y walkthroughs agendados y el
- * walkthrough en curso; sin pendientes, "Todo al día".
+ * Inicio del admin (D-253, muestra surveys/dashboard-estadisticas-aprobado.html en el bento C1; D-111, D-164, D-223):
+ * tarjeta de marca con el profit del mes sobre lo esperado (ingreso, personal, gastos y margen), Por cobrar en ámbar,
+ * Por aprobar, las visitas de hoy con quién marcó entrada, las horas de la semana contra el tope de 32 h (solo con el
+ * schedule, D-223), y Pipeline y Cuentas; cada tarjeta solo con el permiso de su área (admin_home). Debajo siguen los
+ * pendientes por urgencia, los seguimientos, los walkthroughs y "Todo al día" sin pendientes.
  */
 function AdminHome() {
   const { colors, status } = useTheme();
@@ -107,6 +113,7 @@ function AdminHome() {
   const scheduled = salesRows.find((r) => r.key === 'walkthroughs') ? (sales?.walkthroughsUpcoming ?? 0) : 0;
   // Hito 6: trabajos por aprobar, GPS fuera de rango, entradas sin marcar a los 30 min y turnos abiertos (D-214).
   const t = useWorkStrings();
+  const st = useStatisticsStrings();
   const seesWork = canAny(access, ['work_aprobar', 'work_editar', 'work_revisar_gps', 'work_registrar_por_otros', 'schedule_ver_editar']);
   const [work, setWork] = useState<WorkPending | null>(null);
   useFocusEffect(
@@ -124,30 +131,25 @@ function AdminHome() {
   const myToday = pickToday(mine.visits, new Date());
   const workCards = work
     ? ([
-        work.toApprove > 0 ? { key: 'approve', text: t.homeApprove(work.toApprove), urgent: work.urgent > 0, tab: 'approve' } : null,
         work.gpsOut > 0 ? { key: 'gps', text: t.homeGps(work.gpsOut), urgent: true, tab: 'approve' } : null,
         work.forgotClockIn > 0 ? { key: 'forgot', text: t.homeForgot(work.forgotClockIn), urgent: true, tab: 'schedule' } : null,
         work.openShifts > 0 ? { key: 'open', text: t.homeOpen(work.openShifts), urgent: true, tab: 'approve' } : null,
       ].filter(Boolean) as { key: string; text: string; urgent: boolean; tab: string }[])
     : [];
-  const nothing = pending.length === 0 && ongoing.length === 0 && workCards.length === 0 && !myToday;
-  // Hito 7: cifras reales del mes (ingreso esperado y profit sobre lo esperado, D-215) con el dashboard global.
-  // Sin datos, $0.00 (D-225). Nunca hay horas contra el tope de 32 h aquí (D-223).
-  const seesFigures = showsMonthFigures(access);
-  const [figures, setFigures] = useState<{ income: number; profit: number } | null>(null);
+  // D-253: las tarjetas nuevas salen de admin_home, cada una con su permiso (sin permiso llega null).
+  const cards = homeCards(access);
+  const [home, setHome] = useState<AdminHomeData | null>(null);
   useFocusEffect(
     useCallback(() => {
-      if (!seesFigures) return;
       let cancelled = false;
-      const m = monthKeyOf(new Date());
-      void fetchDashboard({ from: m, to: m }, null).then((r) => {
-        if (!cancelled && r.ok) setFigures({ income: r.data.expected, profit: r.data.profit });
-      });
+      void fetchAdminHome().then((r) => !cancelled && r.ok && setHome(r.data));
       return () => {
         cancelled = true;
       };
-    }, [seesFigures]),
+    }, []),
   );
+  const approveCount = home?.toApprove?.shifts ?? 0;
+  const nothing = pending.length === 0 && ongoing.length === 0 && workCards.length === 0 && !myToday && approveCount === 0;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -155,23 +157,20 @@ function AdminHome() {
         <Greeting name={profile?.fullName ?? ''} avatar />
         {/* D-223 (estilo C): mosaico de 2 columnas; D-111 y D-131: pendientes por urgencia, solo de las áreas con permiso. */}
         <Bento>
-          {seesFigures ? (
-            <Card tone="brand" wide style={[styles.mainCard, illustrations ? styles.mainCardArt : null]}>
-              <View style={{ gap: 6, flexShrink: 1, paddingBottom: illustrations ? 18 : 0 }}>
-                <AppText size={13} color="#FFFFFF" style={{ opacity: 0.85 }}>
-                  {strings.home.income}
-                </AppText>
-                <AppText weight="heavy" size={32} color="#FFFFFF">
-                  {money(figures?.income ?? 0)}
-                </AppText>
-                <AppText size={13} color="#FFFFFF" style={{ opacity: 0.85 }}>
-                  {strings.home.profitLine(money(figures?.profit ?? 0))}
-                </AppText>
-              </View>
-              <OfficeArt />
-            </Card>
+          {cards.profit && home?.month ? <ProfitCard m={home.month} /> : null}
+          {cards.receivable && home?.receivable ? <ReceivableCard r={home.receivable} /> : null}
+          {cards.toApprove && home?.toApprove ? (
+            <NumberCard
+              tone={home.toApprove.urgent > 0 ? 'attention' : 'plain'}
+              label={st.home.toApprove}
+              value={home.toApprove.shifts}
+              sub={st.home.toApproveSub}
+              onPress={() => router.push({ pathname: '/schedule', params: { tab: 'approve' } })}
+            />
           ) : null}
           {myToday ? <ClockCard visit={myToday} onChanged={mine.reload} /> : null}
+          {cards.today && home?.today ? home.today.map((v) => <TodayVisitCard key={v.id} v={v} />) : null}
+          {cards.weekHours && home?.weekHours && home.weekHours.length > 0 ? <WeekHoursCard rows={home.weekHours} /> : null}
           {workCards.map((c) => (
             <Card
               key={c.key}
@@ -217,6 +216,24 @@ function AdminHome() {
           {scheduled > 0 ? (
             <NumberCard tone="dark" label={strings.home.walkthroughs} value={scheduled} sub={strings.home.walkthroughsSub} onPress={() => router.navigate('/pipeline')} />
           ) : null}
+          {cards.pipeline && home?.pipeline ? (
+            <NumberCard
+              tone="plain"
+              label={st.home.pipeline}
+              value={home.pipeline.open}
+              sub={st.home.pipelineSub(home.pipeline.quoteSent)}
+              onPress={() => router.navigate('/pipeline')}
+            />
+          ) : null}
+          {cards.accounts && home?.accounts ? (
+            <NumberCard
+              tone="plain"
+              label={st.home.accounts}
+              value={home.accounts.active}
+              sub={st.home.accountsSub(home.accounts.active, home.accounts.atRisk)}
+              onPress={() => router.navigate('/accounts')}
+            />
+          ) : null}
           {ongoing.length > 0 ? (
             <Card
               wide
@@ -255,6 +272,123 @@ function AdminHome() {
   );
 }
 
+/** Tarjeta de marca (D-253): profit del mes sobre lo esperado, ingreso · personal · gastos, barra de lo que se va en costos y margen. */
+function ProfitCard({ m }: { m: NonNullable<AdminHomeData['month']> }) {
+  const st = useStatisticsStrings();
+  const a = useAccountingStrings();
+  const month = a.months[Number(m.month.slice(5, 7)) - 1] ?? '';
+  const share = costShare(m);
+  return (
+    <Card tone="brand" wide style={{ padding: 18, gap: 4 }}>
+      <AppText size={13} color="#FFFFFF" style={{ opacity: 0.82 }}>
+        {st.home.profitOf(month)}
+      </AppText>
+      <AppText weight="heavy" size={32} color="#FFFFFF">
+        {money(m.profit)}
+      </AppText>
+      <AppText size={12} color="#FFFFFF" style={{ opacity: 0.82 }}>
+        {st.home.profitLine(money(m.expected), money(m.staff), money(m.expenses))}
+      </AppText>
+      <View style={styles.bar} accessible accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 100, now: Math.round(share * 100) }}>
+        <View style={[styles.barFill, { width: `${share * 100}%` }]} />
+      </View>
+      {m.margin !== null ? (
+        <AppText size={12} color="#FFFFFF" style={{ opacity: 0.82, marginTop: 2 }}>
+          {st.home.margin(String(Math.round(m.margin * 10) / 10))}
+        </AppText>
+      ) : null}
+    </Card>
+  );
+}
+
+/** Por cobrar (D-253): lo pendiente del mes en ámbar. */
+function ReceivableCard({ r }: { r: NonNullable<AdminHomeData['receivable']> }) {
+  const router = useRouter();
+  const { colors } = useTheme();
+  const st = useStatisticsStrings();
+  const a = useAccountingStrings();
+  const month = a.months[Number(r.month.slice(5, 7)) - 1] ?? '';
+  const key = r.month.slice(0, 7);
+  return (
+    <Card
+      tone="attention"
+      accessibilityLabel={`${st.home.receivable}: ${money(r.pending)}`}
+      onPress={() => router.push({ pathname: '/accounting/income', params: { from: key, to: key } })}
+      style={{ gap: 6 }}
+    >
+      <AppText size={13} color={colors.attentionText}>
+        {st.home.receivable}
+      </AppText>
+      <AppText weight="heavy" size={26} color={colors.attentionText}>
+        {money(r.pending)}
+      </AppText>
+      <AppText size={12} color={colors.attentionText}>
+        {st.home.receivableSub(month)}
+      </AppText>
+    </Card>
+  );
+}
+
+/** Una visita de hoy (D-253): hora, programados y quién marcó entrada. */
+function TodayVisitCard({ v }: { v: HomeVisit }) {
+  const router = useRouter();
+  const { colors } = useTheme();
+  const st = useStatisticsStrings();
+  const { access } = usePermissions();
+  // La visita se abre con el schedule (su pantalla lo exige).
+  const open = canAny(access, ['schedule_ver_editar']) ? () => router.push({ pathname: '/schedule/visit/[id]', params: { id: v.id } }) : undefined;
+  return (
+    <Card wide onPress={open} accessibilityLabel={`${st.home.today(formatTime(new Date(v.startsAt)))} · ${v.jobsite}`}>
+      <View style={styles.between}>
+        <View style={{ flex: 1 }}>
+          <AppText weight="bold" size={15}>
+            {st.home.today(formatTime(new Date(v.startsAt)))}
+          </AppText>
+          <AppText size={12} color={colors.secondary}>
+            {v.jobsite}
+          </AppText>
+        </View>
+        <Pill tone="ok" label={st.home.scheduledChip(v.staff.length)} />
+      </View>
+      {v.staff.map((p) => (
+        <View key={p.profileId} style={[styles.krow, { borderTopColor: colors.border }]}>
+          <AppText size={13} style={{ flex: 1 }}>
+            {p.name}
+          </AppText>
+          {p.clockIn ? (
+            <Pill tone="ok" label={p.clockOut ? st.home.clockedOut(formatTime(new Date(p.clockOut))) : st.home.clockedIn(formatTime(new Date(p.clockIn)))} />
+          ) : (
+            <Pill tone="warn" label={st.home.noClockIn} />
+          )}
+        </View>
+      ))}
+    </Card>
+  );
+}
+
+/** Horas de esta semana contra el tope de 32 h (D-253): solo admin con el schedule (D-223). Reales / programadas. */
+function WeekHoursCard({ rows }: { rows: NonNullable<AdminHomeData['weekHours']> }) {
+  const { colors } = useTheme();
+  const st = useStatisticsStrings();
+  return (
+    <Card tone="dark" wide>
+      <AppText size={12} color={colors.darkCardText} style={{ opacity: 0.72 }}>
+        {st.home.weekHours}
+      </AppText>
+      {rows.map((r) => (
+        <View key={r.profileId} style={[styles.krow, { borderTopColor: 'rgba(255,255,255,0.12)' }]}>
+          <AppText size={13} color={colors.darkCardText} style={{ flex: 1 }}>
+            {r.name}
+          </AppText>
+          <AppText size={13} weight="bold" color={colors.darkCardText}>
+            {st.home.weekRow(hoursText(r.workedMinutes), hoursText(r.programmedMinutes))}
+          </AppText>
+        </View>
+      ))}
+    </Card>
+  );
+}
+
 /** Saludo del estilo C (D-223): fecha de hoy en 13px gris cálido, "Hola, {nombre}" en 24px/800 y, en el admin, iniciales. */
 function Greeting({ name, avatar = false }: { name: string; avatar?: boolean }) {
   const { colors, brand } = useTheme();
@@ -290,7 +424,7 @@ function Greeting({ name, avatar = false }: { name: string; avatar?: boolean }) 
 }
 
 /** Tarjeta de cifra (D-223): etiqueta 13px, cifra 26px/800 y línea 12px. */
-function NumberCard({ tone, label, value, sub, onPress }: { tone: 'plain' | 'dark'; label: string; value: number; sub: string; onPress: () => void }) {
+function NumberCard({ tone, label, value, sub, onPress }: { tone: 'plain' | 'dark' | 'attention'; label: string; value: number; sub: string; onPress: () => void }) {
   const t = useCardText(tone);
   return (
     <Card tone={tone} onPress={onPress} accessibilityLabel={`${label}: ${value} ${sub}`} style={{ gap: 6 }}>
@@ -435,4 +569,8 @@ const styles = StyleSheet.create({
   todayHeadArt: { height: 150, paddingRight: 0, paddingBottom: 0 },
   slide: { marginHorizontal: 12, marginBottom: 12 },
   empty: { alignItems: 'center', gap: 8, paddingVertical: 22 },
+  between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  krow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, paddingVertical: 7, borderTopWidth: StyleSheet.hairlineWidth },
+  bar: { height: 8, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden', marginTop: 8 },
+  barFill: { height: '100%', borderRadius: 8, backgroundColor: '#FFFFFF' },
 });

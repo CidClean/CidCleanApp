@@ -88,6 +88,7 @@ export default function MenuScreen() {
     else if (key === 'history') router.push('/history');
     else if (key === 'scheduleWork') router.push('/schedule');
     else if (key === 'accounting') router.push('/accounting');
+    else if (key === 'statistics') router.push('/statistics');
     else if (key === 'notifications') router.push('/notifications');
   }
 
@@ -141,6 +142,8 @@ export default function MenuScreen() {
           ) : null}
           {items.includes('employees') ? tile('employees', 'plain', <PeopleIcon />, activeEmployees === null ? null : strings.menu.activeEmployees(activeEmployees)) : null}
           {items.includes('accounting') ? tile('accounting', 'dark', <ChartIcon />, profit === null ? null : `${a.profitMonth} · ${money(profit)}`) : null}
+          {/* D-252, D-253: Estadísticas, solo con estadisticas_ver; mismo icono de gráfica que Accounting (D-200). */}
+          {items.includes('statistics') ? tile('statistics', 'plain', <ChartIcon />, null) : null}
           {tile('notifications', 'attention', <BellIcon />, unread ? nt.unread(unread) : null)}
           {items.includes('history') ? tile('history', 'plain', <ClockIcon />, strings.menu.historyLine) : null}
           {items.includes('settings') ? (
