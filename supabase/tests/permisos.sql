@@ -64,8 +64,8 @@ end $$;
 
 -- Plantillas -----------------------------------------------------------------------------------------
 
-select pg_temp.prueba('catálogo: 36 permisos delegables', '36', (select count(*)::text from permissions));
-select pg_temp.prueba('plantilla Admin: 35 (todos menos empleados_gestionar_permisos)', '35',
+select pg_temp.prueba('catálogo: 37 permisos delegables (D-252)', '37', (select count(*)::text from permissions));
+select pg_temp.prueba('plantilla Admin: 36 (todos menos empleados_gestionar_permisos, con estadisticas_ver)', '36',
   (select cardinality(role_template_permissions('admin'))::text));
 select pg_temp.prueba('plantilla Admin: sin empleados_gestionar_permisos', 'false',
   (select ('empleados_gestionar_permisos' = any (role_template_permissions('admin')))::text));
@@ -173,7 +173,7 @@ begin
       $q$ select save_employee_permissions(%L, role_template_permissions('admin'),
             array(select permission_key from profile_permissions where profile_id = %L
                     and permission_key <> all (role_template_permissions('admin'))), 'admin') $q$, obj, obj)) like 'ERR%' then 'fallo' else 'ok' end);
-  perform pg_temp.prueba('quedaron los 35 permisos del Admin', '35', (select count(*)::text from profile_permissions where profile_id = obj));
+  perform pg_temp.prueba('quedaron los 36 permisos del Admin', '36', (select count(*)::text from profile_permissions where profile_id = obj));
   perform pg_temp.prueba('el rol quedó en admin', 'admin', (select role::text from profiles where id = obj));
   perform pg_temp.prueba('el Super Admin puede dar empleados_gestionar_permisos', 'ok',
     case when pg_temp.valor('super', format('select save_employee_permissions(%L, array[''empleados_gestionar_permisos''], ''{}'', null)', otro)) like 'ERR%'

@@ -35,6 +35,7 @@ export const en: Strings = {
     employees: 'Employees',
     scheduleWork: 'Schedule and Work',
     accounting: 'Accounting',
+    statistics: 'Statistics',
     settings: 'Settings',
     history: 'Change history',
     notifications: 'Notifications',
@@ -244,6 +245,7 @@ export const en: Strings = {
       dashboard_global: 'View global dashboard', // Accounting permission
       dashboard_cuenta: 'View account dashboard', // Accounting permission
       reportes_exportar: 'Export reports', // Accounting permission
+      estadisticas_ver: 'View statistics', // Accounting permission: the Statistics center (D-252)
       historial_ver: 'View change history', // System permission
     },
   },

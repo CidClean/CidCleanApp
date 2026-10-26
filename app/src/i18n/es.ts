@@ -34,6 +34,7 @@ export const es = {
     employees: 'Empleados', // APROBADO (D-134)
     scheduleWork: 'Schedule y Work', // APROBADO (D-134)
     accounting: 'Accounting', // APROBADO (D-134)
+    statistics: 'Estadísticas', // APROBADO (D-253)
     settings: 'Ajustes', // APROBADO (D-134)
     history: 'Historial de cambios', // APROBADO (D-134)
     notifications: 'Notificaciones', // APROBADO (D-134)
@@ -246,6 +247,7 @@ export const es = {
       dashboard_global: 'Ver dashboard global', // SIN APROBAR
       dashboard_cuenta: 'Ver dashboard por cuenta', // SIN APROBAR
       reportes_exportar: 'Exportar reportes', // SIN APROBAR
+      estadisticas_ver: 'Ver estadísticas', // APROBADO (D-252)
       historial_ver: 'Ver historial de cambios', // SIN APROBAR
     },
   },

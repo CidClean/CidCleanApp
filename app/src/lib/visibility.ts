@@ -39,6 +39,7 @@ export type MenuKey =
   | 'employees'
   | 'scheduleWork'
   | 'accounting'
+  | 'statistics'
   | 'settings'
   | 'history'
   | 'notifications'
@@ -68,6 +69,8 @@ export function visibleMenuItems(access: Access): MenuKey[] {
   // Hito 6: el schedule o cualquier permiso de Work (aprobar, editar, revisar GPS o registrar por otros).
   if (canAny(access, ['schedule_ver_editar', 'work_registrar_por_otros', 'work_editar', 'work_aprobar', 'work_revisar_gps'])) items.push('scheduleWork');
   if (canAny(access, ACCOUNTING_KEYS)) items.push('accounting');
+  // D-252: Estadísticas, con su propio permiso (no abre Accounting).
+  if (can(access, 'estadisticas_ver')) items.push('statistics');
   if (access.isSuperAdmin) items.push('settings');
   if (can(access, 'historial_ver')) items.push('history');
   items.push('notifications', 'profile');

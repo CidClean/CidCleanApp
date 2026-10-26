@@ -1,8 +1,8 @@
 # Permisos
 
-Catálogo de permisos que usa la base de datos (`supabase/migrations/20261021000001_etapa1_perfiles_y_permisos.sql`). Cada permiso sale de la tabla "Roles y permisos" de `flujo.md` (D-014) y el dueño confirmó esta lista el 2026-10-21 (D-145) y le agregó un permiso el mismo día (D-193). Las etiquetas visibles, en inglés y español, viven en la app. Si algo cambia, se edita aquí, se registra y la versión anterior pasa a `../archive/`.
+Catálogo de permisos que usa la base de datos (`supabase/migrations/20261021000001_etapa1_perfiles_y_permisos.sql`). Cada permiso sale de la tabla "Roles y permisos" de `flujo.md` (D-014) y el dueño confirmó esta lista el 2026-10-21 (D-145), le agregó un permiso el mismo día (D-193) y otro el 2026-10-26 (D-252). Las etiquetas visibles, en inglés y español, viven en la app. Si algo cambia, se edita aquí, se registra y la versión anterior pasa a `../archive/`.
 
-Hay 36 permisos delegables. Dos funciones del Sistema no se delegan y solo las tiene el Super Admin: la configuración general y transferir el rol (D-014).
+Hay 37 permisos delegables. Dos funciones del Sistema no se delegan y solo las tiene el Super Admin: la configuración general y transferir el rol (D-014).
 
 | Área | Claves |
 | --- | --- |
@@ -10,7 +10,7 @@ Hay 36 permisos delegables. Dos funciones del Sistema no se delegan y solo las t
 | Clientes y jobsites (5) | `clientes_ver`, `clientes_editar_datos`, `clientes_editar_walkthrough_sow`, `clientes_ver_tarifa`, `clientes_cambiar_estado` |
 | Empleados (7) | `empleados_ver`, `empleados_invitar_crear`, `empleados_editar_desactivar`, `empleados_ver_pagos`, `empleados_asignar_pago`, `empleados_gestionar_permisos`, `empleados_gestionar_documentos` (ver, subir y reemplazar los W-9 y certificados de seguro de los 1099, D-193) |
 | Schedule y Work (5) | `schedule_ver_editar`, `work_registrar_por_otros`, `work_editar`, `work_aprobar`, `work_revisar_gps` |
-| Accounting (9) | `ingresos_ver_registrar`, `ingresos_marcar_recibidos`, `personal_ver_costo`, `gastos_ver`, `gastos_registrar_editar`, `gastos_recurrentes`, `dashboard_global`, `dashboard_cuenta`, `reportes_exportar` |
+| Accounting (10) | `ingresos_ver_registrar`, `ingresos_marcar_recibidos`, `personal_ver_costo`, `gastos_ver`, `gastos_registrar_editar`, `gastos_recurrentes`, `dashboard_global`, `dashboard_cuenta`, `reportes_exportar`, `estadisticas_ver` (ver el centro de Estadísticas por cuenta, por empleado y tendencia, D-252) |
 | Sistema (1) | `historial_ver` |
 
 ## Plantillas de partida (D-152)
@@ -21,6 +21,6 @@ El rol es solo una plantilla: al crear un perfil se marcan estos permisos y desp
 | --- | --- |
 | Empleado | Ninguno. Ver su horario y hacer clock in y clock out no necesita permisos. |
 | Supervisor (8) | `leads_ver`, `walkthroughs_hacer`, `clientes_ver`, `empleados_ver`, `schedule_ver_editar`, `work_registrar_por_otros`, `work_editar`, `work_revisar_gps` |
-| Admin (35) | Los 36 permisos menos `empleados_gestionar_permisos`. Incluye `gastos_registrar_editar` y `empleados_gestionar_documentos`. |
+| Admin (36) | Los 37 permisos menos `empleados_gestionar_permisos`. Incluye `gastos_registrar_editar`, `empleados_gestionar_documentos` y `estadisticas_ver` (D-252). |
 
 El Supervisor parte sin ver tarifas ni pagos y sin Accounting. El Admin no puede dar ni quitar permisos mientras no se le dé `empleados_gestionar_permisos` a mano. El Super Admin tiene todo y no usa plantilla.

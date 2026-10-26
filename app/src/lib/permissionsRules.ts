@@ -3,7 +3,7 @@ import type { Employee, RoleKey } from './employeeRules';
 
 /**
  * Reglas puras de la pestaña Permisos del perfil (D-058, D-110, D-188 a D-194). Sin React ni red.
- * El catálogo es el de la base (tabla `permissions`, 36 permisos delegables, current/flujo.md "Roles y permisos").
+ * El catálogo es el de la base (tabla `permissions`, 37 permisos delegables (D-252), current/flujo.md "Roles y permisos").
  */
 
 export type AreaKey = 'ventas' | 'clientes' | 'empleados' | 'schedule_work' | 'accounting' | 'sistema';
@@ -62,6 +62,7 @@ export const AREAS: readonly { key: AreaKey; keys: readonly string[] }[] = [
       'dashboard_global',
       'dashboard_cuenta',
       'reportes_exportar',
+      'estadisticas_ver',
     ],
   },
   { key: 'sistema', keys: ['historial_ver'] },

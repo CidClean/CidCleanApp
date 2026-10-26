@@ -24,10 +24,10 @@ const SUPERVISOR_8 = [
   'work_registrar_por_otros', 'work_editar', 'work_revisar_gps',
 ];
 
-describe('catálogo (D-193: 36 permisos en 6 áreas)', () => {
-  test('36 permisos sin repetir, en el orden de la muestra: Ventas, Clientes y jobsites, Empleados, Schedule y Work, Accounting, Sistema', () => {
-    expect(ALL_PERMISSION_KEYS).toHaveLength(36);
-    expect(new Set(ALL_PERMISSION_KEYS).size).toBe(36);
+describe('catálogo (D-193, D-252: 37 permisos en 6 áreas)', () => {
+  test('37 permisos sin repetir, en el orden de la muestra: Ventas, Clientes y jobsites, Empleados, Schedule y Work, Accounting, Sistema', () => {
+    expect(ALL_PERMISSION_KEYS).toHaveLength(37);
+    expect(new Set(ALL_PERMISSION_KEYS).size).toBe(37);
     expect(AREAS.map((a) => a.key)).toEqual(['ventas', 'clientes', 'empleados', 'schedule_work', 'accounting', 'sistema']);
     expect(AREAS.find((a) => a.key === 'empleados')?.keys).toHaveLength(7);
     expect(AREAS.find((a) => a.key === 'empleados')?.keys).toContain('empleados_gestionar_documentos');
@@ -86,10 +86,10 @@ describe('Pagos (D-194)', () => {
 });
 
 describe('qué se lista (D-191)', () => {
-  test('quien tiene todo ve las 6 áreas y los 36 permisos', () => {
+  test('quien tiene todo ve las 6 áreas y los 37 permisos', () => {
     const areas = visibleAreas(access(true), new Set());
     expect(areas.map((a) => a.key)).toHaveLength(6);
-    expect(areas.flatMap((a) => a.keys)).toHaveLength(36);
+    expect(areas.flatMap((a) => a.keys)).toHaveLength(37);
   });
 
   test('solo se listan los permisos que quien mira tiene y un área sin ninguno no aparece', () => {
@@ -113,7 +113,7 @@ describe('qué se lista (D-191)', () => {
   });
 
   test('heldKeys: lo que se puede tocar', () => {
-    expect(heldKeys(access(true))).toHaveLength(36);
+    expect(heldKeys(access(true))).toHaveLength(37);
     expect(heldKeys(access(false, ['leads_ver', 'inventado']))).toEqual(['leads_ver']);
   });
 });

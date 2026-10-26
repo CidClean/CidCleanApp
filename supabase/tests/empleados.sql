@@ -250,7 +250,7 @@ begin
   perform pg_temp.prueba('plantilla Supervisor por el Super Admin: 8 permisos', '8',
     (select count(*)::text from profile_permissions pp join profiles p on p.id = pp.profile_id where p.full_name = 'Sup por Super'));
   perform pg_temp.valor('super', $q$ select create_employee('Admin por Super', null, 'w2', 'admin', 'en', false, null) $q$);
-  perform pg_temp.prueba('plantilla Admin por el Super Admin: 35 permisos', '35',
+  perform pg_temp.prueba('plantilla Admin por el Super Admin: 36 permisos (D-252)', '36',
     (select count(*)::text from profile_permissions pp join profiles p on p.id = pp.profile_id where p.full_name = 'Admin por Super'));
   perform pg_temp.prueba('plantilla Admin: sin empleados_gestionar_permisos', '0',
     (select count(*)::text from profile_permissions pp join profiles p on p.id = pp.profile_id

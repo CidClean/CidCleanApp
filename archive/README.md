@@ -25,3 +25,5 @@ Aquí van las versiones reemplazadas, con su fecha. No se usan: mandan los docum
 | [`diseno-visual-2026-10-23-antes-de-D-220.md`](diseno-visual-2026-10-23-antes-de-D-220.md) | 2026-10-23 | D-220 | El detalle del lead tenía solo las pestañas Datos, Sitios y Notas. |
 | [`diseno-visual-2026-10-23-antes-de-D-223.md`](diseno-visual-2026-10-23-antes-de-D-223.md) | 2026-10-23 | D-223 | Antes del estilo C (bento con ilustraciones) para toda la app. |
 | [`flujo-2026-10-23-antes-de-D-227.md`](flujo-2026-10-23-antes-de-D-227.md) | 2026-10-23 | D-227 | El quote tenía un solo monto mensual; ahora define planes por temporada, add-ons y ajustes. |
+| [`permisos-2026-10-26-antes-de-D-252.md`](permisos-2026-10-26-antes-de-D-252.md) | 2026-10-26 | D-252 | El catálogo tenía 36 permisos y el Admin 35; ahora son 37 y 36, con Ver estadísticas en Accounting. |
+| [`flujo-2026-10-26-antes-de-D-252.md`](flujo-2026-10-26-antes-de-D-252.md) | 2026-10-26 | D-252 | La lista de permisos de Accounting no incluía ver estadísticas. |
