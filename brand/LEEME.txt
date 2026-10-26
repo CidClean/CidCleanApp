@@ -1,0 +1,27 @@
+CID CLEAN — PAQUETE DE ICONOS DE APLICACIÓN
+
+FUENTE
+La imagen aprobada por el usuario (1000113778.jpg), con la C, la i sugerida por cortes y el espacio negativo, la D, la gota superior y las dos olas.
+
+ENTREGABLES
+cid-clean-icon-1024.png .......... PNG principal, lienzo blanco opaco 1024x1024
+cid-clean-icon-512.png ........... PNG 512x512 para PWA / Android
+cid-clean-icon-192.png ........... PNG 192x192 para PWA / Android
+cid-clean-apple-touch-icon-180.png PNG 180x180 para iPhone / iPad
+cid-clean-icon-144.png ........... PNG de 144x144
+cid-clean-icon-96.png ............ PNG 96x96
+cid-clean-favicon.ico ............ Icono web con tamaños incrustados
+cid-clean-favicon-32.png ......... Favicon 32x32
+cid-clean-favicon-16.png ......... Favicon 16x16
+cid-clean-simbolo-transparente-1024.png ... Marca aislada con transparencia, 1024x1024
+cid-clean-icono-vector-trazado.svg ....... Reconstrucción vectorial trazada automáticamente
+cid-clean-simbolo-vector-transparente.svg . Reconstrucción SVG con transparencia
+cid-clean-vector-vista-previa.png ........ Vista previa del trazado SVG
+
+NOTAS
+- Los PNG parten de la imagen aprobada, no de una nueva imagen generada.
+- El fondo de la versión de icono es blanco opaco sin borde redondeado: el sistema operativo recorta la silueta en función de su plataforma.
+- El SVG es un trazado aproximado creado a partir de una referencia rasterizada: sirve para revisión o edición, pero no sustituye un archivo vectorial maestro original. Comparar contra PNG antes de producción.
+- La paleta interna del SVG es aproximada; el PNG retiene los tonos de la imagen de referencia.
+- Ninguna imagen incluye marca de agua. Verificar legibilidad del logo a 16px y 32px antes del uso definitivo.
+- Este paquete prepara recursos; no modifica el sitio web ni la app.
