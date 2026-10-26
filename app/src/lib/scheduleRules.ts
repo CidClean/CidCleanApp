@@ -93,8 +93,11 @@ export function groupByDay<T extends { day: string; startsAt: Date }>(visits: re
  */
 export function pickToday(visits: readonly MyVisit[], now: Date): MyVisit | null {
   const today = dayKey(now);
+  // D-245: un turno abierto sigue a la vista aunque haya empezado ayer (turno de noche que pasa la medianoche).
+  const open = visits.find((v) => v.entry && !v.entry.clockOut);
+  if (open) return open;
   const list = visits.filter((v) => v.day === today).sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
-  return list.find((v) => v.entry && !v.entry.clockOut) ?? list.find((v) => !v.entry) ?? null;
+  return list.find((v) => !v.entry) ?? null;
 }
 
 /** La próxima visita programada después de hoy (tarjeta "Próxima", D-223). */

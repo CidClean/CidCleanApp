@@ -1,4 +1,4 @@
-import { atTime, clockOutAfter, workedMinutes } from './scheduleRules';
+import { atTime, clockOutAfter, pickToday, workedMinutes } from './scheduleRules';
 
 describe('Turno que cruza la medianoche (D-241)', () => {
   it('una salida antes de la entrada es del día siguiente: 11:00 PM a 3:00 AM son 4 h', () => {
@@ -21,5 +21,19 @@ describe('Turno que cruza la medianoche (D-241)', () => {
     const cin = atTime('2026-10-31', 23, 0);
     const cout = clockOutAfter(cin, atTime('2026-10-31', 3, 0));
     expect([cout.getMonth(), cout.getDate(), cout.getHours()]).toEqual([10, 1, 3]);
+  });
+});
+
+describe('Turno abierto después de medianoche (D-245)', () => {
+  const base = { jobsite: 'Naples Yacht Club', address: '', minutes: 240, scheduled: true };
+  it('sigue mostrando el turno de ayer sin salida para poder marcarla', () => {
+    const ayer = { ...base, id: 'a', day: '2026-10-25', startsAt: new Date(2026, 9, 25, 23), entry: { id: 'w', clockIn: new Date(2026, 9, 25, 22, 27), clockOut: null } };
+    const hoy = { ...base, id: 'b', day: '2026-10-26', startsAt: new Date(2026, 9, 26, 23), entry: null };
+    expect(pickToday([ayer, hoy], new Date(2026, 9, 26, 1, 15))?.id).toBe('a');
+  });
+  it('con la salida marcada pasa a la visita de hoy', () => {
+    const ayer = { ...base, id: 'a', day: '2026-10-25', startsAt: new Date(2026, 9, 25, 23), entry: { id: 'w', clockIn: new Date(2026, 9, 25, 23), clockOut: new Date(2026, 9, 26, 3) } };
+    const hoy = { ...base, id: 'b', day: '2026-10-26', startsAt: new Date(2026, 9, 26, 23), entry: null };
+    expect(pickToday([ayer, hoy], new Date(2026, 9, 26, 9))?.id).toBe('b');
   });
 });
