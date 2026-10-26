@@ -1,0 +1,98 @@
+<title>Dashboard y estadísticas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Dos pantallas de teléfono lado a lado (Inicio nuevo y Estadísticas) en el estilo bento C1, con los números reales de octubre. */
+:root{--bg:#FBF6EF;--card:#FFFFFF;--fg:#1E2A28;--sc:#6B5F52;--bd:#EFE5D8;--b:#0F766E;--b2:#2FB8AE;--soft:#DDEFEC;--amber:#FBE3C7;--amberT:#8A4B0F;--dark:#1E2A28;--onb:#FFFFFF;--page:#EDE6DA;--ff:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#0E1312;color-scheme:dark}}
+:root[data-theme="dark"]{--page:#0E1312;color-scheme:dark}
+body{background:var(--page);font-family:var(--ff);color:var(--fg);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.w{max-width:1120px;margin:0 auto;padding-block:24px 40px;display:flex;flex-direction:column;gap:16px}
+.intro h1{margin:0;font-size:26px;font-weight:800;color:var(--fg)} .intro p{margin:6px 0 0;max-width:68ch;line-height:1.5;color:var(--sc)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .intro h1,:root:not([data-theme="light"]) .intro p{color:#EEF2F1}}
+.phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px;align-items:start}
+.label{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--b);margin:0 0 8px}
+.phone{background:var(--bg);border-radius:32px;padding:18px 14px 20px;max-width:400px;width:100%;box-sizing:border-box;margin:0 auto;box-shadow:0 1px 0 rgba(0,0,0,.04)}
+.hdr{display:flex;justify-content:space-between;align-items:center;margin:2px 4px 12px} .hdr small{color:var(--sc);font-size:13px} .hdr b{display:block;font-size:22px;font-weight:800}
+.pill{background:var(--card);border-radius:14px;padding:8px 12px;font-size:13px;font-weight:700}
+.bento{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.c{background:var(--card);border-radius:22px;padding:14px;min-width:0}
+.wide{grid-column:span 2}
+.brand{background:var(--b);color:var(--onb)} .brand .k{color:rgba(255,255,255,.82)}
+.amber{background:var(--amber);color:var(--amberT)} .darkc{background:var(--dark);color:#FFFFFF} .darkc .k{color:rgba(255,255,255,.72)}
+.k{font-size:12px;color:var(--sc);font-weight:600}
+.big{font-size:30px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.mid{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;padding:7px 0;border-top:1px solid var(--bd)} .row:first-of-type{border-top:0}
+.row b{font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:8px;background:rgba(255,255,255,.25);overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;background:#FFFFFF;border-radius:8px}
+.chip{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px}
+.ok{background:var(--soft);color:var(--b)} .warn{background:var(--amber);color:var(--amberT)}
+.seg{display:flex;gap:6px;margin:0 2px 12px}.seg span{font-size:13px;font-weight:700;padding:8px 12px;border-radius:12px;background:var(--card)}.seg .on{background:var(--b);color:#FFFFFF}
+svg text{font-family:var(--ff)}
+.note{font-size:12px;color:var(--sc);line-height:1.4;margin-top:6px}
+.ask{background:var(--card);border-radius:22px;padding:16px;line-height:1.55;font-size:14px;color:var(--fg)} .ask ol{margin:6px 0 0;padding-left:20px}
+</style>
+<div class="w">
+<div class="intro"><h1>Dashboard y estadísticas · propuesta</h1><p>Dos pantallas para el admin, con tus números reales de octubre (Naples Yacht Club). El Inicio nuevo te dice cómo va el negocio hoy y este mes; Estadísticas te deja comparar cada cuenta y cada empleado para mejorar el rendimiento.</p></div>
+<div class="phones">
+
+<div><p class="label">1 · Inicio del admin</p><div class="phone">
+ <div class="hdr"><div><small>Lunes 26 oct</small><b>Hola, Humberto</b></div><span class="pill">Oct 2026</span></div>
+ <div class="bento">
+  <div class="c brand wide"><div class="k">Profit de octubre · sobre lo esperado</div><div class="big">$2,940.00</div>
+   <div class="k" style="margin-top:4px">Ingreso $7,020 · Personal $4,080 · Gastos $0</div>
+   <div class="bar"><i style="width:58%"></i></div><div class="k" style="margin-top:6px">Margen 41.9%</div></div>
+  <div class="c amber"><div class="k" style="color:inherit">Por cobrar</div><div class="mid">$7,020</div><div style="font-size:12px">octubre sin marcar recibido</div></div>
+  <div class="c"><div class="k">Por aprobar</div><div class="mid">0</div><div class="k">turnos esperando</div></div>
+  <div class="c wide"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">Hoy · 11:00 PM</b><span class="chip ok">3 programados</span></div>
+   <div class="row"><span>Humbe</span><span class="chip warn">sin clock in</span></div>
+   <div class="row"><span>Ida</span><span class="chip warn">sin clock in</span></div>
+   <div class="row"><span>Karina</span><span class="chip warn">sin clock in</span></div></div>
+  <div class="c darkc wide"><div class="k">Horas de esta semana · tope 32 h</div>
+   <div class="row" style="border-color:rgba(255,255,255,.12)"><span>Humbe</span><b>8 / 24 h</b></div>
+   <div class="row" style="border-color:rgba(255,255,255,.12)"><span>Ida</span><b>4 / 24 h</b></div>
+   <div class="row" style="border-color:rgba(255,255,255,.12)"><span>Rosemary</span><b>0 / 8 h</b></div></div>
+  <div class="c"><div class="k">Pipeline</div><div class="mid">0</div><div class="k">leads abiertos · 0 quotes enviados</div></div>
+  <div class="c"><div class="k">Cuentas</div><div class="mid">1</div><div class="k">activa · 0 en riesgo</div></div>
+ </div></div></div>
+
+<div><p class="label">2 · Estadísticas</p><div class="phone">
+ <div class="hdr"><div><small>Rendimiento</small><b>Estadísticas</b></div><span class="pill">Oct 2026 ▾</span></div>
+ <div class="seg"><span class="on">Cuentas</span><span>Empleados</span><span>Tendencia</span></div>
+ <div class="bento">
+  <div class="c wide"><div style="display:flex;justify-content:space-between"><b style="font-size:16px">Naples Yacht Club</b><span class="chip ok">margen 41.9%</span></div><div class="k">Wilson Franquicia · 51 turnos en 17 visitas</div></div>
+  <div class="c"><div class="k">Horas trabajadas</div><div class="mid">203.1 h</div><div class="k">reales (clock in → out)</div></div>
+  <div class="c"><div class="k">Horas pagadas</div><div class="mid">204 h</div><div class="k">con las 4 h garantizadas</div></div>
+  <div class="c wide"><div class="k">Pagadas sin trabajar</div><div style="display:flex;justify-content:space-between;align-items:baseline"><div class="mid">0.9 h · $19</div><span class="chip ok">99.5% aprovechado</span></div>
+   <svg viewBox="0 0 320 22" width="100%" height="22" aria-label="Horas trabajadas contra pagadas"><rect x="0" y="5" width="320" height="12" rx="6" fill="#EFE5D8"/><rect x="0" y="5" width="318.4" height="12" rx="6" fill="#0F766E"/></svg>
+   <div class="note">Lo que pagas por garantía y no se trabaja. Si sube, revisa la duración o las horas garantizadas.</div></div>
+  <div class="c brand"><div class="k">Ingreso por hora</div><div class="mid">$34.57</div><div class="k">por hora trabajada</div></div>
+  <div class="c"><div class="k">Costo por hora</div><div class="mid">$20.09</div><div class="k">te quedan $14.48/h</div></div>
+  <div class="c"><div class="k">Duración real</div><div class="mid">3.98 h</div><div class="k">vs 4 h estimadas</div></div>
+  <div class="c amber"><div class="k" style="color:inherit">Puntualidad</div><div class="mid">—</div><div style="font-size:12px">falta que marquen ellos mismos (1 de 51)</div></div>
+  <div class="c wide"><div class="k">Turnos programados vs trabajados</div><div style="display:flex;justify-content:space-between;align-items:baseline"><div class="mid">51 de 53</div><span class="chip warn">2 sin trabajo</span></div>
+   <div class="note">Un turno programado sin registro de trabajo cuenta como falta. Toca para ver el día.</div>
+   <div class="row" style="margin-top:6px"><span>Ida · dom 25 oct</span><span class="chip warn">falta</span></div>
+   <div class="row"><span>Karina · dom 25 oct</span><span class="chip warn">falta</span></div></div>
+  <div class="c wide"><div class="k" style="margin-bottom:6px">Por empleado · octubre</div>
+   <div class="row"><span>Humbe</span><b>17/17 · 68 h · $1,360</b></div>
+   <div class="row"><span>Ida</span><b>14/15 · 56 h · $1,120</b></div>
+   <div class="row"><span>Rosemary</span><b>8/8 · 32 h · $640</b></div>
+   <div class="row"><span>Estela</span><b>6/6 · 24 h · $480</b></div>
+   <div class="row"><span>Karina</span><b>6/7 · 24 h · $480</b></div>
+   <div class="note">turnos trabajados / programados · horas · costo</div></div>
+  <div class="c wide"><div class="k" style="margin-bottom:6px">Tendencia · ingreso, personal y profit</div>
+   <svg viewBox="0 0 320 150" width="100%" height="150" role="img" aria-label="Septiembre: ingreso 3,217, personal 2,020, profit 223. Octubre: ingreso 7,020, personal 4,080, profit 2,940">
+    <line x1="30" y1="120" x2="310" y2="120" stroke="#EFE5D8"/><line x1="30" y1="70" x2="310" y2="70" stroke="#EFE5D8" stroke-dasharray="3 4"/><line x1="30" y1="20" x2="310" y2="20" stroke="#EFE5D8" stroke-dasharray="3 4"/>
+    <text x="0" y="124" font-size="9" fill="#6B5F52">$0</text><text x="0" y="74" font-size="9" fill="#6B5F52">$4k</text><text x="0" y="24" font-size="9" fill="#6B5F52">$8k</text>
+    <rect x="60" y="79.8" width="22" height="40.2" rx="5" fill="#0F766E"/><rect x="86" y="94.8" width="22" height="25.2" rx="5" fill="#F2C27B"/><rect x="112" y="117.2" width="22" height="2.8" rx="2" fill="#2FB8AE"/>
+    <rect x="190" y="32.2" width="22" height="87.8" rx="5" fill="#0F766E"/><rect x="216" y="69" width="22" height="51" rx="5" fill="#F2C27B"/><rect x="242" y="83.2" width="22" height="36.8" rx="5" fill="#2FB8AE"/>
+    <text x="97" y="138" font-size="10" fill="#6B5F52" text-anchor="middle">Sep</text><text x="227" y="138" font-size="10" fill="#6B5F52" text-anchor="middle">Oct</text>
+    <text x="123" y="112" font-size="9" fill="#1E2A28" text-anchor="middle">$223</text><text x="253" y="78" font-size="9" fill="#1E2A28" text-anchor="middle">$2,940</text>
+   </svg>
+   <div class="note">■ Ingreso &nbsp; <span style="color:#C48A2B">■</span> Personal &nbsp; <span style="color:#2FB8AE">■</span> Profit (septiembre incluye $974 de gastos)</div></div>
+ </div></div></div>
+</div>
+<div class="ask"><b>Qué mide cada número, en pocas palabras:</b> horas trabajadas son las reales de clock in a clock out; horas pagadas son las que pagas con las garantizadas; "pagadas sin trabajar" es la diferencia; ingreso y costo por hora salen de dividir entre las horas trabajadas; la puntualidad compara la entrada con la hora de la visita (se llena cuando los empleados marquen ellos mismos). Todo se puede ver por cuenta, por empleado y por mes, y exportar.</div>
+</div>
