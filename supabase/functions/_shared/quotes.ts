@@ -1,10 +1,10 @@
 // Quote y portal del cliente (hito 4, D-209): textos de los correos, formato de montos, fechas y frecuencia, y el
 // PDF de una página. Este archivo no contiene llaves: RESEND_QUOTES_KEY, PORTAL_CODE_PEPPER y PORTAL_BASE_URL son
 // secretos de las funciones.
-import { PDFDocument, rgb, StandardFonts, type PDFFont } from 'npm:pdf-lib@1.17.1';
-import fontkit from 'npm:@pdf-lib/fontkit@1.1.1';
+import { PDFDocument, rgb } from 'npm:pdf-lib@1.17.1';
 
 import { correoHtml, EMPRESA, esc, filas, nota, parrafo, pieTexto, titulo, boton, codigoGrande, firma } from './correo.ts';
+import { ALTO, ALTO_PIE, ANCHO, C, caja, encabezado, fuentesMarca, LADO, logoMarca, partir, pie, recortar } from './pdfMarca.ts';
 
 export type Lang = 'es' | 'en';
 export type Line = { label: string; description?: string; amount?: number; taxable?: boolean; kind?: 'amount' | 'percent'; value?: number };
@@ -13,11 +13,6 @@ export type Frequency = { kind: 'daily' | 'weekly' | 'other'; days: number[]; ot
 
 export const FROM = 'Cid Clean <quotes@mail.cidclean.com>';
 export const REPLY_TO = 'info@cidclean.com'; // D-249
-const BRAND = rgb(15 / 255, 118 / 255, 110 / 255);
-const TEXT = rgb(26 / 255, 26 / 255, 26 / 255);
-const SECONDARY = rgb(107 / 255, 107 / 255, 107 / 255);
-const BORDER = rgb(226 / 255, 226 / 255, 226 / 255);
-
 export function lang(value: unknown): Lang {
   return value === 'es' ? 'es' : 'en';
 }
@@ -271,19 +266,6 @@ export function codigo(): string {
   return String(n % 1000000).padStart(6, '0');
 }
 
-async function manrope(doc: PDFDocument): Promise<{ regular: PDFFont; medium: PDFFont } | null> {
-  try {
-    const css = await (await fetch('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500', { headers: { 'User-Agent': 'Deno' } })).text();
-    const urls = [...css.matchAll(/url\((https:[^)]+\.ttf)\)/g)].map((m) => m[1]);
-    if (urls.length < 2) return null;
-    const [r, m] = await Promise.all(urls.slice(0, 2).map(async (u) => new Uint8Array(await (await fetch(u)).arrayBuffer())));
-    doc.registerFontkit(fontkit);
-    return { regular: await doc.embedFont(r, { subset: true }), medium: await doc.embedFont(m, { subset: true }) };
-  } catch {
-    return null;
-  }
-}
-
 export type PdfData = {
   language: Lang;
   version: string;
@@ -302,94 +284,172 @@ export type PdfData = {
   /** Quote de extra (D-238): total de una vez y fecha del servicio en vez de la frecuencia. */
   extra?: boolean;
   service_date?: string | null;
+  /** Contacto del sitio (migración 20261027000012) y hora de la visita si existe. */
+  contact_name?: string | null;
+  visit_time?: string | null;
 };
 
-/** PDF de una página (D-209): sitio, servicios, add-ons, descuentos, tax, total mensual, vigencia, versión y frecuencia. */
+/** Textos del PDF que no están en T (orden 33, muestra quote-pdf.html). El PDF sigue en el idioma del lead. */
+const PDF_T = {
+  es: {
+    preparedFor: 'Preparado para', details: 'Detalles', visitTime: 'Hora de la visita', // D-200
+    salesTax: (r: number) => `Tax (${r}%)`, included: 'tax incluido', // D-200
+    howTitle: 'Cómo aceptar:', // D-200
+    how: 'abre el enlace del correo que te enviamos, escribe el código que te mandamos por correo, lee el alcance del trabajo y acepta en línea.', // D-200
+    page: 'Página 1 de 1', // D-200
+  },
+  en: {
+    preparedFor: 'Prepared for', details: 'Details', visitTime: 'Visit time',
+    salesTax: (r: number) => `Sales tax (${r}%)`, included: 'tax included',
+    howTitle: 'How to accept:',
+    how: 'open the link in the email we sent, enter the code we email you, read the scope of work and accept online.',
+    page: 'Page 1 of 1',
+  },
+};
+
+/**
+ * PDF de una página (D-209) con la marca (D-250, surveys/marca-aprobado/quote-pdf-aprobado.pdf): logo y "Cid Clean
+ * LLC", número de quote, franja, tarjetas "Prepared for" y "Details", servicios y add-ons con descripción, descuentos,
+ * total con tax en tarjeta verde, "How to accept" y pie de contacto. Un extra (D-238) lleva "Total" y la fecha del
+ * servicio en vez de la frecuencia.
+ */
 export async function pdfQuote(d: PdfData): Promise<Uint8Array> {
-  const t = T[d.language];
+  const l = d.language;
+  const t = T[l];
+  const p = PDF_T[l];
   const doc = await PDFDocument.create();
   doc.setTitle(`${t.quote} ${d.version} · ${d.company}`);
-  doc.setAuthor('Cid Clean');
-  const page = doc.addPage([612, 792]);
-  const fonts = (await manrope(doc)) ?? {
-    regular: await doc.embedFont(StandardFonts.Helvetica),
-    medium: await doc.embedFont(StandardFonts.HelveticaBold),
-  };
-  const W = 612;
-  const M = 48;
-  let y = 792;
-  const txt = (s: string, x: number, yy: number, size: number, font: PDFFont, color = TEXT) =>
-    page.drawText(s, { x, y: yy, size, font, color });
-  const right = (s: string, yy: number, size: number, font: PDFFont, color = TEXT) =>
-    txt(s, W - M - font.widthOfTextAtSize(s, size), yy, size, font, color);
-  const cut = (s: string, size: number, font: PDFFont, max: number) => {
-    let out = s;
-    while (out.length > 1 && font.widthOfTextAtSize(out, size) > max) out = out.slice(0, -2) + '…';
-    return out;
-  };
+  doc.setAuthor('Cid Clean LLC');
+  const page = doc.addPage([ANCHO, ALTO]);
+  const f = await fuentesMarca(doc);
+  const logo = await logoMarca(doc);
+  const W = ANCHO - 2 * LADO;
+  let y = encabezado(page, f, logo, { etiqueta: t.quote, valor: d.version });
 
-  page.drawRectangle({ x: 0, y: 792 - 64, width: W, height: 64, color: BRAND });
-  txt('Cid Clean', M, 792 - 40, 22, fonts.medium, rgb(1, 1, 1));
-  const head = `${t.quote} ${d.version}`;
-  txt(head, W - M - fonts.medium.widthOfTextAtSize(head, 13), 792 - 38, 13, fonts.medium, rgb(1, 1, 1));
-  y = 792 - 64 - 40;
-  txt(cut(d.company, 18, fonts.medium, W - 2 * M), M, y, 18, fonts.medium);
-  y -= 22;
-  txt(cut(d.site, 13, fonts.regular, W - 2 * M), M, y, 13, fonts.regular);
-  y -= 17;
-  txt(cut(d.address, 11, fonts.regular, W - 2 * M), M, y, 11, fonts.regular, SECONDARY);
-  y -= 30;
-  const info: [string, string][] = [
-    [t.date, fecha(d.sent_at, d.language)],
-    [t.validUntil, fecha(d.expires_at, d.language)],
-    d.extra
-      ? [t.serviceDate, d.service_date ? fecha(`${d.service_date}T12:00:00Z`, d.language) : '']
-      : [t.frequency, frecuencia(d.frequency, d.language)],
-  ];
-  for (const [k, v] of info) {
-    txt(k, M, y, 10, fonts.regular, SECONDARY);
-    txt(cut(v, 11, fonts.regular, W - 2 * M - 110), M + 110, y, 11, fonts.regular);
-    y -= 17;
-  }
-  y -= 14;
-
-  // Línea fina bajo cada renglón (muestra ronda 4 `.ln`).
-  const sep = (yy: number) => page.drawLine({ start: { x: M, y: yy }, end: { x: W - M, y: yy }, thickness: 0.5, color: BORDER });
-  const section = (title: string, rows: { label: string; value: string }[]) => {
-    if (rows.length === 0) return;
-    txt(title, M, y, 10, fonts.medium, SECONDARY);
-    y -= 18;
-    for (const r of rows) {
-      txt(cut(r.label, 11, fonts.regular, W - 2 * M - 120), M, y, 11, fonts.regular);
-      right(r.value, y, 11, fonts.regular);
-      sep(y - 7);
-      y -= 22;
+  // Tarjetas "Prepared for" (1.3fr) y "Details" (1fr), 12 pt de separación.
+  const gap = 12;
+  const w1 = ((W - gap) * 1.3) / 2.3;
+  const w2 = W - gap - w1;
+  const x2 = LADO + w1 + gap;
+  const pad = 12;
+  const h4 = (s: string, x: number, yy: number) => {
+    let cx = x;
+    for (const ch of s.toUpperCase()) {
+      page.drawText(ch, { x: cx, y: yy, size: 7.1, font: f.extra, color: C.gris });
+      cx += f.extra.widthOfTextAtSize(ch, 7.1) + 0.7;
     }
-    y -= 8;
   };
-  section(t.services, d.lines.services.map((l) => ({ label: l.label, value: money(l.amount ?? 0) })));
-  section(t.addons, d.lines.addons.map((l) => ({ label: l.label, value: money(l.amount ?? 0) })));
-  section(
+  const izq: { s: string; size: number; font: typeof f.regular }[] = [
+    ...partir(d.company, f.extra, 12, w1 - 2 * pad).map((s) => ({ s, size: 12, font: f.extra })),
+    ...(d.contact_name ? [{ s: recortar(d.contact_name, 8.25, f.regular, w1 - 2 * pad), size: 8.25, font: f.regular }] : []),
+    ...partir([d.site, d.address && d.address !== d.site ? d.address : ''].filter(Boolean).join(' · '), f.regular, 8.25, w1 - 2 * pad)
+      .map((s) => ({ s, size: 8.25, font: f.regular })),
+  ];
+  const det: [string, string][] = [
+    [t.date, fecha(d.sent_at, l)],
+    [t.validUntil, fecha(d.expires_at, l)],
+    d.extra
+      ? [t.serviceDate, d.service_date ? fecha(`${d.service_date}T12:00:00Z`, l) : '—']
+      : [t.frequency, frecuenciaPdf(d.frequency, l) || '—'],
+  ];
+  if (!d.extra && d.visit_time) det.push([p.visitTime, horaCorreo(d.visit_time)]);
+  const altoIzq = 10.5 + 7.1 + 6 + izq.reduce((a, r) => a + r.size * 1.45, 0) + 10.5;
+  const altoDer = 10.5 + 7.1 + 6 + det.length * 12.4 + 10.5;
+  const altoCaja = Math.max(altoIzq, altoDer);
+  caja(page, LADO, y, w1, altoCaja, 12, C.crema);
+  caja(page, x2, y, w2, altoCaja, 12, C.crema);
+  h4(p.preparedFor, LADO + pad, y - 10.5 - 7.1);
+  h4(p.details, x2 + pad, y - 10.5 - 7.1);
+  let yy = y - 10.5 - 7.1 - 6;
+  for (const r of izq) {
+    yy -= r.size * 1.45;
+    page.drawText(r.s, { x: LADO + pad, y: yy + r.size * 0.3, size: r.size, font: r.font, color: C.texto });
+  }
+  const dtW = Math.max(...det.map(([k]) => f.regular.widthOfTextAtSize(k, 8.25))) + 9;
+  yy = y - 10.5 - 7.1 - 6;
+  for (const [k, v] of det) {
+    yy -= 12.4;
+    page.drawText(k, { x: x2 + pad, y: yy + 2.5, size: 8.25, font: f.regular, color: C.gris });
+    page.drawText(recortar(v, 8.25, f.bold, w2 - 2 * pad - dtW), { x: x2 + pad + dtW, y: yy + 2.5, size: 8.25, font: f.bold, color: C.texto });
+  }
+  y -= altoCaja;
+
+  // Secciones: título en marca y filas con nombre, descripción y monto.
+  const limite = ALTO_PIE + 150; // deja sitio para totales, "How to accept" y pie
+  const seccion = (titulo: string, rows: { label: string; detail?: string; value: string }[]) => {
+    if (rows.length === 0) return;
+    y -= 16.5;
+    let cx = LADO;
+    for (const ch of titulo.toUpperCase()) {
+      page.drawText(ch, { x: cx, y: y - 7.5, size: 7.5, font: f.extra, color: C.marca });
+      cx += f.extra.widthOfTextAtSize(ch, 7.5) + 0.75;
+    }
+    y -= 7.5 + 4.5;
+    for (const r of rows) {
+      if (y < limite) break;
+      const alto = 6.75 + 9 + (r.detail ? 10.5 : 0) + 6.75;
+      page.drawText(recortar(r.label, 9, f.bold, W - 90), { x: LADO, y: y - 6.75 - 8, size: 9, font: f.bold, color: C.texto });
+      if (r.detail) {
+        page.drawText(recortar(r.detail, 7.9, f.regular, W - 90), { x: LADO, y: y - 6.75 - 9 - 9, size: 7.9, font: f.regular, color: C.gris });
+      }
+      page.drawText(r.value, { x: ANCHO - LADO - f.bold.widthOfTextAtSize(r.value, 9), y: y - 6.75 - 8, size: 9, font: f.bold, color: C.texto });
+      y -= alto;
+      page.drawLine({ start: { x: LADO, y }, end: { x: ANCHO - LADO, y }, thickness: 0.75, color: C.linea });
+    }
+  };
+  const item = (x: Line) => ({ label: x.label, detail: x.description?.trim() || undefined, value: money(x.amount ?? 0) });
+  seccion(t.services, d.lines.services.map(item));
+  seccion(t.addons, d.lines.addons.map(item));
+  seccion(
     t.discounts,
-    d.lines.discounts.map((l) => ({
-      label: l.kind === 'percent' ? `${l.label} (${l.value}%)` : l.label,
-      value: '−' + money(l.kind === 'percent' ? (d.subtotal * (l.value ?? 0)) / 100 : (l.value ?? 0)),
+    d.lines.discounts.map((x) => ({
+      label: x.kind === 'percent' ? `${x.label} (${x.value}%)` : x.label,
+      value: '−' + money(x.kind === 'percent' ? (d.subtotal * (x.value ?? 0)) / 100 : (x.value ?? 0)),
     })),
   );
-  y -= 4;
-  const totals: [string, string][] = [[t.subtotal, money(d.subtotal)]];
-  if (d.discount > 0) totals.push([t.discounts, '−' + money(d.discount)]);
-  totals.push([t.tax(Number(d.tax_rate)), money(d.tax)]);
-  for (const [k, v] of totals) {
-    txt(k, W - M - 250, y, 11, fonts.regular, SECONDARY);
-    right(v, y, 11, fonts.regular);
-    y -= 18;
-  }
-  page.drawLine({ start: { x: W - M - 250, y: y + 10 }, end: { x: W - M, y: y + 10 }, thickness: 0.5, color: BORDER });
-  y -= 10;
-  txt(d.extra ? t.totalOnce : t.total, W - M - 250, y, 13, fonts.medium);
-  right(money(d.total), y, 16, fonts.medium, BRAND);
 
-  txt(`${t.footer} · ${t.version} ${d.version}`, M, 36, 9, fonts.regular, SECONDARY);
+  // Totales a la derecha, 217.5 pt (290 px) de ancho.
+  y -= 12;
+  const wt = 217.5;
+  const xt = ANCHO - LADO - wt;
+  const filaTot = (k: string, v: string) => {
+    y -= 3 + 8.25;
+    page.drawText(k, { x: xt, y, size: 8.25, font: f.regular, color: C.gris });
+    page.drawText(v, { x: ANCHO - LADO - f.regular.widthOfTextAtSize(v, 8.25), y, size: 8.25, font: f.regular, color: C.gris });
+    y -= 3;
+  };
+  filaTot(t.subtotal, money(d.subtotal));
+  if (d.discount > 0) filaTot(t.discounts, '−' + money(d.discount));
+  filaTot(p.salesTax(Number(d.tax_rate)), money(d.tax));
+  y -= 6;
+  const hg = 42;
+  caja(page, xt, y, wt, hg, 10.5, C.marca);
+  page.drawText(d.extra ? t.totalOnce : t.total, { x: xt + 12, y: y - 18, size: 9, font: f.bold, color: C.blanco });
+  page.drawText(p.included, { x: xt + 12, y: y - 30, size: 7.5, font: f.regular, color: rgb(0.85, 0.93, 0.92) });
+  const tot = money(d.total);
+  page.drawText(tot, { x: ANCHO - LADO - 12 - f.extra.widthOfTextAtSize(tot, 18), y: y - 27, size: 18, font: f.extra, color: C.blanco });
+  y -= hg + 13.5;
+
+  // "How to accept".
+  const anchoNota = W - 21;
+  const lineas = partir(`${p.howTitle} ${p.how}`, f.regular, 8.25, anchoNota);
+  const hn = 9 + lineas.length * 12.4 + 9;
+  caja(page, LADO, y, W, hn, 10.5, C.suave);
+  lineas.forEach((s, i) => {
+    const yl = y - 9 - (i + 1) * 12.4 + 3;
+    if (i === 0 && s.startsWith(p.howTitle)) {
+      page.drawText(p.howTitle, { x: LADO + 10.5, y: yl, size: 8.25, font: f.extra, color: C.texto });
+      page.drawText(s.slice(p.howTitle.length), { x: LADO + 10.5 + f.extra.widthOfTextAtSize(p.howTitle, 8.25), y: yl, size: 8.25, font: f.regular, color: C.texto });
+    } else page.drawText(s, { x: LADO + 10.5, y: yl, size: 8.25, font: f.regular, color: C.texto });
+  });
+
+  pie(page, f, `${t.quote} ${d.version} · ${p.page}`);
   return await doc.save();
+}
+
+/** Frecuencia del PDF como en la muestra: "Mon, Wed and Fri" en inglés; en español la de siempre. */
+function frecuenciaPdf(fr: Frequency, l: Lang): string {
+  if (!fr) return '';
+  if (l === 'en') return fr.kind === 'weekly' ? diasCorreo(fr) : frecuencia(fr, l);
+  return frecuencia(fr, l);
 }

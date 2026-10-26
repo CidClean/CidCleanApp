@@ -1,10 +1,12 @@
 // Diseño del PDF del resumen del walkthrough (D-212; D-208: lo diseña el arquitecto con el sistema visual aprobado).
 // Carta (612 x 792 pt), márgenes de 48 pt, Manrope 400/500 (D-026), color de marca #0F766E (D-024), texto #1A1A1A,
 // gris #6B6B6B, líneas #E2E2E2 y superficie #F4F4F4 (D-033), recuadros con esquinas de 12 (D-025).
-// Contenido: encabezado "Cid Clean" en color de marca (el logo queda para después, D-158), Sitio y contacto, Áreas en
-// tabla y Frecuencia; las fotos van en un anexo. Las notas internas NO salen (flujo: no salen al cliente).
-import { PDFDocument, rgb, StandardFonts, type PDFFont, type PDFPage } from 'npm:pdf-lib@1.17.1';
-import fontkit from 'npm:@pdf-lib/fontkit@1.1.1';
+// Contenido: encabezado con la marca (orden 33, D-250: logo y "Cid Clean LLC", franja de degradado; en cada página),
+// Sitio y contacto, Áreas en tabla y Frecuencia; las fotos van en un anexo; pie con los datos de contacto en cada
+// página. Las notas internas NO salen (flujo: no salen al cliente).
+import { PDFDocument, rgb, type PDFFont, type PDFPage } from 'npm:pdf-lib@1.17.1';
+
+import { C, encabezado, fuentesMarca, logoMarca, partir as partirMarca, pie } from '../_shared/pdfMarca.ts';
 
 export type Fuente = {
   company: string;
@@ -28,21 +30,17 @@ export type Fuente = {
   };
 };
 
-const MARCA = rgb(15 / 255, 118 / 255, 110 / 255);
-const TEXTO = rgb(26 / 255, 26 / 255, 26 / 255);
-const GRIS = rgb(107 / 255, 107 / 255, 107 / 255);
-const LINEA = rgb(226 / 255, 226 / 255, 226 / 255);
-const SUPERFICIE = rgb(244 / 255, 244 / 255, 244 / 255);
+// Paleta de D-223/D-250.
+const MARCA = C.marca;
+const TEXTO = C.texto;
+const GRIS = C.gris;
+const LINEA = C.linea;
+const SUPERFICIE = C.crema;
 
 const ANCHO = 612;
 const ALTO = 792;
-const MARGEN = 48;
+const MARGEN = 34.5; // el mismo margen del encabezado de la marca (46 px)
 const UTIL = ANCHO - MARGEN * 2;
-
-const FUENTES = {
-  regular: 'https://cdn.jsdelivr.net/npm/@expo-google-fonts/manrope@0.4.2/400Regular/Manrope_400Regular.ttf',
-  medium: 'https://cdn.jsdelivr.net/npm/@expo-google-fonts/manrope@0.4.2/500Medium/Manrope_500Medium.ttf',
-};
 
 const T = {
   es: {
@@ -109,32 +107,7 @@ const T = {
   },
 };
 
-async function bajar(url: string): Promise<Uint8Array | null> {
-  try {
-    const res = await fetch(url);
-    return res.ok ? new Uint8Array(await res.arrayBuffer()) : null;
-  } catch {
-    return null;
-  }
-}
-
-/** Parte un texto en líneas que caben en `ancho`. */
-function partir(texto: string, fuente: PDFFont, tam: number, ancho: number): string[] {
-  const lineas: string[] = [];
-  for (const parrafo of texto.split(/\r?\n/)) {
-    let actual = '';
-    for (const palabra of parrafo.split(/\s+/).filter(Boolean)) {
-      const prueba = actual ? `${actual} ${palabra}` : palabra;
-      if (fuente.widthOfTextAtSize(prueba, tam) <= ancho) actual = prueba;
-      else {
-        if (actual) lineas.push(actual);
-        actual = palabra;
-      }
-    }
-    lineas.push(actual);
-  }
-  return lineas.length ? lineas : [''];
-}
+const partir = partirMarca;
 
 /** Recuadro con esquinas redondeadas (borde de 1 pt). */
 function recuadro(page: PDFPage, x: number, yTop: number, w: number, h: number, r: number, borde = LINEA, fondo?: ReturnType<typeof rgb>) {
@@ -151,10 +124,10 @@ export async function armarPdf(
 ): Promise<Uint8Array> {
   const t = T[idioma];
   const doc = await PDFDocument.create();
-  doc.registerFontkit(fontkit);
-  const [reg, med] = await Promise.all([bajar(FUENTES.regular), bajar(FUENTES.medium)]);
-  const fReg = reg ? await doc.embedFont(reg, { subset: true }) : await doc.embedFont(StandardFonts.Helvetica);
-  const fMed = med ? await doc.embedFont(med, { subset: true }) : await doc.embedFont(StandardFonts.HelveticaBold);
+  const fuentes = await fuentesMarca(doc);
+  const logo = await logoMarca(doc);
+  const fReg = fuentes.regular;
+  const fMed = fuentes.bold;
   doc.setTitle(`${t.title} · ${f.company}`);
   doc.setAuthor('Cid Clean');
 
@@ -162,24 +135,23 @@ export async function armarPdf(
   const fecha = new Date(f.closed_at);
   const fechaTexto = t.date(fecha.getUTCDate(), t.months[fecha.getUTCMonth()], fecha.getUTCFullYear());
 
+  const marca = { etiqueta: 'Walkthrough', valor: `v${f.version}` };
   let page = doc.addPage([ANCHO, ALTO]);
-  let y = ALTO - MARGEN;
+  let y = encabezado(page, fuentes, logo, marca);
 
   const nuevaPagina = () => {
     page = doc.addPage([ANCHO, ALTO]);
-    y = ALTO - MARGEN;
+    y = encabezado(page, fuentes, logo, marca);
   };
   const espacio = (alto: number) => {
-    if (y - alto < MARGEN + 24) nuevaPagina();
+    if (y - alto < MARGEN + 30) nuevaPagina();
   };
   const texto = (s: string, x: number, tam: number, fuente: PDFFont, color = TEXTO) => {
     page.drawText(s, { x, y: y - tam, size: tam, font: fuente, color });
   };
 
-  // Encabezado: "Cid Clean" en color de marca, título y línea gris.
-  texto('Cid Clean', MARGEN, 22, fMed, MARCA);
-  y -= 32;
-  texto(t.title, MARGEN, 15, fMed);
+  // Título bajo el encabezado de la marca.
+  texto(t.title, MARGEN, 15, fuentes.extra);
   y -= 22;
   texto(`${f.company} · ${sitio} · ${t.version(f.version)} · ${fechaTexto}`, MARGEN, 10, fReg, GRIS);
   y -= 22;
@@ -224,7 +196,7 @@ export async function armarPdf(
     texto(t.noAreas, MARGEN, 10.5, fReg, GRIS);
     y -= 22;
   } else {
-    const anchos = [118, 56, 62, 108, 128, 44]; // suma 516 = UTIL
+    const anchos = [118, 56, 62, 108, 128, 44].map((w) => (w * UTIL) / 516); // proporciones de siempre sobre UTIL
     const xs = anchos.map((_, i) => MARGEN + anchos.slice(0, i).reduce((a, b) => a + b, 0));
     const encabezado = () => {
       espacio(26);
@@ -244,7 +216,7 @@ export async function armarPdf(
         String(a.photos?.length ?? 0),
       ].map((v, i) => partir(v, fReg, 9.5, anchos[i] - 12));
       const alto = Math.max(...celdas.map((l) => l.length)) * 13 + 10;
-      if (y - alto < MARGEN + 24) {
+      if (y - alto < MARGEN + 30) {
         nuevaPagina();
         encabezado();
       }
@@ -329,13 +301,9 @@ export async function armarPdf(
     y -= 8;
   }
 
-  // Pie de página en todas: empresa a la izquierda y número de página a la derecha.
+  // Pie de contacto en todas, con el número de página a la derecha.
   const paginas = doc.getPages();
-  paginas.forEach((p, i) => {
-    const pie = t.page(i + 1, paginas.length);
-    p.drawText(`Cid Clean · ${f.company}`, { x: MARGEN, y: 28, size: 8, font: fReg, color: GRIS });
-    p.drawText(pie, { x: ANCHO - MARGEN - fReg.widthOfTextAtSize(pie, 8), y: 28, size: 8, font: fReg, color: GRIS });
-  });
+  paginas.forEach((p, i) => pie(p, fuentes, t.page(i + 1, paginas.length)));
 
   return await doc.save();
 }
