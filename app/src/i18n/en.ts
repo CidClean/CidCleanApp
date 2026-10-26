@@ -101,7 +101,7 @@ export const en: Strings = {
     yes: 'Yes', // employee profile: app access row
     no: 'No', // employee profile: app access row, person without access
     // D-216: phone and date/time pickers.
-    phoneError: 'Enter a 10-digit phone number, for example (239) 555-0142.',
+    phoneError: 'Enter a valid US phone number: 10 digits, and the area code and the next 3 digits don\'t start with 0 or 1. Example: (239) 555-0142.',
     pickDate: 'Choose a date',
     pickTime: 'Choose a time',
     noDate: 'No date',

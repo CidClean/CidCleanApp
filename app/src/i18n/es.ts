@@ -102,7 +102,7 @@ export const es = {
     yes: 'Sí', // APROBADO (D-184)
     no: 'No', // APROBADO (D-174: fila Acceso a la app sin acceso)
     // D-216 (delegado D-200): teléfono y selectores de fecha y hora.
-    phoneError: 'Escribe un teléfono de 10 dígitos, por ejemplo (239) 555-0142.',
+    phoneError: 'Escribe un teléfono válido de EE. UU.: 10 dígitos, y el código de área y los 3 siguientes no empiezan con 0 ni 1. Ejemplo: (239) 555-0142.', // D-200 (D-246)
     pickDate: 'Elegir fecha',
     pickTime: 'Elegir hora',
     noDate: 'Sin fecha',
