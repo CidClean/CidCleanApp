@@ -6,6 +6,7 @@ import type { AccountingStrings } from '@/i18n/accounting';
 import type { StaffCost } from './accountingApi';
 import type { Access } from './visibility';
 import { can, canAny } from './visibility';
+import { BRAND_PDF_CSS, brandFooterHtml, brandHeaderHtml } from './pdfBrand';
 
 // --- Periodos (D-069 mes con flechas; D-215 por mes o rango) ----------------------------------------------------
 
@@ -212,7 +213,7 @@ function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/** HTML de una página para el PDF del dashboard: las cuatro cifras, Recibido / Pendiente y la tabla por mes. */
+/** HTML de una página para el PDF del dashboard, con encabezado y pie de la marca (orden 33, D-250): las cuatro cifras, Recibido / Pendiente y la tabla por mes. */
 export function dashboardHtml(d: DashboardFigures, p: Period, scope: string, a: AccountingStrings): string {
   const tile = (label: string, value: number, brand = false) =>
     `<div class="t${brand ? ' b' : ''}"><div class="l">${esc(label)}</div><div class="v">${esc(money(value))}</div></div>`;
@@ -229,12 +230,13 @@ h1{font-size:22px;margin:0 0 2px}.s{color:#6B5F52;font-size:13px;margin-bottom:1
 .g{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}.t{flex:1 1 40%;background:#FFFFFF;border-radius:24px;padding:16px}
 .t.b{background:#0F766E;color:#FFFFFF}.l{font-size:13px;opacity:.85}.v{font-size:20px;font-weight:800;margin-top:4px}
 .rp{font-size:13px;color:#6B5F52;margin-bottom:16px}table{width:100%;border-collapse:collapse;background:#FFFFFF;font-size:12px}
-th,td{padding:8px;border-bottom:1px solid #E2E2E2;text-align:right}th:first-child,td:first-child{text-align:left}
-</style></head><body><h1>Cid Clean · ${esc(a.title)}</h1><div class="s">${esc(scope)} · ${esc(periodTitle(p, a))}</div>
+th,td{padding:8px;border-bottom:1px solid #EFE5D8;text-align:right}th:first-child,td:first-child{text-align:left}
+${BRAND_PDF_CSS}
+</style></head><body>${brandHeaderHtml()}<h1>${esc(a.title)}</h1><div class="s">${esc(scope)} · ${esc(periodTitle(p, a))}</div>
 <div class="g">${tile(a.income, d.expected)}${tile(a.staff, d.staff)}${tile(a.expenses, d.expenses)}${tile(a.profit, d.profit, true)}</div>
 <div class="rp">${esc(a.receivedPending(money(d.received), money(d.pending)))}</div>
 <table><thead><tr><th>${esc(c.month)}</th><th>${esc(c.expected)}</th><th>${esc(c.received)}</th><th>${esc(c.pending)}</th><th>${esc(c.staff)}</th><th>${esc(c.expenses)}</th><th>${esc(c.profit)}</th></tr></thead><tbody>${rows}</tbody></table>
-</body></html>`;
+${brandFooterHtml()}</body></html>`;
 }
 
 // --- Gastos recurrentes (D-103, D-215) --------------------------------------------------------------------------

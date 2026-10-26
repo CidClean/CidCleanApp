@@ -1,7 +1,8 @@
 import { View } from 'react-native';
 
 import { AppText } from '@/components/AppText';
-import { TopBar } from '@/components/TopBar';
+import { TitleHeader } from '@/components/bento/Header';
+import { BrandMark } from '@/components/brand/BrandMark';
 import { getPortalStrings } from '@/i18n/quotes';
 import { useTheme } from '@/theme';
 
@@ -12,7 +13,8 @@ export default function PortalHome() {
   const es = getPortalStrings('es');
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <TopBar title={t.brand} />
+      {/* Orden 33 (D-250): logo en el encabezado del portal. */}
+      <TitleHeader title={t.brand} left={<BrandMark />} />
       <View style={{ padding: 16 }}>
         <AppText center>{t.home}</AppText>
         <AppText center color={colors.secondary} style={{ marginTop: 6 }}>

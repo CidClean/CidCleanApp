@@ -2,6 +2,7 @@ import { dateFromKey, dayKey } from "./leadRules";
 import type { ScheduleVisit } from "./scheduleApi";
 import { addDays, formatMinutes, sundayOf } from "./scheduleRules";
 import { formatTime } from "./week";
+import { BRAND_PDF_CSS, brandFooterHtml, brandHeaderHtml } from "./pdfBrand";
 
 /** Reglas puras de las vistas Tabla y Calendario del Schedule (D-231). Sin red ni React: se prueban solas. */
 
@@ -228,7 +229,7 @@ type PdfStrings = {
 
 /**
  * HTML del PDF de la semana en el estilo C1 (D-223, D-226): fondo crema #FBF6EF, tarjeta blanca de 24px, Manrope 800
- * en los títulos y el color de marca #0F766E. Empleado → días va en hoja horizontal; Día → empleados en vertical.
+ * en los títulos y el color de marca #0F766E; encabezado y pie con la marca (orden 33, D-250, lib/pdfBrand). Empleado → días va en hoja horizontal; Día → empleados en vertical.
  */
 export function scheduleHtml(
   mode: "employee" | "day",
@@ -311,7 +312,8 @@ td { border-bottom: 0.5px solid #EADFD2; padding: 6px 4px; vertical-align: top; 
 .chip { display: inline-block; background: #DDEFEC; color: #0F766E; border-radius: 999px; padding: 4px 10px; margin: 0 6px 6px 0; font-weight: 700; }
 .chip.warn { background: #FBE3C7; color: #8A4B0F; }
 .muted { color: #6B5F52; }
-</style></head><body><div class="card"><div class="brand">CID CLEAN</div><h1>${esc(s.title)}</h1><div class="range">${esc(s.range)}</div>${body}</div></body></html>`;
+${BRAND_PDF_CSS}
+</style></head><body><div class="card">${brandHeaderHtml()}<h1>${esc(s.title)}</h1><div class="range">${esc(s.range)}</div>${body}${brandFooterHtml()}</div></body></html>`;
 }
 
 // --- Semana por semana (D-232) ----------------------------------------------------------------------------------

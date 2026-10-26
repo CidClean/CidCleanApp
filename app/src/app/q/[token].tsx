@@ -13,6 +13,8 @@ import { CodeBoxes } from "@/components/CodeBoxes";
 import { Icon } from "@/components/Icon";
 import { Dialog } from "@/components/Dialog";
 import { TopBar } from "@/components/TopBar";
+import { TitleHeader } from "@/components/bento/Header";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { QuoteView } from "@/components/quotes/QuoteView";
 import { getPortalStrings, type PortalStrings } from "@/i18n/quotes";
 import { CODE_LENGTH } from "@/lib/codeEntry";
@@ -218,16 +220,23 @@ export default function PortalScreen() {
     bottom?: React.ReactNode,
   ) => (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <TopBar
-        title={title}
-        onBack={onBack}
-        backLabel={lang === "es" ? "Volver" : "Back"}
-      />
+      {/* Orden 33 (D-250): logo en el encabezado del portal. Si la barra lleva otro título o la flecha de volver, el
+          logo va arriba del contenido. */}
+      {onBack || title !== t.brand ? (
+        <TopBar
+          title={title}
+          onBack={onBack}
+          backLabel={lang === "es" ? "Volver" : "Back"}
+        />
+      ) : (
+        <TitleHeader title={title} left={<BrandMark />} />
+      )}
       <FormScroll
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.column}>
+          {onBack || title !== t.brand ? <BrandMark size={32} /> : null}
           {notice ? <AppAlert tone="error" text={notice} /> : null}
           {body}
         </View>
