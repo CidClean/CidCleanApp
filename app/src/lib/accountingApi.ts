@@ -113,25 +113,62 @@ export function setIncomeReceived(id: string, received: boolean, on: string | nu
   return rpc('set_income_received', { p_id: id, p_received: received, p_on: on }, () => null);
 }
 
-export type ExpenseCategory = { id: string; labelEs: string; labelEn: string; active: boolean };
+export type ExpenseCategory = { id: string; labelEs: string; labelEn: string; sort: number; active: boolean };
 
 /** Categorías de la lista de Ajustes (D-130), en su orden. */
 export async function fetchExpenseCategories(): Promise<ApiResult<ExpenseCategory[]>> {
   try {
-    const { data, error } = await supabase.from('expense_categories').select('id, label_es, label_en, active').order('sort');
+    const { data, error } = await supabase.from('expense_categories').select('id, label_es, label_en, sort, active').order('sort');
     if (error) return { ok: false, reason: failureFromCode(error.code) };
     return {
       ok: true,
-      data: ((data ?? []) as { id: string; label_es: string; label_en: string; active: boolean }[]).map((r) => ({
+      data: ((data ?? []) as { id: string; label_es: string; label_en: string; sort: number; active: boolean }[]).map((r) => ({
         id: r.id,
         labelEs: r.label_es,
         labelEn: r.label_en,
+        sort: r.sort,
         active: r.active,
       })),
     };
   } catch {
     return { ok: false, reason: 'network' };
   }
+}
+
+/** Ajustes → Categorías de gastos (D-113, D-114): agrega una al final. Las reglas por fila dejan escribir solo al Super Admin. */
+export async function createExpenseCategory(labelEs: string, labelEn: string, sort: number): Promise<ApiResult<string>> {
+  try {
+    const { data, error } = await supabase
+      .from('expense_categories')
+      .insert({ label_es: labelEs.trim(), label_en: labelEn.trim(), sort })
+      .select('id')
+      .single();
+    if (error || !data) return { ok: false, reason: failureFromCode(error?.code) };
+    return { ok: true, data: (data as { id: string }).id };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/** Lápiz de Ajustes: cambia el texto en español y en inglés. Sin fila devuelta = sin permiso o ya no existe. */
+export async function updateExpenseCategory(id: string, labelEs: string, labelEn: string): Promise<ApiResult<null>> {
+  try {
+    const { data, error } = await supabase
+      .from('expense_categories')
+      .update({ label_es: labelEs.trim(), label_en: labelEn.trim() })
+      .eq('id', id)
+      .select('id');
+    if (error) return { ok: false, reason: failureFromCode(error.code) };
+    if (!data || data.length === 0) return { ok: false, reason: 'forbidden' };
+    return { ok: true, data: null };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/** Papelera de Ajustes: borra la categoría, o la desactiva si algún gasto la usa (RPC remove_expense_category). */
+export function removeExpenseCategory(id: string): Promise<ApiResult<'deleted' | 'deactivated'>> {
+  return rpc('remove_expense_category', { p_id: id }, (d) => (d === 'deactivated' ? 'deactivated' : 'deleted'));
 }
 
 export type Expense = {

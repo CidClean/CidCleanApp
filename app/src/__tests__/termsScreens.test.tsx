@@ -61,8 +61,10 @@ describe('Menú → Ajustes (D-107, D-114, D-187)', () => {
     expect(screen.getByLabelText(es.common.back)).toBeTruthy();
     expect(screen.getByText(es.settings.termsRow)).toBeTruthy();
     await waitFor(() => expect(screen.getByText('v2')).toBeTruthy());
-    // Cuatro filas: Términos del staff, Términos del portal (D-209), Motivos de lead perdido (D-203) y Transferir rol (orden 12).
-    expect(screen.getAllByRole('button').filter((b) => b.props.accessibilityLabel !== es.common.back)).toHaveLength(4);
+    // Cinco filas: Términos del staff, Términos del portal (D-209), Categorías de gastos (D-254), Motivos de lead perdido (D-203)
+    // y Transferir rol (orden 12).
+    expect(screen.getAllByRole('button').filter((b) => b.props.accessibilityLabel !== es.common.back)).toHaveLength(5);
+    expect(screen.getByText('Categorías de gastos')).toBeTruthy();
     expect(screen.getByText(es.transfer.row)).toBeTruthy();
     expect(screen.getByText('Motivos de lead perdido')).toBeTruthy();
   });

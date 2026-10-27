@@ -7,6 +7,7 @@ import { AppText } from '@/components/AppText';
 import { DocIcon, LeadCalendarIcon } from '@/components/illustrations';
 import { AppAlert } from '@/components/AppAlert';
 import { ListRow } from '@/components/ListRow';
+import { ExpenseCategoriesSettingsRow } from '@/components/accounting/ExpenseCategoriesSettingsRow';
 import { LostReasonsSettingsRow } from '@/components/sales/LostReasonsSettingsRow';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
@@ -18,7 +19,7 @@ import { useTheme } from '@/theme';
 
 /**
  * Menú → Ajustes (D-107, D-114, D-169, D-187): filas con nombre, valor actual y flecha. Solo el Super Admin.
- * Por ahora "Términos del staff" y "Transferir rol de Super Admin" (D-090); las demás se agregan cuando existan sus módulos.
+ * Términos del staff, Categorías de gastos (D-254), Motivos de lead perdido y Transferir rol de Super Admin (D-090).
  */
 export default function SettingsScreen() {
   const router = useRouter();
@@ -89,6 +90,8 @@ export default function SettingsScreen() {
         </Bento>
         <View style={{ height: 12 }} />
         <CardBlock>
+        {/* D-107/D-254: Categorías de gastos va antes que Motivos de lead perdido, como en la lista aprobada. */}
+        <ExpenseCategoriesSettingsRow />
         <LostReasonsSettingsRow />
         <ListRow title={strings.transfer.row} chevron last onPress={() => router.push('/settings/transfer')} />
         </CardBlock>

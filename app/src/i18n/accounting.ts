@@ -133,6 +133,26 @@ export const accountingEs = {
   // Tarjeta de la cuenta en el jobsite (orden 27)
   accountCard: (period: string) => `Este mes · ${period}`, // D-200
   openAccounting: 'Ver en Accounting', // D-200
+  // Ajustes → Categorías de gastos (orden 40; D-113, D-114, D-130, D-254). Mismo patrón que los motivos de lead perdido.
+  categories: {
+    row: 'Categorías de gastos', // APROBADO (D-089, D-114, D-130)
+    count: (n: number) => (n === 1 ? '1 categoría' : `${n} categorías`), // D-200 (como "8 motivos", D-107)
+    add: 'Agregar', // APROBADO (D-113)
+    newTitle: 'Nueva categoría', // D-200
+    editTitle: 'Editar categoría', // D-200
+    labelEs: 'En español', // D-200
+    labelEn: 'En inglés', // D-200
+    errorEs: 'Escribe la categoría en español.', // D-200
+    errorEn: 'Escribe la categoría en inglés.', // D-200
+    errorLoad: 'No se pudieron cargar las categorías. Inténtalo otra vez.', // D-200
+    errorSave: 'No se pudo guardar. Inténtalo otra vez.', // APROBADO (D-195)
+    errorDelete: 'No se pudo eliminar la categoría. Inténtalo otra vez.', // D-200
+    deleteTitle: (c: string) => `¿Eliminar ${c}?`, // D-200 (mismo patrón de D-201 y D-202)
+    delete: 'Eliminar', // D-200
+    deactivated: 'Algún gasto ya usa esta categoría: se quitó de la lista y esos gastos la conservan.', // D-200 (como D-207)
+    editLabel: (c: string) => `Editar ${c}`, // D-200: solo lo lee el lector de pantalla
+    deleteLabel: (c: string) => `Eliminar ${c}`, // D-200: solo lo lee el lector de pantalla
+  },
 };
 
 export type AccountingStrings = typeof accountingEs;
@@ -259,6 +279,25 @@ export const accountingEn: AccountingStrings = {
   pdfTitle: (period: string) => `Dashboard · ${period}`,
   accountCard: (period: string) => `This month · ${period}`,
   openAccounting: 'See in Accounting',
+  categories: {
+    row: 'Expense categories',
+    count: (n: number) => (n === 1 ? '1 category' : `${n} categories`),
+    add: 'Add',
+    newTitle: 'New category',
+    editTitle: 'Edit category',
+    labelEs: 'In Spanish',
+    labelEn: 'In English',
+    errorEs: 'Enter the category in Spanish.',
+    errorEn: 'Enter the category in English.',
+    errorLoad: "Couldn't load the categories. Try again.",
+    errorSave: "Couldn't save. Try again.",
+    errorDelete: "Couldn't delete the category. Try again.",
+    deleteTitle: (c: string) => `Delete ${c}?`,
+    delete: 'Delete',
+    deactivated: 'An expense already uses this category: it was removed from the list and those expenses keep it.',
+    editLabel: (c: string) => `Edit ${c}`,
+    deleteLabel: (c: string) => `Delete ${c}`,
+  },
 };
 
 export function getAccountingStrings(locale: Locale): AccountingStrings {
