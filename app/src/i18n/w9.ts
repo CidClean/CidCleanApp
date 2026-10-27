@@ -143,6 +143,8 @@ export const w9PortalEs = {
   tinSsn: 'SSN', // APROBADO (muestra)
   tinItin: 'ITIN', // APROBADO (muestra)
   tinEin: 'EIN', // APROBADO (D-256)
+  tinShow: 'Mostrar el número', // D-259
+  tinHide: 'Ocultar el número', // D-259
   tinLabel: { ssn: 'Número de Seguro Social', itin: 'Número de identificación personal del contribuyente (ITIN)', ein: 'Número de identificación del empleador (EIN)' }, // D-200
   tinLock: 'Solo va en tu W-9 firmado. No se guarda en la app.', // APROBADO (muestra)
   badTin: { ssn: 'Revisa tu SSN: son 9 dígitos y no empieza con 9.', itin: 'Revisa tu ITIN: son 9 dígitos y empieza con 9.', ein: 'Revisa tu EIN: son 9 dígitos.' }, // D-200
@@ -203,6 +205,8 @@ export const w9PortalEn: W9PortalStrings = {
   tinSsn: 'SSN',
   tinItin: 'ITIN',
   tinEin: 'EIN',
+  tinShow: 'Show number',
+  tinHide: 'Hide number',
   tinLabel: { ssn: 'Social Security Number', itin: 'Individual Taxpayer Identification Number', ein: 'Employer Identification Number' },
   tinLock: 'Only goes into your signed W-9. It is not saved in the app.',
   badTin: { ssn: 'Check your SSN: 9 digits, not starting with 9.', itin: 'Check your ITIN: 9 digits, starting with 9.', ein: 'Check your EIN: 9 digits.' },

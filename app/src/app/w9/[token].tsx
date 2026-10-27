@@ -43,7 +43,6 @@ import {
   addressText,
   classificationText,
   formatTin,
-  maskTin,
   tinDigits,
   tinValid,
   w9Errors,
@@ -385,7 +384,7 @@ export default function W9PortalScreen() {
       <TinField type={tinType} value={tin} onChange={(v) => {
         setTin(v);
         setTinError(false);
-      }} label={t.tinLabel[tinType]} error={tinError ? t.badTin[tinType] : null} />
+      }} label={t.tinLabel[tinType]} error={tinError ? t.badTin[tinType] : null} showLabel={t.tinShow} hideLabel={t.tinHide} />
       <View style={[styles.lock, { backgroundColor: colors.brandSoft }]}>
         <Icon name="lock" size={14} strokeWidth={iconStrokeWidth} color={brand} />
         <AppText size={12} weight="bold" color={brand} style={{ flexShrink: 1 }}>
@@ -410,24 +409,42 @@ export default function W9PortalScreen() {
 }
 
 /** Campo del número con máscara: mientras se escribe 123-45-6789; fuera del campo •••-••-6789 (muestra aprobada). */
-function TinField(props: { type: TinType; value: string; onChange: (v: string) => void; label: string; error: string | null }) {
-  const [focused, setFocused] = useState(false);
+/** D-259: el número se ve oculto (puntos) mientras se escribe; el ojo lo muestra u oculta. Empieza oculto. */
+function TinField(props: {
+  type: TinType;
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  error: string | null;
+  showLabel: string;
+  hideLabel: string;
+}) {
+  const [visible, setVisible] = useState(false);
+  const { colors } = useTheme();
   return (
     <AppField
       label={props.label}
-      value={focused ? formatTin(props.type, props.value) : maskTin(props.type, props.value)}
-      onChangeText={(v) => {
-        if (focused) props.onChange(tinDigits(v));
-      }}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
+      value={visible ? formatTin(props.type, props.value) : props.value}
+      onChangeText={(v) => props.onChange(tinDigits(v))}
+      secureTextEntry={!visible}
       keyboardType="number-pad"
       autoComplete="off"
       autoCorrect={false}
       importantForAutofill="no"
       textContentType="none"
-      maxLength={11}
+      maxLength={visible ? 11 : 9}
       error={props.error}
+      accessory={
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={visible ? props.hideLabel : props.showLabel}
+          onPress={() => setVisible((v) => !v)}
+          hitSlop={8}
+          style={{ paddingHorizontal: 14, paddingVertical: 8 }}
+        >
+          <Icon name={visible ? 'eyeOff' : 'eye'} size={20} strokeWidth={iconStrokeWidth} color={colors.secondary} />
+        </Pressable>
+      }
     />
   );
 }

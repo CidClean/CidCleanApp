@@ -178,6 +178,8 @@ export const es = {
     w9: 'W-9', // APROBADO (D-175)
     insuranceCertificate: 'Certificado de seguro', // APROBADO (D-175)
     uploadedOn: (date: string) => `Subido el ${date}`, // APROBADO (D-175)
+    w9OnlySuperAdmin: 'Solo el Super Admin puede abrirlo', // APROBADO (D-260)
+    download: 'Descargar', // APROBADO (D-260)
     noFile: 'Sin archivo', // APROBADO (D-175)
     uploadedChip: 'Subido', // APROBADO (D-175)
     missingChip: 'Falta', // APROBADO (D-175)

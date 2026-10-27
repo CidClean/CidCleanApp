@@ -167,14 +167,16 @@ describe('Portal del W-9 (D-255, D-256, D-258)', () => {
     expect(await screen.findByText('Karina M. López')).toBeTruthy();
   });
 
-  test('número con máscara; uno no válido no deja seguir', async () => {
+  test('número oculto mientras se escribe, el ojo lo muestra (D-259); uno no válido no deja seguir', async () => {
     await enter();
     const field = screen.getByLabelText(p.tinLabel.ssn);
-    await fireEvent(field, 'focus');
     await fireEvent.changeText(field, '923456789');
+    expect(screen.getByLabelText(p.tinLabel.ssn).props.secureTextEntry).toBe(true);
+    await fireEvent.press(screen.getByLabelText(p.tinShow));
+    expect(screen.getByLabelText(p.tinLabel.ssn).props.secureTextEntry).toBe(false);
     expect(screen.getByLabelText(p.tinLabel.ssn).props.value).toBe('923-45-6789');
-    await fireEvent(screen.getByLabelText(p.tinLabel.ssn), 'blur');
-    expect(screen.getByLabelText(p.tinLabel.ssn).props.value).toBe('•••-••-6789');
+    await fireEvent.press(screen.getByLabelText(p.tinHide));
+    expect(screen.getByLabelText(p.tinLabel.ssn).props.secureTextEntry).toBe(true);
     await fireEvent.press(screen.getByText(p.continue));
     expect(screen.getByText(p.badTin.ssn)).toBeTruthy();
     expect(screen.queryByText(p.signTitle)).toBeNull();

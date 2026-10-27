@@ -341,6 +341,8 @@ export default function EmployeeProfileScreen() {
         source: 'document',
         documentId,
         title: kind === 'w9' ? strings.employee.w9 : strings.employee.insuranceCertificate,
+        // D-260: el W-9 lo descarga el Super Admin.
+        ...(kind === 'w9' ? { download: '1' } : {}),
       },
     });
   }
@@ -567,12 +569,14 @@ export default function EmployeeProfileScreen() {
                     key={row.kind}
                     title={row.kind === 'w9' ? strings.employee.w9 : strings.employee.insuranceCertificate}
                     detail={
-                      row.state === 'uploaded' && row.uploadedAt
+                      row.kind === 'w9' && row.state === 'uploaded' && !access.isSuperAdmin
+                        ? strings.employee.w9OnlySuperAdmin
+                        : row.state === 'uploaded' && row.uploadedAt
                         ? strings.employee.uploadedOn(formatDate(row.uploadedAt, locale))
                         : strings.employee.noFile
                     }
                     last={i === rows.length - 1}
-                    onPress={row.documentId ? () => open(row.documentId as string, row.kind) : undefined}
+                    onPress={row.documentId && (row.kind !== 'w9' || access.isSuperAdmin) ? () => open(row.documentId as string, row.kind) : undefined}
                     right={
                       <Chip
                         label={row.state === 'uploaded' ? strings.employee.uploadedChip : strings.employee.missingChip}

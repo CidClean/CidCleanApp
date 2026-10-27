@@ -73,6 +73,7 @@ begin
     insert into auth.users (id, aud, role, email) values (aid, 'authenticated', 'authenticated', quien || '@prueba.local');
     insert into actores values (quien, aid, pid);
   end loop;
+  insert into actores select 'super', auth_user_id, id from profiles where is_super_admin;
   insert into profile_permissions (profile_id, permission_key)
     select profile_id, 'empleados_gestionar_documentos' from actores where nombre = 'docs';
   insert into profile_permissions (profile_id, permission_key)
@@ -239,10 +240,11 @@ select pg_temp.prueba('estado en el perfil: Firmado con el documento y lo que ca
           || '|' || split_part(x, '|', 3)
      from pg_temp.valor('docs', format($q$select (s->>'status') || '|' || (s->>'document_id') || '|' || jsonb_array_length(s->'changes')
        from w9_request_status(%L) s$q$, (select id from fx where k = 'karina'))) x));
-select pg_temp.prueba('el PDF firmado lo abre quien gestiona documentos (y queda registrado)', 'ok|ERR:42501',
-  case when pg_temp.valor('docs', format('select open_profile_document(%L)', (select id from profile_documents where profile_id = (select id from fx where k = 'karina') and replaced_at is null)))
+select pg_temp.prueba('el PDF firmado solo lo abre el Super Admin (D-260)', 'ok|ERR:42501|ERR:42501',
+  case when pg_temp.valor('super', format('select open_profile_document(%L)', (select id from profile_documents where profile_id = (select id from fx where k = 'karina') and replaced_at is null)))
             = (select txt from fx where k = 'path') then 'ok' end || '|' ||
-  pg_temp.valor('pagos', format('select open_profile_document(%L)', (select id from profile_documents where profile_id = (select id from fx where k = 'karina') and replaced_at is null))));
+  pg_temp.valor('pagos', format('select open_profile_document(%L)', (select id from profile_documents where profile_id = (select id from fx where k = 'karina') and replaced_at is null))) || '|' ||
+  pg_temp.valor('docs', format('select open_profile_document(%L)', (select id from profile_documents where profile_id = (select id from fx where k = 'karina') and replaced_at is null))));
 select pg_temp.prueba('historial: documento subido y w9_firmado, sin número', 'documento_subido,w9_firmado|0',
   (select string_agg(action, ',' order by action) from change_log where action in ('documento_subido', 'w9_firmado')
       and detail->>'profile_id' = (select id::text from fx where k = 'karina')) || '|' ||

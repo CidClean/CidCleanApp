@@ -21,12 +21,14 @@ type State = { status: 'loading' } | { status: 'error' } | { status: 'ready'; ki
 
 /**
  * Visor de PDF dentro de la app (D-196): los términos del staff (D-176) y los documentos de los 1099 (D-175).
- * Barra con flecha de volver (D-180) y el nombre del documento; sin botones de compartir ni descargar.
+ * Barra con flecha de volver (D-180) y el nombre del documento; sin compartir ni descargar, salvo el W-9 para el Super Admin (D-260).
  * El archivo vive solo en la caché privada de la app y se borra al salir. La URL firmada de 60 s sale de
  * open-document (documentos; deja la apertura en el historial) o de Storage firmado (términos).
  */
 export default function ViewerScreen() {
-  const { source, documentId, title, path, version, language } = useLocalSearchParams<{
+  const { source, documentId, title, path, version, language, download } = useLocalSearchParams<{
+    /** D-260: '1' en el W-9 (solo lo abre el Super Admin) muestra "Descargar". */
+    download?: string;
     source: 'terms' | 'document' | 'quote-file' | 'walkthrough' | 'jobsite';
     documentId?: string;
     title?: string;
@@ -96,7 +98,30 @@ export default function ViewerScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <TopBar title={title ?? ''} onBack={goBack} backLabel={strings.common.back} />
+      <TopBar
+        title={title ?? ''}
+        onBack={goBack}
+        backLabel={strings.common.back}
+        action={
+          download === '1' && state.status === 'ready'
+            ? {
+                label: strings.employee.download,
+                icon: 'download',
+                accessibilityLabel: strings.employee.download,
+                onPress: () => {
+                  const uri = state.uri;
+                  if (Platform.OS === 'web') {
+                    window.open(uri, '_blank', 'noopener');
+                    return;
+                  }
+                  // Módulo nativo cargado al usarlo, como en sharePdf.ts.
+                  const Sharing = require('expo-sharing') as typeof import('expo-sharing');
+                  void Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: title ?? '' }).catch(() => {});
+                },
+              }
+            : undefined
+        }
+      />
       {state.status === 'loading' ? (
         <BrandLoading label={strings.common.loading} />
       ) : null}

@@ -177,6 +177,8 @@ export const en: Strings = {
     w9: 'W-9', // document name
     insuranceCertificate: 'Insurance certificate', // document name
     uploadedOn: (date: string) => `Uploaded on ${date}`, // document row detail
+    w9OnlySuperAdmin: 'Only the Super Admin can open it', // D-260
+    download: 'Download', // D-260
     noFile: 'No file', // document row detail
     uploadedChip: 'Uploaded', // green chip
     missingChip: 'Missing', // amber chip
