@@ -19,7 +19,9 @@ export function Checkbox({ label, checked, onChange }: Props) {
       <View style={[styles.box, checked ? { backgroundColor: brand } : { borderWidth: 1, borderColor: colors.fieldBorder }]}>
         {checked ? <Icon name="check" size={13} strokeWidth={iconStrokeWidth} color="#FFFFFF" /> : null}
       </View>
-      <AppText size={14}>{label}</AppText>
+      <AppText size={14} style={{ flexShrink: 1 }}>
+        {label}
+      </AppText>
     </Pressable>
   );
 }

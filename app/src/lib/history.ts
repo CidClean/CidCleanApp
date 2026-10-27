@@ -81,6 +81,12 @@ export function historyTitle(strings: Strings, e: HistoryEntry): string {
       return h.documentReplaced(documentName(strings, e.info.kind));
     case 'documento_abierto':
       return h.documentOpened(documentName(strings, e.info.kind));
+    case 'w9_enviado':
+      return h.w9Sent;
+    case 'w9_reenviado':
+      return h.w9Resent;
+    case 'w9_firmado':
+      return h.w9Signed;
     case 'terminos_publicados':
       return h.termsPublished(version);
     case 'terminos_aceptados':

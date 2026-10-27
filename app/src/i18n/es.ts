@@ -283,6 +283,9 @@ export const es = {
     documentUploaded: (name: string) => `Documento subido: ${name}`, // SIN APROBAR
     documentReplaced: (name: string) => `Documento reemplazado: ${name}`, // SIN APROBAR
     documentOpened: (name: string) => `Documento abierto: ${name}`, // APROBADO (D-198)
+    w9Sent: 'W-9 enviado para llenar', // D-200 (D-256)
+    w9Resent: 'W-9 reenviado', // D-200 (D-256)
+    w9Signed: 'W-9 firmado por el empleado', // D-200 (D-256)
     termsPublished: (version: string) => `Términos publicados: versión ${version}`, // APROBADO (D-198)
     termsAccepted: (version: string) => `Términos aceptados: versión ${version}`, // APROBADO (D-198)
     leadCreated: 'Lead creado', // SIN APROBAR

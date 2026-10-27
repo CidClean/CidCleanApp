@@ -79,6 +79,13 @@ jest.mock('@/lib/documents', () => ({
   chooseFile: jest.fn(),
 }));
 
+// W-9 por llenar (D-256): se prueba en w9Screens.test.tsx.
+jest.mock('@/lib/w9Api', () => ({
+  fetchW9Status: jest.fn(async () => ({ ok: true, data: null })),
+  sendW9: jest.fn(),
+  resendW9: jest.fn(),
+}));
+
 import NewEmployeeScreen from '@/app/(app)/employees/new';
 import EmployeeProfileScreen from '@/app/(app)/employees/[id]';
 
