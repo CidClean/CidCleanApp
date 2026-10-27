@@ -126,7 +126,8 @@ Valores vigentes de la identidad visual. Cada uno viene de una elección del due
 | Admin: permisos del Super Admin | Todos los interruptores encendidos y bloqueados con candado; áreas con ficha Todo | D-192 | ronda 16 |
 | Admin: permiso de documentos | Fila "Gestionar documentos de empleados" en el área Empleados (36 permisos) | D-193 | ronda 16 |
 | Admin: pestañas Permisos y Pagos | Las ven todos los que ven la lista; Permisos en solo lectura sin el permiso; Pagos sin el permiso muestra "No tienes permiso para ver pagos" sin cifras | D-194 | ronda 16 |
-| Visor de PDF | Términos y documentos 1099 se leen dentro de la app, sin guardar el archivo en el teléfono | D-196 | ronda 16 |
+| Visor de PDF | Términos y documentos 1099 se leen dentro de la app, sin guardar el archivo en el teléfono; el W-9 lleva "Descargar" solo para el Super Admin | D-196, D-260 | ronda 16, 2026-10-27 |
+| Campo del SSN/ITIN/EIN (portal W-9) | Oculto con puntos mientras se escribe; botón de ojo a la derecha para ver u ocultar; empieza oculto | D-259 | 2026-10-27 |
 | Admin: botón Nuevo empleado | Icono + a la derecha de la barra del título de la lista de Empleados; solo con `empleados_invitar_crear` | D-185 | [`ronda-15-empleados-y-pendientes.md`](../surveys/ronda-15-empleados-y-pendientes.md) |
 | Correos | Siempre en inglés, con la marca: logo, tarjeta blanca de 24 px sobre `#FBF6EF`, pie con Cid Clean LLC, cidclean.com, teléfono, correo y redes; Reply-To info@cidclean.com | D-247, D-249, D-250 | marca-aprobado |
 | PDFs | Encabezado con logo y Cid Clean LLC, pie con contacto; quote como `quote-pdf-aprobado.pdf` | D-250 | marca-aprobado |

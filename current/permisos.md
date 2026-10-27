@@ -8,7 +8,7 @@ Hay 37 permisos delegables. Dos funciones del Sistema no se delegan y solo las t
 | --- | --- |
 | Ventas (9) | `leads_ver`, `leads_editar`, `leads_eliminar`, `walkthroughs_hacer`, `quotes_ver`, `quotes_editar`, `quotes_enviar`, `quotes_ver_precios`, `sow_contratos_subir_ver` |
 | Clientes y jobsites (5) | `clientes_ver`, `clientes_editar_datos`, `clientes_editar_walkthrough_sow`, `clientes_ver_tarifa`, `clientes_cambiar_estado` |
-| Empleados (7) | `empleados_ver`, `empleados_invitar_crear`, `empleados_editar_desactivar`, `empleados_ver_pagos`, `empleados_asignar_pago`, `empleados_gestionar_permisos`, `empleados_gestionar_documentos` (ver, subir y reemplazar los W-9 y certificados de seguro de los 1099, D-193) |
+| Empleados (7) | `empleados_ver`, `empleados_invitar_crear`, `empleados_editar_desactivar`, `empleados_ver_pagos`, `empleados_asignar_pago`, `empleados_gestionar_permisos`, `empleados_gestionar_documentos` (el W-9 solo lo abre y descarga el Super Admin, D-260; ver, subir y reemplazar los W-9 y certificados de seguro de los 1099, D-193) |
 | Schedule y Work (5) | `schedule_ver_editar`, `work_registrar_por_otros`, `work_editar`, `work_aprobar`, `work_revisar_gps` |
 | Accounting (10) | `ingresos_ver_registrar`, `ingresos_marcar_recibidos`, `personal_ver_costo`, `gastos_ver`, `gastos_registrar_editar`, `gastos_recurrentes`, `dashboard_global`, `dashboard_cuenta`, `reportes_exportar`, `estadisticas_ver` (ver el centro de Estadísticas por cuenta, por empleado y tendencia, D-252) |
 | Sistema (1) | `historial_ver` |
