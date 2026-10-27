@@ -109,3 +109,15 @@ npx supabase@latest functions deploy send-notifications --project-ref <ref> --us
 - `send-notifications`: avisos y resumen con el mismo armazón; los textos salen en inglés porque `claim_notification_emails` pide `notification_text` en `en` (migración `20261027000012`). La bandeja de la app sigue en el idioma del perfil.
 - Necesita la migración `20261027000012_correos_en_ingles.sql` (contacto y datos del correo en `prepare_send_quote` y `quote_mail_data`). Sin ella el correo sale sin nombre y, al reenviar, sin servicios ni total.
 - Pendiente del arquitecto: crear el bucket (`bucket-brand.md`), aplicar la migración y desplegar `send-quote`, `quote-portal` (`--no-verify-jwt`), `send-notifications`, `create-employee` y `resend-invitation`.
+
+## W-9 prellenado: send-w9 y w9-portal (órdenes 41 a 43, D-255, D-256, D-257, D-258)
+
+- Migración `20261027000016_w9.sql` (sin aplicar): tablas `w9_requests`, `w9_portal_codes`, `w9_portal_sessions` y `w9_signatures` sin políticas (solo funciones). Pruebas en `supabase/tests/w9.sql`.
+- `send-w9` (`verify_jwt` activado): con el JWT de quien envía, `create_w9_request` / `resend_w9_request` exigen `empleados_gestionar_documentos`. Genera el token (solo se guarda su hash), vence a los 7 días, y manda "Please complete your W-9" con el botón "Complete W-9" a `PORTAL_BASE_URL/w9/{token}` desde `quotes@mail.cidclean.com` (llave `RESEND_QUOTES_KEY`, respuesta a `info@cidclean.com`). Cuerpo `{ profile_id, data, email }` o `{ request_id, resend: true }`; devuelve `{ id, sent, expires_at }`.
+- `w9-portal` (**sin** `verify_jwt`, desplegar con `--no-verify-jwt`): acciones `state`, `request`, `verify`, `data`, `preview` (PDF sin número ni firma, con "PREVIEW - NOT SIGNED") y `sign`. El código usa `PORTAL_CODE_PEPPER`. Al firmar llena `_shared/irs/fw9-2024-03.pdf` (copiado en base64 en `_shared/irs/fw9.ts`, que se regenera con `node supabase/scripts/generar-w9.mjs`), lo sube a `employee-docs/<perfil>/w9/signed-<solicitud>-<aleatorio>.pdf` y llama a `w9_portal_sign`, que lo registra como el W-9 vigente, guarda la firma y avisa en la app a quien envió (aviso `w9_signed`).
+- El SSN/ITIN/EIN solo pasa por `w9-portal` en la acción `sign`: no se guarda en la base, no se registra en logs ni en `change_log` y ninguna respuesta lo devuelve. Si la firma no queda, el PDF de ese intento se borra.
+
+```
+npx supabase@latest functions deploy send-w9 --project-ref <ref> --use-api
+npx supabase@latest functions deploy w9-portal --project-ref <ref> --use-api --no-verify-jwt
+```

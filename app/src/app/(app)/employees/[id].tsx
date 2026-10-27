@@ -27,6 +27,7 @@ import { Sheet } from '@/components/Sheet';
 import { Switch } from '@/components/Switch';
 import { Tabs } from '@/components/Tabs';
 import { TopBar } from '@/components/TopBar';
+import { W9ProfileSection } from '@/components/w9/W9ProfileSection';
 import { useStrings } from '@/i18n/useStrings';
 import type { Strings } from '@/i18n/es';
 import { chooseFile, fetchDocuments, takePhoto, uploadDocument, type PickResult } from '@/lib/documents';
@@ -580,6 +581,15 @@ export default function EmployeeProfileScreen() {
                     }
                   />
                 ))}
+                {/* D-256: W-9 por llenar, debajo de las filas de Documentos. */}
+                <W9ProfileSection
+                  profileId={employee.id}
+                  fullName={employee.fullName}
+                  email={employee.email}
+                  locale={locale}
+                  currentW9DocumentId={documents.find((d) => d.kind === 'w9')?.id ?? null}
+                  onChanged={() => void loadDocuments()}
+                />
                 <View style={{ height: 8 }} />
                 {documentError ? (
                   <AppAlert

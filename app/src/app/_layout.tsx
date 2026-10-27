@@ -16,7 +16,7 @@ SplashScreen.preventAutoHideAsync();
 
 /**
  * Exportación web del portal del cliente (quote.cidclean.com, D-161, D-209): EXPO_PUBLIC_PORTAL_ONLY=1 deja solo
- * las rutas /q; la app del staff no se publica ahí.
+ * las rutas /q y /w9 (D-256); la app del staff no se publica ahí.
  */
 const PORTAL_ONLY = process.env.EXPO_PUBLIC_PORTAL_ONLY === '1';
 
@@ -62,6 +62,8 @@ function Routes() {
         {/* Portal del cliente (D-209): sin sesión del staff, siempre disponible. */}
         <Stack.Screen name="q/index" />
         <Stack.Screen name="q/[token]" />
+        {/* W-9 del 1099 (D-255, D-256): mismo portal y misma exportación, sin sesión del staff. */}
+        <Stack.Screen name="w9/[token]" />
         <Stack.Protected guard={!PORTAL_ONLY && status === 'out'}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
