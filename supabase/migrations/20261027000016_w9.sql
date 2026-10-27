@@ -340,8 +340,10 @@ begin
   if p_signer_name is not null and (btrim(p_signer_name) = '' or length(p_signer_name) > 120) then
     raise exception 'Falta el nombre de la firma' using errcode = '22023';
   end if;
+  -- La Edge Function agrega "-<aleatorio>.pdf": cada intento sube su propio archivo (dos intentos a la vez nunca pisan
+  -- ni borran el PDF que quedó firmado).
   return jsonb_build_object('request_id', r.id, 'profile_id', r.profile_id, 'data', d,
-    'path', r.profile_id::text || '/w9/signed-' || r.id::text || '.pdf');
+    'path_prefix', r.profile_id::text || '/w9/signed-' || r.id::text);
 end $$;
 
 -- Firma (un solo uso): registra el PDF ya subido como el W-9 vigente del perfil (el anterior queda reemplazado), la
@@ -368,7 +370,7 @@ begin
   if btrim(coalesce(p_signer_name, '')) = '' or length(p_signer_name) > 120 then
     raise exception 'Falta el nombre de la firma' using errcode = '22023';
   end if;
-  if p_path is distinct from r.profile_id::text || '/w9/signed-' || r.id::text || '.pdf' then
+  if coalesce(p_path, '') !~ ('^' || r.profile_id::text || '/w9/signed-' || r.id::text || '-[A-Za-z0-9_-]{8,64}\.pdf$') then
     raise exception 'La ruta del archivo no corresponde' using errcode = '22023';
   end if;
   if not exists (select 1 from storage.objects where bucket_id = 'employee-docs' and name = p_path) then
