@@ -132,7 +132,7 @@ begin
     (select count(*)::text from profile_documents where profile_id = obj::uuid and kind = 'w9' and replaced_at is null));
   perform pg_temp.prueba('el cambio quedó en el historial (documento_subido)', '1',
     (select count(*)::text from change_log where action = 'documento_subido' and entity_id = doc1
-        and actor_id = (select profile_id from actores where nombre = 'super')));
+        and actor_id = (select profile_id from actores where nombre = 'docs')));
 
   perform pg_temp.prueba('reemplazar: se registra el nuevo', 'ok',
     case when pg_temp.valor('docs', format('select register_profile_document(%L, ''w9'', %L)', obj, obj || '/w9/b.pdf')) like 'ERR%'
@@ -175,7 +175,7 @@ begin
   perform pg_temp.valor('super', format('select open_profile_document(%L)', doc2));
   perform pg_temp.prueba('cada apertura queda en el historial (2 aperturas)', '2',
     (select count(*)::text from change_log where action = 'documento_abierto' and entity_id = doc2
-        and actor_id = (select profile_id from actores where nombre = 'docs')));
+        and actor_id = (select profile_id from actores where nombre = 'super')));
   perform pg_temp.prueba('la apertura guarda el empleado y el tipo', 'w9',
     (select detail->>'kind' from change_log where action = 'documento_abierto' and entity_id = doc2 limit 1));
   perform pg_temp.prueba('anon: no abre documentos (42501)', 'ERR:42501',

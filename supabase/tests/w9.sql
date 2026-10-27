@@ -221,7 +221,7 @@ select pg_temp.prueba('firmar: el PDF queda como el W-9 vigente del perfil', 'w9
   (select kind || '|' || count(*) over () from profile_documents where profile_id = (select id from fx where k = 'karina') and replaced_at is null));
 select pg_temp.prueba('firmar: se registra nombre, IP, user agent, versión, tipo y cambios (nombre y dirección)', 'Karina M. López|1.2.3.4|Prueba UA|Form W-9 (Rev. March 2024)|ssn|name,address',
   (select signer_name || '|' || ip || '|' || user_agent || '|' || form_version || '|' || tin_type || '|' ||
-          (select string_agg(x->>'field', ',') from jsonb_array_elements(changes) x) from w9_signatures));
+          (select string_agg(x->>'field', ',') from jsonb_array_elements(changes) x) from w9_signatures where profile_id = (select id from fx where k = 'karina')));
 select pg_temp.prueba('firmar: un solo uso (la segunda vez no)', 'ERR:22023|signed',
   pg_temp.servicio(format($q$select w9_portal_sign('sesion-1', '{"name":"K","classification":"individual","address":"A","city":"B"}',
     'ssn', 'K', true, 'Form W-9 (Rev. March 2024)', %L, null, null)::text$q$, (select txt from fx where k = 'path'))) || '|' ||
@@ -252,7 +252,7 @@ select pg_temp.prueba('historial: documento subido y w9_firmado, sin número', '
 
 -- F. Vencer y reenviar ------------------------------------------------------------------------------
 select pg_temp.prueba('reenviar: una firmada no se reenvía', 'ERR:22023',
-  pg_temp.valor('docs', format('select resend_w9_request(%L, %L)', (select id from w9_requests where status = 'signed'), pg_temp.h('tercero'))));
+  pg_temp.valor('docs', format('select resend_w9_request(%L, %L)', (select id from w9_requests where status = 'signed' and profile_id = (select id from fx where k = 'karina')), pg_temp.h('tercero'))));
 -- Una solicitud nueva que vence.
 select pg_temp.valor('docs', format($q$select create_w9_request(%L, '{"name":"Karina M. López","classification":"llc","llc":"P","foreign_partners":true,"accounts":"A-1","address":"1520 Golden Gate Pkwy","city":"Naples, FL 34109"}', 'karina@email.com', %L)->>'id'$q$,
   (select id from fx where k = 'karina'), pg_temp.h('cuarto')));
