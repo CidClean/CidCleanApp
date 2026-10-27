@@ -1,0 +1,87 @@
+<title>W-9 para 1099</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Cuatro pasos del W-9 como pantallas de teléfono en fila (se apilan en el teléfono). Colores C1 de Cid Clean. */
+:root{--bg:#FBF6EF;--card:#FFFFFF;--fg:#1E2A28;--sc:#6B5F52;--bd:#E8DCC9;--b:#0F766E;--soft:#DDEFEC;--amber:#FBE3C7;--amberT:#8A4B0F;--page:#EDE6DA;--txt:#1E2A28;--ff:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#0E1312;--txt:#EEF2F1;color-scheme:dark}}
+:root[data-theme="dark"]{--page:#0E1312;--txt:#EEF2F1;color-scheme:dark}
+body{background:var(--page);font-family:var(--ff);color:var(--fg);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.w{max-width:1260px;margin:0 auto;padding-block:24px 40px;display:flex;flex-direction:column;gap:16px}
+.intro h1{margin:0;font-size:26px;font-weight:800;color:var(--txt)} .intro p{margin:6px 0 0;max-width:70ch;line-height:1.5;color:var(--txt);opacity:.8}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;align-items:start}
+.step{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--b);margin:0 0 8px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .step{color:#4FB8AC}}
+.ph{background:var(--bg);border-radius:30px;padding:16px 14px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.top{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--b);font-size:16px}
+.dot{width:26px;height:26px;border-radius:8px;background:var(--b)}
+h2{margin:0;font-size:20px;font-weight:800;line-height:1.25}
+.c{background:var(--card);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.lb{font-size:12px;color:var(--sc);font-weight:600;margin-bottom:-6px}
+.in{border:1px solid var(--bd);border-radius:14px;padding:11px 12px;font-size:14px;background:#FFFFFF;display:flex;justify-content:space-between;gap:8px}
+.in.pre{background:#F6EFE6} .in em{font-style:normal;color:var(--sc);font-size:12px}
+.seg{display:flex;gap:6px}.seg span{flex:1;text-align:center;font-size:13px;font-weight:700;padding:9px;border-radius:12px;background:#F6EFE6}.seg .on{background:var(--b);color:#FFFFFF}
+.btn{background:var(--b);color:#FFFFFF;border-radius:16px;padding:14px;text-align:center;font-weight:800;font-size:15px}
+.btn2{border:1px solid var(--b);color:var(--b);border-radius:16px;padding:12px;text-align:center;font-weight:800;font-size:14px}
+.note{font-size:12px;color:var(--sc);line-height:1.45}
+.lock{background:var(--soft);color:var(--b);border-radius:14px;padding:10px 12px;font-size:12px;font-weight:700;line-height:1.4}
+.chk{display:flex;gap:8px;font-size:12.5px;line-height:1.45;align-items:flex-start}.chk b{flex:none;width:18px;height:18px;border-radius:5px;background:var(--b);color:#FFFFFF;font-size:12px;display:grid;place-items:center}
+.sig{font-family:"Brush Script MT","Segoe Script",cursive;font-size:24px;color:#1E2A28}
+.chip{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:var(--amber);color:var(--amberT)}
+.mail{background:#FFFFFF;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5}
+.ask{background:var(--card);border-radius:22px;padding:16px;font-size:14px;line-height:1.55}.ask ol{margin:6px 0 0;padding-left:20px}
+</style>
+<div class="w">
+<div class="intro"><h1>W-9 prellenado · propuesta</h1><p>Tú lo mandas desde el perfil del empleado 1099; a él le llega un correo, entra con un código, revisa lo que llenaste, pone su SSN o ITIN y firma escribiendo su nombre. El PDF que queda es el W-9 oficial del IRS (Rev. March 2024) llenado. Los datos son de ejemplo.</p></div>
+<div class="row">
+
+<div><p class="step">1 · Tú, en el perfil 1099</p><div class="ph">
+ <div class="top">‹ &nbsp;Documentos</div>
+ <div class="c"><div style="display:flex;justify-content:space-between;align-items:center"><b>W-9</b><span class="chip">Falta</span></div>
+  <div class="btn">Send W-9 to fill</div><div class="note">o sube uno que ya tengas, como hoy</div></div>
+ <div class="c"><h2 style="font-size:17px">Enviar W-9 a Karina</h2>
+  <div class="lb">Line 1 · Name</div><div class="in">Karina López</div>
+  <div class="lb">Line 2 · Business name (optional)</div><div class="in"><em>—</em></div>
+  <div class="lb">Line 3a · Tax classification</div><div class="in">Individual / sole proprietor</div>
+  <div class="lb">Lines 5–6 · Address</div><div class="in">1520 Golden Gate Pkwy, Naples, FL 34105</div>
+  <div class="lb">Send to</div><div class="in">karina@email.com</div>
+  <div class="btn">Send</div></div>
+</div></div>
+
+<div><p class="step">2 · El correo que le llega</p><div class="ph">
+ <div class="top"><span class="dot"></span>Cid Clean</div>
+ <div class="mail"><b style="font-size:19px">Please complete your W-9, Karina</b>
+  <div>Cid Clean LLC needs your Form W-9 to pay you as a contractor. We already filled in your details. You only need to add your SSN or ITIN and sign.</div>
+  <div class="btn">Complete W-9</div>
+  <div class="note">The page is secure. We'll send a code to this email so only you can open it. Your SSN is not stored in our app: it only goes into your signed form.</div>
+  <div class="note">Cid Clean LLC · cidclean.com · (786) 250-1324</div></div>
+</div></div>
+
+<div><p class="step">3 · Él revisa y pone su número</p><div class="ph">
+ <div class="top"><span class="dot"></span>Cid Clean</div>
+ <h2>Your W-9</h2>
+ <div class="c">
+  <div class="lb">Name</div><div class="in pre">Karina López <em>Edit</em></div>
+  <div class="lb">Business name</div><div class="in pre"><em>— &nbsp;Edit</em></div>
+  <div class="lb">Tax classification</div><div class="in pre">Individual / sole proprietor <em>Edit</em></div>
+  <div class="lb">Address</div><div class="in pre">1520 Golden Gate Pkwy, Naples, FL 34105 <em>Edit</em></div></div>
+ <div class="c"><div class="seg"><span class="on">SSN</span><span>ITIN</span></div>
+  <div class="lb">Social Security Number</div><div class="in" style="letter-spacing:3px">•••-••-4821</div>
+  <div class="lock">🔒 Only goes into your signed W-9. It is not saved in the app.</div></div>
+ <div class="btn">Continue</div>
+</div></div>
+
+<div><p class="step">4 · Firma escribiendo su nombre</p><div class="ph">
+ <div class="top"><span class="dot"></span>Cid Clean</div>
+ <h2>Sign your W-9</h2>
+ <div class="c"><div class="note" style="color:#1E2A28"><b>Under penalties of perjury, I certify that:</b> 1. The number shown on this form is my correct taxpayer identification number… 2. I am not subject to backup withholding… 3. I am a U.S. citizen or other U.S. person… 4. The FATCA code(s)… is correct. <u>Read all</u></div>
+  <div class="lb">Type your full legal name to sign</div><div class="in">Karina López</div>
+  <div class="in" style="justify-content:center;background:#FBF6EF"><span class="sig">Karina López</span></div>
+  <div class="chk"><b>✓</b><span>I agree that typing my name is my electronic signature on this Form W-9.</span></div>
+  <div class="note">Date: Oct 27, 2026 · recorded with time and IP</div></div>
+ <div class="btn">Sign and submit</div>
+ <div class="btn2">Preview W-9 PDF</div>
+</div></div>
+</div>
+<div class="ask"><b>Después:</b> en el perfil de Karina el W-9 pasa a "Subido" con el PDF firmado; si ella corrigió algún dato, ves qué cambió. Puedes reenviar el link si no le llega, y vence en 7 días.<br><br><b>Me faltan tres datos tuyos:</b><ol><li>¿Las pantallas que ve el empleado van en <b>inglés</b> (como los correos), o en el idioma de su perfil? El W-9 oficial siempre es en inglés.</li><li>En el W-9 hay un campo opcional "Requester's name and address". ¿Pongo <b>Cid Clean LLC</b> con la dirección del negocio? Si sí, ¿cuál es la dirección?</li><li>¿Solo SSN o ITIN, como dijiste, o también <b>EIN</b> para el 1099 que tenga su propia empresa?</li></ol></div>
+</div>
