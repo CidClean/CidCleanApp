@@ -1,8 +1,9 @@
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppAlert } from '../AppAlert';
+import { AppButton } from '../AppButton';
 import { AppText } from '../AppText';
 import { Dialog } from '../Dialog';
 import { Icon } from '../Icon';
@@ -12,6 +13,8 @@ import { useWorkStrings } from '@/i18n/useWorkStrings';
 import { dateFromKey, dayKey, formatShortDate } from '@/lib/leadRules';
 import { fetchSchedule, fetchSchedulable, setVisitStaff, type Schedulable, type ScheduleVisit } from '@/lib/scheduleApi';
 import { addDays, formatMinutes, sundayOf } from '@/lib/scheduleRules';
+import { usePermissions } from '@/lib/session';
+import { can } from '@/lib/visibility';
 import { formatTime } from '@/lib/week';
 import { iconStrokeWidth, useTheme } from '@/theme';
 
@@ -28,12 +31,15 @@ export function simpleDays(range: SimpleRange, today: Date): string[] {
 /**
  * Schedule simple (D-232, `surveys/schedule-simple-aprobado.html`): por día, cada jobsite con hora · duración en horas
  * y las personas en fichas; hoy en tarjeta de marca; "Falta asignar personal" en ámbar. Tocar una tarjeta abre una
- * ventana al centro con casillas para cambiar quién va ese día (solo esa visita).
+ * ventana al centro con casillas para cambiar quién va ese día (solo esa visita). Si la visita es de hoy o de un día
+ * pasado y la persona tiene `work_registrar_por_otros`, la ventana lleva "Registrar trabajo" (D-254).
  */
 export function ScheduleSimple({ onError, jobsiteId }: { onError: (text: string | null) => void; jobsiteId?: string }) {
   const { colors, brand } = useTheme();
   const s = useSalesStrings();
   const t = useWorkStrings();
+  const router = useRouter();
+  const { access } = usePermissions();
   const [range, setRange] = useState<SimpleRange>('three');
   const [visits, setVisits] = useState<ScheduleVisit[] | null>(null);
   const [editing, setEditing] = useState<ScheduleVisit | null>(null);
@@ -180,6 +186,17 @@ export function ScheduleSimple({ onError, jobsiteId }: { onError: (text: string 
               })}
             </View>
             <DialogButtons cancel={t.cancel} save={t.save} onCancel={() => setEditing(null)} onSave={() => void save()} disabled={busy} />
+            {can(access, 'work_registrar_por_otros') && editing.day <= today ? (
+              <AppButton
+                label={t.registerOthers}
+                variant="outline"
+                onPress={() => {
+                  const id = editing.id;
+                  setEditing(null);
+                  router.push({ pathname: '/schedule/work/[id]', params: { id } });
+                }}
+              />
+            ) : null}
           </View>
         ) : null}
       </Dialog>

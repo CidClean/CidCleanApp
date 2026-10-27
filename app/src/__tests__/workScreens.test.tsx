@@ -24,8 +24,9 @@ jest.mock('expo-router', () => ({
   },
 }));
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
+let mockAccess: { isSuperAdmin: boolean; permissions: Set<string> } = { isSuperAdmin: true, permissions: new Set() };
 jest.mock('@/lib/session', () => ({
-  usePermissions: () => ({ access: { isSuperAdmin: true, permissions: new Set() }, isSuperAdmin: true, can: () => true }),
+  usePermissions: () => ({ access: mockAccess, isSuperAdmin: mockAccess.isSuperAdmin, can: () => mockAccess.isSuperAdmin }),
   useSession: () => ({ locale: 'es', profile: { id: 'yo' } }),
 }));
 jest.mock('@/i18n/useStrings', () => ({ useStrings: () => require('@/i18n').getStrings('es') }));
@@ -88,7 +89,10 @@ const visit = {
   entry: null,
 };
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockAccess = { isSuperAdmin: true, permissions: new Set() };
+});
 
 describe('ClockCard (D-049 a D-051, D-214)', () => {
   it('lejos del sitio muestra la distancia y deja marcar de todos modos', async () => {
@@ -233,6 +237,43 @@ describe('Schedule simple (D-232)', () => {
     await fireEvent.press(await screen.findByLabelText('Diego'));
     await fireEvent.press(screen.getByText('Guardar'));
     await waitFor(() => expect(mockSetStaff).toHaveBeenCalledWith('v2', ['p2']));
+  });
+
+  const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+  const tomorrowKey = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+  const twoDays = () =>
+    mockSchedule.mockResolvedValue({
+      ok: true,
+      data: [
+        { ...base, id: 'v1', jobsite: 'Break TAX Office', staff: [{ id: 'p1', name: 'Rosemary' }] },
+        { ...base, id: 'v3', jobsite: 'Naples Yacht Club', day: tomorrowKey, startsAt: new Date(tomorrow.getTime() + 18 * 3600000), staff: [] },
+      ],
+    });
+
+  it('D-254: la ventana de una visita de hoy lleva "Registrar trabajo", que abre su registro y cierra la ventana', async () => {
+    twoDays();
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['schedule_ver_editar', 'work_registrar_por_otros']) };
+    await render(<ScheduleScreen />);
+    await fireEvent.press(await screen.findByLabelText('Cambiar quién va a Break TAX Office'));
+    await fireEvent.press(await screen.findByText('Registrar trabajo'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/schedule/work/[id]', params: { id: 'v1' } });
+    await waitFor(() => expect(screen.queryByText('Registrar trabajo')).toBeNull());
+  });
+
+  it('D-254: sin "Registrar trabajo" en una visita de mañana ni sin el permiso', async () => {
+    twoDays();
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['schedule_ver_editar', 'work_registrar_por_otros']) };
+    await render(<ScheduleScreen />);
+    await fireEvent.press(await screen.findByLabelText('Cambiar quién va a Naples Yacht Club'));
+    await screen.findByLabelText('Diego');
+    expect(screen.queryByText('Registrar trabajo')).toBeNull();
+    await fireEvent.press(screen.getByText('Cancelar'));
+
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['schedule_ver_editar']) };
+    await render(<ScheduleScreen />);
+    await fireEvent.press(await screen.findByLabelText('Cambiar quién va a Break TAX Office'));
+    await screen.findByLabelText('Diego');
+    expect(screen.queryByText('Registrar trabajo')).toBeNull();
   });
 });
 
