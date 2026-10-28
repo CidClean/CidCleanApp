@@ -137,8 +137,9 @@ export function W9SendDialog(props: {
   // Cada vez que se abre parte del perfil (nombre y correo); lo demás lo llena quien envía.
   useEffect(() => {
     if (!props.visible) return;
-    setData((d) => ({ ...d, name: d.name || props.fullName }));
-    setEmail((e) => e || props.email);
+    // Siempre del perfil actual: si se cambió el nombre o el correo, el W-9 toma el nuevo.
+    setData((d) => ({ ...d, name: props.fullName }));
+    setEmail(props.email);
     setErrors([]);
     setEmailError(false);
     setFailed(false);
