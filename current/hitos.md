@@ -30,3 +30,21 @@ Plan para terminar la app, aprobado por el dueño el 2026-10-21 (D-170). Cada hi
 - Cuentas de Apple Developer y Google Play (antes del hito 8).
 - Confirmar con el contador o abogado la retención de 3 años (D-127).
 - Cambiar los tokens entregados en el chat cuando terminen las pruebas.
+
+## Por construir (al reiniciarse el uso semanal del dueño)
+
+Registrado, sin construir. En este orden:
+
+1. D-265: app completa en la web en app.cidclean.com, probada con WebKit; prueba real de Ida en iPhone con Safari. Hace falta un token nuevo de Cloudflare.
+2. D-265: correo de invitación con "Open Cid Clean" (web) y "Download for Android".
+3. D-261: registro automático de quien no tiene acceso a la app; "To approve" por persona, con "missing" en la hora que falta.
+4. D-262: el Super Admin registra y edita el trabajo aunque la visita esté aprobada; el pago se recalcula.
+5. D-263: el 1099 ve sus documentos, descarga su W-9 y sube su certificado (antes, diseño para aprobar).
+6. D-264: formulario nuevo del empleado (nombre, apellidos, teléfono, email, dirección, dirección 2, state, city, ZIP).
+
+Preguntas abiertas para el dueño:
+
+- D-261: ¿el registro automático aparece al terminar la hora programada? ¿Botón "No vino"? ¿Se mantiene aprobar toda la visita?
+- D-264: ¿el W-9 toma esa dirección? ¿Cómo se separan los nombres que ya existen? ¿Qué campos son obligatorios?
+- W-9: ¿"or EIN" en el correo? ¿Remitente quotes@mail.cidclean.com? ¿"Más opciones" en la ventana del admin? ¿Firma en Times Italic?
+- Semana: ¿el miércoles se muestra "X" o "M"?
