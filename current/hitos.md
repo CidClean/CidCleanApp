@@ -37,14 +37,13 @@ Registrado, sin construir. En este orden:
 
 1. D-265: app completa en la web en app.cidclean.com, probada con WebKit; prueba real de Ida en iPhone con Safari. Hace falta un token nuevo de Cloudflare.
 2. D-265: correo de invitación con "Open Cid Clean" (web) y "Download for Android".
-3. D-261: registro automático de quien no tiene acceso a la app; "To approve" por persona, con "missing" en la hora que falta.
+3. D-261 y D-266: registro automático de quien no tiene acceso al terminar la visita; "To approve" por visita con "Edit", "No show", "+ Agregar persona" (también sustitutos) y "Approve" de una visita a la vez.
 4. D-262: el Super Admin registra y edita el trabajo aunque la visita esté aprobada; el pago se recalcula.
 5. D-263: el 1099 ve sus documentos, descarga su W-9 y sube su certificado (antes, diseño para aprobar).
-6. D-264: formulario nuevo del empleado (nombre, apellidos, teléfono, email, dirección, dirección 2, state, city, ZIP).
+6. D-264 y D-267: formulario nuevo del empleado; aviso con el nombre actual para llenar Nombre y Apellidos a mano; avisar al dueño cuando salga la actualización.
+7. D-268: remitente documents@mail.cidclean.com y certificado de la firma electrónica como última hoja del W-9.
+8. D-269: miércoles "X" en español.
 
 Preguntas abiertas para el dueño:
 
-- D-261: ¿el registro automático aparece al terminar la hora programada? ¿Botón "No vino"? ¿Se mantiene aprobar toda la visita?
-- D-264: ¿el W-9 toma esa dirección? ¿Cómo se separan los nombres que ya existen? ¿Qué campos son obligatorios?
-- W-9: ¿"or EIN" en el correo? ¿Remitente quotes@mail.cidclean.com? ¿"Más opciones" en la ventana del admin? ¿Firma en Times Italic?
-- Semana: ¿el miércoles se muestra "X" o "M"?
+- W-9: "or EIN" en el correo (el texto aprobado dice "add your SSN or ITIN"; el EIN también se acepta). Explicado al dueño el 2026-10-29, falta su respuesta.
