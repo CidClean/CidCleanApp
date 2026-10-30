@@ -214,9 +214,19 @@ select pg_temp.prueba('firmar: sin la casilla, sin nombre o con otra ruta no se 
     'ssn', '  ', true, 'Form W-9 (Rev. March 2024)', %L, null, null)::text$q$, (select txt from fx where k = 'path'))) || '|' ||
   pg_temp.servicio($q$select w9_portal_sign('sesion-1', '{"name":"K","classification":"individual","address":"A","city":"B"}',
     'ssn', 'K', true, 'Form W-9 (Rev. March 2024)', 'otra/w9/x.pdf', null, null)::text$q$));
+-- Certificado (D-268 (4)): correo verificado y quién lo mandó; la firma guarda su id y el SHA-256 del PDF.
+select pg_temp.prueba('certificado: correo verificado y quién lo mandó', 'karina@email.com|Prueba docs|true',
+  pg_temp.servicio($q$select (c->>'email') || '|' || (c->>'sent_by') || '|' || ((c->>'sent_at') is not null)::text from w9_portal_certificate('sesion-1') c$q$));
+select pg_temp.prueba('certificado: sin sesión no', 'ERR:42501', pg_temp.servicio($q$select w9_portal_certificate('otra')::text$q$));
+select pg_temp.prueba('certificado: un hash mal formado no se firma', 'ERR:22023',
+  pg_temp.servicio(format($q$select w9_portal_sign('sesion-1', '{"name":"Karina M. López","business":"","classification":"individual","address":"1520 Golden Gate Pkwy","city":"Naples, FL 34109"}',
+    'ssn', 'Karina M. López', true, 'Form W-9 (Rev. March 2024)', %L, '1.2.3.4', 'Prueba UA', gen_random_uuid(), 'xyz')::text$q$, (select txt from fx where k = 'path'))));
 select pg_temp.prueba('firmar: queda firmado', 'ok',
   case when pg_temp.servicio(format($q$select w9_portal_sign('sesion-1', '{"name":"Karina M. López","business":"","classification":"individual","address":"1520 Golden Gate Pkwy","city":"Naples, FL 34109"}',
-    'ssn', 'Karina M. López', true, 'Form W-9 (Rev. March 2024)', %L, '1.2.3.4', 'Prueba UA')->>'document_id'$q$, (select txt from fx where k = 'path'))) ~ '^[0-9a-f-]{36}$' then 'ok' end);
+    'ssn', 'Karina M. López', true, 'Form W-9 (Rev. March 2024)', %L, '1.2.3.4', 'Prueba UA', 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee', %L)->>'document_id'$q$,
+    (select txt from fx where k = 'path'), repeat('ab', 32))) ~ '^[0-9a-f-]{36}$' then 'ok' end);
+select pg_temp.prueba('certificado: la firma guarda el id dado y el SHA-256', 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee|' || repeat('ab', 32),
+  (select id || '|' || pdf_sha256 from w9_signatures where profile_id = (select id from fx where k = 'karina')));
 select pg_temp.prueba('firmar: el PDF queda como el W-9 vigente del perfil', 'w9|1',
   (select kind || '|' || count(*) over () from profile_documents where profile_id = (select id from fx where k = 'karina') and replaced_at is null));
 select pg_temp.prueba('firmar: se registra nombre, IP, user agent, versión, tipo y cambios (nombre y dirección)', 'Karina M. López|1.2.3.4|Prueba UA|Form W-9 (Rev. March 2024)|ssn|name,address',

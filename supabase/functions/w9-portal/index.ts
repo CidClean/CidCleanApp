@@ -8,7 +8,9 @@
 // Este archivo no contiene llaves.
 import { clienteDeServicio } from '../_shared/comun.ts';
 import { codigo, enviarCorreo, sha256, tokenAleatorio } from '../_shared/quotes.ts';
-import { base64, correoCodigoW9, fillW9, FORM_VERSION, REQUESTER, tinValid, type TinType, type W9Data } from '../_shared/w9.ts';
+import {
+  agregarCertificado, base64, correoCodigoW9, fillW9, FORM_VERSION, REMITENTE_W9, REQUESTER, sha256Bytes, tinValid, type TinType, type W9Data,
+} from '../_shared/w9.ts';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -61,7 +63,7 @@ Deno.serve(async (req) => {
       if (error) return r(500, { error: 'server_error' });
       if (data === 'closed') return r(409, { error: 'closed' });
       if (data === 'rate_limited') return r(429, { error: 'rate_limited' });
-      if (data === 'sent') await enviarCorreo(email, correoCodigoW9(code)); // siempre en inglés (D-247)
+      if (data === 'sent') await enviarCorreo(email, correoCodigoW9(code), [], REMITENTE_W9); // en inglés (D-247), remitente D-268
       // Misma respuesta para otro correo: no se revela a quién se mandó.
       return r(200, { ok: true });
     }
@@ -116,9 +118,25 @@ Deno.serve(async (req) => {
         return errorRpc(error.code);
       }
       const ahora = new Date();
+      const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null;
+      const userAgent = (req.headers.get('user-agent') ?? '').slice(0, 400);
+      const { data: cert, error: e1 } = await db.rpc('w9_portal_certificate', { p_session_hash: sessionHash });
+      if (e1) {
+        tin = null;
+        return errorRpc(e1.code);
+      }
+      // D-268 (4): id de la firma y SHA-256 del W-9 firmado antes de agregarle el certificado como última hoja.
+      const signatureId = crypto.randomUUID();
       let pdf: Uint8Array;
+      let pdfSha256: string;
       try {
         pdf = await fillW9({ data: c.data as W9Data, tinType, tin, signer, signedAt: ahora });
+        pdfSha256 = await sha256Bytes(pdf);
+        pdf = await agregarCertificado(pdf, {
+          signatureId, pdfSha256, signer, email: cert.email as string, signedAt: ahora, ip, userAgent,
+          language: cert.language === 'es' ? 'es' : 'en', sentBy: (cert.sent_by as string | null) ?? null,
+          sentAt: cert.sent_at ? new Date(cert.sent_at as string) : null,
+        });
       } catch {
         return r(500, { error: 'server_error' });
       } finally {
@@ -128,10 +146,10 @@ Deno.serve(async (req) => {
       const path = `${c.path_prefix as string}-${tokenAleatorio(12)}.pdf`;
       const up = await db.storage.from(BUCKET).upload(path, pdf, { contentType: 'application/pdf', upsert: false });
       if (up.error) return r(500, { error: 'server_error' });
-      const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null;
       const { data: s, error: e2 } = await db.rpc('w9_portal_sign', {
         p_session_hash: sessionHash, p_data: c.data, p_tin_type: tinType, p_signer_name: signer, p_agreed: true,
-        p_form_version: FORM_VERSION, p_path: path, p_ip: ip, p_user_agent: (req.headers.get('user-agent') ?? '').slice(0, 400),
+        p_form_version: FORM_VERSION, p_path: path, p_ip: ip, p_user_agent: userAgent,
+        p_signature_id: signatureId, p_pdf_sha256: pdfSha256,
       });
       if (e2) {
         // No quedó firmado: el PDF de este intento (con el número) no se conserva.
