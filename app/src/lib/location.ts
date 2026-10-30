@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
 
 /**
@@ -8,10 +9,25 @@ import { requireOptionalNativeModule } from 'expo';
 export type Position = { latitude: number; longitude: number; accuracy: number | null };
 
 export function locationAvailable(): boolean {
+  if (Platform.OS === 'web') return typeof navigator !== 'undefined' && !!navigator.geolocation;
   return requireOptionalNativeModule('ExpoLocation') !== null;
 }
 
+/** En la web (D-265) la ubicación la da el navegador: pide permiso y devuelve la posición, o null si no la dan. */
+function webPosition(timeoutMs: number): Promise<Position | null> {
+  return new Promise((resolve) => {
+    const geo = typeof navigator !== 'undefined' ? navigator.geolocation : undefined;
+    if (!geo) return resolve(null);
+    geo.getCurrentPosition(
+      (fix) => resolve({ latitude: fix.coords.latitude, longitude: fix.coords.longitude, accuracy: fix.coords.accuracy ?? null }),
+      () => resolve(null),
+      { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 0 },
+    );
+  });
+}
+
 export async function currentPosition(timeoutMs = 12_000): Promise<Position | null> {
+  if (Platform.OS === 'web') return webPosition(timeoutMs);
   if (!locationAvailable()) return null;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
