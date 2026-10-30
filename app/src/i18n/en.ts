@@ -101,6 +101,21 @@ export const en: Strings = {
     ownW9Note: 'Only you and the Cid Clean Super Admin can see it.', // D-200 (translation of D-271)
   },
 
+  // D-272, D-274: My hours for every employee (hours only, no money, no 32 h cap).
+  myHours: {
+    title: 'My hours', // D-200 (translation of D-274)
+    worked: 'Worked',
+    insured: 'Guaranteed',
+    ofInsured: (h: string) => `of ${h} guaranteed`,
+    note: 'Approved work only. "Guaranteed" hours are the hours you are paid even if you finish early.',
+    empty: 'No approved work this month.', // D-200
+    errorLoad: "Your hours couldn't be loaded. Try again.", // D-200
+    rowDetail: 'Your approved work by month', // D-200 (row on Home and My profile)
+    previousMonth: 'Previous month', // D-200 (screen reader)
+    nextMonth: 'Next month', // D-200 (screen reader)
+    shortMonths: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  },
+
   common: {
     loading: 'Loading',
     back: 'Back', // screen reader name of the back arrow in the top bar (D-180)
