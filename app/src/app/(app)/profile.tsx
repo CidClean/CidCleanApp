@@ -20,7 +20,7 @@ import { useSession } from '@/lib/session';
 import { THEME_PREFERENCES, setThemePreference, useThemePreference, type ThemePreference } from '@/lib/themePreference';
 import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
-/** Mi perfil (D-166, D-222): Nombre, Correo (solo lectura), Idioma, Tema y Cerrar sesión con la ventana al centro; el 1099 ve Mis documentos (D-271). */
+/** Mi perfil (D-166, D-222): Nombre, Correo (solo lectura), Idioma, Tema y Cerrar sesión con la ventana al centro; Mis horas (D-274); el 1099 ve Mis documentos (D-271). */
 export default function ProfileScreen() {
   const { colors, status, brand } = useTheme();
   const router = useRouter();
@@ -81,6 +81,10 @@ export default function ProfileScreen() {
           <AppText weight="medium">{strings.profile.signOut}</AppText>
           <Icon name="chevron-right" size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
         </Pressable>
+        </CardBlock>
+        {/* D-272, D-274: Mis horas para todos los empleados; la fila está aquí y en el Inicio del staff (D-200). */}
+        <CardBlock>
+          <ListRow title={strings.myHours.title} detail={strings.myHours.rowDetail} chevron last onPress={() => router.push('/my-hours')} />
         </CardBlock>
         {/* D-263, D-271: los documentos propios del 1099. */}
         {profile && showsMyDocuments(profile) ? <MyDocuments profileId={profile.id} strings={strings} locale={locale} /> : null}

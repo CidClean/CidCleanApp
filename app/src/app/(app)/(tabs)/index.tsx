@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
-import { Bento, Card, useCardText } from '@/components/bento/Card';
+import { Bento, Card, CardBlock, useCardText } from '@/components/bento/Card';
 import { ApproveIcon, CalendarIcon, QuoteDueIcon, WalkthroughIcon } from '@/components/illustrations';
 import { SlideToMark } from '@/components/SlideToMark';
 import { WeekStrip } from '@/components/WeekStrip';
@@ -444,16 +444,23 @@ function NumberCard({ tone, label, value, sub, onPress }: { tone: 'plain' | 'dar
 /**
  * Inicio del staff (D-165, D-214, D-223): la visita de hoy con "Desliza para marcar entrada" y el turno (ClockCard),
  * la próxima visita y "Tu semana" con Esta semana / Próxima semana (D-093); tocar un día muestra sus visitas.
- * Regla del dueño (D-223): el staff nunca ve sus horas contra el tope de 32 h; aquí no hay nada de eso.
+ * Regla del dueño (D-223): el staff nunca ve sus horas contra el tope de 32 h; aquí no hay nada de eso. Abajo, la fila
+ * Mis horas (D-274).
  */
 function StaffHome() {
   const { profile } = useSession();
+  const router = useRouter();
+  const strings = useStrings();
   const { visits, reload } = useMySchedule(true);
   return (
     <View style={{ flex: 1, backgroundColor: useTheme().colors.background }}>
       <ScrollView contentContainerStyle={styles.page}>
         <Greeting name={profile?.fullName ?? ''} />
         <StaffCards visits={visits} onChanged={reload} />
+        {/* D-272, D-274: Mis horas, también en Mi perfil (D-200). */}
+        <CardBlock style={{ marginTop: 12 }}>
+          <ListRow title={strings.myHours.title} detail={strings.myHours.rowDetail} chevron last onPress={() => router.push('/my-hours')} />
+        </CardBlock>
       </ScrollView>
     </View>
   );

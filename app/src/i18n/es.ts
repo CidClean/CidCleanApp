@@ -102,6 +102,21 @@ export const es = {
     ownW9Note: 'Solo lo ven tú y el Super Admin de Cid Clean.', // APROBADO (D-271)
   },
 
+  // D-272, D-274: Mis horas de cada empleado (solo horas, sin dinero ni tope de 32 h).
+  myHours: {
+    title: 'Mis horas', // APROBADO (D-274)
+    worked: 'Trabajadas', // APROBADO (D-274)
+    insured: 'Aseguradas', // APROBADO (D-274)
+    ofInsured: (h: string) => `de ${h} aseguradas`, // APROBADO (D-274)
+    note: 'Solo el trabajo aprobado. "Aseguradas" son las horas que se te pagan aunque termines antes.', // APROBADO (D-274)
+    empty: 'No hay trabajo aprobado en este mes.', // D-200
+    errorLoad: 'No se pudieron cargar tus horas. Inténtalo otra vez.', // D-200
+    rowDetail: 'Tu trabajo aprobado por mes', // D-200 (fila en Inicio y Mi perfil)
+    previousMonth: 'Mes anterior', // D-200 (lector de pantalla)
+    nextMonth: 'Mes siguiente', // D-200 (lector de pantalla)
+    shortMonths: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'], // D-200 (como "Oct 26" del survey)
+  },
+
   common: {
     loading: 'Cargando', // D-200 (lector de pantalla de la animación Cargando, D-250)
     back: 'Volver', // SIN APROBAR: solo lo lee el lector de pantalla (nombre de la flecha de volver, D-180)

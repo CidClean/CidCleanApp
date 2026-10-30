@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { parseMyHours } from './myHours';
 
 /**
  * Schedule y Work (migración 20261026000001, hito 6). Todo va por funciones del servidor: validan el permiso, dejan
@@ -395,3 +396,8 @@ export const saveWeek = (sunday: string, plan: { jobsite: string; cells: string[
     },
     warnings,
   );
+
+// --- Mis horas (D-272, D-274) ------------------------------------------------------------------------------
+
+/** Horas del trabajo aprobado de quien entra en el mes de `month` ("AAAA-MM-01"). Sin dinero ni tope (D-223). */
+export const fetchMyHours = (month: string) => rpc('my_hours', { p_month: month }, parseMyHours);
