@@ -1,0 +1,64 @@
+<!doctype html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Días de servicio</title>
+<!-- D-286: aprobado por el dueño ("Todo aprobado", 2026-10-30); estado de cuenta por mes, cierre el último día del mes y pago 7 días después. Colores C1 (D-226). Datos de ejemplo. -->
+<style>
+body{background:#EDE6DA;font-family:Manrope,system-ui,sans-serif;color:#1E2A28;margin:0;padding:16px}
+.w{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;max-width:1240px;margin:auto}
+.step{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0F766E;margin:0 0 8px}
+.ph{background:#FBF6EF;border-radius:30px;padding:16px 14px;display:flex;flex-direction:column;gap:10px}
+.top{font-weight:800;font-size:20px}
+.c{background:#fff;border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.hero{background:#0F766E;color:#fff;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:6px}
+.hero small{opacity:.85;font-size:12px}
+.btnw{background:#fff;color:#0F766E;border-radius:16px;padding:13px;text-align:center;font-weight:800}
+.btn{background:#0F766E;color:#fff;border-radius:16px;padding:12px;text-align:center;font-weight:800;font-size:14px}
+.btn2{border:1px solid #0F766E;color:#0F766E;border-radius:16px;padding:11px;text-align:center;font-weight:800;font-size:14px}
+.r{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:.5px solid #E8DCC9;font-size:14px;gap:8px}
+.r:last-child{border:0}.r small{display:block;color:#6B5F52;font-size:12px}
+.ok{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#DDEFEC;color:#0F766E;white-space:nowrap}
+.warn{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#FBE3C7;color:#8A4B0F;white-space:nowrap}
+.neu{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#F1EBE2;color:#6B5F52;white-space:nowrap}
+.mb{display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:20px;padding:10px 14px;font-weight:800}.mb span{color:#0F766E;font-size:20px;padding:0 6px}
+.note{font-size:12px;color:#6B5F52;line-height:1.45}
+.amber{background:#FBE3C7;color:#8A4B0F;border-radius:14px;padding:10px 12px;font-size:13px;line-height:1.4}
+.a{color:#0F766E;font-weight:800;font-size:13px}
+.in{border:1px solid #E8DCC9;border-radius:14px;padding:11px 12px;font-size:14px;color:#6B5F52}
+</style>
+<div class="w">
+<div><p class="step">1 · Inicio del 1099</p><div class="ph">
+ <div class="hero"><b style="font-size:18px">Naples Yacht Club</b><small>Hoy · Franja de acceso del cliente: 11:00 pm – 3:00 am</small><div class="btnw">Marcar como completado</div></div>
+ <div class="c"><div class="r"><div><b>Mis días de servicio</b><small>Octubre: 12 aprobados · 1 pendiente</small></div><span class="a">›</span></div></div>
+ <div class="note">Sin clock in, sin horas y sin ubicación. La fecha y el sitio se ponen solos.</div>
+</div></div>
+<div><p class="step">2 · Mis días de servicio</p><div class="ph">
+ <div class="top">Mis días de servicio</div>
+ <div class="mb"><span>‹</span>Octubre 2026<span>›</span></div>
+ <div class="c" style="padding:6px 14px">
+  <div class="r"><div><b>Oct 30</b><small>Naples Yacht Club</small></div><span class="neu">Pendiente</span></div>
+  <div class="r"><div><b>Oct 29</b><small>Naples Yacht Club</small></div><span class="warn">Requiere corrección</span></div>
+  <div class="r"><div><b>Oct 28</b><small>Naples Yacht Club</small></div><span class="ok">Aprobado</span></div>
+ </div>
+ <div class="amber"><b>Oct 29 · nota del admin:</b> Faltó sacar la basura del muelle. Vuelve a marcarlo cuando esté hecho.<div class="btn" style="margin-top:8px">Marcar de nuevo como completado</div></div>
+</div></div>
+<div><p class="step">3 · Admin: To approve</p><div class="ph">
+ <div class="c"><b>Naples Yacht Club · Oct 30</b>
+  <div class="r"><div>Humberto V.<small>Marcado completado 3:05 am</small></div><div><span class="a">Aprobar</span> · <span class="a">Devolver</span></div></div>
+  <div class="r"><div>Estela M. <span class="neu">Sin acceso a la app</span><small>Programada</small></div><div><span class="a">Registrar y aprobar</span> · <span class="a">No show</span></div></div>
+  <div class="r"><div>Karina S. <span class="neu">Sin acceso a la app</span><small>Programada</small></div><div><span class="a">Registrar y aprobar</span> · <span class="a">No show</span></div></div>
+  <div class="note">+ Agregar persona</div>
+ </div>
+ <div class="c"><b>Devolver: Requiere corrección</b><div class="in">Nota (obligatoria)</div><div class="btn">Devolver</div></div>
+</div></div>
+<div><p class="step">4 · Admin: estado de cuenta del mes</p><div class="ph">
+ <div class="top">Estado de cuenta</div>
+ <div class="mb"><span>‹</span>Octubre 2026<span>›</span></div>
+ <div class="c" style="padding:6px 14px">
+  <div class="r"><div><b>Humberto V.</b><small>12 días aprobados</small></div><div style="text-align:right"><b>$960</b><small>Pagar antes del Nov 7</small></div></div>
+  <div class="r"><div><b>Estela M.</b><small>8 días · fijo mensual</small></div><div style="text-align:right"><b>$1,350</b><small>mensual</small></div></div>
+  <div class="r"><div><b>Karina S.</b><small>7 días aprobados · 1 editado</small></div><div style="text-align:right"><b>$580</b></div></div>
+ </div>
+ <div class="btn2">Exportar (PDF / CSV)</div>
+ <div class="note">$80 por día de servicio aprobado según el pago del jobsite; un día se puede editar en casos especiales y queda en el historial.</div>
+</div></div>
+</div>
