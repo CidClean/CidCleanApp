@@ -175,6 +175,7 @@ export const clientsEs = {
     submit: 'Asignar', // D-200
     errorStart: 'La fecha de inicio no puede ser anterior a hoy.', // D-200
     errorSave: 'No se pudo asignar. Inténtalo otra vez.', // D-200
+    errorContract: 'El contrato de este jobsite aún no está firmado por ambas partes. No se puede asignar personal.', // D-200 (D-283)
     remove: 'Quitar del jobsite', // D-200 (D-210: quitar con fecha de fin)
     end: 'Fecha de fin', // D-200
     removeTitle: (n: string, j: string) => `¿Quitar a ${n} de ${j}?`, // D-200 (patrón de D-173)
@@ -351,6 +352,7 @@ export const clientsEn: ClientsStrings = {
     submit: 'Assign',
     errorStart: "The start date can't be before today.",
     errorSave: "Couldn't assign. Try again.",
+    errorContract: "This jobsite's contract isn't signed by both parties yet. Staff can't be assigned.",
     remove: 'Remove from jobsite',
     end: 'End date',
     removeTitle: (n: string, j: string) => `Remove ${n} from ${j}?`,

@@ -577,7 +577,9 @@ function AcceptStep({
       <View style={{ marginTop: 4 }}>
         <Checkbox
           label={
-            quote.extra
+            quote.acceptance_text
+              ? quote.acceptance_text
+              : quote.extra
               ? hasTerms
                 ? t.confirmTermsOnly
                 : t.confirmExtra

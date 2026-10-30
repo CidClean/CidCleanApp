@@ -134,7 +134,9 @@ export function ScheduleWeek({
       const text =
         r.reason === "over_32"
           ? t.over32(r.detail ?? "")
-          : r.reason === "no_time"
+          : r.reason === "contract_pending"
+            ? t.errorContract(r.detail ?? "")
+            : r.reason === "no_time"
             ? t.errorNoTime
             : r.reason === "no_day"
               ? t.errorNoDay

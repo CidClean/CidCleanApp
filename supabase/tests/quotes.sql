@@ -138,8 +138,8 @@ begin
   perform pg_temp.prueba('solo con quotes_ver no se guarda (42501)', 'ERR:42501',
     pg_temp.valor('ver', format('select save_quote_draft(%L, %L, 6, 30, null)', v, lines)));
   perform pg_temp.prueba('guardar el borrador calcula los totales en la base', 'ok',
-    case when pg_temp.valor('ventas', format('select save_quote_draft(%L, %L, 6, 45, array['' Socio@Prueba.local '', ''socio@prueba.local''])', v, lines)) like 'ERR%' then 'fallo' else 'ok' end);
-  perform pg_temp.prueba('totales: 1500 - 100, tax 6% sobre 1200 menos su parte del descuento', '1500.00|100.00|67.20|1467.20|45|{socio@prueba.local}',
+    case when pg_temp.valor('ventas', format('select save_quote_draft(%L, %L, 6, 30, array['' Socio@Prueba.local '', ''socio@prueba.local''])', v, lines)) like 'ERR%' then 'fallo' else 'ok' end);
+  perform pg_temp.prueba('totales: 1500 - 100, tax 6% sobre 1200 menos su parte del descuento', '1500.00|100.00|67.20|1467.20|30|{socio@prueba.local}',
     (select subtotal || '|' || discount || '|' || tax || '|' || total || '|' || valid_days || '|' || recipients::text from quote_versions where id = v));
   perform pg_temp.prueba('quien solo ve quotes no ve montos', 'null|null|false',
     pg_temp.valor('ver', format($q$ select coalesce((get_site_quote(%L)->'versions'->0->>'total'), 'null') || '|' ||
@@ -182,7 +182,7 @@ begin
   tok := confirm_send_quote(v, ventas, q || '/' || v || '/quote-1.0.pdf', '{"language":"es","company":"Oficinas Prueba","site":"Sede norte","address":"100 Main St, Naples","frequency":{"kind":"weekly","days":[0,2,4],"other":""}}')->>'token';
   insert into fx values ('tok10', null);
   update fx set k = 'tok10:' || tok where k = 'tok10';
-  perform pg_temp.prueba('enviado: estado, enlace y vencimiento según la vigencia', 'sent|true|45',
+  perform pg_temp.prueba('enviado: estado, enlace y vencimiento según la vigencia', 'sent|true|30',
     (select status || '|' || (length(public_token) >= 30)::text || '|' || extract(day from (expires_at - sent_at))::int from quote_versions where id = v));
   perform pg_temp.prueba('el lead pasa a Quote enviado', 'quote_sent', (select status::text from leads where id = lead));
   perform pg_temp.prueba('el envío queda en el historial', '1', (select count(*)::text from change_log where action = 'quote_enviado' and entity_id = q));

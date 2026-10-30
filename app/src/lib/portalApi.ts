@@ -33,6 +33,9 @@ export type PortalQuote = {
   expires_at: string;
   sow_opened: boolean;
   terms_version: number | null;
+  /** D-283: texto exacto de la casilla de rev. 3 (solo el quote del sitio; null en un extra). */
+  acceptance_text?: string | null;
+  quote_number?: string | null;
   /** Quote de extra de una cuenta (D-238) y su fecha del servicio (AAAA-MM-DD). */
   extra?: boolean;
   service_date?: string | null;

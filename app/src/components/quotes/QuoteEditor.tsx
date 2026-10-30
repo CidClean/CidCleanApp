@@ -269,7 +269,7 @@ export function QuoteEditor({ source }: { source: QuoteSource }) {
     if (
       errors?.lines.size ||
       !(tax >= 0 && tax <= 100) ||
-      !(days >= 1 && days <= 365)
+      !(days >= 1 && days <= 30) // D-283: vigencia de hasta 30 días
     ) {
       setShowErrors(true);
       return false;
