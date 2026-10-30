@@ -81,31 +81,24 @@ export async function fetchOwnPermissions(profileId: string): Promise<string[] |
 }
 
 /**
- * Consulta la última versión publicada de los términos del staff y si este perfil ya la aceptó (D-168).
+ * Consulta lo que este perfil tiene que aceptar (D-168, D-282): la última versión de los términos del staff y la
+ * última versión importante de la Política de Privacidad (my_terms_status, que corre con la identidad de quien entra).
+ * Para la lógica de `terms.ts` las versiones exigidas se juntan en una sola clave (`<id>+<id>`): cuenta como aceptada
+ * solo si están todas aceptadas, y es lo que el teléfono recuerda para entrar sin conexión (D-197).
  * Si no se puede consultar (sin red u otro error) devuelve 'unknown': ya no se deja pasar (D-179).
+ * `profileId` se conserva por compatibilidad: la base usa el perfil de la sesión.
  */
-export async function fetchTermsLookup(profileId: string): Promise<TermsLookup> {
+export async function fetchTermsLookup(_profileId: string): Promise<TermsLookup> {
   try {
-    const latest = await supabase
-      .from('terms_documents')
-      .select('id')
-      .eq('kind', 'staff')
-      .order('version', { ascending: false })
-      .limit(1);
-    if (latest.error) return { kind: 'unknown' };
-    const latestId: string | null = latest.data?.[0]?.id ?? null;
-    if (latestId === null) return { kind: 'ok', latestStaffDocumentId: null, acceptedDocumentIds: [] };
-    const accepted = await supabase
-      .from('terms_acceptances')
-      .select('document_id')
-      .eq('profile_id', profileId)
-      .eq('document_id', latestId);
-    if (accepted.error) return { kind: 'unknown' };
-    return {
-      kind: 'ok',
-      latestStaffDocumentId: latestId,
-      acceptedDocumentIds: (accepted.data ?? []).map((r: { document_id: string }) => r.document_id),
-    };
+    const { data, error } = await supabase.rpc('my_terms_status');
+    if (error) return { kind: 'unknown' };
+    const rows = (data as { document_id: string; kind: string; accepted: boolean }[] | null) ?? [];
+    if (rows.length === 0) return { kind: 'ok', latestStaffDocumentId: null, acceptedDocumentIds: [] };
+    const key = rows
+      .map((r) => r.document_id)
+      .sort()
+      .join('+');
+    return { kind: 'ok', latestStaffDocumentId: key, acceptedDocumentIds: rows.every((r) => r.accepted) ? [key] : [] };
   } catch {
     return { kind: 'unknown' };
   }

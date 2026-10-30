@@ -60,10 +60,10 @@ describe('Menú → Ajustes (D-107, D-114, D-187)', () => {
     expect(screen.getByText(es.nav.settings)).toBeTruthy();
     expect(screen.getByLabelText(es.common.back)).toBeTruthy();
     expect(screen.getByText(es.settings.termsRow)).toBeTruthy();
-    await waitFor(() => expect(screen.getByText('v2')).toBeTruthy());
-    // Cinco filas: Términos del staff, Términos del portal (D-209), Categorías de gastos (D-254), Motivos de lead perdido (D-203)
-    // y Transferir rol (orden 12).
-    expect(screen.getAllByRole('button').filter((b) => b.props.accessibilityLabel !== es.common.back)).toHaveLength(5);
+    await waitFor(() => expect(screen.getAllByText('v2').length).toBeGreaterThan(0));
+    // Siete filas: Términos del staff, Términos del portal (D-209), Política de Privacidad y Solicitudes de eliminación de
+    // cuenta (D-282), Categorías de gastos (D-254), Motivos de lead perdido (D-203) y Transferir rol (orden 12).
+    expect(screen.getAllByRole('button').filter((b) => b.props.accessibilityLabel !== es.common.back)).toHaveLength(7);
     expect(screen.getByText('Categorías de gastos')).toBeTruthy();
     expect(screen.getByText(es.transfer.row)).toBeTruthy();
     expect(screen.getByText('Motivos de lead perdido')).toBeTruthy();
@@ -72,7 +72,7 @@ describe('Menú → Ajustes (D-107, D-114, D-187)', () => {
   test('sin versión publicada el valor es "Sin publicar"', async () => {
     mockFetchCurrent.mockResolvedValue({ ok: true, data: null });
     await render(<SettingsScreen />);
-    await waitFor(() => expect(screen.getAllByText(es.settings.unpublished)).toHaveLength(2));
+    await waitFor(() => expect(screen.getAllByText(es.settings.unpublished)).toHaveLength(3)); // staff, portal y privacidad (D-282)
   });
 
   test('al tocar la fila se abre la pantalla de publicar', async () => {
@@ -124,7 +124,7 @@ describe('Términos del staff: publicar (D-176)', () => {
     await waitFor(() => screen.getByText('terminos-staff-v3.pdf'));
     mockFetchCurrent.mockResolvedValue({ ok: true, data: { ...v2, version: 3 } });
     await fireEvent.press(screen.getByText(es.settings.publish));
-    await waitFor(() => expect(mockPublish).toHaveBeenCalledWith({ uri: 'file:///a.pdf', name: 'terminos-staff-v3.pdf' }, 'staff'));
+    await waitFor(() => expect(mockPublish).toHaveBeenCalledWith({ uri: 'file:///a.pdf', name: 'terminos-staff-v3.pdf' }, 'staff', true));
     await waitFor(() => expect(screen.getByText(es.settings.currentVersion(3, '5 oct 2026'))).toBeTruthy());
     expect(screen.queryByText('terminos-staff-v3.pdf')).toBeNull();
   });
@@ -154,7 +154,9 @@ describe('Staff: Antes de empezar (D-086, D-176, D-179)', () => {
   test('"Leer los términos completos" abre el visor de PDF de la app con el nombre del documento (D-196)', async () => {
     await render(<TermsScreen />);
     await fireEvent.press(screen.getByText(es.terms.readFull));
-    expect(mockPush).toHaveBeenCalledWith({ pathname: '/viewer', params: { source: 'terms', title: es.settings.termsRow } });
+    await waitFor(() =>
+      expect(mockPush).toHaveBeenCalledWith({ pathname: '/viewer', params: { source: 'terms', kind: 'staff', title: es.settings.termsRow } }),
+    );
   });
 
   test('con conexión muestra los tres puntos, la casilla y Aceptar; no la pantalla de conexión', async () => {

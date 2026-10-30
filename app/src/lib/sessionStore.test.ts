@@ -17,6 +17,18 @@ jest.mock('./supabase', () => ({
   AUTH_STORAGE_KEY: 'cidclean-auth',
   supabase: {
     auth: { getSession: (...a: unknown[]) => mockGetSession(...a), signOut: (...a: unknown[]) => mockSignOut(...a) },
+    // my_terms_status (D-282) se arma con lo que digan las "tablas" terms_documents y terms_acceptances del mock.
+    rpc: async (name: string) => {
+      if (name !== 'my_terms_status') return { data: null, error: { code: '42883' } };
+      const docs = await mockTables.terms_documents();
+      if (docs.error) return docs;
+      const rows = (docs.data as { id: string }[]) ?? [];
+      if (rows.length === 0) return { data: [], error: null };
+      const acc = mockTables.terms_acceptances ? await mockTables.terms_acceptances() : { data: [], error: null };
+      if (acc.error) return acc;
+      const ids = ((acc.data as { document_id: string }[]) ?? []).map((a) => a.document_id);
+      return { data: [{ document_id: rows[0].id, kind: 'staff', accepted: ids.includes(rows[0].id) }], error: null };
+    },
     from: (table: string) => {
       const chain: Record<string, unknown> = {};
       for (const m of ['select', 'eq', 'order', 'limit']) chain[m] = () => chain;

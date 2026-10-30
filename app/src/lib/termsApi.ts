@@ -10,19 +10,23 @@ import { supabase } from './supabase';
 
 const BUCKET = 'terms';
 const KIND = 'staff';
-/** staff (D-176) o portal del cliente (D-209: mismo mecanismo, PDF en Ajustes). */
-export type TermsKind = 'staff' | 'portal';
+/** staff (D-176), portal del cliente (D-209: mismo mecanismo, PDF en Ajustes) o Política de Privacidad (D-282). */
+export type TermsKind = 'staff' | 'portal' | 'privacy';
 const SIGNED_URL_SECONDS = 60; // URL firmada de corta duración
 
-export type CurrentTerms = { version: number; publishedAt: string; filePath: string };
+/** major: cambio importante (la privacidad lo decide el Super Admin, D-282; staff y portal siempre lo son). */
+export type CurrentTerms = { version: number; publishedAt: string; filePath: string; major: boolean };
 
 /** Versión vigente de los términos del staff; null si todavía no se publicó ninguna. */
 export async function fetchCurrentTerms(kind: TermsKind = KIND): Promise<ApiResult<CurrentTerms | null>> {
   try {
     const { data, error } = await supabase.rpc('get_current_terms', { p_kind: kind });
     if (error) return { ok: false, reason: failureFromCode(error.code) };
-    const row = (data as { version: number; published_at: string; file_path: string }[] | null)?.[0];
-    return { ok: true, data: row ? { version: row.version, publishedAt: row.published_at, filePath: row.file_path } : null };
+    const row = (data as { version: number; published_at: string; file_path: string; major?: boolean }[] | null)?.[0];
+    return {
+      ok: true,
+      data: row ? { version: row.version, publishedAt: row.published_at, filePath: row.file_path, major: row.major !== false } : null,
+    };
   } catch {
     return { ok: false, reason: 'network' };
   }
@@ -32,9 +36,9 @@ export async function fetchCurrentTerms(kind: TermsKind = KIND): Promise<ApiResu
  * "Leer los términos completos" (D-176, D-196): firma una URL de 60 s del PDF vigente en el bucket terms.
  * El visor de la app la descarga a la caché privada y la lee ahí.
  */
-export async function fetchTermsUrl(): Promise<ApiResult<{ url: string }>> {
+export async function fetchTermsUrl(kind: TermsKind = KIND): Promise<ApiResult<{ url: string }>> {
   try {
-    const current = await fetchCurrentTerms();
+    const current = await fetchCurrentTerms(kind);
     if (!current.ok) return current;
     if (current.data === null) return { ok: false, reason: 'not_found' };
     const signed = await supabase.storage.from(BUCKET).createSignedUrl(current.data.filePath, SIGNED_URL_SECONDS);
@@ -65,14 +69,17 @@ export function termsPath(name: string = uniqueName(), kind: TermsKind = KIND): 
   return `${kind}/${name}.pdf`;
 }
 
-/** Sube el PDF al bucket y publica la versión siguiente (publish_terms valida que el archivo exista). */
-export async function publishTerms(file: PickedPdf, kind: TermsKind = KIND): Promise<ApiResult<null>> {
+/**
+ * Sube el PDF al bucket y publica la versión siguiente (publish_terms valida que el archivo exista).
+ * `major` solo cuenta para la privacidad (D-282): si es importante, el staff tiene que aceptarla; si no, solo se avisa.
+ */
+export async function publishTerms(file: PickedPdf, kind: TermsKind = KIND, major: boolean = true): Promise<ApiResult<null>> {
   try {
     const path = termsPath(undefined, kind);
     const bytes = await (await fetch(file.uri)).arrayBuffer();
     const upload = await supabase.storage.from(BUCKET).upload(path, bytes, { contentType: 'application/pdf' });
     if (upload.error) return { ok: false, reason: 'server' };
-    const { error } = await supabase.rpc('publish_terms', { kind, file_path: path });
+    const { error } = await supabase.rpc('publish_terms', { kind, file_path: path, major });
     if (error) return { ok: false, reason: failureFromCode(error.code) };
     return { ok: true, data: null };
   } catch {

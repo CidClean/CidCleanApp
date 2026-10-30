@@ -31,7 +31,7 @@ beforeEach(() => {
 describe('versión vigente (get_current_terms)', () => {
   test('devuelve versión, fecha y ruta del PDF', async () => {
     mockRpc.mockResolvedValue({ data: [row], error: null });
-    expect(await fetchCurrentTerms()).toEqual({ ok: true, data: { version: 2, publishedAt: row.published_at, filePath: 'staff/abc.pdf' } });
+    expect(await fetchCurrentTerms()).toEqual({ ok: true, data: { version: 2, publishedAt: row.published_at, filePath: 'staff/abc.pdf', major: true } });
     expect(mockRpc).toHaveBeenCalledWith('get_current_terms', { p_kind: 'staff' });
   });
   test('sin versión publicada devuelve null', async () => {
@@ -82,7 +82,7 @@ describe('publicar una versión (D-176)', () => {
     expect(bucket).toBe('terms');
     expect(path).toMatch(/^staff\/[a-z0-9]+\.pdf$/);
     expect(options).toEqual({ contentType: 'application/pdf' });
-    expect(mockRpc).toHaveBeenCalledWith('publish_terms', { kind: 'staff', file_path: path });
+    expect(mockRpc).toHaveBeenCalledWith('publish_terms', { kind: 'staff', file_path: path, major: true });
   });
 
   test('si falla la subida no se publica nada', async () => {

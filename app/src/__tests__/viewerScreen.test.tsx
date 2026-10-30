@@ -12,11 +12,12 @@ jest.mock('expo-router', () => ({
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
+jest.mock('@/lib/session', () => ({ useSession: () => ({ termsPending: false, termsOffline: false }) }));
 jest.mock('@/i18n/useStrings', () => ({ useStrings: () => require('@/i18n').getStrings('es') }));
 
 const mockFetchDocumentUrl = jest.fn();
 const mockFetchTermsUrl = jest.fn();
-jest.mock('@/lib/documents', () => ({ fetchDocumentUrl: (...a: unknown[]) => mockFetchDocumentUrl(...a) }));
+jest.mock('@/lib/documents', () => ({ fetchDocumentUrl: (...a: unknown[]) => mockFetchDocumentUrl(...a), logDocumentDownload: jest.fn() }));
 jest.mock('@/lib/termsApi', () => ({ fetchTermsUrl: (...a: unknown[]) => mockFetchTermsUrl(...a) }));
 const mockFetchQuoteFileUrl = jest.fn();
 jest.mock('@/lib/quotesApi', () => ({ fetchQuoteFileUrl: (...a: unknown[]) => mockFetchQuoteFileUrl(...a) }));

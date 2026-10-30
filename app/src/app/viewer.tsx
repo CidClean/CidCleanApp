@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import { BrandLoading } from '@/components/brand/BrandLoading';
 import type { File } from 'expo-file-system';
 import * as WebBrowser from 'expo-web-browser';
@@ -9,12 +9,13 @@ import { AppAlert } from '@/components/AppAlert';
 import { AppText } from '@/components/AppText';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
-import { fetchDocumentUrl } from '@/lib/documents';
+import { fetchDocumentUrl, logDocumentDownload } from '@/lib/documents';
 import { fetchJobsiteDocumentUrl } from '@/lib/clientsApi';
 import { fetchWalkthroughPdfUrl } from '@/lib/walkthroughApi';
 import { useGoBack } from '@/lib/navigation';
 import { fetchQuoteFileUrl } from '@/lib/quotesApi';
-import { fetchTermsUrl } from '@/lib/termsApi';
+import { useSession } from '@/lib/session';
+import { fetchTermsUrl, type TermsKind } from '@/lib/termsApi';
 import { downloadToCache, kindFromUrl, loadPdfView, removeCachedFile, type ViewerKind } from '@/lib/viewerFile';
 import { sample, useTheme } from '@/theme';
 
@@ -27,7 +28,9 @@ type State = { status: 'loading' } | { status: 'error' } | { status: 'ready'; ki
  * open-document (documentos; deja la apertura en el historial) o de Storage firmado (términos).
  */
 export default function ViewerScreen() {
-  const { source, documentId, title, path, version, language, download, note } = useLocalSearchParams<{
+  const { source, documentId, title, path, version, language, download, note, kind: termsKindParam } = useLocalSearchParams<{
+    /** source 'terms': staff (por defecto), portal o privacy (D-282). */
+    kind?: string;
     /** D-271: 'own-w9' en el W-9 que abre su dueño muestra "Solo lo ven tú y el Super Admin de Cid Clean." */
     note?: string;
     /** D-260: '1' en el W-9 (solo lo abre el Super Admin) muestra "Descargar". */
@@ -44,17 +47,22 @@ export default function ViewerScreen() {
   const { colors } = useTheme();
   const strings = useStrings();
   const [state, setState] = useState<State>({ status: 'loading' });
+  const { termsPending, termsOffline } = useSession();
+  const termsKind: TermsKind = termsKindParam === 'privacy' ? 'privacy' : termsKindParam === 'portal' ? 'portal' : 'staff';
+  // D-282: con términos o privacidad por aceptar, el visor solo abre los textos legales (sin hueco por URL directa).
+  const blocked = (termsPending || termsOffline) && source !== 'terms';
 
   useEffect(() => {
     let cancelled = false;
     let file: File | null = null;
 
     async function load() {
+      if (blocked) return;
       // Hito 5: los documentos del jobsite usan el mismo visor (open-jobsite-document registra cada apertura).
       // Hito 3 (D-212): el PDF del walkthrough usa el mismo visor; documentId es el walkthrough y version su versión.
       const result =
         source === 'terms'
-          ? await fetchTermsUrl()
+          ? await fetchTermsUrl(termsKind)
           : source === 'quote-file'
             ? await fetchQuoteFileUrl(path ?? '')
             : source === 'walkthrough'
@@ -95,9 +103,11 @@ export default function ViewerScreen() {
       removeCachedFile(file);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, documentId, path, version]);
+  }, [source, documentId, path, version, termsKind, blocked]);
 
   const PdfView = state.status === 'ready' && state.kind === 'pdf' ? loadPdfView() : null;
+
+  if (blocked) return <Redirect href="/" />;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -113,10 +123,19 @@ export default function ViewerScreen() {
                 accessibilityLabel: strings.employee.download,
                 onPress: () => {
                   const uri = state.uri;
+                  // D-280: cada descarga del W-9 queda en el historial. En la web el enlace del W-9 cifrado es de un
+                  // solo uso: se pide uno nuevo (que registra la descarga) y se abre en una pestaña.
                   if (Platform.OS === 'web') {
+                    if (source === 'document' && documentId) {
+                      void fetchDocumentUrl(documentId, 'download').then((r) => {
+                        if (r.ok) window.open(r.data.url, '_blank', 'noopener');
+                      });
+                      return;
+                    }
                     window.open(uri, '_blank', 'noopener');
                     return;
                   }
+                  if (source === 'document' && documentId) void logDocumentDownload(documentId);
                   // Módulo nativo cargado al usarlo, como en sharePdf.ts.
                   const Sharing = require('expo-sharing') as typeof import('expo-sharing');
                   void Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: title ?? '' }).catch(() => {});
