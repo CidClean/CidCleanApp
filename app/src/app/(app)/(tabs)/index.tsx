@@ -22,6 +22,9 @@ import { usePermissions, useSession } from '@/lib/session';
 import { canAny, homeKind } from '@/lib/visibility';
 import { formatTime } from '@/lib/week';
 import { ClockCard } from '@/components/work/ClockCard';
+import { ServiceDayCard } from '@/components/work/ServiceDayCard';
+import { useServiceDaysStrings } from '@/i18n/useServiceDaysStrings';
+import { fetchMyServiceDays, type MyServiceDays } from '@/lib/serviceDays';
 import { ListRow } from '@/components/ListRow';
 import { Segmented } from '@/components/Segmented';
 import { useWorkStrings } from '@/i18n/useWorkStrings';
@@ -29,12 +32,12 @@ import { dayKey } from '@/lib/leadRules';
 import { clockIn, clockOut, fetchMySchedule, fetchWorkPending, type MyVisit, type WorkPending } from '@/lib/scheduleApi';
 import { pickNext, pickToday, weekRange } from '@/lib/scheduleRules';
 import { syncWorkQueue } from '@/lib/workQueue';
-import { hoursText, money } from '@/lib/accountingRules';
+import { hoursText, money, monthKeyOf, monthStart } from '@/lib/accountingRules';
 import { Pill } from '@/components/bento/Pill';
 import { useAccountingStrings } from '@/i18n/useAccountingStrings';
 import { useStatisticsStrings } from '@/i18n/useStatisticsStrings';
 import { fetchAdminHome } from '@/lib/statisticsApi';
-import { costShare, homeCards, type AdminHomeData, type HomeVisit } from '@/lib/statisticsRules';
+import { costShare, homeCards, type AdminHomeData, type HomeVisit, type HomeVisitStaff } from '@/lib/statisticsRules';
 import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
 /** Inicio: el del admin para el Super Admin y quien tenga algún permiso; el del staff para quien no tenga ninguno (D-169). */
@@ -168,7 +171,7 @@ function AdminHome() {
               onPress={() => router.push({ pathname: '/schedule', params: { tab: 'approve' } })}
             />
           ) : null}
-          {myToday ? <ClockCard visit={myToday} onChanged={mine.reload} /> : null}
+          {myToday ? <TodayWorkCard visit={myToday} onChanged={mine.reload} /> : null}
           {cards.today && home?.today ? home.today.map((v) => <TodayVisitCard key={v.id} v={v} />) : null}
           {cards.weekHours && home?.weekHours && home.weekHours.length > 0 ? <WeekHoursCard rows={home.weekHours} /> : null}
           {workCards.map((c) => (
@@ -331,6 +334,10 @@ function ReceivableCard({ r }: { r: NonNullable<AdminHomeData['receivable']> }) 
 
 /** Una visita de hoy (D-253): hora, programados y quién marcó entrada. */
 function TodayVisitCard({ v }: { v: HomeVisit }) {
+  const sd = useServiceDaysStrings();
+  // D-275: los 1099 no marcan entrada; se muestra el estado de su día de servicio.
+  const dayLabel = (s: HomeVisitStaff['serviceDay']) =>
+    s === 'approved' ? sd.approved : s === 'needs_correction' ? sd.needsCorrection : s === 'pending' ? sd.pending : sd.notMarked;
   const router = useRouter();
   const { colors } = useTheme();
   const st = useStatisticsStrings();
@@ -355,7 +362,9 @@ function TodayVisitCard({ v }: { v: HomeVisit }) {
           <AppText size={13} style={{ flex: 1 }}>
             {p.name}
           </AppText>
-          {p.clockIn ? (
+          {p.contractor ? (
+            <Pill tone={p.serviceDay === 'approved' ? 'ok' : 'warn'} label={dayLabel(p.serviceDay)} />
+          ) : p.clockIn ? (
             <Pill tone="ok" label={p.clockOut ? st.home.clockedOut(formatTime(new Date(p.clockOut))) : st.home.clockedIn(formatTime(new Date(p.clockIn)))} />
           ) : (
             <Pill tone="warn" label={st.home.noClockIn} />
@@ -451,19 +460,55 @@ function StaffHome() {
   const { profile } = useSession();
   const router = useRouter();
   const strings = useStrings();
+  const sd = useServiceDaysStrings();
+  const contractor = profile?.workerType === '1099';
   const { visits, reload } = useMySchedule(true);
+  const days = useMyMonthDays(contractor);
   return (
     <View style={{ flex: 1, backgroundColor: useTheme().colors.background }}>
       <ScrollView contentContainerStyle={styles.page}>
         <Greeting name={profile?.fullName ?? ''} />
-        <StaffCards visits={visits} onChanged={reload} />
-        {/* D-272, D-274: Mis horas, también en Mi perfil (D-200). */}
+        <StaffCards visits={visits} onChanged={() => { reload(); days.reload(); }} contractor={contractor} />
+        {/* D-279, D-286 (1): el 1099 ve "Mis días de servicio" con el resumen del mes; el W-2, Mis horas (D-274). */}
         <CardBlock style={{ marginTop: 12 }}>
-          <ListRow title={strings.myHours.title} detail={strings.myHours.rowDetail} chevron last onPress={() => router.push('/my-hours')} />
+          {contractor ? (
+            <ListRow
+              title={sd.title}
+              detail={days.data ? sd.summary(sd.months[new Date().getMonth()] ?? '', days.data.approved, days.data.pending + days.data.needsCorrection) : sd.rowDetail}
+              chevron
+              last
+              onPress={() => router.push('/my-service-days')}
+            />
+          ) : (
+            <ListRow title={strings.myHours.title} detail={strings.myHours.rowDetail} chevron last onPress={() => router.push('/my-hours')} />
+          )}
         </CardBlock>
       </ScrollView>
     </View>
   );
+}
+
+/** Resumen del mes del 1099 para la fila "Mis días de servicio" (D-286 (1)). */
+function useMyMonthDays(enabled: boolean) {
+  const [data, setData] = useState<MyServiceDays | null>(null);
+  const reload = useCallback(() => {
+    if (!enabled) return;
+    void fetchMyServiceDays(monthStart(monthKeyOf(new Date()))).then((r) => {
+      if (r.ok) setData(r.data);
+    });
+  }, [enabled]);
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload]),
+  );
+  return { data, reload };
+}
+
+/** Hoy: el W-2 marca entrada y salida (ClockCard); el 1099 marca su día como completado (D-275). */
+function TodayWorkCard({ visit, onChanged }: { visit: MyVisit; onChanged: () => void }) {
+  const { profile } = useSession();
+  return profile?.workerType === '1099' ? <ServiceDayCard visit={visit} onChanged={onChanged} /> : <ClockCard visit={visit} onChanged={onChanged} />;
 }
 
 /** Mis visitas (semana actual y siguiente) y la cola de entradas y salidas sin conexión, al volver a la pantalla. */
@@ -485,8 +530,9 @@ function useMySchedule(enabled: boolean) {
   return { visits, reload };
 }
 
-function StaffCards({ visits, onChanged, weekCard = true }: { visits: MyVisit[]; onChanged: () => void; weekCard?: boolean }) {
+function StaffCards({ visits, onChanged, weekCard = true, contractor = false }: { visits: MyVisit[]; onChanged: () => void; weekCard?: boolean; contractor?: boolean }) {
   const { colors } = useTheme();
+  const sd = useServiceDaysStrings();
   const strings = useStrings();
   const s = useSalesStrings();
   const t = useWorkStrings();
@@ -507,7 +553,7 @@ function StaffCards({ visits, onChanged, weekCard = true }: { visits: MyVisit[];
   const dayList = selected ? inWeek.filter((v) => v.day === selected) : [];
   return (
     <Bento>
-      {today ? <ClockCard visit={today} onChanged={onChanged} /> : null}
+      {today ? <TodayWorkCard visit={today} onChanged={onChanged} /> : null}
       {next ? (
         <Card tone="attention" wide style={styles.rowCard}>
           <CalendarIcon />
@@ -516,8 +562,16 @@ function StaffCards({ visits, onChanged, weekCard = true }: { visits: MyVisit[];
               {strings.home.next}
             </AppText>
             <AppText weight="bold" size={16}>
-              {`${s.dayNames[next.startsAt.getDay()]} ${next.startsAt.getDate()} · ${formatTime(next.startsAt)}`}
+              {contractor
+                ? `${s.dayNames[next.startsAt.getDay()]} ${next.startsAt.getDate()}`
+                : `${s.dayNames[next.startsAt.getDay()]} ${next.startsAt.getDate()} · ${formatTime(next.startsAt)}`}
             </AppText>
+            {/* D-275: al 1099 la franja se muestra como "Franja de acceso del cliente". */}
+            {contractor ? (
+              <AppText size={12} color={colors.secondary}>
+                {sd.accessWindow(formatTime(next.startsAt), formatTime(new Date(next.startsAt.getTime() + next.minutes * 60000)))}
+              </AppText>
+            ) : null}
             <AppText size={12} color={colors.secondary}>
               {next.jobsite}
             </AppText>
@@ -551,7 +605,10 @@ function StaffCards({ visits, onChanged, weekCard = true }: { visits: MyVisit[];
                 <ListRow
                   key={v.id}
                   title={v.jobsite}
-                  detail={strings.home.timeRange(formatTime(v.startsAt), formatTime(new Date(v.startsAt.getTime() + v.minutes * 60000)))}
+                  detail={(contractor ? sd.accessWindow : strings.home.timeRange)(
+                    formatTime(v.startsAt),
+                    formatTime(new Date(v.startsAt.getTime() + v.minutes * 60000)),
+                  )}
                   last={i === dayList.length - 1}
                 />
               ))

@@ -1,4 +1,4 @@
-import { useFocusEffect } from 'expo-router';
+import { Redirect, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -14,15 +14,22 @@ import { monthKeyOf, monthStart, monthTitle, shiftMonth } from '@/lib/accounting
 import { hoursLabel, rowDate, type MyHours } from '@/lib/myHours';
 import { useGoBack } from '@/lib/navigation';
 import { fetchMyHours } from '@/lib/scheduleApi';
+import { useSession } from '@/lib/session';
 import { iconStrokeWidth, radius, sample, useTheme } from '@/theme';
 
 /**
  * Mis horas (D-272, D-274, `surveys/mis-horas-aprobado.html`): selector de mes con flechas (como D-069, sin
  * pastillas ni "Rango"), tarjeta verde con Trabajadas y Aseguradas del mes, una fila por día con la cuenta y
  * "de {n} h aseguradas", y la nota. Para todos los empleados (W2 y 1099); solo horas del trabajo aprobado, nunca
- * dinero ni el tope de 32 h (D-223).
+ * dinero ni el tope de 32 h (D-223). Solo W-2 (D-279).
  */
 export default function MyHoursScreen() {
+  // D-279: Mis horas solo para W-2; el 1099 va a Mis días de servicio.
+  const contractor = useSession().profile?.workerType === '1099';
+  return contractor ? <Redirect href="/my-service-days" /> : <MyHours />;
+}
+
+function MyHours() {
   const goBack = useGoBack();
   const { colors } = useTheme();
   const strings = useStrings();
