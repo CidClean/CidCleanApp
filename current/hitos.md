@@ -31,18 +31,14 @@ Plan para terminar la app, aprobado por el dueño el 2026-10-21 (D-170). Cada hi
 - Confirmar con el contador o abogado la retención de 3 años (D-127).
 - Cambiar los tokens entregados en el chat cuando terminen las pruebas.
 
-## Por construir (al reiniciarse el uso semanal del dueño)
+## Por construir
 
-Registrado, sin construir. En este orden:
+Hecho y publicado el 2026-10-30: D-265 (app en app.cidclean.com, invitación con los botones), D-261/D-266 ("To approve" por visita y registro automático), D-262 (correcciones del Super Admin), D-268/D-270 (W-9: remitente, texto y certificado), D-269 (ya estaba). Falta la prueba real de Ida en iPhone con Safari.
 
-1. D-265: app completa en la web en app.cidclean.com, probada con WebKit; prueba real de Ida en iPhone con Safari. Hace falta un token nuevo de Cloudflare.
-2. D-265: correo de invitación con "Open Cid Clean" (web) y "Download for Android".
-3. D-261 y D-266: registro automático de quien no tiene acceso al terminar la visita; "To approve" por visita con "Edit", "No show", "+ Agregar persona" (también sustitutos) y "Approve" de una visita a la vez.
-4. D-262: el Super Admin registra y edita el trabajo aunque la visita esté aprobada; el pago se recalcula.
-5. D-263 y D-271: "Mis documentos" del 1099 (diseño aprobado).
-6. D-264 y D-267: formulario nuevo del empleado; aviso con el nombre actual para llenar Nombre y Apellidos a mano; avisar al dueño cuando salga la actualización.
-7. D-268 y D-270: remitente documents@mail.cidclean.com, "SSN, ITIN or EIN" en el correo, y certificado de la firma electrónica como última hoja del W-9.
-8. D-269: miércoles "X" en español.
+Registrado, sin construir:
+
+1. D-263 y D-271: "Mis documentos" del 1099.
+2. D-264 y D-267: formulario nuevo del empleado; aviso con el nombre actual para llenar Nombre y Apellidos a mano; avisar al dueño cuando salga.
 
 Preguntas abiertas para el dueño:
 
