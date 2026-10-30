@@ -11,7 +11,7 @@ export function horaNaples(d: Date, segundos = false): string {
   return new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/New_York', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit',
     ...(segundos ? { second: '2-digit' as const } : {}), hour12: true, timeZoneName: 'short',
-  }).format(d).replace(/[  ]/g, ' ');
+  }).format(d).replace(/[  ]/g, ' ').replace(' at ', ', ');
 }
 
 /** MM/DD/YYYY en Naples (formato del contrato). */
@@ -101,4 +101,12 @@ export function correoContratoFirmado(o: { company: string; csa: string; sow: st
   });
   const text = [intro, '', fecha, ...(o.paraCidClean ? [] : [PAPEL]), '', pieTexto()].join('\n');
   return { subject, html, text };
+}
+
+/** Aviso al Super Admin de que el cliente firmó y falta la contrafirma (orden 62). */
+export function correoFirmaCliente(o: { company: string; site: string; csa: string; signer: string }) {
+  const subject = `${o.company} signed agreement ${o.csa}`;
+  const body = `${o.signer} signed the Commercial Service Agreement ${o.csa} for ${o.site}. Countersign it in the app to enable the schedule.`;
+  const html = correoHtml({ preview: subject, tarjeta: titulo(subject, 22) + nota(esc(body)).replace('font-size:13px', 'font-size:15px') });
+  return { subject, html, text: `${subject}\n${body}\n\n${pieTexto()}` };
 }
