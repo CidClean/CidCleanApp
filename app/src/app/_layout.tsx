@@ -24,8 +24,15 @@ function Routes() {
   const { status, termsPending, termsOffline } = useSession();
   const { scheme, colors } = useTheme();
 
-  const [fontsLoaded] = useFonts({ Manrope_400Regular, Manrope_500Medium, Manrope_700Bold, Manrope_800ExtraBold });
-  const ready = fontsLoaded && status !== 'loading';
+  const [fontsLoaded, fontError] = useFonts({ Manrope_400Regular, Manrope_500Medium, Manrope_700Bold, Manrope_800ExtraBold });
+  // Si la fuente no termina de cargar (en Safari la promesa puede no resolverse, D-265), a los 3 s la app sigue igual:
+  // el navegador aplica Manrope en cuanto llega, en vez de quedarse en blanco.
+  const [fontWait, setFontWait] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setFontWait(false), 3000);
+    return () => clearTimeout(t);
+  }, []);
+  const ready = (fontsLoaded || fontError !== null || !fontWait) && status !== 'loading';
   // Orden 34 (D-250): animación de apertura al abrir la app, después de la pantalla nativa de inicio. No en el portal
   // web (D-200: el cliente entra directo al quote).
   const [opening, setOpening] = useState(Platform.OS !== 'web' && !PORTAL_ONLY);
