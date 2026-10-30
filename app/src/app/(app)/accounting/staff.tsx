@@ -12,6 +12,7 @@ import { usePeriod } from '@/components/accounting/usePeriod';
 import { Card, CardBlock } from '@/components/bento/Card';
 import { BackHeader } from '@/components/bento/Header';
 import { useAccountingStrings } from '@/i18n/useAccountingStrings';
+import { useServiceDaysStrings } from '@/i18n/useServiceDaysStrings';
 import { useStrings } from '@/i18n/useStrings';
 import { fetchStaffCost, type StaffCost } from '@/lib/accountingApi';
 import { accountingAccess, groupStaff, hoursText, isRange, money, monthTitle, periodTitle } from '@/lib/accountingRules';
@@ -28,6 +29,10 @@ export default function StaffCostScreen() {
   const { colors } = useTheme();
   const strings = useStrings();
   const a = useAccountingStrings();
+  const sd = useServiceDaysStrings();
+  // D-275: los 1099 cuentan días de servicio, no horas.
+  const work = (minutes: number, days: number) =>
+    days > 0 && minutes === 0 ? sd.days(days) : days > 0 ? `${a.hours(hoursText(minutes))} · ${sd.days(days)}` : a.hours(hoursText(minutes));
   const { access } = usePermissions();
   const acc = accountingAccess(access);
   const { period, setPeriod, jobsiteId } = usePeriod();
@@ -100,7 +105,7 @@ export default function StaffCostScreen() {
                   <View style={{ flex: 1 }}>
                     <AppText weight="medium">{g.name}</AppText>
                     <AppText size={sample.noteSize} color={colors.secondary}>
-                      {a.hours(hoursText(g.minutes))}
+                      {work(g.minutes, g.days)}
                     </AppText>
                   </View>
                   <AppText weight="bold">{money(g.amount)}</AppText>
@@ -113,7 +118,7 @@ export default function StaffCostScreen() {
                           {d.name}
                         </AppText>
                         <AppText size={13} color={colors.secondary}>
-                          {a.hours(hoursText(d.minutes))}
+                          {work(d.minutes, d.days)}
                         </AppText>
                         <AppText size={13} weight="medium" style={{ minWidth: 86, textAlign: 'right' }}>
                           {money(d.amount)}

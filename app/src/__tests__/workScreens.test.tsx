@@ -113,14 +113,29 @@ describe('ClockCard (D-049 a D-051, D-214)', () => {
     expect(await screen.findByText('Marcar salida')).toBeTruthy();
   });
 
-  it('sin ubicación y sin internet guarda en el teléfono y abre el turno', async () => {
+  it('D-277 (2): sin ubicación no marca; explica por qué y da el botón para el permiso', async () => {
     mockPosition.mockResolvedValue(null);
+    await render(<ClockCard visit={visit} onChanged={jest.fn()} />);
+    await fireEvent.press(screen.getByText('Desliza para marcar entrada'));
+    expect(await screen.findByText(/necesitamos tu ubicación/)).toBeTruthy();
+    expect(screen.getByText('Dar permiso de ubicación')).toBeTruthy();
+    expect(mockClockIn).not.toHaveBeenCalled();
+    expect(mockEnqueue).not.toHaveBeenCalled();
+    mockPosition.mockResolvedValue({ latitude: 26.14, longitude: -81.79, accuracy: 5 });
+    mockCheck.mockResolvedValue({ ok: true, data: { status: 'ok', distanceM: 10 } });
+    mockClockIn.mockResolvedValue({ ok: true, data: { id: 'w1' } });
+    await fireEvent.press(screen.getByText('Volver a intentar'));
+    await waitFor(() => expect(mockClockIn).toHaveBeenCalledWith(expect.objectContaining({ lat: 26.14, lng: -81.79 })));
+  });
+
+  it('con ubicación y sin internet guarda en el teléfono y abre el turno', async () => {
+    mockPosition.mockResolvedValue({ latitude: 26.14, longitude: -81.79, accuracy: 5 });
+    mockCheck.mockResolvedValue({ ok: false, reason: 'network' });
     mockClockIn.mockResolvedValue({ ok: false, reason: 'network' });
     await render(<ClockCard visit={visit} onChanged={jest.fn()} />);
     await fireEvent.press(screen.getByText('Desliza para marcar entrada'));
     expect(await screen.findByText('Sin conexión: se guardó en el teléfono y se enviará después.')).toBeTruthy();
-    expect(mockCheck).not.toHaveBeenCalled();
-    expect(mockEnqueue).toHaveBeenCalledWith(expect.objectContaining({ kind: 'in', visitId: 'v1', lat: null, lng: null }));
+    expect(mockEnqueue).toHaveBeenCalledWith(expect.objectContaining({ kind: 'in', visitId: 'v1', lat: 26.14, lng: -81.79 }));
     expect(screen.getByText('Marcar salida')).toBeTruthy();
   });
 });

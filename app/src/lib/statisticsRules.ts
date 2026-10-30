@@ -23,6 +23,8 @@ export type ShiftFigures = {
   paidMinutes: number;
   unworkedMinutes: number;
   unworkedAmount: number;
+  /** Días de servicio aprobados de los 1099 (D-275), que no tienen horas. */
+  serviceDays: number;
   avgMinutes: number | null;
   /** Entradas marcadas por el propio empleado y cuántas fueron a tiempo (hasta 5 min tarde, D-200). */
   punctualSelf: number;
@@ -66,6 +68,7 @@ function figures(r: Row): ShiftFigures {
     paidMinutes: n(r.paid_minutes),
     unworkedMinutes: n(r.unworked_minutes),
     unworkedAmount: n(r.unworked_amount),
+    serviceDays: n(r.service_days),
     avgMinutes: nn(r.avg_minutes),
     punctualSelf: n(r.punctual_self),
     punctualOnTime: n(r.punctual_on_time),
@@ -172,7 +175,15 @@ export function trendScale(months: readonly TrendMonth[]): number {
 
 // --- Inicio del admin (D-253) -----------------------------------------------------------------------------------
 
-export type HomeVisitStaff = { profileId: string; name: string; clockIn: string | null; clockOut: string | null };
+/** Los 1099 traen el estado de su día de servicio en vez de entrada y salida (D-275). */
+export type HomeVisitStaff = {
+  profileId: string;
+  name: string;
+  clockIn: string | null;
+  clockOut: string | null;
+  contractor: boolean;
+  serviceDay: 'pending' | 'needs_correction' | 'approved' | null;
+};
 export type HomeVisit = { id: string; jobsite: string; startsAt: string; minutes: number; staff: HomeVisitStaff[] };
 export type WeekHours = { profileId: string; name: string; programmedMinutes: number; workedMinutes: number };
 
@@ -211,6 +222,8 @@ export function toAdminHome(d: unknown): AdminHomeData {
             name: String(s.name ?? ''),
             clockIn: (s.clock_in as string | null) ?? null,
             clockOut: (s.clock_out as string | null) ?? null,
+            contractor: s.worker_type === '1099',
+            serviceDay: (s.service_day as HomeVisitStaff['serviceDay']) ?? null,
           })),
         }))
       : null,

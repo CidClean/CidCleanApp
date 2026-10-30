@@ -1074,6 +1074,21 @@ begin
   execute src;
 end $$;
 
+-- Texto del aviso al 1099 cuando el admin devuelve su día (D-200).
+do $$
+declare
+  src text;
+begin
+  select pg_get_functiondef('notification_text'::regproc) into src;
+  src := replace(src, '    when ''work_approved'' then',
+    '    when ''service_day_returned'' then
+      title := case when es then ''Día de servicio: requiere corrección'' else ''Service day: needs correction'' end;
+      detail := concat_ws('' · '', d->>''jobsite'', day);
+    when ''work_approved'' then');
+  if src not like '%service_day_returned%' then raise exception 'notification_text no se pudo actualizar'; end if;
+  execute src;
+end $$;
+
 -- 10. Permisos de ejecución -------------------------------------------------------------------------------------------
 
 revoke execute on function is_contractor(uuid), service_day_pay(uuid, uuid), visit_w2_pending(visits), visit_days_pending(visits),
