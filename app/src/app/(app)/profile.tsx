@@ -6,19 +6,21 @@ import { CardBlock } from '@/components/bento/Card';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { ListRow, rowStyles } from '@/components/ListRow';
+import { MyDocuments } from '@/components/profile/MyDocuments';
 import { Segmented } from '@/components/Segmented';
 import { Sheet } from '@/components/Sheet';
 import { SignOutDialog } from '@/components/SignOutDialog';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
 import { useNotificationsStrings } from '@/i18n/useNotificationsStrings';
+import { showsMyDocuments } from '@/lib/myDocuments';
 import { useGoBack } from '@/lib/navigation';
 import type { Locale } from '@/i18n';
 import { useSession } from '@/lib/session';
 import { THEME_PREFERENCES, setThemePreference, useThemePreference, type ThemePreference } from '@/lib/themePreference';
 import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
-/** Mi perfil (D-166, D-222): Nombre, Correo (solo lectura), Idioma, Tema y Cerrar sesión con la ventana al centro. */
+/** Mi perfil (D-166, D-222): Nombre, Correo (solo lectura), Idioma, Tema y Cerrar sesión con la ventana al centro; el 1099 ve Mis documentos (D-271). */
 export default function ProfileScreen() {
   const { colors, status, brand } = useTheme();
   const router = useRouter();
@@ -80,6 +82,8 @@ export default function ProfileScreen() {
           <Icon name="chevron-right" size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
         </Pressable>
         </CardBlock>
+        {/* D-263, D-271: los documentos propios del 1099. */}
+        {profile && showsMyDocuments(profile) ? <MyDocuments profileId={profile.id} strings={strings} locale={locale} /> : null}
       </ScrollView>
       {/* D-222 a: la misma ventana al centro que el Menú. */}
       <SignOutDialog visible={confirming} onClose={() => setConfirming(false)} />

@@ -93,6 +93,13 @@ export const es = {
     themeSystem: 'Sistema', // APROBADO (D-222)
     themeLight: 'Claro', // APROBADO (D-222)
     themeDark: 'Oscuro', // APROBADO (D-222)
+    myDocuments: 'Mis documentos', // APROBADO (D-271)
+    signedOn: (date: string) => `Firmado el ${date}`, // APROBADO (D-271)
+    signedChip: 'Firmado', // APROBADO (D-271)
+    uploadNewCertificate: 'Subir certificado nuevo', // APROBADO (D-271)
+    uploadCertificate: 'Subir certificado', // APROBADO (D-271)
+    certificateNote: 'Cuando renueves tu seguro, sube el certificado nuevo. Reemplaza al anterior.', // APROBADO (D-271)
+    ownW9Note: 'Solo lo ven tú y el Super Admin de Cid Clean.', // APROBADO (D-271)
   },
 
   common: {

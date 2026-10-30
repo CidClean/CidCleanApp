@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Image, Platform, StyleSheet, View } from 'react-native';
 
 import { AppAlert } from '@/components/AppAlert';
+import { AppText } from '@/components/AppText';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
 import { fetchDocumentUrl } from '@/lib/documents';
@@ -15,18 +16,20 @@ import { useGoBack } from '@/lib/navigation';
 import { fetchQuoteFileUrl } from '@/lib/quotesApi';
 import { fetchTermsUrl } from '@/lib/termsApi';
 import { downloadToCache, kindFromUrl, loadPdfView, removeCachedFile, type ViewerKind } from '@/lib/viewerFile';
-import { useTheme } from '@/theme';
+import { sample, useTheme } from '@/theme';
 
 type State = { status: 'loading' } | { status: 'error' } | { status: 'ready'; kind: ViewerKind; uri: string };
 
 /**
  * Visor de PDF dentro de la app (D-196): los términos del staff (D-176) y los documentos de los 1099 (D-175).
- * Barra con flecha de volver (D-180) y el nombre del documento; sin compartir ni descargar, salvo el W-9 para el Super Admin (D-260).
+ * Barra con flecha de volver (D-180) y el nombre del documento; sin compartir ni descargar, salvo el W-9 para el Super Admin (D-260) y para su dueño (D-263).
  * El archivo vive solo en la caché privada de la app y se borra al salir. La URL firmada de 60 s sale de
  * open-document (documentos; deja la apertura en el historial) o de Storage firmado (términos).
  */
 export default function ViewerScreen() {
-  const { source, documentId, title, path, version, language, download } = useLocalSearchParams<{
+  const { source, documentId, title, path, version, language, download, note } = useLocalSearchParams<{
+    /** D-271: 'own-w9' en el W-9 que abre su dueño muestra "Solo lo ven tú y el Super Admin de Cid Clean." */
+    note?: string;
     /** D-260: '1' en el W-9 (solo lo abre el Super Admin) muestra "Descargar". */
     download?: string;
     source: 'terms' | 'document' | 'quote-file' | 'walkthrough' | 'jobsite';
@@ -138,6 +141,13 @@ export default function ViewerScreen() {
       ) : null}
       {PdfView && state.status === 'ready' && Platform.OS !== 'web' ? (
         <PdfView uri={state.uri} fitMode="width" style={[styles.fill, { backgroundColor: colors.surface }]} />
+      ) : null}
+      {note === 'own-w9' && state.status === 'ready' ? (
+        <View style={{ padding: 12 }}>
+          <AppText size={sample.noteSize} color={colors.secondary}>
+            {strings.profile.ownW9Note}
+          </AppText>
+        </View>
       ) : null}
     </View>
   );

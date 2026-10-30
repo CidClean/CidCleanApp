@@ -5,7 +5,7 @@ import { extensionFor, type DocumentKind, type EmployeeDocument } from './employ
 import { failureFromCode, functionFailure, type ApiResult } from './employeesApi';
 import { supabase } from './supabase';
 
-/** Documentos de los 1099 (D-125, D-175, D-183, D-193): bucket privado employee-docs. Solo con `empleados_gestionar_documentos`. */
+/** Documentos de los 1099 (D-125, D-175, D-183, D-193): bucket privado employee-docs. Con `empleados_gestionar_documentos`, o el propio 1099 (D-263: lista, abre y sube su certificado). */
 
 const BUCKET = 'employee-docs';
 

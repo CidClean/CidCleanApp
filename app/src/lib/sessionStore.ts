@@ -31,6 +31,8 @@ export type OwnProfile = {
   role: string | null;
   isSuperAdmin: boolean;
   language: Locale | null;
+  /** D-263: "Mis documentos" en el perfil solo para el 1099. */
+  workerType: 'w2' | '1099' | null;
 };
 
 export async function fetchOwnProfile(
@@ -39,7 +41,7 @@ export async function fetchOwnProfile(
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, email, role, is_super_admin, active, language')
+      .select('id, full_name, email, role, is_super_admin, active, language, worker_type')
       .eq('auth_user_id', authUserId)
       .maybeSingle();
     if (error) return { lookup: { kind: 'unknown' }, profile: null };
@@ -56,6 +58,7 @@ export async function fetchOwnProfile(
         role: data.role,
         isSuperAdmin: data.is_super_admin,
         language: isLocale(data.language) ? data.language : null,
+        workerType: data.worker_type === '1099' || data.worker_type === 'w2' ? data.worker_type : null,
       },
     };
   } catch {

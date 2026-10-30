@@ -92,6 +92,13 @@ export const en: Strings = {
     themeSystem: 'System',
     themeLight: 'Light',
     themeDark: 'Dark',
+    myDocuments: 'My documents', // D-200 (translation of D-271)
+    signedOn: (date: string) => `Signed on ${date}`, // D-200 (translation of D-271)
+    signedChip: 'Signed', // D-200 (translation of D-271)
+    uploadNewCertificate: 'Upload new certificate', // D-200 (translation of D-271)
+    uploadCertificate: 'Upload certificate', // D-200 (translation of D-271)
+    certificateNote: 'When you renew your insurance, upload the new certificate. It replaces the previous one.', // D-200 (translation of D-271)
+    ownW9Note: 'Only you and the Cid Clean Super Admin can see it.', // D-200 (translation of D-271)
   },
 
   common: {
