@@ -121,3 +121,29 @@ npx supabase@latest functions deploy send-notifications --project-ref <ref> --us
 npx supabase@latest functions deploy send-w9 --project-ref <ref> --use-api
 npx supabase@latest functions deploy w9-portal --project-ref <ref> --use-api --no-verify-jwt
 ```
+
+## Legal rev. 3, fase B (órdenes 56 a 59, D-282, D-284, D-280)
+
+Migraciones (sin aplicar, en este orden): `20261030000008_terminos_privacidad_rev3.sql`, `20261030000009_eliminar_cuenta.sql`, `20261030000010_fotos_solo_admin.sql` y `20261030000011_w9_cifrado.sql`. Pruebas: `supabase/tests/legal_rev3.sql` (psql, termina en rollback), `supabase/tests/w9.sql` (rutas `.pdf.enc`) y `node --test supabase/tests/cifrado.test.mjs`.
+
+- **Términos y privacidad:** `accept_pending_terms` (reemplaza `accept_staff_terms`) guarda IP (cabecera `cf-connecting-ip` que pone el servidor, después `x-forwarded-for`) y navegador. `publish_terms(kind, file_path, major)` publica también `privacy`; el aviso (`terms_new` / `privacy_new`) lo manda por correo la `send-notifications` que ya existe (en inglés, plantilla D-250): no hay función nueva que desplegar para esto.
+- **Eliminar cuenta:** el aviso `account_deletion_requested` al Super Admin también sale por `send-notifications`.
+- **Fotos:** `walkthrough-pdf` arma el PDF sin fotos para quien no tiene rol admin (`<walkthrough>/v<versión>-sin-fotos.pdf`). Redesplegar.
+- **W-9 cifrado (AES-256-GCM, `_shared/cifrado.ts`):**
+  - Secreto nuevo `W9_FILE_KEY`: 32 bytes aleatorios en base64. Se crea fuera del repositorio y no se guarda en ningún archivo; si se pierde, los W-9 cifrados no se pueden abrir (guárdala también en el gestor de contraseñas del dueño):
+    ```
+    npx supabase@latest secrets set --project-ref <ref> W9_FILE_KEY="$(openssl rand -base64 32)"
+    ```
+  - `w9-portal`: cifra el PDF firmado antes de subirlo (`…/w9/signed-<solicitud>-<aleatorio>.pdf.enc`). Redesplegar con `--no-verify-jwt`.
+  - `upload-w9` (nueva, `verify_jwt` activado): subida manual de un W-9 por quien tiene `empleados_gestionar_documentos`; cifra y registra con `register_profile_document` (que ya solo acepta W-9 `.enc`). La app ya no sube W-9 directo a Storage.
+  - `open-document` (redesplegar): acepta `action: 'open' | 'download'` (las dos quedan en `change_log`: `documento_abierto` / `documento_descargado`). Para un archivo cifrado devuelve un enlace de un solo uso de 60 s a `w9-file` (solo se guarda su hash en `w9_open_tokens`).
+  - `w9-file` (nueva, **sin** `verify_jwt`): `GET /functions/v1/w9-file/<enlace>/w9.pdf` consume el enlace, descifra y entrega el PDF con `Cache-Control: no-store`.
+  - Los W-9 ya guardados los cifra el arquitecto, una vez, después de la migración 011 y del secreto: `SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… W9_FILE_KEY=… node supabase/scripts/cifrar-w9-existentes.mjs --dry-run` y después sin `--dry-run`.
+
+```
+npx supabase@latest functions deploy walkthrough-pdf --project-ref <ref> --use-api
+npx supabase@latest functions deploy open-document --project-ref <ref> --use-api
+npx supabase@latest functions deploy upload-w9 --project-ref <ref> --use-api
+npx supabase@latest functions deploy w9-file --project-ref <ref> --use-api --no-verify-jwt
+npx supabase@latest functions deploy w9-portal --project-ref <ref> --use-api --no-verify-jwt
+```
