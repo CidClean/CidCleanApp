@@ -12,6 +12,7 @@ import { SelectField } from '@/components/SelectField';
 import { TopBar } from '@/components/TopBar';
 import { SyncStatus } from '@/components/walkthrough/SyncStatus';
 import { useStrings } from '@/i18n/useStrings';
+import { useLegalStrings } from '@/i18n/useLegalStrings';
 import { useWalkthroughStrings } from '@/i18n/useWalkthroughStrings';
 import { pickPhotos, takePhoto, type PickedFile } from '@/lib/documents';
 import { useGoBack } from '@/lib/navigation';
@@ -53,6 +54,7 @@ export default function AreaScreen() {
   const { colors } = useTheme();
   const strings = useStrings();
   const w = useWalkthroughStrings();
+  const legal = useLegalStrings(); // D-284: aviso de la cámara
   const { access } = usePermissions();
   const { doc, update } = useWalkthrough(params.id);
   const [area, setArea] = useState<Area | null>(null);
@@ -207,6 +209,7 @@ export default function AreaScreen() {
             <AppField label={w.areas.notes} value={area.notes} multiline onChangeText={(v) => change({ ...area, notes: v })} />
             <AreaPhotos
               w={w}
+              notice={legal.cameraNotice}
               common={strings.common}
               photos={photos}
               error={photoError}

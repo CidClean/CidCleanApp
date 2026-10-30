@@ -3,6 +3,8 @@
 // 2) Si la versión aún no tiene PDF, la service role lo arma (resumen sin fotos y fotos en un anexo, SIN notas internas),
 //    lo guarda en el bucket privado walkthrough-pdfs y anota la ruta en walkthrough_versions.
 // 3) Devuelve una URL firmada de 60 s para el visor de la app (D-196).
+// D-284: el anexo de fotos solo va para admins (fuente.photos); los demás reciben un PDF sin fotos, que se arma aparte
+//    (`<walkthrough>/v<versión>-sin-fotos.pdf`) y no se anota en walkthrough_versions.
 import { CORS, clienteDeQuienLlama, clienteDeServicio, errorDeBase, responder } from '../_shared/comun.ts';
 import { armarPdf, type Fuente } from './pdf.ts';
 
@@ -35,6 +37,20 @@ Deno.serve(async (req) => {
   }
 
   const servicio = clienteDeServicio();
+  if ((fuente as { photos?: boolean }).photos !== true) {
+    const sinFotos = sinFotosDe(fuente as Fuente);
+    const rutaSinFotos = `${id}/v${version}-sin-fotos.pdf`;
+    try {
+      const bytes = await armarPdf(sinFotos, idioma, async () => null);
+      const subida = await servicio.storage.from(BUCKET).upload(rutaSinFotos, bytes, { contentType: 'application/pdf', upsert: true });
+      if (subida.error) return responder(500, { error: 'server_error' });
+    } catch {
+      return responder(500, { error: 'server_error' });
+    }
+    const { data, error: errorFirma } = await servicio.storage.from(BUCKET).createSignedUrl(rutaSinFotos, SEGUNDOS);
+    if (errorFirma || !data?.signedUrl) return responder(500, { error: 'server_error' });
+    return responder(200, { url: data.signedUrl, expires_in: SEGUNDOS, path: rutaSinFotos });
+  }
   let ruta = (fuente as Fuente).pdf_path;
   if (!ruta) {
     try {
@@ -60,3 +76,13 @@ Deno.serve(async (req) => {
   if (errorFirma || !data?.signedUrl) return responder(500, { error: 'server_error' });
   return responder(200, { url: data.signedUrl, expires_in: SEGUNDOS, path: ruta });
 });
+
+/** La misma fuente sin las fotos de ningún área (D-284: quien no es admin no las ve). */
+function sinFotosDe(f: Fuente): Fuente {
+  const datos = (f as unknown as { data?: { areas?: unknown[] } }).data;
+  if (!datos || !Array.isArray(datos.areas)) return f;
+  return {
+    ...f,
+    data: { ...datos, areas: datos.areas.map((a) => ({ ...(a as Record<string, unknown>), photos: [] })) },
+  } as unknown as Fuente;
+}

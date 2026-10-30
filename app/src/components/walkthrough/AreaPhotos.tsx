@@ -13,6 +13,8 @@ import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
 type Props = {
   w: WalkthroughStrings;
+  /** D-284: aviso junto a la cámara y al selector de fotos del trabajo, en el idioma del perfil. */
+  notice?: string;
   common: { cancel: string; save: string };
   photos: readonly Photo[];
   error: 'camera' | 'gallery' | 'photo' | null;
@@ -27,7 +29,7 @@ type Props = {
  * nota de 12px debajo con su papelera (D-039), y dos botones de contorno: Tomar foto (abre la cámara al instante)
  * y Subir de la galería. Tocar una miniatura abre su nota (D-200); la papelera pide confirmación (D-212).
  */
-export function AreaPhotos({ w, common, photos, error, onTake, onGallery, onNote, onRemove }: Props) {
+export function AreaPhotos({ w, notice, common, photos, error, onTake, onGallery, onNote, onRemove }: Props) {
   const { colors } = useTheme();
   const [editing, setEditing] = useState<Photo | null>(null);
   const [note, setNote] = useState('');
@@ -79,6 +81,14 @@ export function AreaPhotos({ w, common, photos, error, onTake, onGallery, onNote
           ))}
         </ScrollView>
       )}
+      {notice ? (
+        <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center', marginBottom: 8 }}>
+          <Icon name="camera" size={16} strokeWidth={iconStrokeWidth} color={colors.secondary} />
+          <AppText size={sample.noteSize} color={colors.secondary} style={{ flexShrink: 1 }}>
+            {notice}
+          </AppText>
+        </View>
+      ) : null}
       <View style={styles.row}>
         <View style={styles.flex}>
           <AppButton label={w.photos.take} variant="outline" icon="camera" onPress={onTake} />
