@@ -227,13 +227,14 @@ export async function enviarCorreo(
   to: string,
   m: { subject: string; html: string; text: string },
   adjuntos: { filename: string; content: Uint8Array }[] = [],
+  from: string = FROM,
 ): Promise<boolean> {
   const attachments = adjuntos.map((a) => ({ filename: a.filename, content: base64(a.content) }));
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${Deno.env.get('RESEND_QUOTES_KEY')}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: FROM, to: [to], reply_to: REPLY_TO, subject: m.subject, html: m.html, text: m.text,
+      from, to: [to], reply_to: REPLY_TO, subject: m.subject, html: m.html, text: m.text,
       ...(attachments.length ? { attachments } : {}),
     }),
   });

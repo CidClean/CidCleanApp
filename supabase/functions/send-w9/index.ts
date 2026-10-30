@@ -2,13 +2,13 @@
 // Con el JWT de quien envía, create_w9_request / resend_w9_request exigen empleados_gestionar_documentos (D-193),
 // validan los datos y guardan solo el hash del token. La función genera el token, arma el link
 // https://quote.cidclean.com/w9/{token} y manda el correo en inglés (D-247) con el marco de la marca (D-250), desde
-// quotes@mail.cidclean.com con respuesta a info@cidclean.com (D-249).
+// documents@mail.cidclean.com con respuesta a info@cidclean.com (D-268).
 // Cuerpo: { profile_id, data, email } para mandar uno nuevo, o { request_id, resend: true } para reenviar.
 // Devuelve { sent, expires_at }: sent = false si el correo no salió (la solicitud queda y se puede reenviar).
 // Este archivo no contiene llaves.
 import { CORS, clienteDeQuienLlama, errorDeBase, responder } from '../_shared/comun.ts';
 import { enviarCorreo, fecha, sha256, tokenAleatorio } from '../_shared/quotes.ts';
-import { correoW9 } from '../_shared/w9.ts';
+import { correoW9, REMITENTE_W9 } from '../_shared/w9.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
   const d = r.data as { id: string; email: string; name: string; expires_at: string };
   let sent = false;
   try {
-    sent = await enviarCorreo(d.email, correoW9({ name: d.name, link: `${base}/w9/${token}`, expires: fecha(d.expires_at, 'en') }));
+    sent = await enviarCorreo(d.email, correoW9({ name: d.name, link: `${base}/w9/${token}`, expires: fecha(d.expires_at, 'en') }), [], REMITENTE_W9);
   } catch {
     sent = false;
   }

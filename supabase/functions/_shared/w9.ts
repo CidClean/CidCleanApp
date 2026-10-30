@@ -6,8 +6,11 @@ import { degrees, PDFDocument, rgb, StandardFonts } from 'npm:pdf-lib@1.17.1';
 
 import { boton, codigoGrande, correoHtml, esc, nota, parrafo, pieTexto, titulo } from './correo.ts';
 import { FW9_PDF_BASE64 } from './irs/fw9.ts';
+import * as m from './pdfMarca.ts';
 
 export const FORM_VERSION = 'Form W-9 (Rev. March 2024)';
+/** Remitente de los correos del W-9 (D-268 (1)); la respuesta va a info@cidclean.com (REPLY_TO de quotes.ts). */
+export const REMITENTE_W9 = 'Cid Clean <documents@mail.cidclean.com>';
 /** "Requester's name and address" fijo (D-256, D-258). */
 export const REQUESTER = ['Cid Clean LLC', '3727 Milano Lakes Cir', 'Naples FL 34114'];
 
@@ -49,7 +52,7 @@ export function tinValid(type: unknown, value: unknown): string | null {
 export function correoW9(o: { name: string; link: string; expires: string }) {
   const first = o.name.trim().split(/\s+/)[0] ?? '';
   const subject = 'Please complete your W-9';
-  const intro = 'Cid Clean LLC needs your Form W-9 to pay you as a contractor. We already filled in your details. You only need to add your SSN or ITIN and sign.';
+  const intro = 'Cid Clean LLC needs your Form W-9 to pay you as a contractor. We already filled in your details. You only need to add your SSN, ITIN or EIN and sign.';
   const seguro = "The page is secure. We'll send a code to this email so only you can open it. Your SSN is not stored in our app: it only goes into your signed form.";
   const vence = `This link expires on ${o.expires}.`;
   const html = correoHtml({
@@ -185,4 +188,94 @@ export function base64(bytes: Uint8Array): string {
   let s = '';
   for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
   return btoa(s);
+}
+
+// Certificado de la firma electrónica (D-268 (4)): última hoja del W-9 firmado, en inglés, con la marca como los otros
+// PDFs (pdfMarca.ts). No lleva el número de identificación.
+
+/** Texto de la casilla de firma, tal como se ve en el portal (app/src/i18n/w9.ts, `agree`). */
+export const AGREE_TEXT = {
+  en: 'I agree that typing my name is my electronic signature on this Form W-9.',
+  es: 'Acepto que escribir mi nombre es mi firma electrónica en este Formulario W-9.',
+};
+
+export type Certificado = {
+  signatureId: string;
+  pdfSha256: string;
+  signer: string;
+  email: string;
+  signedAt: Date;
+  ip: string | null;
+  userAgent: string | null;
+  language: 'en' | 'es';
+  sentBy: string | null;
+  sentAt: Date | null;
+};
+
+/** Fecha y hora en Naples con su zona (EDT o EST): "October 30, 2026, 9:15:02 AM EDT". */
+export function horaNaples(d: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit',
+    second: '2-digit', hour12: true, timeZoneName: 'short',
+  }).format(d).replace(/[  ]/g, ' ');
+}
+
+export function horaUtc(d: Date): string {
+  return `${d.toISOString().replace('T', ' ').slice(0, 19)} UTC`;
+}
+
+/** Filas del certificado (etiqueta, valor). Aparte para poder probarlas sin pdf-lib. */
+export function filasCertificado(c: Certificado): [string, string][] {
+  const consent = c.language === 'es'
+    ? `Accepted. Checkbox shown in Spanish: "${AGREE_TEXT.es}" (English: "${AGREE_TEXT.en}")`
+    : `Accepted. Checkbox: "${AGREE_TEXT.en}"`;
+  return [
+    ['Document', FORM_VERSION],
+    ['Signature ID', c.signatureId],
+    ['Document SHA-256', `${c.pdfSha256} (the signed Form W-9 before this certificate was added)`],
+    ['Signer', c.signer],
+    ['Verified email', `${c.email} (verified with a one-time code sent to this address)`],
+    ['Signed on', `${horaNaples(c.signedAt)} (America/New_York) · ${horaUtc(c.signedAt)}`],
+    ['IP address', c.ip ?? 'Not available'],
+    ['Browser', c.userAgent || 'Not available'],
+    ['Electronic signature consent', consent],
+    ['Sent', c.sentAt ? `${c.sentBy ? `By ${c.sentBy}, Cid Clean LLC, on` : 'On'} ${horaNaples(c.sentAt)}` : 'Not available'],
+  ];
+}
+
+export const NOTA_CERTIFICADO =
+  'The taxpayer identification number (SSN, ITIN or EIN) appears only on the signed form above. It is not stored in the Cid Clean app.';
+
+/** Agrega el certificado como última hoja del PDF firmado. */
+export async function agregarCertificado(pdf: Uint8Array, c: Certificado): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(pdf);
+  const f = await m.fuentesMarca(doc);
+  const logo = await m.logoMarca(doc);
+  const page = doc.addPage([m.ANCHO, m.ALTO]);
+  let y = m.encabezado(page, f, logo, { etiqueta: 'Form W-9', valor: 'Certificate' });
+  const ancho = m.ANCHO - 2 * m.LADO;
+  page.drawText('Electronic signature certificate', { x: m.LADO, y: y - 18, size: 18, font: f.extra, color: m.C.texto });
+  y -= 40;
+  const etiqueta = 150;
+  for (const [k, v] of filasCertificado(c)) {
+    const lineas = m.partir(winAnsi(v), f.regular, 9, ancho - etiqueta);
+    page.drawText(k, { x: m.LADO, y, size: 9, font: f.bold, color: m.C.gris });
+    for (const [i, l] of lineas.entries()) page.drawText(l, { x: m.LADO + etiqueta, y: y - i * 12, size: 9, font: f.regular, color: m.C.texto });
+    y -= lineas.length * 12 + 8;
+    page.drawLine({ start: { x: m.LADO, y: y + 4 }, end: { x: m.ANCHO - m.LADO, y: y + 4 }, thickness: 0.5, color: m.C.linea });
+    y -= 6;
+  }
+  y -= 6;
+  for (const l of m.partir(NOTA_CERTIFICADO, f.regular, 8.5, ancho)) {
+    page.drawText(l, { x: m.LADO, y, size: 8.5, font: f.regular, color: m.C.ambar });
+    y -= 12;
+  }
+  m.pie(page, f, `Page ${doc.getPageCount()} of ${doc.getPageCount()}`);
+  return await doc.save();
+}
+
+/** SHA-256 en hex de unos bytes. */
+export async function sha256Bytes(bytes: Uint8Array): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }

@@ -64,6 +64,26 @@ export const workEs = {
   noOut: 'Sin salida', // D-200
   errorOpen: 'Hay un turno abierto: ciérralo antes de aprobar.', // D-200
   errorGps: 'Falta revisar el GPS fuera de rango.', // D-200 (D-214)
+  // "To approve" por visita (D-266, surveys/por-aprobar-por-visita-aprobado.html)
+  cardTitle: (client: string, day: string) => `${client} · ${day}`, // APROBADO (D-266: "Cuenta · fecha")
+  rowEdit: 'Edit', // APROBADO (D-266)
+  rowNoShow: 'No show', // APROBADO (D-266)
+  addPersonCard: '+ Agregar persona', // APROBADO (D-266)
+  approveCard: 'Approve', // APROBADO (D-266)
+  autoChip: 'Automático · sin acceso a la app', // APROBADO (D-266)
+  missingIn: 'Falta clock in', // APROBADO (D-266)
+  missingOut: 'Falta clock out', // APROBADO (D-266)
+  missing: 'missing', // APROBADO (D-266)
+  timeRange: (from: string, to: string) => `${from} – ${to}`, // APROBADO (D-266: "11:00 pm – 3:00 am")
+  noPay: 'Sin pago asignado para este día', // D-200 (aviso ámbar, orden 45)
+  noShowTitle: (name: string) => `¿No show de ${name}?`, // D-200
+  noShowBody: 'Se quita de esta visita y se borra su registro (queda en el historial).', // D-200
+  noShowList: 'No show', // D-200: quienes se quitaron, con Deshacer
+  undo: 'Deshacer', // D-200
+  addPersonTitle: 'Agregar persona', // D-200
+  noOneToAdd: 'No hay más empleados activos para agregar.', // D-200
+  errorMissing: 'Falta la hora de alguien: regístrala con Edit o marca No show.', // D-200
+  errorNoWork: 'No hay trabajo registrado en esta visita.', // D-200
   errorHours: 'La salida debe ser después de la entrada.', // D-200
   distance: (m: number) => `A ${m} m del sitio`, // D-200
 
@@ -203,6 +223,25 @@ export const workEn: WorkStrings = {
   noOut: 'No clock out',
   errorOpen: 'There is an open shift: close it before approving.',
   errorGps: 'The out-of-range GPS still needs review.',
+  cardTitle: (client: string, day: string) => `${client} · ${day}`,
+  rowEdit: 'Edit',
+  rowNoShow: 'No show',
+  addPersonCard: '+ Add person',
+  approveCard: 'Approve',
+  autoChip: 'Automatic · no app access',
+  missingIn: 'Missing clock in',
+  missingOut: 'Missing clock out',
+  missing: 'missing',
+  timeRange: (from: string, to: string) => `${from} – ${to}`,
+  noPay: 'No pay assigned for this day',
+  noShowTitle: (name: string) => `Mark ${name} as no show?`,
+  noShowBody: 'They are removed from this visit and their record is deleted (it stays in the history).',
+  noShowList: 'No show',
+  undo: 'Undo',
+  addPersonTitle: 'Add person',
+  noOneToAdd: 'No more active employees to add.',
+  errorMissing: "Someone's time is missing: enter it with Edit or mark No show.",
+  errorNoWork: 'There is no work recorded on this visit.',
   errorHours: 'Clock out must be after clock in.',
   distance: (m: number) => `${m} m from the site`,
   locationReady: 'Location ready',

@@ -33,7 +33,7 @@ type Person = { id: string; name: string };
 
 /**
  * Modo Semana (D-232; reemplaza "Equipos fijos" de la muestra): el horario se arma semana por semana. Por jobsite, una
- * cuadrícula D L M M J V S × persona de la semana elegida (flechas para cambiar de semana); solo los días que el
+ * cuadrícula D L M X J V S (D-269) × persona de la semana elegida (flechas para cambiar de semana); solo los días que el
  * jobsite trabaja se marcan. "Guardar semana" crea o cambia las visitas de esa semana con la regla de 32 h (aviso desde
  * 28 h y bloqueo). Una semana sin guardar se ve vacía; "Copiar semana anterior" la llena con la anterior (D-200).
  */

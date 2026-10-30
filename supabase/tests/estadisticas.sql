@@ -85,7 +85,8 @@ begin
   insert into assignment_pay (assignment_id, kind, hourly_rate, effective_from) values (a2, 'hourly', 20, '2026-09-01');
   insert into visits (jobsite_id, starts_at, minutes, local_date) values (j, '2026-09-10 09:00-04', 240, '2026-09-10') returning id into v1;
   insert into visits (jobsite_id, starts_at, minutes, local_date) values (j, '2026-09-11 09:00-04', 240, '2026-09-11') returning id into v2;
-  insert into visit_staff values (v1, p1), (v1, p2), (v2, p1), (v2, p2);
+  -- e2 no fue el 11 (No show, D-266): sin eso "missing_time" no deja aprobar v2.
+  insert into visit_staff values (v1, p1, false), (v1, p2, false), (v2, p1, false), (v2, p2, true);
   insert into work_entries (visit_id, profile_id, clock_in, clock_out, in_status, out_status)
   values (v1, p1, '2026-09-10 09:06-04', '2026-09-10 12:36-04', 'ok', 'ok'),
          (v2, p1, '2026-09-11 09:00-04', '2026-09-11 13:00-04', 'ok', 'ok');
