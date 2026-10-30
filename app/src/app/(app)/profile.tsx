@@ -6,6 +6,7 @@ import { CardBlock } from '@/components/bento/Card';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { ListRow, rowStyles } from '@/components/ListRow';
+import { DeleteAccount } from '@/components/profile/DeleteAccount';
 import { MyDocuments } from '@/components/profile/MyDocuments';
 import { Segmented } from '@/components/Segmented';
 import { Sheet } from '@/components/Sheet';
@@ -94,6 +95,8 @@ export default function ProfileScreen() {
         </CardBlock>
         {/* D-263, D-271: los documentos propios del 1099. */}
         {profile && showsMyDocuments(profile) ? <MyDocuments profileId={profile.id} strings={strings} locale={locale} /> : null}
+        {/* Orden 57 (D-282): Cuenta → Eliminar cuenta, para todo el personal menos el Super Admin. */}
+        {profile && !profile.isSuperAdmin ? <DeleteAccount /> : null}
       </ScrollView>
       {/* D-222 a: la misma ventana al centro que el Menú. */}
       <SignOutDialog visible={confirming} onClose={() => setConfirming(false)} />

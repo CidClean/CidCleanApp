@@ -81,6 +81,12 @@ export function historyTitle(strings: Strings, e: HistoryEntry): string {
       return h.documentReplaced(documentName(strings, e.info.kind));
     case 'documento_abierto':
       return h.documentOpened(documentName(strings, e.info.kind));
+    case 'documento_descargado':
+      return h.documentDownloaded(documentName(strings, e.info.kind));
+    case 'cuenta_eliminacion_solicitada':
+      return h.deletionRequested;
+    case 'cuenta_eliminacion_atendida':
+      return h.deletionHandled;
     case 'w9_enviado':
       return h.w9Sent;
     case 'w9_reenviado':

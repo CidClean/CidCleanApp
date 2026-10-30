@@ -14,6 +14,7 @@ import { useStrings } from '@/i18n/useStrings';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions } from '@/lib/session';
 import { useQuoteStrings } from '@/i18n/useQuoteStrings';
+import { useLegalStrings } from '@/i18n/useLegalStrings';
 import { fetchCurrentTerms, type CurrentTerms } from '@/lib/termsApi';
 import { useTheme } from '@/theme';
 
@@ -31,6 +32,8 @@ export default function SettingsScreen() {
   const [failed, setFailed] = useState(false);
   const [portal, setPortal] = useState<CurrentTerms | null | undefined>(undefined); // términos del portal (D-209)
   const qs = useQuoteStrings();
+  const legal = useLegalStrings();
+  const [privacy, setPrivacy] = useState<CurrentTerms | null | undefined>(undefined); // Política de Privacidad (D-282)
 
   // Se vuelve a leer al volver de publicar, para mostrar la versión nueva.
   useFocusEffect(
@@ -43,6 +46,9 @@ export default function SettingsScreen() {
       });
       fetchCurrentTerms('portal').then((result) => {
         if (!cancelled && result.ok) setPortal(result.data);
+      });
+      fetchCurrentTerms('privacy').then((result) => {
+        if (!cancelled && result.ok) setPrivacy(result.data);
       });
       return () => {
         cancelled = true;
@@ -91,6 +97,14 @@ export default function SettingsScreen() {
         <View style={{ height: 12 }} />
         <CardBlock>
         {/* D-107/D-254: Categorías de gastos va antes que Motivos de lead perdido, como en la lista aprobada. */}
+        {/* D-282 (D-200): Política de Privacidad (se publica como los términos) y solicitudes de eliminación de cuenta. */}
+        <ListRow
+          title={legal.privacyRow}
+          detail={privacy === undefined ? undefined : privacy === null ? strings.settings.unpublished : strings.settings.termsValue(privacy.version)}
+          chevron
+          onPress={() => router.push({ pathname: '/settings/terms', params: { kind: 'privacy' } })}
+        />
+        <ListRow title={legal.requestsRow} chevron onPress={() => router.push('/settings/account-deletions')} />
         <ExpenseCategoriesSettingsRow />
         <LostReasonsSettingsRow />
         <ListRow title={strings.transfer.row} chevron last onPress={() => router.push('/settings/transfer')} />
