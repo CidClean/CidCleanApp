@@ -37,7 +37,7 @@ Plan para terminar la app, aprobado por el dueño el 2026-10-21 (D-170). Cada hi
 Legal rev. 3 (D-275 a D-285), en este orden:
 
 1. Fase A: HECHA y publicada el 2026-10-30 (días de servicio, conversión de 90 registros con $6,980 intactos, W-2 con ubicación obligatoria).
-2. Fase B (páginas públicas en cidclean.com/privacy, /terms/staff, /terms/client-portal y /delete-account ya publicadas): términos solo en inglés y bloqueo hasta aceptar (D-282), privacidad en cidclean.com/privacy y eliminación de cuenta, fotos solo admin (D-284), W-9 cifrado con aperturas registradas (D-280).
+2. Fase B: HECHA y publicada el 2026-10-30 (términos en inglés con bloqueo y aviso, privacidad versionada, eliminar cuenta en Mi perfil, fotos solo admin, W-9 cifrado con 4 de 4 vigentes cifrados). Falta publicar en la app los términos v1.0 y la privacidad v1.0 (legal/rev3/web/pdf/), cuando el dueño diga: avisa por correo a todo el personal y bloquea hasta aceptar.
 3. Fase C: quote ≠ contrato, firma del contrato, vigencias y 6% solo no residencial (D-283).
 4. Fase D: ICA antes del primer trabajo, ofertas de trabajo y advertencias (D-285).
 5. Fase E: retención y borrado automático (D-281); W-2 sin acceso con corrección en 7 días, salario mínimo y horas extra (D-278).
