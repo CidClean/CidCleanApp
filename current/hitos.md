@@ -22,6 +22,7 @@ Plan para terminar la app, aprobado por el dueño el 2026-10-21 (D-170). Cada hi
 3. Lo aprobado se registra con valores exactos y su copia en HTML, y se le muestra el commit (reglas 8 y 9 de `../AGENTS.md`).
 4. El ejecutor construye por órdenes numeradas y el arquitecto revisa cada commit antes de subirlo.
 5. El dueño prueba en el teléfono y aprueba.
+6. Cada publicación sale a la vez en el teléfono (actualización de Android) y en la web (app.cidclean.com y quote.cidclean.com) (D-273).
 
 ## Pendientes del dueño
 
