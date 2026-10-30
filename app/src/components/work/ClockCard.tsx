@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppAlert } from '../AppAlert';
 import { AppText } from '../AppText';
@@ -7,6 +7,7 @@ import { Card } from '../bento/Card';
 import { CartArt } from '../illustrations';
 import { SlideToMark } from '../SlideToMark';
 import { useStrings } from '@/i18n/useStrings';
+import { useServiceDaysStrings } from '@/i18n/useServiceDaysStrings';
 import { useWorkStrings } from '@/i18n/useWorkStrings';
 import { currentPosition, locationAvailable, type Position } from '@/lib/location';
 import { checkDistance, clockIn, clockOut, type MyVisit } from '@/lib/scheduleApi';
@@ -17,16 +18,25 @@ import { formatTime } from '@/lib/week';
 import { enqueue, loadShift, saveShift, syncWorkQueue, type Shift } from '@/lib/workQueue';
 import { illustrations, useTheme } from '@/theme';
 
-type Phase = { kind: 'idle' } | { kind: 'locating' } | { kind: 'away'; distance: number; pos: Position | null } | { kind: 'saving' };
+type Phase =
+  | { kind: 'idle' }
+  | { kind: 'locating' }
+  | { kind: 'away'; distance: number; pos: Position | null }
+  | { kind: 'saving' }
+  // D-277 (2): sin ubicación no se marca; se explica por qué y se da el botón para el permiso.
+  | { kind: 'needLocation'; action: 'in' | 'out' };
 
 /**
  * Tarjeta de hoy del staff (D-049 a D-051, D-165, D-214, D-223): sitio y horario, "Desliza para marcar entrada"; si
  * el GPS queda a más de 150 m, "Estás a X m del sitio" con Reintentar ubicación y Marcar de todos modos; con el turno
  * abierto, la hora de entrada, el cronómetro de 34px y Marcar salida. Sin internet se guarda en el teléfono.
+ * D-277 (2): la ubicación es obligatoria para el W-2; sin ella no marca, se explica por qué y hay un botón para dar el
+ * permiso (Ajustes del teléfono; en la web se vuelve a pedir). La ubicación se lee solo al marcar.
  */
 export function ClockCard({ visit, onChanged }: { visit: MyVisit; onChanged: () => void }) {
   const strings = useStrings();
   const t = useWorkStrings();
+  const sd = useServiceDaysStrings();
   const [shift, setShift] = useState<Shift | null>(null);
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
   const [notice, setNotice] = useState<{ tone: 'error' | 'warning'; text: string } | null>(null);
@@ -55,7 +65,11 @@ export function ClockCard({ visit, onChanged }: { visit: MyVisit; onChanged: () 
 
   async function startIn(pos: Position | null, skipCheck = false) {
     setNotice(null);
-    if (!skipCheck && pos) {
+    if (!pos) {
+      setPhase({ kind: 'needLocation', action: 'in' });
+      return;
+    }
+    if (!skipCheck) {
       const check = await checkDistance(visit.id, pos.latitude, pos.longitude);
       if (check.ok && check.data.status === 'out_of_range') {
         setPhase({ kind: 'away', distance: check.data.distanceM ?? 0, pos });
@@ -65,7 +79,7 @@ export function ClockCard({ visit, onChanged }: { visit: MyVisit; onChanged: () 
     setPhase({ kind: 'saving' });
     const clientId = newId();
     const at = new Date();
-    const r = await clockIn({ visitId: visit.id, clientId, at, lat: pos?.latitude ?? null, lng: pos?.longitude ?? null, offline: false });
+    const r = await clockIn({ visitId: visit.id, clientId, at, lat: pos.latitude, lng: pos.longitude, offline: false });
     if (r.ok) {
       const s = { visitId: visit.id, clientId, entryId: r.data.id, clockIn: at.toISOString(), jobsite: visit.jobsite };
       await saveShift(s);
@@ -77,7 +91,7 @@ export function ClockCard({ visit, onChanged }: { visit: MyVisit; onChanged: () 
     }
     if (r.reason === 'network') {
       // D-214: sin internet se guarda con la hora del teléfono y se manda después.
-      await enqueue({ kind: 'in', clientId, visitId: visit.id, at: at.toISOString(), lat: pos?.latitude ?? null, lng: pos?.longitude ?? null });
+      await enqueue({ kind: 'in', clientId, visitId: visit.id, at: at.toISOString(), lat: pos.latitude, lng: pos.longitude });
       const s = { visitId: visit.id, clientId, entryId: null, clockIn: at.toISOString(), jobsite: visit.jobsite };
       await saveShift(s);
       setShift(s);
@@ -100,8 +114,12 @@ export function ClockCard({ visit, onChanged }: { visit: MyVisit; onChanged: () 
     setPhase({ kind: 'saving' });
     setNotice(null);
     const pos = await currentPosition();
+    if (!pos) {
+      setPhase({ kind: 'needLocation', action: 'out' });
+      return;
+    }
     const at = new Date();
-    const item = { lat: pos?.latitude ?? null, lng: pos?.longitude ?? null };
+    const item = { lat: pos.latitude, lng: pos.longitude };
     let saved = false;
     if (shift.entryId) {
       const r = await clockOut({ entryId: shift.entryId, at, ...item, offline: false });
@@ -123,7 +141,36 @@ export function ClockCard({ visit, onChanged }: { visit: MyVisit; onChanged: () 
     onChanged();
   }
 
+  async function givePermission() {
+    // En el teléfono el permiso negado solo se cambia en Ajustes; en la web el navegador lo vuelve a pedir.
+    if (Platform.OS !== 'web') {
+      try {
+        await Linking.openSettings();
+      } catch {
+        // sin Ajustes: queda el botón de volver a intentar
+      }
+      return;
+    }
+    await retryLocation();
+  }
+
+  async function retryLocation() {
+    if (phase.kind !== 'needLocation') return;
+    if (phase.action === 'out') await onClockOut();
+    else await onSlide();
+  }
+
   const end = new Date(visit.startsAt.getTime() + visit.minutes * 60000);
+  const needLocation =
+    phase.kind === 'needLocation' ? (
+      <View style={{ gap: 8 }}>
+        <AppText weight="bold" size={14} color="#FFFFFF">
+          {sd.locationNeeded}
+        </AppText>
+        <OnBrandButton label={sd.givePermission} solid onPress={() => void givePermission()} />
+        {Platform.OS !== 'web' ? <OnBrandButton label={sd.retryLocation} onPress={() => void retryLocation()} /> : null}
+      </View>
+    ) : null;
   return (
     <Card tone="brand" wide style={styles.card}>
       <View style={[styles.head, illustrations ? styles.headArt : null]}>
@@ -142,7 +189,9 @@ export function ClockCard({ visit, onChanged }: { visit: MyVisit; onChanged: () 
       </View>
       <View style={styles.body}>
         {notice ? <AppAlert tone={notice.tone} text={notice.text} /> : null}
-        {shift ? (
+        {needLocation ? (
+          needLocation
+        ) : shift ? (
           // D-050: hora de entrada, cronómetro de 34px y Marcar salida.
           <View style={{ gap: 8 }}>
             <AppText size={14} color="#FFFFFF">

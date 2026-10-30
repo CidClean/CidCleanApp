@@ -110,14 +110,17 @@ begin
 
   -- Marcar entrada y salida (D-214)
   perform pg_temp.prueba('distancia antes de marcar: dentro de 150 m', 'ok', pg_temp.valor('staff1', format('select visit_distance(%L, 26.1421, -81.7948)->>''status''', hoy)));
-  perform pg_temp.prueba('quien no está asignado no marca', 'ERR:42501', pg_temp.valor('sin', format('select clock_in(%L, gen_random_uuid(), now(), null, null, false)::text', hoy)));
+  perform pg_temp.prueba('quien no está asignado no marca', 'ERR:42501', pg_temp.valor('sin', format('select clock_in(%L, gen_random_uuid(), now(), 26.1421, -81.7948, false)::text', hoy)));
   w := (pg_temp.valor('staff1', format('select clock_in(%L, %L, %L, 26.15, -81.7948, true)->>''id''', hoy, '11111111-1111-4111-8111-111111111111', now() - interval '2 hours')))::uuid;
   perform pg_temp.prueba('sin conexión guarda la hora del teléfono y queda marcado', 't',
     (select (clock_in <= now() - interval '119 minutes' and in_offline and in_status = 'out_of_range' and in_distance_m > 150)::text from work_entries where id = w)::char(1));
   perform pg_temp.prueba('la cola reintenta sin duplicar (mismo id del teléfono)', w::text,
     pg_temp.valor('staff1', format('select clock_in(%L, %L, now(), null, null, false)->>''id''', hoy, '11111111-1111-4111-8111-111111111111')));
-  perform pg_temp.prueba('no marca dos veces la misma visita', 'ERR:22023', pg_temp.valor('staff1', format('select clock_in(%L, gen_random_uuid(), now(), null, null, false)::text', hoy)));
-  perform pg_temp.prueba('salida validada igual: sin ubicación', 'no_location', pg_temp.valor('staff1', format('select clock_out(%L, now(), null, null, false)->>''status''', w)));
+  perform pg_temp.prueba('no marca dos veces la misma visita', 'ERR:22023', pg_temp.valor('staff1', format('select clock_in(%L, gen_random_uuid(), now(), 26.1421, -81.7948, false)::text', hoy)));
+  -- D-277 (2): el W-2 con acceso no marca sin ubicación.
+  perform pg_temp.prueba('W-2: entrada sin ubicación no (location_required)', 'ERR:22023', pg_temp.valor('staff2', format('select clock_in(%L, gen_random_uuid(), now(), null, null, false)::text', hoy)));
+  perform pg_temp.prueba('W-2: salida sin ubicación no (location_required)', 'ERR:22023', pg_temp.valor('staff1', format('select clock_out(%L, now(), null, null, false)->>''status''', w)));
+  perform pg_temp.prueba('W-2: salida con ubicación dentro del rango', 'ok', pg_temp.valor('staff1', format('select clock_out(%L, now(), 26.1421, -81.7948, false)->>''status''', w)));
 
   -- Registro por otros (D-052) y quien no estaba programado
   insert into jobsite_assignments (jobsite_id, profile_id, start_date) values (js, s2, cc_today());

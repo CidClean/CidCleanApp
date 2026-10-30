@@ -13,6 +13,7 @@ import { Bento, Card, useCardText, type CardTone } from '@/components/bento/Card
 import { BackHeader } from '@/components/bento/Header';
 import { ChartIcon, ClockIcon, DocIcon, PeopleIcon, QuoteDueIcon } from '@/components/illustrations';
 import { useAccountingStrings } from '@/i18n/useAccountingStrings';
+import { useServiceDaysStrings } from '@/i18n/useServiceDaysStrings';
 import { useStrings } from '@/i18n/useStrings';
 import { fetchAccountingJobsites, fetchDashboard, fetchRecurring, type AccountingJobsite } from '@/lib/accountingApi';
 import { accountingAccess, isRange, money, type DashboardFigures } from '@/lib/accountingRules';
@@ -33,6 +34,7 @@ export default function AccountingScreen() {
   const { colors } = useTheme();
   const strings = useStrings();
   const a = useAccountingStrings();
+  const sd = useServiceDaysStrings();
   const { access } = usePermissions();
   const acc = accountingAccess(access);
   const { period, setPeriod, jobsiteId, setJobsiteId, params } = usePeriod();
@@ -131,6 +133,10 @@ export default function AccountingScreen() {
           ) : null}
           {acc.staff ? (
             <Tile tone="plain" icon={<PeopleIcon />} title={a.staff} figure={seesFigures && data ? money(data.staff) : null} onPress={() => go('/accounting/staff')} />
+          ) : null}
+          {acc.staff ? (
+            // D-286 (4): estado de cuenta del mes de los 1099.
+            <Tile tone="plain" icon={<PeopleIcon />} title={sd.statementTitle} line={sd.statementRow} onPress={() => router.push('/accounting/statement')} />
           ) : null}
           {acc.expenses ? (
             <Tile tone="plain" icon={<DocIcon />} title={a.expenses} figure={seesFigures && data ? money(data.expenses) : null} onPress={() => go('/accounting/expenses')} />

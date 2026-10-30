@@ -13,6 +13,7 @@ import {
   validateJobsite,
   startDateError,
   validatePay,
+  payKindsFor,
   visitsPerMonth,
   type Jobsite,
 } from './clientRules';
@@ -51,7 +52,10 @@ describe('Pago por jobsite (D-059, D-061, D-096, D-100, D-210)', () => {
   const base = emptyPayForm(today, formatUsDate);
   it('mínimo de $15.00 solo para W-2 por hora', () => {
     expect(validatePay({ ...base, hourlyRate: '14.99' }, 'w2', today)).toEqual({ hourlyRate: 'minWage' });
-    expect(validatePay({ ...base, hourlyRate: '14.99' }, '1099', today)).toEqual({});
+    // D-276: un 1099 no tiene pago por hora.
+    expect(validatePay({ ...base, hourlyRate: '14.99' }, '1099', today)).toEqual({ fixedAmount: true });
+    expect(payKindsFor('1099')).toEqual(['fixed']);
+    expect(payKindsFor('w2')).toEqual(['hourly', 'fixed']);
     expect(validatePay({ ...base, hourlyRate: '15' }, 'w2', today)).toEqual({});
     expect(validatePay({ ...base, kind: 'fixed', fixedAmount: '10' }, 'w2', today)).toEqual({});
   });

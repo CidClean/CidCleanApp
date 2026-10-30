@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppButton } from '../AppButton';
+import { AppField } from '../AppField';
 import { AppText } from '../AppText';
 import { Card } from '../bento/Card';
 import { Chip } from '../Chip';
@@ -11,7 +12,10 @@ import { Sheet } from '../Sheet';
 import { ClockField, clockOf } from './ClockField';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useStrings } from '@/i18n/useStrings';
+import { useServiceDaysStrings } from '@/i18n/useServiceDaysStrings';
 import { useWorkStrings } from '@/i18n/useWorkStrings';
+import { money, parseMoney } from '@/lib/accountingRules';
+import { approveServiceDay, editServiceDayAmount, recordAndApproveServiceDay, returnServiceDay } from '@/lib/serviceDays';
 import { dateFromKey, formatShortDate } from '@/lib/leadRules';
 import {
   approveVisit,
@@ -47,18 +51,27 @@ type Props = {
  * (con confirmación, D-200); "+ Agregar persona" (cualquier empleado activo, también el sustituto) y "Approve" de la
  * visita. Aviso ámbar si la persona no tiene pago asignado ese día (D-200). En una visita aprobada solo el Super Admin
  * sigue viendo Edit, No show y Agregar persona (D-262). La usan "To approve" y el detalle de la visita.
+ * Los 1099 (D-286 (3)): quien marcó, "Aprobar" · "Devolver" (nota obligatoria); quien no marcó o no tiene acceso,
+ * ficha "Sin acceso a la app" y "Registrar y aprobar" · "No show"; "Editar monto" para casos especiales (D-276).
  */
 export function VisitApprovalCard({ card, onChanged, onError, onApproved }: Props) {
   const { colors } = useTheme();
   const strings = useStrings();
   const s = useSalesStrings();
   const t = useWorkStrings();
+  const sd = useServiceDaysStrings();
   const { access } = usePermissions();
   const [editing, setEditing] = useState<Editing>(null);
   const [inTime, setInTime] = useState<Clock | null>(null);
   const [outTime, setOutTime] = useState<Clock | null>(null);
   const [noShow, setNoShow] = useState<WorkRow | null>(null);
-  const [adding, setAdding] = useState<{ id: string; name: string; hasPay: boolean }[] | null>(null);
+  const [adding, setAdding] = useState<{ id: string; name: string; hasPay: boolean; contractor: boolean }[] | null>(null);
+  const [returning, setReturning] = useState<WorkRow | null>(null);
+  const [returnNote, setReturnNote] = useState('');
+  const [amountFor, setAmountFor] = useState<WorkRow | null>(null);
+  const [amountText, setAmountText] = useState('');
+  const [amountNote, setAmountNote] = useState('');
+  const [dialogError, setDialogError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   // D-262: una visita aprobada solo la corrige el Super Admin.
@@ -67,8 +80,18 @@ export function VisitApprovalCard({ card, onChanged, onError, onApproved }: Prop
   const canEdit = open && can(access, 'work_editar');
   const end = new Date(card.startsAt.getTime() + card.minutes * 60000);
 
+  const canApprove = can(access, 'work_aprobar');
+  const seesPay = can(access, 'empleados_ver_pagos');
+  const canAmount = (r: WorkRow) =>
+    !!r.serviceDay && can(access, 'work_editar') && seesPay && (r.serviceDay.status !== 'approved' || access.isSuperAdmin);
+  const hasW2 = card.rows.some((r) => !r.contractor);
+
   const failText = (r: WorkFailure) =>
-    r === 'open_shift' ? t.errorOpen : r === 'gps_pending' ? t.errorGps : r === 'missing_time' ? t.errorMissing : r === 'no_work' ? t.errorNoWork : t.errorSave;
+    r === 'service_days_pending'
+      ? sd.errorPendingDays
+      : r === 'already_approved'
+        ? sd.errorApproved
+        : r === 'open_shift' ? t.errorOpen : r === 'gps_pending' ? t.errorGps : r === 'missing_time' ? t.errorMissing : r === 'no_work' ? t.errorNoWork : t.errorSave;
 
   async function run(action: () => Promise<{ ok: boolean; reason?: WorkFailure }>) {
     setBusy(true);
@@ -95,6 +118,42 @@ export function VisitApprovalCard({ card, onChanged, onError, onApproved }: Prop
     await run(() =>
       e.entryId ? editWorkEntry(e.entryId, cin, cout) : recordWork(card.id, [{ profileId: e.profileId, clockIn: cin, clockOut: cout }]),
     );
+  }
+
+  function openReturn(r: WorkRow) {
+    setReturning(r);
+    setReturnNote('');
+    setDialogError(null);
+  }
+
+  async function sendReturn() {
+    const r = returning;
+    if (!r?.serviceDay) return;
+    if (!returnNote.trim()) {
+      setDialogError(sd.noteRequired);
+      return;
+    }
+    setReturning(null);
+    await run(() => returnServiceDay(r.serviceDay?.id as string, returnNote.trim()));
+  }
+
+  function openAmount(r: WorkRow) {
+    setAmountFor(r);
+    const cur = r.serviceDay?.amount ?? r.serviceDay?.expectedAmount;
+    setAmountText(cur === null || cur === undefined ? '' : cur.toFixed(2));
+    setAmountNote('');
+    setDialogError(null);
+  }
+
+  async function sendAmount() {
+    const r = amountFor;
+    const amount = parseMoney(amountText);
+    if (!r?.serviceDay || amount === null || !amountNote.trim()) {
+      setDialogError(sd.amountInvalid);
+      return;
+    }
+    setAmountFor(null);
+    await run(() => editServiceDayAmount(r.serviceDay?.id as string, amount, amountNote.trim()));
   }
 
   async function openAdd() {
@@ -142,7 +201,65 @@ export function VisitApprovalCard({ card, onChanged, onError, onApproved }: Prop
         {card.approved ? <Chip label={t.approved} tone="success" /> : card.urgent ? <Chip label={t.urgent} tone="warning" /> : null}
       </View>
 
-      {card.rows.map((r) => (
+      {card.rows.map((r) =>
+        r.contractor ? (
+          <View key={r.profileId} style={[styles.row, { borderBottomColor: colors.border }]}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <AppText weight="bold">{r.name}</AppText>
+              <View style={styles.chips}>
+                {r.serviceDay?.status === 'approved' ? <Chip label={sd.approved} tone="success" /> : null}
+                {r.serviceDay?.status === 'needs_correction' ? <Chip label={sd.needsCorrection} tone="warning" /> : null}
+                {!r.serviceDay && !r.hasAppAccess ? <Chip label={sd.noAccess} tone="warning" /> : null}
+                {r.unscheduled ? <Chip label={t.unscheduled} tone="warning" /> : null}
+                {r.serviceDay?.amountEdited ? <Chip label={sd.editedChip} tone="neutral" /> : null}
+              </View>
+              <AppText size={12} color={colors.secondary}>
+                {r.serviceDay?.selfMarked && r.serviceDay.markedAt
+                  ? sd.markedAt(formatTime(r.serviceDay.markedAt))
+                  : r.serviceDay
+                    ? ''
+                    : r.hasAppAccess
+                      ? sd.notMarked
+                      : sd.scheduled}
+              </AppText>
+              {r.serviceDay?.status === 'needs_correction' && r.serviceDay.note ? (
+                <AppText size={12} color={colors.attentionText}>
+                  {r.serviceDay.note}
+                </AppText>
+              ) : null}
+              {seesPay && r.serviceDay && (r.serviceDay.amount ?? r.serviceDay.expectedAmount) !== null ? (
+                <AppText size={12} color={colors.secondary}>
+                  {money(r.serviceDay.amount ?? r.serviceDay.expectedAmount)}
+                </AppText>
+              ) : null}
+              {!r.hasPay ? (
+                <View style={[styles.warn, { backgroundColor: colors.attention }]}>
+                  <AppText size={12} weight="bold" color={colors.attentionText}>
+                    {t.noPay}
+                  </AppText>
+                </View>
+              ) : null}
+            </View>
+            <View style={[styles.actions, { flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '55%' }]}>
+              {r.serviceDay?.status === 'pending' && canApprove ? (
+                <>
+                  <ActionLink label={sd.approve} a11y={`${sd.approve} ${r.name}`} onPress={() => void run(() => approveServiceDay(r.serviceDay?.id as string))} />
+                  <ActionLink label={sd.giveBack} a11y={`${sd.giveBack} ${r.name}`} onPress={() => openReturn(r)} />
+                </>
+              ) : null}
+              {r.serviceDay?.status === 'approved' && canApprove && access.isSuperAdmin ? (
+                <ActionLink label={sd.giveBack} a11y={`${sd.giveBack} ${r.name}`} onPress={() => openReturn(r)} />
+              ) : null}
+              {!r.serviceDay && canRecord && canApprove ? (
+                <ActionLink label={sd.recordApprove} a11y={`${sd.recordApprove} ${r.name}`} onPress={() => void run(() => recordAndApproveServiceDay(card.id, r.profileId))} />
+              ) : null}
+              {canAmount(r) ? <ActionLink label={sd.editAmount} a11y={`${sd.editAmount} ${r.name}`} onPress={() => openAmount(r)} /> : null}
+              {canRecord && (r.serviceDay?.status !== 'approved' || access.isSuperAdmin) ? (
+                <ActionLink label={t.rowNoShow} a11y={`${t.rowNoShow} ${r.name}`} onPress={() => setNoShow(r)} />
+              ) : null}
+            </View>
+          </View>
+        ) : (
         <View key={r.profileId} style={[styles.row, { borderBottomColor: colors.border }]}>
           <View style={{ flex: 1, gap: 2 }}>
             <AppText weight="bold">{r.name}</AppText>
@@ -195,7 +312,8 @@ export function VisitApprovalCard({ card, onChanged, onError, onApproved }: Prop
             ) : null}
           </View>
         </View>
-      ))}
+        ),
+      )}
 
       {card.noShow.length > 0 ? (
         <View style={{ gap: 4, paddingTop: 6 }}>
@@ -224,7 +342,7 @@ export function VisitApprovalCard({ card, onChanged, onError, onApproved }: Prop
         </Pressable>
       ) : null}
 
-      {!card.approved && can(access, 'work_aprobar') ? (
+      {!card.approved && canApprove && hasW2 ? (
         <AppButton label={t.approveCard} onPress={() => void approve()} disabled={busy || card.rows.length === 0} />
       ) : null}
 
@@ -259,7 +377,9 @@ export function VisitApprovalCard({ card, onChanged, onError, onApproved }: Prop
             accessibilityRole="button"
             onPress={() => {
               setAdding(null);
-              openEdit({ profileId: p.id, name: p.name, entryId: null, clockIn: null, clockOut: null });
+              // D-275: al 1099 no se le registran horas; se registra y aprueba su día.
+              if (p.contractor) void run(() => recordAndApproveServiceDay(card.id, p.id));
+              else openEdit({ profileId: p.id, name: p.name, entryId: null, clockIn: null, clockOut: null });
             }}
             style={[styles.pick, { borderBottomColor: colors.border }]}
           >
@@ -272,6 +392,37 @@ export function VisitApprovalCard({ card, onChanged, onError, onApproved }: Prop
           </Pressable>
         ))}
       </Sheet>
+
+      <Dialog visible={returning !== null} onClose={() => setReturning(null)}>
+        <AppText weight="heavy" size={sample.headingSize} style={{ marginBottom: 6 }}>
+          {sd.returnTitle}
+        </AppText>
+        <AppField label={sd.returnNote} value={returnNote} onChangeText={setReturnNote} multiline error={dialogError ?? undefined} />
+        <View style={styles.buttons}>
+          <View style={{ flex: 1 }}>
+            <AppButton label={strings.common.cancel} variant="outline" onPress={() => setReturning(null)} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <AppButton label={sd.giveBack} disabled={busy} onPress={() => void sendReturn()} />
+          </View>
+        </View>
+      </Dialog>
+
+      <Dialog visible={amountFor !== null} onClose={() => setAmountFor(null)}>
+        <AppText weight="heavy" size={sample.headingSize} style={{ marginBottom: 6 }}>
+          {amountFor ? sd.editAmountTitle(amountFor.name) : ''}
+        </AppText>
+        <AppField label={sd.amountLabel} value={amountText} onChangeText={setAmountText} keyboardType="decimal-pad" />
+        <AppField label={sd.amountNote} value={amountNote} onChangeText={setAmountNote} error={dialogError ?? undefined} />
+        <View style={styles.buttons}>
+          <View style={{ flex: 1 }}>
+            <AppButton label={strings.common.cancel} variant="outline" onPress={() => setAmountFor(null)} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <AppButton label={t.save} disabled={busy} onPress={() => void sendAmount()} />
+          </View>
+        </View>
+      </Dialog>
 
       <Dialog visible={noShow !== null} onClose={() => setNoShow(null)}>
         <AppText weight="heavy" size={sample.headingSize} style={{ marginBottom: 6 }}>
@@ -298,6 +449,17 @@ export function VisitApprovalCard({ card, onChanged, onError, onApproved }: Prop
         </View>
       </Dialog>
     </Card>
+  );
+}
+
+function ActionLink({ label, a11y, onPress }: { label: string; a11y: string; onPress: () => void }) {
+  const { colors } = useTheme();
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={a11y} onPress={onPress} hitSlop={8}>
+      <AppText size={13} weight="heavy" color={colors.brandText}>
+        {label}
+      </AppText>
+    </Pressable>
   );
 }
 

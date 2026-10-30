@@ -11,6 +11,7 @@ import { Segmented } from '@/components/Segmented';
 import { Sheet } from '@/components/Sheet';
 import { SignOutDialog } from '@/components/SignOutDialog';
 import { TopBar } from '@/components/TopBar';
+import { useServiceDaysStrings } from '@/i18n/useServiceDaysStrings';
 import { useStrings } from '@/i18n/useStrings';
 import { useNotificationsStrings } from '@/i18n/useNotificationsStrings';
 import { showsMyDocuments } from '@/lib/myDocuments';
@@ -27,6 +28,7 @@ export default function ProfileScreen() {
   const nt = useNotificationsStrings();
   const goBack = useGoBack();
   const strings = useStrings();
+  const sd = useServiceDaysStrings();
   const { profile, locale, setLanguage } = useSession();
   const theme = useThemePreference();
   const [pickingTheme, setPickingTheme] = useState(false);
@@ -82,9 +84,13 @@ export default function ProfileScreen() {
           <Icon name="chevron-right" size={18} strokeWidth={iconStrokeWidth} color={colors.text} />
         </Pressable>
         </CardBlock>
-        {/* D-272, D-274: Mis horas para todos los empleados; la fila está aquí y en el Inicio del staff (D-200). */}
+        {/* D-274, D-279: Mis horas solo para W-2; el 1099 ve Mis días de servicio. También en el Inicio del staff (D-200). */}
         <CardBlock>
-          <ListRow title={strings.myHours.title} detail={strings.myHours.rowDetail} chevron last onPress={() => router.push('/my-hours')} />
+          {profile?.workerType === '1099' ? (
+            <ListRow title={sd.title} detail={sd.rowDetail} chevron last onPress={() => router.push('/my-service-days')} />
+          ) : (
+            <ListRow title={strings.myHours.title} detail={strings.myHours.rowDetail} chevron last onPress={() => router.push('/my-hours')} />
+          )}
         </CardBlock>
         {/* D-263, D-271: los documentos propios del 1099. */}
         {profile && showsMyDocuments(profile) ? <MyDocuments profileId={profile.id} strings={strings} locale={locale} /> : null}

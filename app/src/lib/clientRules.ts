@@ -233,6 +233,11 @@ export function emptyPayForm(today: Date, us: (key: string) => string): PayForm 
   return { kind: 'hourly', hourlyRate: '', guaranteedHours: '', fixedPeriod: 'visit', fixedAmount: '', from: us(dayKey(today)) };
 }
 
+/** D-276: al 1099 no se le paga por hora; solo fijo (por visita = por día de servicio, por semana o por mes). */
+export function payKindsFor(workerType: 'w2' | '1099' | null): PayKind[] {
+  return workerType === '1099' ? ['fixed'] : ['hourly', 'fixed'];
+}
+
 export type PayErrors = { hourlyRate?: 'invalid' | 'minWage'; guaranteedHours?: true; fixedAmount?: true; from?: 'invalid' | 'past' };
 
 /**
@@ -247,7 +252,8 @@ export function startDateError(key: string | null, today: Date, legacy: boolean)
 
 export function validatePay(f: PayForm, workerType: 'w2' | '1099' | null, today: Date, legacy = false): PayErrors {
   const e: PayErrors = {};
-  if (f.kind === 'hourly') {
+  if (f.kind === 'hourly' && workerType === '1099') e.fixedAmount = true; // D-276: nunca por hora
+  else if (f.kind === 'hourly') {
     const rate = parseMoney(f.hourlyRate);
     if (rate === null) e.hourlyRate = 'invalid';
     // D-096: Guardar queda activo; con menos de $15.00 un W-2 no guarda y ve el error bajo el campo.

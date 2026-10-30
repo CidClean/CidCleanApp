@@ -250,7 +250,15 @@ export function recurringLine(r: { frequency: RecurringFrequency; day: number; m
 
 // --- Personal (D-067) ------------------------------------------------------------------------------------------
 
-export type StaffGroup = { key: string; name: string; minutes: number; amount: number; detail: { key: string; name: string; minutes: number; amount: number }[] };
+/** `days`: días de servicio aprobados de los 1099 (D-275), que no tienen horas. */
+export type StaffGroup = {
+  key: string;
+  name: string;
+  minutes: number;
+  days: number;
+  amount: number;
+  detail: { key: string; name: string; minutes: number; days: number; amount: number }[];
+};
 
 /** Agrupa lo que se debe por empleado o por jobsite (D-067), con el detalle del otro lado. */
 export function groupStaff(rows: readonly StaffCost[], by: 'employee' | 'jobsite', monthLabel: (m: string) => string | null): StaffGroup[] {
@@ -259,20 +267,22 @@ export function groupStaff(rows: readonly StaffCost[], by: 'employee' | 'jobsite
       key: r.profileId,
       name: r.name,
       minutes: r.minutes,
+      days: r.days ?? 0,
       amount: r.amount,
       detail: r.jobsites.map((j) => {
         const m = monthLabel(j.month);
-        return { key: `${j.jobsiteId}-${j.month}`, name: m ? `${j.jobsite} · ${m}` : j.jobsite, minutes: j.minutes, amount: j.amount };
+        return { key: `${j.jobsiteId}-${j.month}`, name: m ? `${j.jobsite} · ${m}` : j.jobsite, minutes: j.minutes, days: j.days ?? 0, amount: j.amount };
       }),
     }));
   const map = new Map<string, StaffGroup>();
   for (const r of rows)
     for (const j of r.jobsites) {
-      const g: StaffGroup = map.get(j.jobsiteId) ?? { key: j.jobsiteId, name: j.jobsite, minutes: 0, amount: 0, detail: [] };
+      const g: StaffGroup = map.get(j.jobsiteId) ?? { key: j.jobsiteId, name: j.jobsite, minutes: 0, days: 0, amount: 0, detail: [] };
       g.minutes += j.minutes;
+      g.days += j.days ?? 0;
       g.amount = Math.round((g.amount + j.amount) * 100) / 100;
       const m = monthLabel(j.month);
-      g.detail.push({ key: `${r.profileId}-${j.month}`, name: m ? `${r.name} · ${m}` : r.name, minutes: j.minutes, amount: j.amount });
+      g.detail.push({ key: `${r.profileId}-${j.month}`, name: m ? `${r.name} · ${m}` : r.name, minutes: j.minutes, days: j.days ?? 0, amount: j.amount });
       map.set(j.jobsiteId, g);
     }
   return [...map.values()].sort((x, y) => x.name.localeCompare(y.name));

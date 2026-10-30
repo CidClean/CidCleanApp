@@ -18,6 +18,13 @@ export type WorkFailure =
   | 'missing_time'
   | 'no_time'
   | 'no_day'
+  | 'location_required'
+  | 'contractor_no_hours'
+  | 'note_required'
+  | 'needs_correction'
+  | 'service_days_pending'
+  | 'already_approved'
+  | 'not_yet'
   | 'not_found'
   | 'network'
   | 'server';
@@ -30,15 +37,16 @@ function isNetwork(e: unknown): boolean {
 
 export function workFailure(code: string | undefined, message: string | undefined): { reason: WorkFailure; detail?: string } {
   const m = message ?? '';
+  if (m.startsWith('contractor_no_hours')) return { reason: 'contractor_no_hours' };
   if (code === '42501') return { reason: 'forbidden' };
   if (code === 'P0002') return { reason: 'not_found' };
   if (m.startsWith('over_32:')) return { reason: 'over_32', detail: m.slice(8) };
-  for (const k of ['already_in', 'not_today', 'open_shift', 'gps_pending', 'no_work', 'missing_time', 'no_time', 'no_day'] as const) if (m.startsWith(k)) return { reason: k };
+  for (const k of ['already_in', 'not_today', 'open_shift', 'gps_pending', 'no_work', 'missing_time', 'no_time', 'no_day', 'location_required', 'note_required', 'needs_correction', 'service_days_pending', 'already_approved', 'not_yet'] as const) if (m.startsWith(k)) return { reason: k };
   if (code === '22023' || code === '22P02' || code === '22008' || code === '23514') return { reason: 'invalid' };
   return { reason: 'server' };
 }
 
-async function rpc<T>(fn: string, args: Record<string, unknown>, map: (d: unknown) => T = (d) => d as T): Promise<WorkResult<T>> {
+export async function rpc<T>(fn: string, args: Record<string, unknown>, map: (d: unknown) => T = (d) => d as T): Promise<WorkResult<T>> {
   try {
     const { data, error } = await supabase.rpc(fn, args);
     if (error) {
@@ -130,7 +138,10 @@ export type MyVisit = {
   minutes: number;
   scheduled: boolean;
   entry: { id: string; clockIn: Date; clockOut: Date | null } | null;
+  /** Día de servicio del 1099 en esta visita (D-275); los 1099 no tienen `entry`. */
+  serviceDay?: { id: string; status: ServiceDayStatus; note: string | null } | null;
 };
+export type ServiceDayStatus = 'pending' | 'needs_correction' | 'approved';
 
 export const fetchMySchedule = () =>
   rpc('my_schedule', {}, (d) =>
@@ -143,6 +154,7 @@ export const fetchMySchedule = () =>
       minutes: number;
       scheduled: boolean;
       entry: { id: string; clock_in: string; clock_out: string | null } | null;
+      service_day?: { id: string; status: ServiceDayStatus; note: string | null } | null;
     }[]).map<MyVisit>((r) => ({
       id: r.id,
       jobsite: r.jobsite,
@@ -152,6 +164,7 @@ export const fetchMySchedule = () =>
       minutes: r.minutes,
       scheduled: r.scheduled,
       entry: r.entry ? { id: r.entry.id, clockIn: new Date(r.entry.clock_in), clockOut: r.entry.clock_out ? new Date(r.entry.clock_out) : null } : null,
+      serviceDay: r.service_day ? { id: r.service_day.id, status: r.service_day.status, note: r.service_day.note ?? null } : null,
     })),
   );
 
@@ -175,7 +188,9 @@ export const clockOut = (p: { entryId: string; at: Date; lat: number | null; lng
 // --- Work: registro por otros, revisión y aprobación ----------------------------------------------------------
 
 /** Estado de una fila de "To approve" (D-266): missing = programado sin registro. */
-export type WorkRowStatus = 'ok' | 'auto' | 'manual' | 'gps' | 'offline' | 'unscheduled' | 'missing';
+/** day_* = fila de un 1099 (D-286): sin día, pendiente, requiere corrección o aprobado. */
+export type WorkRowStatus = 'ok' | 'auto' | 'manual' | 'gps' | 'offline' | 'unscheduled' | 'missing' | 'day_missing' | 'day_pending' | 'day_correction' | 'day_approved';
+export type RowServiceDay = { id: string; status: ServiceDayStatus; note: string | null; markedAt: Date | null; selfMarked: boolean; amount: number | null; amountEdited: boolean; expectedAmount: number | null };
 export type EntryStatus = 'ok' | 'out_of_range' | 'no_location' | 'manual' | 'auto';
 export type WorkRow = {
   profileId: string;
@@ -194,6 +209,8 @@ export type WorkRow = {
   gpsReviewed: boolean;
   hasAppAccess: boolean;
   hasPay: boolean;
+  contractor: boolean;
+  serviceDay: RowServiceDay | null;
 };
 /** Tarjeta de una visita (D-266): cuenta · fecha y una fila por persona (programados sin No show ∪ registros). */
 export type VisitCard = {
@@ -205,6 +222,8 @@ export type VisitCard = {
   startsAt: Date;
   minutes: number;
   approved: boolean;
+  /** Queda parte W-2 por aprobar con "Approve" (los 1099 se aprueban uno por uno). */
+  w2Pending: boolean;
   ended: boolean;
   urgent: boolean;
   rows: WorkRow[];
@@ -228,6 +247,17 @@ type RawRow = {
   gps_reviewed: boolean;
   has_app_access: boolean;
   has_pay: boolean;
+  worker_type?: string | null;
+  service_day?: {
+    id: string;
+    status: ServiceDayStatus;
+    note: string | null;
+    marked_at: string | null;
+    self_marked: boolean | null;
+    amount: number | string | null;
+    amount_edited: boolean;
+    expected_amount: number | string | null;
+  } | null;
 };
 type RawCard = {
   id: string;
@@ -238,6 +268,7 @@ type RawCard = {
   starts_at: string;
   minutes: number;
   approved: boolean;
+  w2_pending?: boolean;
   ended: boolean;
   urgent: boolean;
   rows: RawRow[] | null;
@@ -254,6 +285,7 @@ export function mapVisitCard(r: RawCard): VisitCard {
     startsAt: new Date(r.starts_at),
     minutes: r.minutes,
     approved: r.approved,
+    w2Pending: r.w2_pending ?? !r.approved,
     ended: r.ended,
     urgent: r.urgent,
     rows: (r.rows ?? []).map<WorkRow>((e) => ({
@@ -273,6 +305,19 @@ export function mapVisitCard(r: RawCard): VisitCard {
       gpsReviewed: e.gps_reviewed,
       hasAppAccess: e.has_app_access,
       hasPay: e.has_pay,
+      contractor: e.worker_type === '1099',
+      serviceDay: e.service_day
+        ? {
+            id: e.service_day.id,
+            status: e.service_day.status,
+            note: e.service_day.note ?? null,
+            markedAt: e.service_day.marked_at ? new Date(e.service_day.marked_at) : null,
+            selfMarked: !!e.service_day.self_marked,
+            amount: e.service_day.amount === null || e.service_day.amount === undefined ? null : Number(e.service_day.amount),
+            amountEdited: !!e.service_day.amount_edited,
+            expectedAmount: e.service_day.expected_amount === null || e.service_day.expected_amount === undefined ? null : Number(e.service_day.expected_amount),
+          }
+        : null,
     })),
     noShow: (r.no_show ?? []).map((p) => ({ profileId: p.profile_id, name: p.name })),
   };
@@ -286,7 +331,12 @@ export const undoNoShow = (visitId: string, profileId: string) => rpc('undo_no_s
 /** "+ Agregar persona" (D-266 (3)): cualquier empleado activo que aún no está en la visita. */
 export const fetchAddableStaff = (visitId: string) =>
   rpc('work_addable_staff', { p_visit: visitId }, (d) =>
-    ((d ?? []) as { id: string; name: string; has_pay: boolean }[]).map((p) => ({ id: p.id, name: p.name, hasPay: p.has_pay })),
+    ((d ?? []) as { id: string; name: string; has_pay: boolean; worker_type?: string | null }[]).map((p) => ({
+      id: p.id,
+      name: p.name,
+      hasPay: p.has_pay,
+      contractor: p.worker_type === '1099',
+    })),
   );
 
 export const recordWork = (visitId: string, rows: { profileId: string; clockIn: Date; clockOut: Date | null }[]) =>

@@ -268,8 +268,8 @@ export function saveRecurring(r: Omit<Recurring, 'id' | 'categoryEs' | 'category
   );
 }
 
-export type StaffCostJobsite = { jobsiteId: string; jobsite: string; month: string; minutes: number; amount: number };
-export type StaffCost = { profileId: string; name: string; workerType: string | null; minutes: number; amount: number; jobsites: StaffCostJobsite[] };
+export type StaffCostJobsite = { jobsiteId: string; jobsite: string; month: string; minutes: number; days?: number; amount: number };
+export type StaffCost = { profileId: string; name: string; workerType: string | null; minutes: number; days?: number; amount: number; jobsites: StaffCostJobsite[] };
 
 export function fetchStaffCost(p: Period, jobsiteId: string | null = null): Promise<ApiResult<StaffCost[]>> {
   return rpc('staff_cost', { ...range(p), p_jobsite: jobsiteId }, (d) =>
@@ -278,12 +278,14 @@ export function fetchStaffCost(p: Period, jobsiteId: string | null = null): Prom
       name: String(r.name ?? ''),
       workerType: (r.worker_type as string | null) ?? null,
       minutes: n(r.minutes),
+      days: n(r.days),
       amount: n(r.amount),
       jobsites: ((r.jobsites ?? []) as Record<string, unknown>[]).map((j) => ({
         jobsiteId: String(j.jobsite_id),
         jobsite: String(j.jobsite ?? ''),
         month: String(j.month),
         minutes: n(j.minutes),
+        days: n(j.days),
         amount: n(j.amount),
       })),
     })),

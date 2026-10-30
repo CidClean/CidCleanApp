@@ -16,6 +16,7 @@ import { useStrings } from '@/i18n/useStrings';
 import {
   canSetPay,
   emptyPayForm,
+  payKindsFor,
   hasPayErrors,
   parseHours,
   payExplanation,
@@ -44,11 +45,16 @@ export default function PayScreen() {
   const c = useClientsStrings();
   const { access } = usePermissions();
   const today = useMemo(() => new Date(), []);
-  const [form, setForm] = useState<PayForm>(() => emptyPayForm(today, formatUsDate));
+  const workerType = params.workerType === 'w2' || params.workerType === '1099' ? params.workerType : null;
+  // D-276: a un 1099 solo se le ofrece tarifa fija (por visita = por día de servicio, por semana o por mes).
+  const kinds = payKindsFor(workerType);
+  const [form, setForm] = useState<PayForm>(() => {
+    const f = emptyPayForm(today, formatUsDate);
+    return kinds.includes(f.kind) ? f : { ...f, kind: 'fixed' };
+  });
   const [errors, setErrors] = useState<PayErrors>({});
   const [failed, setFailed] = useState(false);
   const [saving, setSaving] = useState(false);
-  const workerType = params.workerType === 'w2' || params.workerType === '1099' ? params.workerType : null;
   // D-241: en jobsites de clientes previos el pago puede empezar en una fecha pasada.
   const [legacySite, setLegacy] = useState(false);
   // D-244: el Super Admin puede poner una fecha pasada en cualquier jobsite.
@@ -68,7 +74,8 @@ export default function PayScreen() {
       if (!p) return;
       setForm((f) => ({
         ...f,
-        kind: p.kind,
+        // Un pago por hora guardado antes (D-276) se muestra como fijo para un 1099.
+        kind: kinds.includes(p.kind) ? p.kind : 'fixed',
         hourlyRate: p.hourlyRate === null ? '' : String(p.hourlyRate),
         guaranteedHours: p.guaranteedHours === null ? '' : String(p.guaranteedHours),
         fixedPeriod: p.fixedPeriod ?? 'visit',
@@ -107,14 +114,16 @@ export default function PayScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={c.pay.title(params.jobsite ?? '')} onBack={goBack} backLabel={strings.common.back} />
       <FormScroll contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
-        <Segmented
-          options={[
-            { value: 'hourly', label: c.pay.hourly },
-            { value: 'fixed', label: c.pay.fixed },
-          ]}
-          value={form.kind}
-          onChange={(k) => set('kind', k)}
-        />
+        {kinds.length > 1 ? (
+          <Segmented
+            options={[
+              { value: 'hourly', label: c.pay.hourly },
+              { value: 'fixed', label: c.pay.fixed },
+            ]}
+            value={form.kind}
+            onChange={(k) => set('kind', k)}
+          />
+        ) : null}
         {form.kind === 'hourly' ? (
           <>
             <AppField

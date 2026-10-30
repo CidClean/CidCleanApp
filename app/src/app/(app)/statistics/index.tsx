@@ -15,6 +15,7 @@ import { Pill } from '@/components/bento/Pill';
 import { BrandLoading } from '@/components/brand/BrandLoading';
 import { useAccountingStrings } from '@/i18n/useAccountingStrings';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
+import { useServiceDaysStrings } from '@/i18n/useServiceDaysStrings';
 import { useStatisticsStrings } from '@/i18n/useStatisticsStrings';
 import { useStrings } from '@/i18n/useStrings';
 import { money, monthTitle, periodTitle, type Period } from '@/lib/accountingRules';
@@ -378,6 +379,7 @@ function ShiftsCard({
 function EmployeeCard({ e, onAbsence }: { e: EmployeeStats; onAbsence: ((a: Absence) => void) | null }) {
   const { colors } = useTheme();
   const s = useStatisticsStrings();
+  const sd = useServiceDaysStrings();
   const dayText = useAbsenceDay();
   const punctual = punctualityPct(e);
   const used = usedPct(e);
@@ -393,14 +395,23 @@ function EmployeeCard({ e, onAbsence }: { e: EmployeeStats; onAbsence: ((a: Abse
         {e.workerType === '1099' ? '1099' : 'W-2'}
       </AppText>
       <KRow first left={s.shiftsShort} right={s.shiftsOf(e.scheduledWorked, e.scheduled)} />
-      <KRow left={s.workedHours} right={hours(e.workedMinutes)} />
-      <KRow left={s.paidHours} right={hours(e.paidMinutes)} />
-      <KRow
-        left={s.unworked}
-        right={`${hours(e.unworkedMinutes)} · ${money(e.unworkedAmount)}${used === null ? '' : ` · ${s.usedChip(pct(used))}`}`}
-      />
+      {/* D-275: el 1099 cuenta días de servicio aprobados en lugar de horas y puntualidad. */}
+      {e.workerType === '1099' ? (
+        <KRow left={sd.title} right={sd.days(e.serviceDays)} />
+      ) : (
+        <>
+          <KRow left={s.workedHours} right={hours(e.workedMinutes)} />
+          <KRow left={s.paidHours} right={hours(e.paidMinutes)} />
+          <KRow
+            left={s.unworked}
+            right={`${hours(e.unworkedMinutes)} · ${money(e.unworkedAmount)}${used === null ? '' : ` · ${s.usedChip(pct(used))}`}`}
+          />
+        </>
+      )}
       <KRow left={s.cost} right={money(e.cost)} />
-      <KRow left={s.punctuality} right={punctual === null ? '—' : `${pct(punctual)}% · ${e.punctualOnTime}/${e.punctualSelf}`} />
+      {e.workerType === '1099' ? null : (
+        <KRow left={s.punctuality} right={punctual === null ? '—' : `${pct(punctual)}% · ${e.punctualOnTime}/${e.punctualSelf}`} />
+      )}
       {e.absences.map((x) => (
         <KRow
           key={`${x.visitId}-${x.profileId}`}
