@@ -8,6 +8,7 @@
 // Este archivo no contiene llaves.
 import { clienteDeServicio } from '../_shared/comun.ts';
 import { codigo, enviarCorreo, sha256, tokenAleatorio } from '../_shared/quotes.ts';
+import { cifrar, claveW9 } from '../_shared/cifrado.ts';
 import {
   agregarCertificado, base64, correoCodigoW9, fillW9, FORM_VERSION, REMITENTE_W9, REQUESTER, sha256Bytes, tinValid, type TinType, type W9Data,
 } from '../_shared/w9.ts';
@@ -143,8 +144,15 @@ Deno.serve(async (req) => {
         tin = null;
       }
       // Un archivo por intento (nunca se pisa ni se borra el PDF de una firma que sí quedó).
-      const path = `${c.path_prefix as string}-${tokenAleatorio(12)}.pdf`;
-      const up = await db.storage.from(BUCKET).upload(path, pdf, { contentType: 'application/pdf', upsert: false });
+      // D-280: el W-9 firmado se guarda cifrado (AES-256-GCM, W9_FILE_KEY); solo open-document/w9-file lo abren.
+      const path = `${c.path_prefix as string}-${tokenAleatorio(12)}.pdf.enc`;
+      let cifrado: Uint8Array;
+      try {
+        cifrado = await cifrar(await claveW9(Deno.env.get('W9_FILE_KEY')), pdf);
+      } catch {
+        return r(500, { error: 'server_error' });
+      }
+      const up = await db.storage.from(BUCKET).upload(path, cifrado, { contentType: 'application/pdf', upsert: false });
       if (up.error) return r(500, { error: 'server_error' });
       const { data: s, error: e2 } = await db.rpc('w9_portal_sign', {
         p_session_hash: sessionHash, p_data: c.data, p_tin_type: tinType, p_signer_name: signer, p_agreed: true,

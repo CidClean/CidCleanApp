@@ -37,24 +37,32 @@ describe('subir un documento (D-183)', () => {
     const order: string[] = [];
     mockUpload.mockImplementation(async () => (order.push('mockUpload'), { error: null }));
     mockRpc.mockImplementation(async () => (order.push('register'), { error: null }));
-    expect(await uploadDocument('p1', 'w9', file)).toEqual({ ok: true, data: null });
+    expect(await uploadDocument('p1', 'insurance_certificate', file)).toEqual({ ok: true, data: null });
     expect(order).toEqual(['mockUpload', 'register']);
     const [path, , options] = mockUpload.mock.calls[0];
-    expect(path).toMatch(/^p1\/w9\/[a-z0-9]+\.pdf$/);
+    expect(path).toMatch(/^p1\/insurance_certificate\/[a-z0-9]+\.pdf$/);
     expect(options).toEqual({ contentType: 'application/pdf' });
-    expect(mockRpc).toHaveBeenCalledWith('register_profile_document', { p_profile: 'p1', p_kind: 'w9', p_path: path });
+    expect(mockRpc).toHaveBeenCalledWith('register_profile_document', { p_profile: 'p1', p_kind: 'insurance_certificate', p_path: path });
   });
 
   test('si falla la subida no se registra nada', async () => {
     mockUpload.mockResolvedValue({ error: { message: 'x' } });
-    expect((await uploadDocument('p1', 'w9', file)).ok).toBe(false);
+    expect((await uploadDocument('p1', 'insurance_certificate', file)).ok).toBe(false);
     expect(mockRpc).not.toHaveBeenCalled();
   });
 
   test('sin permiso la base lo rechaza (42501)', async () => {
     mockUpload.mockResolvedValue({ error: null });
     mockRpc.mockResolvedValue({ error: { code: '42501' } });
-    expect(await uploadDocument('p1', 'w9', file)).toEqual({ ok: false, reason: 'forbidden' });
+    expect(await uploadDocument('p1', 'insurance_certificate', file)).toEqual({ ok: false, reason: 'forbidden' });
+  });
+
+  test('el W-9 no se sube directo: va a upload-w9, que lo cifra (D-280)', async () => {
+    mockInvoke.mockResolvedValue({ data: { document_id: 'd1' }, error: null });
+    expect(await uploadDocument('p1', 'w9', file)).toEqual({ ok: true, data: null });
+    expect(mockUpload).not.toHaveBeenCalled();
+    expect(mockRpc).not.toHaveBeenCalled();
+    expect(mockInvoke).toHaveBeenCalledWith('upload-w9', { body: { profile_id: 'p1', mime_type: 'application/pdf', file: 'AAAAAA==' } });
   });
 });
 

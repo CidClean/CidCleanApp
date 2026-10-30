@@ -41,11 +41,28 @@ export function documentPath(profileId: string, kind: DocumentKind, file: Picked
   return `${profileId}/${kind}/${name}.${extensionFor(file.mimeType, file.name)}`;
 }
 
-/** Sube el archivo al bucket y lo registra como el documento vigente (el anterior queda reemplazado). */
+/** Bytes a base64 sin Buffer (Hermes y la web tienen btoa). */
+export function bytesToBase64(bytes: Uint8Array): string {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+/**
+ * Sube el archivo al bucket y lo registra como el documento vigente (el anterior queda reemplazado).
+ * D-280: el W-9 no se sube directo: pasa por la Edge Function upload-w9, que lo cifra antes de guardarlo.
+ */
 export async function uploadDocument(profileId: string, kind: DocumentKind, file: PickedFile): Promise<ApiResult<null>> {
   try {
-    const path = documentPath(profileId, kind, file);
     const bytes = await (await fetch(file.uri)).arrayBuffer();
+    if (kind === 'w9') {
+      const { error } = await supabase.functions.invoke('upload-w9', {
+        body: { profile_id: profileId, mime_type: file.mimeType ?? 'application/pdf', file: bytesToBase64(new Uint8Array(bytes)) },
+      });
+      if (error) return { ok: false, reason: await functionFailure(error) };
+      return { ok: true, data: null };
+    }
+    const path = documentPath(profileId, kind, file);
     const upload = await supabase.storage.from(BUCKET).upload(path, bytes, {
       contentType: file.mimeType ?? 'application/octet-stream',
     });
@@ -63,15 +80,28 @@ export async function uploadDocument(profileId: string, kind: DocumentKind, file
  * Edge Function open-document, que exige empleados_gestionar_documentos, registra quién y cuándo en el historial y
  * firma una URL de 60 s. El visor de la app la descarga a la caché privada y la lee ahí.
  */
-export async function fetchDocumentUrl(documentId: string): Promise<ApiResult<{ url: string }>> {
+export async function fetchDocumentUrl(documentId: string, action: 'open' | 'download' = 'open'): Promise<ApiResult<{ url: string }>> {
   try {
-    const { data, error } = await supabase.functions.invoke('open-document', { body: { document_id: documentId } });
+    // D-280: un W-9 cifrado vuelve como enlace de un solo uso de 60 s a w9-file, que lo entrega descifrado.
+    const { data, error } = await supabase.functions.invoke('open-document', {
+      body: action === 'download' ? { document_id: documentId, action } : { document_id: documentId },
+    });
     if (error) return { ok: false, reason: await functionFailure(error) };
     const url: unknown = data?.url;
     if (typeof url !== 'string') return { ok: false, reason: 'server' };
     return { ok: true, data: { url } };
   } catch {
     return { ok: false, reason: 'network' };
+  }
+}
+
+/** D-280: registra en el historial la descarga de un documento ya abierto en el visor (el W-9 al compartirlo). */
+export async function logDocumentDownload(documentId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase.rpc('open_profile_document', { doc_id: documentId, p_action: 'download' });
+    return !error;
+  } catch {
+    return false;
   }
 }
 

@@ -200,9 +200,9 @@ select pg_temp.prueba('revisar: datos no válidos o tipo de número desconocido'
   pg_temp.servicio($q$select w9_portal_check('sesion-1', '{"name":"","classification":"individual","address":"A","city":"B"}', 'ssn', 'K', true)::text$q$) || '|' ||
   pg_temp.servicio($q$select w9_portal_check('sesion-1', '{"name":"K","classification":"individual","address":"A","city":"B"}', 'passport', 'K', true)::text$q$));
 insert into fx (k, txt) select 'path', pg_temp.servicio($q$select w9_portal_check('sesion-1',
-  '{"name":"Karina M. López","business":"","classification":"individual","address":"1520 Golden Gate Pkwy","city":"Naples, FL 34109"}', 'ssn', 'Karina M. López', true)->>'path_prefix'$q$) || '-prueba1234.pdf';
+  '{"name":"Karina M. López","business":"","classification":"individual","address":"1520 Golden Gate Pkwy","city":"Naples, FL 34109"}', 'ssn', 'Karina M. López', true)->>'path_prefix'$q$) || '-prueba1234.pdf.enc';
 select pg_temp.prueba('revisar: la ruta del PDF va en la carpeta W-9 del empleado', 'true',
-  ((select txt from fx where k = 'path') like (select id from fx where k = 'karina')::text || '/w9/signed-%.pdf')::text);
+  ((select txt from fx where k = 'path') like (select id from fx where k = 'karina')::text || '/w9/signed-%.pdf.enc')::text);
 select pg_temp.prueba('firmar: sin el PDF subido no se firma', 'ERR:22023',
   pg_temp.servicio(format($q$select w9_portal_sign('sesion-1', '{"name":"Karina M. López","classification":"individual","address":"1520 Golden Gate Pkwy","city":"Naples, FL 34109"}',
     'ssn', 'Karina M. López', true, 'Form W-9 (Rev. March 2024)', %L, '1.2.3.4', 'Prueba')::text$q$, (select txt from fx where k = 'path'))));
