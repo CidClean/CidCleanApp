@@ -39,11 +39,11 @@ Registrado, sin construir. En este orden:
 2. D-265: correo de invitación con "Open Cid Clean" (web) y "Download for Android".
 3. D-261 y D-266: registro automático de quien no tiene acceso al terminar la visita; "To approve" por visita con "Edit", "No show", "+ Agregar persona" (también sustitutos) y "Approve" de una visita a la vez.
 4. D-262: el Super Admin registra y edita el trabajo aunque la visita esté aprobada; el pago se recalcula.
-5. D-263: el 1099 ve sus documentos, descarga su W-9 y sube su certificado (antes, diseño para aprobar).
+5. D-263 y D-271: "Mis documentos" del 1099 (diseño aprobado).
 6. D-264 y D-267: formulario nuevo del empleado; aviso con el nombre actual para llenar Nombre y Apellidos a mano; avisar al dueño cuando salga la actualización.
-7. D-268: remitente documents@mail.cidclean.com y certificado de la firma electrónica como última hoja del W-9.
+7. D-268 y D-270: remitente documents@mail.cidclean.com, "SSN, ITIN or EIN" en el correo, y certificado de la firma electrónica como última hoja del W-9.
 8. D-269: miércoles "X" en español.
 
 Preguntas abiertas para el dueño:
 
-- W-9: "or EIN" en el correo (el texto aprobado dice "add your SSN or ITIN"; el EIN también se acepta). Explicado al dueño el 2026-10-29, falta su respuesta.
+- (ninguna por ahora)
