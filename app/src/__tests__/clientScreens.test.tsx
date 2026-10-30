@@ -159,11 +159,23 @@ describe('Pago (D-061, D-096)', () => {
   });
 
   it('tarifa fija: Cobra y la línea de explicación', async () => {
-    mockParams = { assignment: 'a1', jobsite: '5th Ave S', jobsiteId: 'j1', workerType: '1099' };
+    mockParams = { assignment: 'a1', jobsite: '5th Ave S', jobsiteId: 'j1', workerType: 'w2' };
     await render(<PayScreen />);
     await screen.findByDisplayValue('18');
     await fireEvent.press(screen.getByText('Tarifa fija'));
     await fireEvent.changeText(screen.getByLabelText('Monto'), '120');
     expect(screen.getByText('Se pagan $120.00 por cada visita trabajada.')).toBeTruthy();
+  });
+
+  it('D-276: a un 1099 no se le ofrece por hora, solo tarifa fija (visita, semana o mes)', async () => {
+    mockParams = { assignment: 'a1', jobsite: '5th Ave S', jobsiteId: 'j1', workerType: '1099' };
+    mockSetPay.mockResolvedValue({ ok: true, data: null });
+    await render(<PayScreen />);
+    expect(await screen.findByLabelText('Monto')).toBeTruthy();
+    expect(screen.queryByText('Por hora')).toBeNull();
+    expect(screen.queryByLabelText('Tarifa por hora')).toBeNull();
+    await fireEvent.changeText(screen.getByLabelText('Monto'), '80');
+    await fireEvent.press(screen.getByText('Guardar'));
+    await waitFor(() => expect(mockSetPay).toHaveBeenCalledWith('a1', expect.objectContaining({ kind: 'fixed' })));
   });
 });
