@@ -111,8 +111,9 @@ select pg_temp.prueba('totales del mes', '433|480|2026-10-01',
   pg_temp.valor('humbe', $q$select (h->>'worked_minutes') || '|' || (h->>'insured_minutes') || '|' || (h->>'month') from my_hours('2026-10-31') h$q$));
 select pg_temp.prueba('septiembre: solo la del 30', '1|300|300',
   pg_temp.valor('humbe', $q$select jsonb_array_length(h->'rows') || '|' || (h->>'worked_minutes') || '|' || (h->>'insured_minutes') from my_hours('2026-09-01') h$q$));
-select pg_temp.prueba('el 1099 ve lo suyo (90 de 240)', '1|90|240',
-  pg_temp.valor('karina', $q$select jsonb_array_length(h->'rows') || '|' || (h->>'worked_minutes') || '|' || (h->>'insured_minutes') from my_hours('2026-10-01') h$q$));
+-- D-279: "Mis horas" solo para W-2; el 1099 ve "Mis días de servicio".
+select pg_temp.prueba('el 1099 no usa Mis horas (contractor_no_hours)', 'ERR:42501',
+  pg_temp.valor('karina', $q$select my_hours('2026-10-01')::text$q$));
 select pg_temp.prueba('otra persona no ve las de humbe', '120',
   pg_temp.valor('otro', $q$select my_hours('2026-10-01')->>'worked_minutes'$q$));
 select pg_temp.prueba('mes sin trabajo: vacío y 0', '0|0|0',
@@ -120,7 +121,7 @@ select pg_temp.prueba('mes sin trabajo: vacío y 0', '0|0|0',
 
 -- Sin montos ni tope de 32 h (D-223)
 select pg_temp.prueba('la respuesta no lleva dinero ni tope', 'false',
-  pg_temp.valor('karina', $q$select (my_hours('2026-10-01')::text ~* 'amount|rate|money|pay_|32|limit|cap')::text$q$));
+  pg_temp.valor('humbe', $q$select (my_hours('2026-10-01')::text ~* 'amount|rate|money|pay_|32|limit|cap')::text$q$));
 select pg_temp.prueba('cada fila lleva solo fecha, cuenta, trabajados y asegurados', 'account,date,insured_minutes,worked_minutes',
   pg_temp.valor('humbe', $q$select string_agg(k, ',' order by k) from jsonb_object_keys(my_hours('2026-10-01')->'rows'->0) k$q$));
 
