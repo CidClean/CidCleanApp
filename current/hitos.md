@@ -34,12 +34,15 @@ Plan para terminar la app, aprobado por el dueño el 2026-10-21 (D-170). Cada hi
 
 ## Por construir
 
-Hecho y publicado el 2026-10-30: D-265 (app en app.cidclean.com, invitación con los botones), D-261/D-266 ("To approve" por visita y registro automático), D-262 (correcciones del Super Admin), D-268/D-270 (W-9: remitente, texto y certificado), D-269 (ya estaba). Falta la prueba real de Ida en iPhone con Safari.
+Legal rev. 3 (D-275 a D-285), en este orden:
 
-Registrado, sin construir:
+1. Fase A: 1099 por días de servicio (D-275, D-276, D-277 conversión de datos, D-279 Mis días de servicio) y W-2 con ubicación obligatoria (D-277). Diseño de las pantallas de días de servicio por aprobar.
+2. Fase B: términos solo en inglés y bloqueo hasta aceptar (D-282), privacidad en cidclean.com/privacy y eliminación de cuenta, fotos solo admin (D-284), W-9 cifrado con aperturas registradas (D-280).
+3. Fase C: quote ≠ contrato, firma del contrato, vigencias y 6% solo no residencial (D-283).
+4. Fase D: ICA antes del primer trabajo, ofertas de trabajo y advertencias (D-285).
+5. Fase E: retención y borrado automático (D-281); W-2 sin acceso con corrección en 7 días, salario mínimo y horas extra (D-278).
 
-1. D-263 y D-271: "Mis documentos" del 1099.
-2. D-264 y D-267: formulario nuevo del empleado; aviso con el nombre actual para llenar Nombre y Apellidos a mano; avisar al dueño cuando salga.
+Pendiente: prueba real de Ida en iPhone con Safari.
 
 Preguntas abiertas para el dueño:
 

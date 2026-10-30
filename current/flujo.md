@@ -165,17 +165,13 @@ Cada notificación llega solo a quien tiene el permiso relacionado. Cada persona
 
 Cid Clean opera en Naples, Florida (Collier County). Esta sección no es asesoría legal: lo que sigue se confirma con un CPA o abogado.
 
-- **Sales tax:** la limpieza de edificios no residenciales es un servicio gravable en Florida, con 6% estatal. Collier no tiene recargo de condado. En la app, cada servicio y add-on del quote lleva una casilla "gravable" que decide el dueño. La app no automatiza exenciones.
+- **Sales tax:** la limpieza de edificios no residenciales es un servicio gravable en Florida, con 6% estatal, solo en limpieza no residencial; la residencial no lleva impuesto (D-283). Collier no tiene recargo de condado. En la app, cada servicio y add-on del quote lleva una casilla "gravable" que decide el dueño. La app no automatiza exenciones.
 - **Salario mínimo:** $15/h desde el 30 de septiembre de 2026. La app alerta si a un empleado W-2 pagado por hora se le asigna menos.
 - **W-2 y 1099:** ambos tipos conviven, y cada perfil lleva el suyo. En Florida pesa cómo se trata realmente al trabajador, no lo que diga el contrato.
 
-**Términos y condiciones**
+**Textos legales (rev. 3, D-275 a D-285)**
 
-Los redacta un abogado fuera de la app. La app los guarda versionados y registra quién aceptó qué versión y cuándo. Son tres documentos:
-
-1. **Portal del cliente:** aceptación electrónica y uso del OTP. Se registra junto a cada quote aceptado: nombre, cargo, fecha y hora, IP, versión del quote y confirmación de lectura del SOW.
-2. **Staff:** consentimiento de uso de GPS (solo en clock in y clock out), fotos y datos personales. Se acepta en el primer ingreso y de nuevo si cambia la versión. Las versiones y las aceptaciones se guardan en la base de datos; no se pide aceptar hasta que haya una versión publicada, y no se le pide al Super Admin. Cada versión es un PDF del abogado que sube el Super Admin, y el staff lo lee como PDF (D-176).
-3. **Privacidad y emails:** baja de comunicaciones y dirección física en los emails a leads.
+Redactados con el abogado, solo en inglés, en `../legal/rev3/`: Staff Terms, Client Portal Terms, Privacy Policy, SOW y Service Agreement, Prospect Email Footer e Independent Contractor Agreement. Lo que cambian en la app está en `../legal/rev3/cambios_app_rev3.pdf` y en D-275 a D-285: los 1099 trabajan por días de servicio sin horas ni GPS; los W-2 marcan con ubicación obligatoria; aceptar el quote no es contrato; plazos de retención con borrado automático; ICA firmado antes del primer trabajo.
 
 Sources: [FL DOR, sales tax on cleaning services](https://floridarevenue.com/forms_library/current/gt800015.pdf) · [Rule 12A-1.0091](https://floridasalestax.com/florida-sales-tax-rules/12a-1-0091) · [Florida county surtax rates 2026](https://www.floridasalestax.com/florida-tax-law-blog/2026/august/florida-county-surtax-rates-for-2026-the-complet/) · [Florida minimum wage $15](https://www.hrmorning.com/news/florida-minimum-wage/) · [Worker classification in Florida](https://www.epgdlaw.com/?p=598)
 
