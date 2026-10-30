@@ -9,6 +9,8 @@ const mockClockIn = jest.fn();
 const mockEnqueue = jest.fn();
 const mockVisitWork = jest.fn();
 const mockApprove = jest.fn();
+const mockNoShow = jest.fn();
+const mockRecord = jest.fn();
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: jest.fn(), push: mockPush, navigate: jest.fn(), back: mockBack, canGoBack: () => true }),
@@ -52,8 +54,11 @@ jest.mock('@/lib/scheduleApi', () => ({
   fetchVisitWork: (...a: unknown[]) => mockVisitWork(...a),
   approveVisit: (...a: unknown[]) => mockApprove(...a),
   editWorkEntry: jest.fn(),
-  recordWork: jest.fn(),
+  recordWork: (...a: unknown[]) => mockRecord(...a),
   reviewGps: jest.fn(),
+  markNoShow: (...a: unknown[]) => mockNoShow(...a),
+  undoNoShow: jest.fn(async () => ({ ok: true, data: null })),
+  fetchAddableStaff: jest.fn(async () => ({ ok: true, data: [{ id: 'p9', name: 'Sustituto', hasPay: false }] })),
   fetchSchedule: (...a: unknown[]) => mockSchedule(...a),
   fetchToApprove: jest.fn(async () => ({ ok: true, data: [] })),
   fetchSchedulable: jest.fn(async () => ({
@@ -120,44 +125,95 @@ describe('ClockCard (D-049 a D-051, D-214)', () => {
   });
 });
 
-describe('Trabajo por aprobar (D-109)', () => {
-  const work = {
+describe('To approve por visita (D-266, D-262)', () => {
+  const row = (o: Record<string, unknown>) => ({
+    entryId: null,
+    clockIn: null,
+    clockOut: null,
+    inStatus: null,
+    outStatus: null,
+    status: 'ok',
+    distanceM: null,
+    offline: false,
+    unscheduled: false,
+    manual: false,
+    gpsPending: false,
+    gpsReviewed: false,
+    hasAppAccess: true,
+    hasPay: true,
+    ...o,
+  });
+  const card = (o: Record<string, unknown> = {}) => ({
     id: 'v1',
-    jobsite: 'Break TAX Office',
+    jobsiteId: 'j1',
+    jobsite: 'Cuenta X',
+    client: 'Cuenta X',
     day: '2026-10-26',
-    startsAt: new Date(2026, 9, 26, 18, 0),
-    minutes: 120,
+    startsAt: new Date(2026, 9, 26, 23, 0),
+    minutes: 240,
     approved: false,
-    scheduled: [{ id: 'p1', name: 'Rosemary' }],
-    entries: [
-      {
-        id: 'e1',
-        profileId: 'p1',
-        name: 'Rosemary',
-        clockIn: new Date(2026, 9, 26, 18, 0),
-        clockOut: new Date(2026, 9, 26, 20, 30),
-        inStatus: 'out_of_range',
-        outStatus: 'ok',
-        distanceM: 320,
-        gpsPending: true,
-        gpsReviewed: false,
-        offline: false,
-        unscheduled: false,
-        manual: false,
-      },
+    ended: true,
+    urgent: false,
+    noShow: [],
+    rows: [
+      row({ profileId: 'p1', name: 'Humbe', entryId: 'e1', clockIn: new Date(2026, 9, 26, 23, 0), clockOut: new Date(2026, 9, 27, 3, 0), inStatus: 'ok', outStatus: 'ok' }),
+      row({ profileId: 'p2', name: 'Estela', entryId: 'e2', clockIn: new Date(2026, 9, 26, 23, 0), clockOut: new Date(2026, 9, 27, 3, 0), inStatus: 'auto', outStatus: 'auto', status: 'auto', hasAppAccess: false }),
+      row({ profileId: 'p3', name: 'Ida', status: 'missing' }),
+      row({ profileId: 'p4', name: 'Maria', entryId: 'e4', clockIn: new Date(2026, 9, 26, 23, 0), clockOut: new Date(2026, 9, 27, 3, 0), status: 'auto', hasAppAccess: false, hasPay: false }),
     ],
-  };
+    ...o,
+  });
 
-  it('muestra horas y fichas, y no aprueba con GPS sin revisar', async () => {
-    mockVisitWork.mockResolvedValue({ ok: true, data: work });
-    mockApprove.mockResolvedValue({ ok: false, reason: 'gps_pending' });
+  it('una tarjeta "Cuenta · fecha" con automático, missing y el aviso sin pago; Approve con missing no aprueba', async () => {
+    mockVisitWork.mockResolvedValue({ ok: true, data: card() });
+    mockApprove.mockResolvedValue({ ok: false, reason: 'missing_time' });
     await render(<WorkScreen />);
-    expect(await screen.findByText('Rosemary')).toBeTruthy();
-    expect(screen.getByText('GPS fuera de rango')).toBeTruthy();
-    expect(screen.getByText('A 320 m del sitio')).toBeTruthy();
-    await fireEvent.press(screen.getByText('Aprobar'));
-    expect(await screen.findByText('Falta revisar el GPS fuera de rango.')).toBeTruthy();
+    expect(await screen.findByText('Cuenta X · Lun 26 oct')).toBeTruthy();
+    expect(screen.getAllByText('Automático · sin acceso a la app')).toHaveLength(2);
+    expect(screen.getByText('Falta clock in')).toBeTruthy();
+    expect(screen.getByText('missing – missing')).toBeTruthy();
+    expect(screen.getAllByText('11:00 PM – 3:00 AM · 4 h')).toHaveLength(3);
+    expect(screen.getByText('Sin pago asignado para este día')).toBeTruthy();
+    expect(screen.getAllByText('Edit')).toHaveLength(4);
+    await fireEvent.press(screen.getByText('Approve'));
+    expect(await screen.findByText('Falta la hora de alguien: regístrala con Edit o marca No show.')).toBeTruthy();
     expect(mockBack).not.toHaveBeenCalled();
+  });
+
+  it('No show pide confirmación y quita a la persona', async () => {
+    mockVisitWork.mockResolvedValue({ ok: true, data: card() });
+    mockNoShow.mockResolvedValue({ ok: true, data: null });
+    await render(<WorkScreen />);
+    await fireEvent.press(await screen.findByLabelText('No show Ida'));
+    expect(screen.getByText('¿No show de Ida?')).toBeTruthy();
+    const buttons = screen.getAllByText('No show');
+    await fireEvent.press(buttons[buttons.length - 1]);
+    await waitFor(() => expect(mockNoShow).toHaveBeenCalledWith('v1', 'p3'));
+  });
+
+  it('+ Agregar persona registra a cualquier empleado activo (sustituto)', async () => {
+    mockVisitWork.mockResolvedValue({ ok: true, data: card() });
+    mockRecord.mockResolvedValue({ ok: true, data: null });
+    await render(<WorkScreen />);
+    await fireEvent.press(await screen.findByText('+ Agregar persona'));
+    await fireEvent.press(await screen.findByText('Sustituto'));
+    await fireEvent.press(screen.getByText('Guardar'));
+    await waitFor(() => expect(mockRecord).toHaveBeenCalledWith('v1', [expect.objectContaining({ profileId: 'p9' })]));
+  });
+
+  it('visita aprobada: el Super Admin sigue con Edit, No show y Agregar persona; otro admin no (D-262)', async () => {
+    mockVisitWork.mockResolvedValue({ ok: true, data: card({ approved: true }) });
+    await render(<WorkScreen />);
+    expect(await screen.findByText('+ Agregar persona')).toBeTruthy();
+    expect(screen.getAllByText('Edit').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Approve')).toBeNull();
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['work_aprobar', 'work_editar', 'work_registrar_por_otros']) };
+    await screen.unmount();
+    await render(<WorkScreen />);
+    expect(await screen.findByText('Aprobado')).toBeTruthy();
+    expect(screen.queryByText('Edit')).toBeNull();
+    expect(screen.queryByText('No show')).toBeNull();
+    expect(screen.queryByText('+ Agregar persona')).toBeNull();
   });
 });
 

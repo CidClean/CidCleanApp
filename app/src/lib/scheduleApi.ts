@@ -14,6 +14,7 @@ export type WorkFailure =
   | 'open_shift'
   | 'gps_pending'
   | 'no_work'
+  | 'missing_time'
   | 'no_time'
   | 'no_day'
   | 'not_found'
@@ -31,7 +32,7 @@ export function workFailure(code: string | undefined, message: string | undefine
   if (code === '42501') return { reason: 'forbidden' };
   if (code === 'P0002') return { reason: 'not_found' };
   if (m.startsWith('over_32:')) return { reason: 'over_32', detail: m.slice(8) };
-  for (const k of ['already_in', 'not_today', 'open_shift', 'gps_pending', 'no_work', 'no_time', 'no_day'] as const) if (m.startsWith(k)) return { reason: k };
+  for (const k of ['already_in', 'not_today', 'open_shift', 'gps_pending', 'no_work', 'missing_time', 'no_time', 'no_day'] as const) if (m.startsWith(k)) return { reason: k };
   if (code === '22023' || code === '22P02' || code === '22008' || code === '23514') return { reason: 'invalid' };
   return { reason: 'server' };
 }
@@ -172,124 +173,120 @@ export const clockOut = (p: { entryId: string; at: Date; lat: number | null; lng
 
 // --- Work: registro por otros, revisión y aprobación ----------------------------------------------------------
 
-export type ToApprove = {
-  id: string;
-  jobsiteId: string;
-  jobsite: string;
-  day: string;
-  startsAt: Date;
-  people: number;
-  minutes: number;
-  open: boolean;
-  gpsOut: boolean;
-  review: boolean;
-  urgent: boolean;
-};
-export const fetchToApprove = () =>
-  rpc('work_to_approve', {}, (d) =>
-    ((d ?? []) as {
-      id: string;
-      jobsite_id?: string;
-      jobsite: string;
-      day: string;
-      starts_at: string;
-      people: number;
-      minutes: number;
-      open: boolean;
-      gps_out: boolean;
-      review: boolean;
-      urgent: boolean;
-    }[]).map<ToApprove>((r) => ({
-      id: r.id,
-      jobsiteId: r.jobsite_id ?? '',
-      jobsite: r.jobsite,
-      day: r.day,
-      startsAt: new Date(r.starts_at),
-      people: r.people,
-      minutes: r.minutes,
-      open: r.open,
-      gpsOut: r.gps_out,
-      review: r.review,
-      urgent: r.urgent,
-    })),
-  );
-
-export type WorkEntry = {
-  id: string;
+/** Estado de una fila de "To approve" (D-266): missing = programado sin registro. */
+export type WorkRowStatus = 'ok' | 'auto' | 'manual' | 'gps' | 'offline' | 'unscheduled' | 'missing';
+export type EntryStatus = 'ok' | 'out_of_range' | 'no_location' | 'manual' | 'auto';
+export type WorkRow = {
   profileId: string;
   name: string;
-  clockIn: Date;
+  entryId: string | null;
+  clockIn: Date | null;
   clockOut: Date | null;
-  inStatus: 'ok' | 'out_of_range' | 'no_location' | 'manual';
-  outStatus: 'ok' | 'out_of_range' | 'no_location' | 'manual' | null;
+  inStatus: EntryStatus | null;
+  outStatus: EntryStatus | null;
+  status: WorkRowStatus;
   distanceM: number | null;
   offline: boolean;
   unscheduled: boolean;
   manual: boolean;
   gpsPending: boolean;
   gpsReviewed: boolean;
+  hasAppAccess: boolean;
+  hasPay: boolean;
 };
-export type VisitWork = {
+/** Tarjeta de una visita (D-266): cuenta · fecha y una fila por persona (programados sin No show ∪ registros). */
+export type VisitCard = {
   id: string;
+  jobsiteId: string;
   jobsite: string;
+  client: string;
   day: string;
   startsAt: Date;
   minutes: number;
   approved: boolean;
-  entries: WorkEntry[];
-  scheduled: { id: string; name: string }[];
+  ended: boolean;
+  urgent: boolean;
+  rows: WorkRow[];
+  noShow: { profileId: string; name: string }[];
 };
-export const fetchVisitWork = (visitId: string) =>
-  rpc('visit_work', { p_visit: visitId }, (d) => {
-    const r = d as {
-      id: string;
-      jobsite: string;
-      day: string;
-      starts_at: string;
-      minutes: number;
-      approved: boolean;
-      scheduled: { id: string; name: string }[];
-      entries: {
-        id: string;
-        profile_id: string;
-        name: string;
-        clock_in: string;
-        clock_out: string | null;
-        in_status: WorkEntry['inStatus'];
-        out_status: WorkEntry['outStatus'];
-        distance_m: number | null;
-        offline: boolean;
-        unscheduled: boolean;
-        manual: boolean;
-        gps_pending: boolean;
-        gps_reviewed: boolean;
-      }[];
-    };
-    return {
-      id: r.id,
-      jobsite: r.jobsite,
-      day: r.day,
-      startsAt: new Date(r.starts_at),
-      minutes: r.minutes,
-      approved: r.approved,
-      scheduled: r.scheduled ?? [],
-      entries: (r.entries ?? []).map<WorkEntry>((e) => ({
-        id: e.id,
-        profileId: e.profile_id,
-        name: e.name,
-        clockIn: new Date(e.clock_in),
-        clockOut: e.clock_out ? new Date(e.clock_out) : null,
-        inStatus: e.in_status,
-        outStatus: e.out_status,
-        distanceM: e.distance_m,
-        offline: e.offline,
-        unscheduled: e.unscheduled,
-        manual: e.manual,
-        gpsPending: e.gps_pending,
-        gpsReviewed: e.gps_reviewed,
-      })),
-    } as VisitWork;
-  });
+
+type RawRow = {
+  profile_id: string;
+  name: string;
+  entry_id: string | null;
+  clock_in: string | null;
+  clock_out: string | null;
+  in_status: EntryStatus | null;
+  out_status: EntryStatus | null;
+  status: WorkRowStatus;
+  distance_m: number | null;
+  offline: boolean;
+  unscheduled: boolean;
+  manual: boolean;
+  gps_pending: boolean;
+  gps_reviewed: boolean;
+  has_app_access: boolean;
+  has_pay: boolean;
+};
+type RawCard = {
+  id: string;
+  jobsite_id: string;
+  jobsite: string;
+  client: string | null;
+  day: string;
+  starts_at: string;
+  minutes: number;
+  approved: boolean;
+  ended: boolean;
+  urgent: boolean;
+  rows: RawRow[] | null;
+  no_show: { profile_id: string; name: string }[] | null;
+};
+
+export function mapVisitCard(r: RawCard): VisitCard {
+  return {
+    id: r.id,
+    jobsiteId: r.jobsite_id ?? '',
+    jobsite: r.jobsite,
+    client: r.client ?? r.jobsite,
+    day: r.day,
+    startsAt: new Date(r.starts_at),
+    minutes: r.minutes,
+    approved: r.approved,
+    ended: r.ended,
+    urgent: r.urgent,
+    rows: (r.rows ?? []).map<WorkRow>((e) => ({
+      profileId: e.profile_id,
+      name: e.name,
+      entryId: e.entry_id,
+      clockIn: e.clock_in ? new Date(e.clock_in) : null,
+      clockOut: e.clock_out ? new Date(e.clock_out) : null,
+      inStatus: e.in_status,
+      outStatus: e.out_status,
+      status: e.status,
+      distanceM: e.distance_m,
+      offline: e.offline,
+      unscheduled: e.unscheduled,
+      manual: e.manual,
+      gpsPending: e.gps_pending,
+      gpsReviewed: e.gps_reviewed,
+      hasAppAccess: e.has_app_access,
+      hasPay: e.has_pay,
+    })),
+    noShow: (r.no_show ?? []).map((p) => ({ profileId: p.profile_id, name: p.name })),
+  };
+}
+
+/** "To approve" (D-266): una tarjeta por visita, la más antigua primero (antes llena los registros automáticos). */
+export const fetchToApprove = () => rpc('work_to_approve', {}, (d) => ((d ?? []) as RawCard[]).map(mapVisitCard));
+export const fetchVisitWork = (visitId: string) => rpc('visit_work', { p_visit: visitId }, (d) => mapVisitCard(d as RawCard));
+export const markNoShow = (visitId: string, profileId: string) => rpc('mark_no_show', { p_visit: visitId, p_profile: profileId }, () => null);
+export const undoNoShow = (visitId: string, profileId: string) => rpc('undo_no_show', { p_visit: visitId, p_profile: profileId }, () => null);
+/** "+ Agregar persona" (D-266 (3)): cualquier empleado activo que aún no está en la visita. */
+export const fetchAddableStaff = (visitId: string) =>
+  rpc('work_addable_staff', { p_visit: visitId }, (d) =>
+    ((d ?? []) as { id: string; name: string; has_pay: boolean }[]).map((p) => ({ id: p.id, name: p.name, hasPay: p.has_pay })),
+  );
 
 export const recordWork = (visitId: string, rows: { profileId: string; clockIn: Date; clockOut: Date | null }[]) =>
   rpc(

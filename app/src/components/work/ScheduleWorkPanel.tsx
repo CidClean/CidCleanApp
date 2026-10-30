@@ -4,14 +4,13 @@ import { Pressable, StyleSheet, View } from "react-native";
 
 import { AppAlert } from "../AppAlert";
 import { AppText } from "../AppText";
-import { Card } from "../bento/Card";
-import { Chip } from "../Chip";
 import { Icon } from "../Icon";
 import { Segmented } from "../Segmented";
 import { ScheduleSimple } from "./ScheduleSimple";
 import { ScheduleTable } from "./ScheduleTable";
 import { ScheduleWeek } from "./ScheduleWeek";
 import { ModeSeg } from "./SimpleParts";
+import { VisitApprovalCard } from "./VisitApprovalCard";
 import { useSalesStrings } from "@/i18n/useSalesStrings";
 import { useStrings } from "@/i18n/useStrings";
 import { useWorkStrings } from "@/i18n/useWorkStrings";
@@ -20,9 +19,8 @@ import {
   fetchSchedule,
   fetchToApprove,
   type ScheduleVisit,
-  type ToApprove,
+  type VisitCard,
 } from "@/lib/scheduleApi";
-import { formatMinutes } from "@/lib/scheduleRules";
 import {
   scheduleHtml,
   shiftTable,
@@ -47,8 +45,8 @@ export const WORK_KEYS = [
 /**
  * Contenido de Schedule & Work (D-214, D-235). Se usa en la pantalla del menú (todos los jobsites) y dentro de cada
  * jobsite con `jobsiteId` (solo ese jobsite). Schedule: Simple (Hoy, 3 días, Semana), Semana (se arma y guarda) y
- * Detallado (tabla Empleado → días por semana o por mes, con Compartir en PDF). Por aprobar (D-053) con ficha
- * Pendiente o Urgente (D-131) y GPS fuera de rango (D-054).
+ * Detallado (tabla Empleado → días por semana o por mes, con Compartir en PDF). Por aprobar por visita (D-266): una
+ * tarjeta por visita con Edit, No show, + Agregar persona y Approve.
  */
 export function ScheduleWorkPanel({
   jobsiteId,
@@ -73,7 +71,8 @@ export function ScheduleWorkPanel({
   const [anchor, setAnchor] = useState(() => new Date());
   const [notice, setNotice] = useState<string | null>(null);
   const [visits, setVisits] = useState<ScheduleVisit[] | null>(null);
-  const [toApprove, setToApprove] = useState<ToApprove[] | null>(null);
+  const [toApprove, setToApprove] = useState<VisitCard[] | null>(null);
+  const [approveError, setApproveError] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
   const days = tableDays(range, anchor);
@@ -253,42 +252,15 @@ export function ScheduleWorkPanel({
               {t.nothingToApprove}
             </AppText>
           ) : null}
+          {approveError ? <AppAlert tone="error" text={approveError} /> : null}
+          {/* D-266: una tarjeta por visita con sus personas; se aprueba de a una visita. */}
           {(toApprove ?? []).map((w) => (
-            <Card
+            <VisitApprovalCard
               key={w.id}
-              wide
-              accessibilityLabel={`${w.jobsite} ${dayTitle(w.day)}`}
-              onPress={() =>
-                router.push({
-                  pathname: "/schedule/work/[id]",
-                  params: { id: w.id },
-                })
-              }
-              style={{ gap: 6, paddingVertical: 14 }}
-            >
-              <View style={styles.rowHead}>
-                <View style={{ flex: 1 }}>
-                  <AppText weight="bold" size={15}>
-                    {w.jobsite}
-                  </AppText>
-                  <AppText size={12} color={colors.secondary}>
-                    {`${dayTitle(w.day)} · ${t.summary(t.people(w.people), formatMinutes(w.minutes, t.hours))}`}
-                  </AppText>
-                </View>
-                <Chip
-                  label={w.urgent ? t.urgent : t.pendingChip}
-                  tone="warning"
-                />
-              </View>
-              {w.gpsOut || w.open ? (
-                <View
-                  style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}
-                >
-                  {w.gpsOut ? <Chip label={t.gpsOut} tone="warning" /> : null}
-                  {w.open ? <Chip label={t.open} tone="warning" /> : null}
-                </View>
-              ) : null}
-            </Card>
+              card={w}
+              onChanged={load}
+              onError={setApproveError}
+            />
           ))}
         </View>
       ) : null}
@@ -305,7 +277,6 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
   },
-  rowHead: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
   toolbar: {
     flexDirection: "row",
     alignItems: "center",
