@@ -38,13 +38,16 @@ describe('failureFromCode', () => {
 });
 
 describe('createEmployee', () => {
-  const form = { ...emptyNewEmployee(), fullName: ' Ana Ruiz ', email: 'Ana@Correo.com', phone: '1' };
+  const form = { ...emptyNewEmployee(), firstName: ' Ana ', lastName: ' Ruiz ', email: 'Ana@Correo.com', phone: '1' };
 
   test('llama a create-employee con el cuerpo limpio y devuelve el id y el estado de la invitación', async () => {
     mockInvoke.mockResolvedValue({ data: { id: 'p1', invitation: 'sent' }, error: null });
     const result = await createEmployee(form);
     expect(mockInvoke).toHaveBeenCalledWith('create-employee', {
-      body: { full_name: 'Ana Ruiz', phone: '1', worker_type: 'w2', role: 'employee', language: 'en', has_app_access: true, email: 'ana@correo.com' },
+      body: {
+        first_name: 'Ana', last_name: 'Ruiz', phone: '1', worker_type: 'w2', role: 'employee', language: 'en', has_app_access: true,
+        email: 'ana@correo.com', address_line1: '', address_line2: '', state: '', city: '', zip: '',
+      },
     });
     expect(result).toEqual({ ok: true, data: { id: 'p1', invitation: 'sent' } });
   });
@@ -85,9 +88,13 @@ describe('otras operaciones', () => {
 
   test('updateEmployee manda solo los campos editables; el teléfono vacío va como null', async () => {
     mockRpc.mockResolvedValue({ error: null });
-    await updateEmployee('p1', { fullName: ' Ana ', phone: ' ', workerType: '1099', language: 'es' });
+    await updateEmployee('p1', {
+      firstName: ' Ana ', lastName: ' Ruiz ', phone: ' ', workerType: '1099', language: 'es',
+      addressLine1: ' 1 Main St ', addressLine2: ' ', state: 'FL', city: 'Naples', zip: '34105',
+    });
     expect(mockRpc).toHaveBeenCalledWith('update_employee', {
-      p_profile: 'p1', p_full_name: 'Ana', p_phone: null, p_worker_type: '1099', p_language: 'es',
+      p_profile: 'p1', p_first_name: 'Ana', p_last_name: 'Ruiz', p_phone: null, p_worker_type: '1099', p_language: 'es',
+      p_address_line1: '1 Main St', p_address_line2: null, p_state: 'FL', p_city: 'Naples', p_zip: '34105',
     });
   });
 

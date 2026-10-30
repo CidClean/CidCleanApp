@@ -137,6 +137,16 @@ export const en: Strings = {
   newEmployee: {
     title: 'New employee', // top bar of the create screen
     name: 'Name', // field label
+    firstName: 'First name', // D-200 (translation of D-264)
+    lastName: 'Last name', // D-200 (translation of D-264)
+    address1: 'Address', // D-200 (translation of D-264)
+    address2: 'Address 2', // D-200 (translation of D-264)
+    state: 'State', // D-264
+    city: 'City', // D-264
+    zip: 'ZIP code', // D-264
+    noState: '—', // D-200
+    errorLastName: 'Enter the last name.', // D-200
+    errorZip: 'Enter a 5-digit ZIP code, for example 34105.', // D-200
     phone: 'Phone', // field label
     type: 'Type', // segmented control label: W-2 / 1099
     role: 'Starting role', // dropdown label: the role is only a permission template that is adjusted later
@@ -195,6 +205,9 @@ export const en: Strings = {
     errorUpload: "Couldn't upload the document. Try again.", // red notice under the documents
     errorOpen: "Couldn't open the document. Try again.", // red notice under the documents
     errorCamera: 'Allow camera access in the phone settings.', // red notice when the camera permission is denied
+    missingName: (name: string) => `Current name: ${name}. Fill in First name and Last name.`, // D-200 (translation of D-267)
+    fillName: 'Edit', // D-200
+    address: 'Address', // D-200
   },
 
   // Employee profile, Permissions and Pay tabs (D-058, D-188 to D-194). Translated from the Spanish text with context (D-157).

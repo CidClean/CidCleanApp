@@ -28,6 +28,7 @@ import { Switch } from '@/components/Switch';
 import { Tabs } from '@/components/Tabs';
 import { TopBar } from '@/components/TopBar';
 import { W9ProfileSection } from '@/components/w9/W9ProfileSection';
+import { AddressFields } from '@/components/employees/AddressFields';
 import { useStrings } from '@/i18n/useStrings';
 import type { Strings } from '@/i18n/es';
 import { chooseFile, fetchDocuments, takePhoto, uploadDocument, type PickResult } from '@/lib/documents';
@@ -41,6 +42,10 @@ import {
   documentRows,
   editChanged,
   editFormFrom,
+  hasErrors,
+  missingNameParts,
+  w9AddressLine,
+  w9CityLine,
   formatDate,
   showsDocuments,
   validateEdit,
@@ -100,6 +105,8 @@ export default function EmployeeProfileScreen() {
   const [form, setForm] = useState<EditForm | null>(null);
   const [nameError, setNameError] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
+  const [lastNameError, setLastNameError] = useState(false);
+  const [zipError, setZipError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
 
@@ -202,6 +209,9 @@ export default function EmployeeProfileScreen() {
     if (!employee) return;
     setForm(editFormFrom(employee));
     setNameError(false);
+    setLastNameError(false);
+    setPhoneError(false);
+    setZipError(false);
     setSaveError(false);
     setEditing(true);
   }
@@ -209,9 +219,11 @@ export default function EmployeeProfileScreen() {
   async function save() {
     if (!employee || !form || saving) return;
     const errors = validateEdit(form);
-    setNameError(Boolean(errors.fullName));
+    setNameError(Boolean(errors.firstName));
+    setLastNameError(Boolean(errors.lastName));
     setPhoneError(Boolean(errors.phone));
-    if (errors.fullName || errors.phone) return;
+    setZipError(Boolean(errors.zip));
+    if (hasErrors(errors)) return;
     if (!editChanged(employee, form)) {
       setEditing(false);
       return;
@@ -488,6 +500,14 @@ export default function EmployeeProfileScreen() {
               </View>
             ) : null}
 
+            {/* D-267 (2): perfil sin Nombre o Apellidos (los que ya existían): aviso ámbar con acceso directo a editar. */}
+            {tab === 'data' && !editing && missingNameParts(employee) ? (
+              <View style={{ marginBottom: 8 }}>
+                <AppAlert text={strings.employee.missingName(employee.fullName)} />
+                {canEdit ? <AppButton label={strings.employee.fillName} variant="text" onPress={startEditing} /> : null}
+              </View>
+            ) : null}
+
             {tab === 'data' && !editing ? (
               <DataSection
                 employee={employee}
@@ -508,12 +528,22 @@ export default function EmployeeProfileScreen() {
 
             {tab === 'data' && editing && form ? (
               <KeyboardForm>
+                {/* D-264: Nombre, Apellidos, Teléfono, Email, Dirección, Dirección 2, State, City y ZIP code. */}
                 <AppField
-                  label={strings.newEmployee.name}
-                  value={form.fullName}
-                  onChangeText={(v) => setForm({ ...form, fullName: v })}
+                  label={strings.newEmployee.firstName}
+                  value={form.firstName}
+                  onChangeText={(v) => setForm({ ...form, firstName: v })}
                   autoCapitalize="words"
+                  maxLength={60}
                   error={nameError ? strings.newEmployee.errorName : null}
+                />
+                <AppField
+                  label={strings.newEmployee.lastName}
+                  value={form.lastName}
+                  onChangeText={(v) => setForm({ ...form, lastName: v })}
+                  autoCapitalize="words"
+                  maxLength={60}
+                  error={lastNameError ? strings.newEmployee.errorLastName : null}
                 />
                 <PhoneField
                   label={strings.employee.phone}
@@ -521,7 +551,8 @@ export default function EmployeeProfileScreen() {
                   onChange={(v) => setForm({ ...form, phone: v })}
                   error={phoneError ? strings.common.phoneError : null}
                 />
-                <DataRow label={strings.employee.email} value={employee.email ?? '—'} />
+                <DataRow label={strings.newEmployee.email} value={employee.email ?? '—'} />
+                <AddressFields form={form} onChange={setForm} strings={strings} zipError={zipError} />
                 {employee.workerType !== null ? (
                   <View style={{ paddingTop: 8 }}>
                     <AppText size={sample.labelSize} color={colors.secondary} style={{ marginBottom: 2 }}>
@@ -589,6 +620,8 @@ export default function EmployeeProfileScreen() {
                 <W9ProfileSection
                   profileId={employee.id}
                   fullName={employee.fullName}
+                  address={w9AddressLine(employee)}
+                  cityLine={w9CityLine(employee)}
                   email={employee.email}
                   locale={locale}
                   currentW9DocumentId={documents.find((d) => d.kind === 'w9')?.id ?? null}
@@ -826,7 +859,9 @@ function DataSection({
       <CardBlock>
         <DataRow label={strings.newEmployee.name} value={employee.fullName} />
         <DataRow label={strings.employee.phone} value={employee.phone ? formatPhone(employee.phone) : '—'} />
-        <DataRow label={strings.employee.email} value={employee.email ?? '—'} />
+        <DataRow label={strings.newEmployee.email} value={employee.email ?? '—'} />
+        {/* D-264 (D-200: la dirección se lee en una sola fila). */}
+        <DataRow label={strings.employee.address} value={[w9AddressLine(employee), w9CityLine(employee)].filter(Boolean).join(', ') || '—'} />
         {employee.workerType !== null ? (
           <DataRow label={strings.newEmployee.type} value={typeLabel(strings, employee.workerType)} />
         ) : null}

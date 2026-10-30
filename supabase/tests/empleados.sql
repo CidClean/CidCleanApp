@@ -222,43 +222,43 @@ declare
   nuevo text;
 begin
   perform pg_temp.prueba('crear: sin permiso (42501)', 'ERR:42501',
-    pg_temp.valor('ver', $q$ select create_employee('Nadie', null, 'w2', 'employee', 'en', false, null) $q$));
+    pg_temp.valor('ver', $q$ select create_employee('Nadie', 'Nadie', null, 'w2', 'employee', 'en', false, null) $q$));
   perform pg_temp.prueba('crear: anon (42501)', 'ERR:42501',
-    pg_temp.valor('anon', $q$ select create_employee('Nadie', null, 'w2', 'employee', 'en', false, null) $q$));
+    pg_temp.valor('anon', $q$ select create_employee('Nadie', 'Nadie', null, 'w2', 'employee', 'en', false, null) $q$));
   perform pg_temp.prueba('crear: con acceso y sin correo (22023)', 'ERR:22023',
-    pg_temp.valor('crear', $q$ select create_employee('Ana', null, 'w2', 'employee', 'en', true, null) $q$));
+    pg_temp.valor('crear', $q$ select create_employee('Ana', 'Ruiz', null, 'w2', 'employee', 'en', true, null) $q$));
   perform pg_temp.prueba('crear: nombre vacío (22023)', 'ERR:22023',
-    pg_temp.valor('crear', $q$ select create_employee('  ', null, 'w2', 'employee', 'en', false, null) $q$));
+    pg_temp.valor('crear', $q$ select create_employee('  ', 'X', null, 'w2', 'employee', 'en', false, null) $q$));
   perform pg_temp.prueba('crear: sin acceso y sin correo, ok', 'ok',
-    case when pg_temp.valor('crear', $q$ select create_employee('Sin Acceso', '239 555 0100', '1099', 'employee', 'es', false, null) $q$) like 'ERR%'
+    case when pg_temp.valor('crear', $q$ select create_employee('Sin', ' Acceso', '239 555 0100', '1099', 'employee', 'es', false, null) $q$) like 'ERR%'
       then 'fallo' else 'ok' end);
   perform pg_temp.prueba('crear: con acceso y correo, ok', 'ok',
-    case when pg_temp.valor('crear', $q$ select create_employee('  Con Acceso ', null, 'w2', 'employee', 'es', true, '  Ana.Ruiz@Correo.COM ') $q$) like 'ERR%'
+    case when pg_temp.valor('crear', $q$ select create_employee('  Con', ' Acceso ', null, 'w2', 'employee', 'es', true, '  Ana.Ruiz@Correo.COM ') $q$) like 'ERR%'
       then 'fallo' else 'ok' end);
   perform pg_temp.prueba('crear: el correo se guarda limpio y en minúsculas', 'ana.ruiz@correo.com',
     (select email from profiles where full_name = 'Con Acceso'));
   perform pg_temp.prueba('crear: el nombre se guarda sin espacios sobrantes y el teléfono vacío queda null', 'Con Acceso|null',
     (select full_name || '|' || coalesce(phone, 'null') from profiles where full_name = 'Con Acceso'));
   perform pg_temp.prueba('crear: correo repetido con otras mayúsculas (23505)', 'ERR:23505',
-    pg_temp.valor('crear', $q$ select create_employee('Otra', null, 'w2', 'employee', 'en', true, 'ANA.RUIZ@correo.com') $q$));
+    pg_temp.valor('crear', $q$ select create_employee('Otra', 'Más', null, 'w2', 'employee', 'en', true, 'ANA.RUIZ@correo.com') $q$));
   perform pg_temp.prueba('crear: queda en el historial con quien lo creó', '1',
     (select count(*)::text from change_log l join profiles p on p.id = l.entity_id
       where l.action = 'perfil_creado' and p.full_name = 'Con Acceso'
         and l.actor_id = (select profile_id from actores where nombre = 'crear')));
   -- Plantillas: nadie da un permiso que no tiene
-  perform pg_temp.valor('crear', $q$ select create_employee('Sup por Crear', null, 'w2', 'supervisor', 'en', false, null) $q$);
+  perform pg_temp.valor('crear', $q$ select create_employee('Sup por', ' Crear', null, 'w2', 'supervisor', 'en', false, null) $q$);
   perform pg_temp.prueba('plantilla: quien crea sin esos permisos no los otorga (0)', '0',
     (select count(*)::text from profile_permissions pp join profiles p on p.id = pp.profile_id where p.full_name = 'Sup por Crear'));
-  perform pg_temp.valor('super', $q$ select create_employee('Sup por Super', null, 'w2', 'supervisor', 'en', false, null) $q$);
+  perform pg_temp.valor('super', $q$ select create_employee('Sup por', ' Super', null, 'w2', 'supervisor', 'en', false, null) $q$);
   perform pg_temp.prueba('plantilla Supervisor por el Super Admin: 8 permisos', '8',
     (select count(*)::text from profile_permissions pp join profiles p on p.id = pp.profile_id where p.full_name = 'Sup por Super'));
-  perform pg_temp.valor('super', $q$ select create_employee('Admin por Super', null, 'w2', 'admin', 'en', false, null) $q$);
+  perform pg_temp.valor('super', $q$ select create_employee('Admin por', ' Super', null, 'w2', 'admin', 'en', false, null) $q$);
   perform pg_temp.prueba('plantilla Admin por el Super Admin: 36 permisos (D-252)', '36',
     (select count(*)::text from profile_permissions pp join profiles p on p.id = pp.profile_id where p.full_name = 'Admin por Super'));
   perform pg_temp.prueba('plantilla Admin: sin empleados_gestionar_permisos', '0',
     (select count(*)::text from profile_permissions pp join profiles p on p.id = pp.profile_id
       where p.full_name = 'Admin por Super' and pp.permission_key = 'empleados_gestionar_permisos'));
-  perform pg_temp.valor('super', $q$ select create_employee('Emp por Super', null, 'w2', 'employee', 'en', false, null) $q$);
+  perform pg_temp.valor('super', $q$ select create_employee('Emp por', ' Super', null, 'w2', 'employee', 'en', false, null) $q$);
   perform pg_temp.prueba('plantilla Empleado: sin permisos', '0',
     (select count(*)::text from profile_permissions pp join profiles p on p.id = pp.profile_id where p.full_name = 'Emp por Super'));
   perform pg_temp.prueba('los permisos otorgados quedan con quién los dio', '8',

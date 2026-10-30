@@ -138,11 +138,21 @@ export const es = {
   newEmployee: {
     title: 'Nuevo empleado', // APROBADO (D-171)
     name: 'Nombre', // APROBADO (D-171)
+    firstName: 'Nombre', // APROBADO (D-264)
+    lastName: 'Apellidos', // APROBADO (D-264)
+    address1: 'Dirección', // APROBADO (D-264)
+    address2: 'Dirección 2', // APROBADO (D-264)
+    state: 'State', // APROBADO (D-264)
+    city: 'City', // APROBADO (D-264)
+    zip: 'ZIP code', // APROBADO (D-264)
+    noState: '—', // D-200 (opción para dejar State vacío)
+    errorLastName: 'Escribe los apellidos.', // D-200 (mismo patrón que errorName)
+    errorZip: 'Escribe un ZIP code de 5 dígitos, por ejemplo 34105.', // D-200 (patrón de D-219)
     phone: 'Teléfono', // APROBADO (D-171)
     type: 'Tipo', // APROBADO (D-171)
     role: 'Rol de partida', // APROBADO (D-171)
     hasAccess: 'Tiene acceso a la app', // APROBADO (D-171)
-    email: 'Correo', // APROBADO (D-171)
+    email: 'Email', // APROBADO (D-264, antes 'Correo' de D-171)
     language: 'Idioma', // APROBADO (D-171)
     create: 'Crear empleado', // APROBADO (D-171)
     errorName: 'Escribe el nombre.', // SIN APROBAR (mismo patrón que D-156 "Escribe un correo válido.")
@@ -196,6 +206,9 @@ export const es = {
     errorUpload: 'No se pudo subir el documento. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
     errorOpen: 'No se pudo abrir el documento. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
     errorCamera: 'Permite el acceso a la cámara en los ajustes del teléfono.', // SIN APROBAR
+    missingName: (name: string) => `Nombre actual: ${name}. Llena Nombre y Apellidos.`, // APROBADO (D-267)
+    fillName: 'Editar', // D-200 (acceso directo a editar desde el aviso de D-267)
+    address: 'Dirección', // D-200 (fila de solo lectura en Datos: dirección completa)
   },
 
   // Pestañas Permisos y Pagos del perfil (D-058, D-188 a D-194). Los 36 nombres de permisos salen de current/flujo.md

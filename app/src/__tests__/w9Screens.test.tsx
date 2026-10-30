@@ -67,6 +67,14 @@ describe('Perfil 1099 → Documentos: W-9 por llenar (D-256)', () => {
     expect(screen.getByLabelText(a.accounts)).toBeTruthy();
   });
 
+  test('D-267 (1): las líneas 5 y 6 salen de la dirección del perfil', async () => {
+    mockApi.status.mockResolvedValue({ ok: true, data: null });
+    await render(section({ address: '1520 Golden Gate Pkwy, Apt 4', cityLine: 'Naples, FL 34105' }));
+    await fireEvent.press(await screen.findByText(a.sendToFill));
+    expect(screen.getByLabelText(a.line5).props.value).toBe('1520 Golden Gate Pkwy, Apt 4');
+    expect(screen.getByLabelText(a.line6).props.value).toBe('Naples, FL 34105');
+  });
+
   test('sin dirección no se envía; con los datos llama a send-w9 y dice a quién se envió', async () => {
     mockApi.status.mockResolvedValue({ ok: true, data: null });
     mockApi.send.mockResolvedValue({ ok: true, data: { id: 'r1', sent: true, expiresAt: '2026-11-03T12:00:00Z' } });

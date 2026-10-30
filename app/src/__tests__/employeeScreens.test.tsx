@@ -91,7 +91,8 @@ import EmployeeProfileScreen from '@/app/(app)/employees/[id]';
 
 const es = getStrings('es');
 const employee = (over: Record<string, unknown> = {}) => ({
-  id: 'e1', fullName: 'Ana Ruiz', phone: '(239) 555-0142', email: 'ana@correo.com', workerType: '1099', role: 'employee',
+  id: 'e1', fullName: 'Ana Ruiz', firstName: 'Ana', lastName: 'Ruiz', addressLine1: null, addressLine2: null, state: null, city: null,
+  zip: null, phone: '(239) 555-0142', email: 'ana@correo.com', workerType: '1099', role: 'employee',
   isSuperAdmin: false, hasAppAccess: true, language: 'en', active: true, firstLoginAt: null, ...over,
 });
 
@@ -108,7 +109,10 @@ beforeEach(() => {
 describe('Nuevo empleado (D-171)', () => {
   test('muestra los campos de la muestra; el correo solo con la casilla marcada', async () => {
     await render(<NewEmployeeScreen />);
-    for (const label of [es.newEmployee.name, es.newEmployee.phone, es.newEmployee.role, es.newEmployee.email, es.newEmployee.language]) {
+    for (const label of [
+      es.newEmployee.firstName, es.newEmployee.lastName, es.newEmployee.phone, es.newEmployee.email, es.newEmployee.address1,
+      es.newEmployee.address2, es.newEmployee.state, es.newEmployee.city, es.newEmployee.zip, es.newEmployee.role, es.newEmployee.language,
+    ]) {
       expect(screen.getByLabelText(label)).toBeTruthy();
     }
     expect(screen.getByText(es.newEmployee.type)).toBeTruthy();
@@ -126,6 +130,7 @@ describe('Nuevo empleado (D-171)', () => {
     await render(<NewEmployeeScreen />);
     await fireEvent.press(screen.getByText(es.newEmployee.create));
     expect(screen.getByText(es.newEmployee.errorName)).toBeTruthy();
+    expect(screen.getByText(es.newEmployee.errorLastName)).toBeTruthy();
     expect(screen.getByText(es.email.invalid)).toBeTruthy();
     expect(mockCreateEmployee).not.toHaveBeenCalled();
   });
@@ -133,12 +138,13 @@ describe('Nuevo empleado (D-171)', () => {
   test('crea y abre el perfil, pestaña Datos (D-181), con el estado de la invitación', async () => {
     mockCreateEmployee.mockResolvedValue({ ok: true, data: { id: 'nuevo1', invitation: 'sent' } });
     await render(<NewEmployeeScreen />);
-    await fireEvent.changeText(screen.getByLabelText(es.newEmployee.name), 'Ana Ruiz');
+    await fireEvent.changeText(screen.getByLabelText(es.newEmployee.firstName), 'Ana');
+    await fireEvent.changeText(screen.getByLabelText(es.newEmployee.lastName), 'Ruiz');
     await fireEvent.changeText(screen.getByLabelText(es.newEmployee.email), 'ana@correo.com');
     await fireEvent.press(screen.getByText(es.newEmployee.create));
     await waitFor(() => expect(mockReplace).toHaveBeenCalled());
     expect(mockCreateEmployee).toHaveBeenCalledWith(
-      expect.objectContaining({ fullName: 'Ana Ruiz', email: 'ana@correo.com', workerType: 'w2', role: 'employee', hasAppAccess: true, language: 'en' }),
+      expect.objectContaining({ firstName: 'Ana', lastName: 'Ruiz', email: 'ana@correo.com', workerType: 'w2', role: 'employee', hasAppAccess: true, language: 'en' }),
     );
     expect(mockReplace).toHaveBeenCalledWith({ pathname: '/employees/[id]', params: { id: 'nuevo1', invitation: 'sent' } });
   });
@@ -146,7 +152,8 @@ describe('Nuevo empleado (D-171)', () => {
   test('correo ya registrado: lo dice bajo el campo y no abre ningún perfil', async () => {
     mockCreateEmployee.mockResolvedValue({ ok: false, reason: 'email_taken' });
     await render(<NewEmployeeScreen />);
-    await fireEvent.changeText(screen.getByLabelText(es.newEmployee.name), 'Ana Ruiz');
+    await fireEvent.changeText(screen.getByLabelText(es.newEmployee.firstName), 'Ana');
+    await fireEvent.changeText(screen.getByLabelText(es.newEmployee.lastName), 'Ruiz');
     await fireEvent.changeText(screen.getByLabelText(es.newEmployee.email), 'ana@correo.com');
     await fireEvent.press(screen.getByText(es.newEmployee.create));
     expect(await screen.findByText(es.newEmployee.errorEmailTaken)).toBeTruthy();
@@ -249,22 +256,28 @@ describe('Perfil del empleado (D-057, D-172 a D-175, D-182 a D-184)', () => {
     expect(screen.queryByRole('switch')).toBeNull();
   });
 
-  test('Editar convierte la pantalla en formulario: solo Nombre, Teléfono, Tipo e Idioma se editan', async () => {
+  test('Editar convierte la pantalla en formulario: Nombre, Apellidos, Teléfono, dirección, Tipo e Idioma se editan', async () => {
     mockUpdateEmployee.mockResolvedValue({ ok: true, data: null });
     await render(<EmployeeProfileScreen />);
     await screen.findByText(es.employee.invitationSent);
     await fireEvent.press(screen.getByText(es.common.edit));
-    expect(screen.getByLabelText(es.newEmployee.name)).toBeTruthy();
+    expect(screen.getByLabelText(es.newEmployee.firstName)).toBeTruthy();
+    expect(screen.getByLabelText(es.newEmployee.lastName)).toBeTruthy();
     expect(screen.getByLabelText(es.employee.phone)).toBeTruthy();
+    expect(screen.getByLabelText(es.newEmployee.zip)).toBeTruthy();
     expect(screen.getByLabelText(es.newEmployee.language)).toBeTruthy();
     // Correo, Rol de partida y Acceso a la app siguen como filas de solo lectura.
-    expect(screen.queryByLabelText(es.employee.email)).toBeNull();
+    expect(screen.queryByLabelText(es.newEmployee.email)).toBeNull();
     expect(screen.getByText('ana@correo.com')).toBeTruthy();
     expect(screen.getByText(es.employee.invitationSent)).toBeTruthy();
-    await fireEvent.changeText(screen.getByLabelText(es.newEmployee.name), 'Ana María Ruiz');
+    await fireEvent.changeText(screen.getByLabelText(es.newEmployee.firstName), 'Ana María');
+    await fireEvent.changeText(screen.getByLabelText(es.newEmployee.zip), '34105');
     await fireEvent.press(screen.getByText(es.common.save));
     await waitFor(() => expect(mockUpdateEmployee).toHaveBeenCalled());
-    expect(mockUpdateEmployee).toHaveBeenCalledWith('e1', { fullName: 'Ana María Ruiz', phone: '(239) 555-0142', workerType: '1099', language: 'en' });
+    expect(mockUpdateEmployee).toHaveBeenCalledWith('e1', {
+      firstName: 'Ana María', lastName: 'Ruiz', phone: '(239) 555-0142', workerType: '1099', language: 'en',
+      addressLine1: '', addressLine2: '', state: '', city: '', zip: '34105',
+    });
   });
 
   test('mientras se edita el interruptor Activo no se muestra: queda solo la etiqueta con el estado real', async () => {
@@ -293,10 +306,27 @@ describe('Perfil del empleado (D-057, D-172 a D-175, D-182 a D-184)', () => {
     await render(<EmployeeProfileScreen />);
     await screen.findByText(es.employee.invitationSent);
     await fireEvent.press(screen.getByText(es.common.edit));
-    await fireEvent.changeText(screen.getByLabelText(es.newEmployee.name), '  ');
+    await fireEvent.changeText(screen.getByLabelText(es.newEmployee.firstName), '  ');
+    await fireEvent.changeText(screen.getByLabelText(es.newEmployee.zip), '341');
     await fireEvent.press(screen.getByText(es.common.save));
     expect(screen.getByText(es.newEmployee.errorName)).toBeTruthy();
+    expect(screen.getByText(es.newEmployee.errorZip)).toBeTruthy();
     expect(mockUpdateEmployee).not.toHaveBeenCalled();
+  });
+
+  test('D-267 (2): sin Nombre y Apellidos, aviso ámbar con el nombre actual y acceso directo a editar', async () => {
+    mockFetchEmployee.mockResolvedValue({ ok: true, data: employee({ fullName: 'Ana Ruiz Vieja', firstName: null, lastName: null }) });
+    await render(<EmployeeProfileScreen />);
+    expect(await screen.findByText(es.employee.missingName('Ana Ruiz Vieja'))).toBeTruthy();
+    await fireEvent.press(screen.getAllByText(es.employee.fillName)[1]);
+    expect(screen.getByLabelText(es.newEmployee.firstName).props.value).toBe('');
+    expect(screen.queryByText(es.employee.missingName('Ana Ruiz Vieja'))).toBeNull();
+  });
+
+  test('D-267 (2): con Nombre y Apellidos no hay aviso', async () => {
+    await render(<EmployeeProfileScreen />);
+    await screen.findByText(es.employee.invitationSent);
+    expect(screen.queryByText(es.employee.missingName('Ana Ruiz'))).toBeNull();
   });
 
   test('Reenviar invitación llama a la función y lo confirma', async () => {

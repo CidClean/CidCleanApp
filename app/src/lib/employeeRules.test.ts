@@ -18,6 +18,9 @@ import {
   sortEmployees,
   validateEdit,
   validateNewEmployee,
+  missingNameParts,
+  w9AddressLine,
+  w9CityLine,
   type Employee,
 } from './employeeRules';
 import type { Access } from './visibility';
@@ -26,6 +29,13 @@ const access = (isSuperAdmin: boolean, perms: string[] = []): Access => ({ isSup
 const employee = (over: Partial<Employee> = {}): Employee => ({
   id: 'e1',
   fullName: 'Ana Ruiz',
+  firstName: 'Ana',
+  lastName: 'Ruiz',
+  addressLine1: null,
+  addressLine2: null,
+  state: null,
+  city: null,
+  zip: null,
   phone: '(239) 555-0142',
   email: 'ana@correo.com',
   workerType: 'w2',
@@ -55,63 +65,104 @@ describe('iniciales y orden de la lista (D-083)', () => {
   });
 });
 
-describe('Nuevo empleado (D-171)', () => {
-  test('valores de partida: W-2, Empleado, con acceso, English', () => {
+describe('Nuevo empleado (D-171, D-264)', () => {
+  const addr = { addressLine1: '', addressLine2: '', state: '', city: '', zip: '' };
+  test('valores de partida: W-2, Empleado, con acceso, English, sin dirección', () => {
     expect(emptyNewEmployee()).toEqual({
-      fullName: '', phone: '', workerType: 'w2', role: 'employee', hasAppAccess: true, email: '', language: 'en',
+      firstName: '', lastName: '', phone: '', workerType: 'w2', role: 'employee', hasAppAccess: true, email: '', language: 'en', ...addr,
     });
   });
 
-  test('el nombre es obligatorio', () => {
-    expect(validateNewEmployee({ ...emptyNewEmployee(), fullName: '  ', email: 'a@b.co' })).toEqual({ fullName: 'required' });
+  test('Nombre y Apellidos son obligatorios (D-267 (3))', () => {
+    expect(validateNewEmployee({ ...emptyNewEmployee(), firstName: '  ', lastName: ' ', email: 'a@b.co' })).toEqual({
+      firstName: 'required',
+      lastName: 'required',
+    });
+    expect(validateNewEmployee({ ...emptyNewEmployee(), firstName: 'Ana', email: 'a@b.co' })).toEqual({ lastName: 'required' });
   });
 
   test('con acceso a la app el correo es obligatorio y debe tener formato de correo', () => {
-    const base = { ...emptyNewEmployee(), fullName: 'Ana' };
+    const base = { ...emptyNewEmployee(), firstName: 'Ana', lastName: 'Ruiz' };
     expect(validateNewEmployee({ ...base, email: '' })).toEqual({ email: 'invalid' });
     expect(validateNewEmployee({ ...base, email: 'ana@' })).toEqual({ email: 'invalid' });
     expect(validateNewEmployee({ ...base, email: ' ana@correo.com ' })).toEqual({});
   });
 
   test('sin acceso a la app el correo no se pide ni se valida', () => {
-    const form = { ...emptyNewEmployee(), fullName: 'Ana', hasAppAccess: false, email: 'basura' };
+    const form = { ...emptyNewEmployee(), firstName: 'Ana', lastName: 'Ruiz', hasAppAccess: false, email: 'basura' };
     expect(validateNewEmployee(form)).toEqual({});
     expect(createEmployeeBody(form).email).toBe('');
   });
 
+  test('ZIP de 5 dígitos o 5+4; State de la lista', () => {
+    const base = { ...emptyNewEmployee(), firstName: 'Ana', lastName: 'Ruiz', email: 'a@b.co' };
+    expect(validateNewEmployee({ ...base, zip: '34105' })).toEqual({});
+    expect(validateNewEmployee({ ...base, zip: '34105-1234' })).toEqual({});
+    expect(validateNewEmployee({ ...base, zip: '3410' })).toEqual({ zip: 'invalid' });
+    expect(validateNewEmployee({ ...base, state: 'DC' })).toEqual({});
+    expect(validateNewEmployee({ ...base, state: 'XX' })).toEqual({ state: 'invalid' });
+  });
+
   test('hasErrors', () => {
     expect(hasErrors({})).toBe(false);
-    expect(hasErrors({ fullName: 'required' })).toBe(true);
+    expect(hasErrors({ firstName: 'required' })).toBe(true);
   });
 
   test('el cuerpo para la Edge Function va limpio', () => {
     expect(
-      createEmployeeBody({ fullName: ' Ana Ruiz ', phone: ' (239) 555-0142 ', workerType: '1099', role: 'supervisor', hasAppAccess: true, email: ' Ana@Correo.COM ', language: 'es' }),
+      createEmployeeBody({
+        firstName: ' Ana ', lastName: ' Ruiz ', phone: ' (239) 555-0142 ', workerType: '1099', role: 'supervisor', hasAppAccess: true,
+        email: ' Ana@Correo.COM ', language: 'es', addressLine1: ' 1520 Golden Gate Pkwy ', addressLine2: '', state: 'FL', city: ' Naples ', zip: ' 34105 ',
+      }),
     ).toEqual({
-      full_name: 'Ana Ruiz', phone: '(239) 555-0142', worker_type: '1099', role: 'supervisor', language: 'es',
-      has_app_access: true, email: 'ana@correo.com',
+      first_name: 'Ana', last_name: 'Ruiz', phone: '(239) 555-0142', worker_type: '1099', role: 'supervisor', language: 'es',
+      has_app_access: true, email: 'ana@correo.com', address_line1: '1520 Golden Gate Pkwy', address_line2: '', state: 'FL', city: 'Naples', zip: '34105',
     });
   });
 });
 
-describe('Datos en edición (D-174): solo Nombre, Teléfono, Tipo e Idioma', () => {
-  test('el formulario parte de los datos actuales y solo trae los campos editables', () => {
-    expect(editFormFrom(employee({ phone: null }))).toEqual({ fullName: 'Ana Ruiz', phone: '', workerType: 'w2', language: 'en' });
+describe('Datos en edición (D-174, D-264)', () => {
+  test('el formulario parte de los datos actuales; un perfil viejo parte sin Nombre ni Apellidos', () => {
+    expect(editFormFrom(employee({ phone: null, state: 'FL' }))).toEqual({
+      firstName: 'Ana', lastName: 'Ruiz', phone: '', workerType: 'w2', language: 'en',
+      addressLine1: '', addressLine2: '', state: 'FL', city: '', zip: '',
+    });
+    expect(editFormFrom(employee({ firstName: null, lastName: null })).firstName).toBe('');
   });
 
-  test('el nombre no puede quedar vacío', () => {
-    expect(validateEdit({ fullName: ' ', phone: '', workerType: 'w2', language: 'en' })).toEqual({ fullName: 'required' });
-    expect(validateEdit({ fullName: 'Ana', phone: '', workerType: 'w2', language: 'en' })).toEqual({});
+  test('Nombre y Apellidos no pueden quedar vacíos', () => {
+    const f = editFormFrom(employee());
+    expect(validateEdit({ ...f, firstName: ' ' })).toEqual({ firstName: 'required' });
+    expect(validateEdit({ ...f, lastName: '' })).toEqual({ lastName: 'required' });
+    expect(validateEdit(f)).toEqual({});
   });
 
   test('detecta si hubo cambios', () => {
     const e = employee();
     const form = editFormFrom(e);
     expect(editChanged(e, form)).toBe(false);
-    expect(editChanged(e, { ...form, fullName: ' Ana Ruiz ' })).toBe(false);
+    expect(editChanged(e, { ...form, firstName: ' Ana ' })).toBe(false);
+    expect(editChanged(e, { ...form, lastName: 'Ruiz Díaz' })).toBe(true);
     expect(editChanged(e, { ...form, phone: '1' })).toBe(true);
+    expect(editChanged(e, { ...form, zip: '34105' })).toBe(true);
+    expect(editChanged(e, { ...form, state: 'FL' })).toBe(true);
     expect(editChanged(e, { ...form, workerType: '1099' })).toBe(true);
     expect(editChanged(e, { ...form, language: 'es' })).toBe(true);
+  });
+
+  test('aviso de D-267 (2) solo si falta Nombre o Apellidos', () => {
+    expect(missingNameParts(employee())).toBe(false);
+    expect(missingNameParts(employee({ firstName: null }))).toBe(true);
+    expect(missingNameParts(employee({ lastName: ' ' }))).toBe(true);
+  });
+
+  test('W-9 (D-267 (1)): línea 5 con Dirección 2 y línea 6 "City, ST ZIP"', () => {
+    const e = employee({ addressLine1: '1520 Golden Gate Pkwy', addressLine2: 'Apt 4', city: 'Naples', state: 'FL', zip: '34105' });
+    expect(w9AddressLine(e)).toBe('1520 Golden Gate Pkwy, Apt 4');
+    expect(w9CityLine(e)).toBe('Naples, FL 34105');
+    expect(w9AddressLine(employee({ addressLine1: '1 Main St' }))).toBe('1 Main St');
+    expect(w9CityLine(employee({ city: 'Naples' }))).toBe('Naples');
+    expect(w9CityLine(employee())).toBe('');
   });
 });
 

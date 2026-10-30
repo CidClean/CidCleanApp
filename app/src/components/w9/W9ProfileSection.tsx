@@ -31,6 +31,9 @@ export function changedText(t: W9AdminStrings, changes: readonly W9Change[]): st
 export function W9ProfileSection(props: {
   profileId: string;
   fullName: string;
+  /** D-267 (1): línea 5 (Dirección + Dirección 2) y línea 6 ("City, ST ZIP") desde el perfil. */
+  address?: string;
+  cityLine?: string;
   email: string | null;
   locale: Locale;
   /** El W-9 vigente del perfil (para mostrar "Cambió" solo si es el que firmó el empleado). */
@@ -103,6 +106,8 @@ export function W9ProfileSection(props: {
         t={t}
         profileId={props.profileId}
         fullName={props.fullName}
+        address={props.address ?? ''}
+        cityLine={props.cityLine ?? ''}
         email={props.email ?? ''}
         onClose={() => setOpen(false)}
         onSent={async (sent, email) => {
@@ -122,6 +127,8 @@ export function W9SendDialog(props: {
   t: W9AdminStrings;
   profileId: string;
   fullName: string;
+  address?: string;
+  cityLine?: string;
   email: string;
   onClose: () => void;
   onSent: (sent: boolean, email: string) => void;
@@ -134,16 +141,23 @@ export function W9SendDialog(props: {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  // Cada vez que se abre parte del perfil (nombre y correo); lo demás lo llena quien envía.
+  // Cada vez que se abre parte del perfil (nombre, dirección y correo); lo demás lo llena quien envía.
   useEffect(() => {
     if (!props.visible) return;
     // Siempre del perfil actual: si se cambió el nombre o el correo, el W-9 toma el nuevo.
-    setData((d) => ({ ...d, name: props.fullName }));
+    // D-267 (1): la dirección sale del perfil (Dirección + Dirección 2 y "City, ST ZIP"); si el perfil no la tiene, se
+    // deja lo que se haya escrito antes.
+    setData((d) => ({
+      ...d,
+      name: props.fullName,
+      address: props.address?.trim() ? props.address.trim() : d.address,
+      city: props.cityLine?.trim() ? props.cityLine.trim() : d.city,
+    }));
     setEmail(props.email);
     setErrors([]);
     setEmailError(false);
     setFailed(false);
-  }, [props.visible, props.fullName, props.email]);
+  }, [props.visible, props.fullName, props.email, props.address, props.cityLine]);
 
   async function send() {
     if (busy) return;

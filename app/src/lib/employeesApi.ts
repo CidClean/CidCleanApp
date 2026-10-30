@@ -9,8 +9,8 @@ import {
   type NewEmployeeForm,
   type RoleKey,
   type WorkerType,
+  updateEmployeeArgs,
 } from './employeeRules';
-import { normalizePhone } from './phone';
 import { supabase } from './supabase';
 
 /** Acceso a empleados: lectura directa (las reglas por fila filtran por permiso), cambios por funciones del servidor. */
@@ -18,11 +18,19 @@ import { supabase } from './supabase';
 export type ApiFailure = 'forbidden' | 'email_taken' | 'invalid' | 'not_found' | 'network' | 'server';
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; reason: ApiFailure };
 
-const COLUMNS = 'id, full_name, phone, email, worker_type, role, is_super_admin, has_app_access, language, active, first_login_at';
+const COLUMNS =
+  'id, full_name, first_name, last_name, phone, email, worker_type, role, is_super_admin, has_app_access, language, active, first_login_at, address_line1, address_line2, state, city, zip';
 
 type Row = {
   id: string;
   full_name: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  address_line1?: string | null;
+  address_line2?: string | null;
+  state?: string | null;
+  city?: string | null;
+  zip?: string | null;
   phone: string | null;
   email: string | null;
   worker_type: WorkerType | null;
@@ -38,6 +46,13 @@ export function rowToEmployee(r: Row): Employee {
   return {
     id: r.id,
     fullName: r.full_name,
+    firstName: r.first_name ?? null,
+    lastName: r.last_name ?? null,
+    addressLine1: r.address_line1 ?? null,
+    addressLine2: r.address_line2 ?? null,
+    state: r.state ?? null,
+    city: r.city ?? null,
+    zip: r.zip ?? null,
     phone: r.phone,
     email: r.email,
     workerType: r.worker_type,
@@ -141,13 +156,7 @@ export async function setEmployeeActive(profileId: string, active: boolean): Pro
 
 export async function updateEmployee(profileId: string, form: EditForm): Promise<ApiResult<null>> {
   try {
-    const { error } = await supabase.rpc('update_employee', {
-      p_profile: profileId,
-      p_full_name: form.fullName.trim(),
-      p_phone: normalizePhone(form.phone) || null,
-      p_worker_type: form.workerType,
-      p_language: form.language,
-    });
+    const { error } = await supabase.rpc('update_employee', updateEmployeeArgs(profileId, form));
     if (error) return { ok: false, reason: failureFromCode(error.code) };
     return { ok: true, data: null };
   } catch {

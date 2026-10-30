@@ -6,6 +6,7 @@ import { FormScroll } from '@/components/FormScroll';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
+import { AddressFields } from '@/components/employees/AddressFields';
 import { PhoneField } from '@/components/PhoneField';
 import { AppText } from '@/components/AppText';
 import { Checkbox } from '@/components/Checkbox';
@@ -27,7 +28,7 @@ import { useGoBack } from '@/lib/navigation';
 import { usePermissions } from '@/lib/session';
 import { sample, useTheme } from '@/theme';
 
-/** Nuevo empleado (D-171): una sola pantalla; el correo aparece solo con acceso a la app. Al crear abre su perfil (D-181). */
+/** Nuevo empleado (D-171, D-264): una sola pantalla; el correo aparece solo con acceso a la app. Al crear abre su perfil (D-181). */
 export default function NewEmployeeScreen() {
   const router = useRouter();
   const goBack = useGoBack();
@@ -68,40 +69,31 @@ export default function NewEmployeeScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={strings.newEmployee.title} onBack={goBack} backLabel={strings.common.back} />
       <FormScroll contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
+        {/* D-264: Nombre, Apellidos, Teléfono, Email, Dirección, Dirección 2, State, City y ZIP code, en este orden.
+            D-200: la casilla de acceso va justo antes del Email (que aparece solo con acceso, D-171); Tipo y Rol después. */}
         <AppField
-          label={strings.newEmployee.name}
-          value={form.fullName}
-          onChangeText={(v) => set('fullName', v)}
+          label={strings.newEmployee.firstName}
+          value={form.firstName}
+          onChangeText={(v) => set('firstName', v)}
           autoCapitalize="words"
-          autoComplete="name"
-          error={errors.fullName ? strings.newEmployee.errorName : null}
+          autoComplete="given-name"
+          maxLength={60}
+          error={errors.firstName ? strings.newEmployee.errorName : null}
+        />
+        <AppField
+          label={strings.newEmployee.lastName}
+          value={form.lastName}
+          onChangeText={(v) => set('lastName', v)}
+          autoCapitalize="words"
+          autoComplete="family-name"
+          maxLength={60}
+          error={errors.lastName ? strings.newEmployee.errorLastName : null}
         />
         <PhoneField
           label={strings.newEmployee.phone}
           value={form.phone}
           onChange={(v) => set('phone', v)}
           error={errors.phone ? strings.common.phoneError : null}
-        />
-        <AppText size={sample.labelSize} color={colors.secondary} style={{ marginBottom: 2 }}>
-          {strings.newEmployee.type}
-        </AppText>
-        <Segmented
-          options={[
-            { value: 'w2', label: strings.employees.w2 },
-            { value: '1099', label: strings.employees.contractor },
-          ]}
-          value={form.workerType}
-          onChange={(v) => set('workerType', v)}
-        />
-        <SelectField
-          label={strings.newEmployee.role}
-          options={[
-            { value: 'employee', label: roleLabel(strings, 'employee') },
-            { value: 'supervisor', label: roleLabel(strings, 'supervisor') },
-            { value: 'admin', label: roleLabel(strings, 'admin') },
-          ]}
-          value={form.role}
-          onChange={(v) => set('role', v)}
         />
         <Checkbox
           label={strings.newEmployee.hasAccess}
@@ -126,6 +118,28 @@ export default function NewEmployeeScreen() {
             }
           />
         ) : null}
+        <AddressFields form={form} onChange={setForm} strings={strings} zipError={Boolean(errors.zip)} />
+        <AppText size={sample.labelSize} color={colors.secondary} style={{ marginBottom: 2 }}>
+          {strings.newEmployee.type}
+        </AppText>
+        <Segmented
+          options={[
+            { value: 'w2', label: strings.employees.w2 },
+            { value: '1099', label: strings.employees.contractor },
+          ]}
+          value={form.workerType}
+          onChange={(v) => set('workerType', v)}
+        />
+        <SelectField
+          label={strings.newEmployee.role}
+          options={[
+            { value: 'employee', label: roleLabel(strings, 'employee') },
+            { value: 'supervisor', label: roleLabel(strings, 'supervisor') },
+            { value: 'admin', label: roleLabel(strings, 'admin') },
+          ]}
+          value={form.role}
+          onChange={(v) => set('role', v)}
+        />
         <SelectField
           label={strings.newEmployee.language}
           options={[
