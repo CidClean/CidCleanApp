@@ -32,12 +32,14 @@ function escaparHtml(texto: string): string {
   return texto.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/** Correo de invitación (D-186 en inglés, D-247; estilo D-250): sin enlaces, desde no-reply@auth.cidclean.com. */
+/** Correo de invitación (D-186 en inglés, D-247; estilo D-250; botones de D-265), desde no-reply@auth.cidclean.com. */
 export async function enviarInvitacion(correo: string, nombre: string): Promise<boolean> {
   const html = INVITACION_HTML.replaceAll('{{name}}', escaparHtml(nombre));
   const texto = [
     `Hi ${nombre}, you've been added to the Cid Clean app.`,
-    "Open the app, enter this email and we'll send you a 6-digit code to sign in.",
+    "Open Cid Clean, enter this email and we'll send you a 6-digit code to sign in.",
+    'Open Cid Clean (web, also on iPhone with Safari): https://app.cidclean.com',
+    'Download for Android: https://expo.dev/artifacts/eas/Xi8qhEo-TqSGXLSV_IBPVjhiUbjtDtZ1uBbNvhMNlF4.apk',
     "If you weren't expecting this invitation, ignore this email.",
     '',
     pieTexto(),
