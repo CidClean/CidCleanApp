@@ -18,6 +18,21 @@ const mockBack = jest.fn();
 let mockAccess: { isSuperAdmin: boolean; permissions: Set<string> } = { isSuperAdmin: true, permissions: new Set() };
 let mockOwnId: string | null = 'yo';
 
+// D-292: las secciones de la fase D (ICA, ofertas y advertencias) sin red en las pruebas de pantallas.
+jest.mock('@/lib/icaApi', () => ({
+  fetchIcaInfo: async () => ({ ok: true, data: null }),
+  fetchOffersFor: async () => ({ ok: true, data: [] }),
+  fetchMyOffers: async () => ({ ok: true, data: [] }),
+  fetchWarnings: async () => ({ ok: false, reason: 'forbidden' }),
+  fetchOfferJobsites: async () => [],
+  fetchOfferVisits: async () => [],
+  fetchIcaPreviewUrl: jest.fn(),
+  fetchIcaSignedUrl: jest.fn(),
+  fetchWarningUrl: jest.fn(),
+  hour12: (x: string | null) => x ?? '',
+  windowEnd: () => null,
+  ICA_FIELDS: [],
+}));
 jest.mock('expo-router', () => ({
   useNavigation: () => mockNavigation,
   useRouter: () => ({ replace: jest.fn(), push: jest.fn(), back: mockBack, canGoBack: () => true }),
