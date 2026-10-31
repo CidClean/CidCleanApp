@@ -42,6 +42,8 @@ Legal rev. 3 (D-275 a D-285), en este orden:
 4. Fase D: ICA antes del primer trabajo, ofertas de trabajo y advertencias (D-285).
 5. Fase E: retención y borrado automático (D-281); W-2 sin acceso con corrección en 7 días, salario mínimo y horas extra (D-278).
 
+6. D-291: marca "Proveedor de cuentas" en el cliente (Wilson Franquicia), sus jobsites sin quote ni contrato.
+
 Pendiente: prueba real de Ida en iPhone con Safari.
 
 Preguntas abiertas para el dueño:
