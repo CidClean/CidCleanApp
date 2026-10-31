@@ -1,0 +1,57 @@
+<!doctype html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ICA, ofertas y advertencias</title>
+<!-- D-292: aprobado por el dueño (2026-10-31) sin el bloqueo para asignar trabajo; el ICA es opcional. Colores C1 (D-226). Datos de ejemplo. -->
+<style>
+body{background:#EDE6DA;font-family:Manrope,system-ui,sans-serif;color:#1E2A28;margin:0;padding:16px}
+.w{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;max-width:1240px;margin:auto}
+.step{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0F766E;margin:0 0 8px}
+.ph{background:#FBF6EF;border-radius:30px;padding:16px 14px;display:flex;flex-direction:column;gap:10px}
+.top{font-weight:800;font-size:20px}
+.c{background:#fff;border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.btn{background:#0F766E;color:#fff;border-radius:16px;padding:12px;text-align:center;font-weight:800;font-size:14px}
+.btn2{border:1px solid #0F766E;color:#0F766E;border-radius:16px;padding:11px;text-align:center;font-weight:800;font-size:14px}
+.r{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px}
+.r small{display:block;color:#6B5F52;font-size:12px}
+.ok{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#DDEFEC;color:#0F766E;white-space:nowrap}
+.warn{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#FBE3C7;color:#8A4B0F;white-space:nowrap}
+.neu{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#F1EBE2;color:#6B5F52;white-space:nowrap}
+.note{font-size:12px;color:#6B5F52;line-height:1.45}
+.amber{background:#FBE3C7;color:#8A4B0F;border-radius:14px;padding:10px 12px;font-size:13px;line-height:1.4}
+.row2{display:flex;gap:8px}.row2>div{flex:1}
+.hero{background:#0F766E;color:#fff;border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.hero small{opacity:.85;font-size:12px}
+.btnw{background:#fff;color:#0F766E;border-radius:16px;padding:12px;text-align:center;font-weight:800}
+.btnw2{border:1px solid #fff;color:#fff;border-radius:16px;padding:11px;text-align:center;font-weight:800}
+</style>
+<div class="w">
+<div><p class="step">1 · Perfil del 1099 → Documentos</p><div class="ph">
+ <div class="c"><div class="r"><div><b>W-9</b><small>Firmado el Oct 27, 2026</small></div><span class="ok">Firmado</span></div></div>
+ <div class="c"><div class="r"><div><b>Contrato de contratista (ICA)</b><small>ICA-0003 · enviado el Oct 31</small></div><span class="warn">Enviado</span></div>
+  <div class="btn2">Ver PDF</div><div class="note">Cuando firme, aparece "Contrafirmar". También puedes "Subir ICA firmado" si lo firmó en papel.</div></div>
+ <div class="c"><div class="r"><div><b>Contrato de contratista (ICA)</b><small>Sin ICA (acuerdo verbal)</small></div><span class="neu">Sin ICA</span></div>
+  <div class="btn">Preparar ICA</div></div>
+</div></div>
+<div><p class="step">2 · Admin: ofrecer trabajo</p><div class="ph">
+ <div class="c"><b>Ofrecer trabajo a Karina</b>
+  <div class="note">Naples Yacht Club · Franja de acceso: 11:00 pm – 3:00 am · L, M, J, V, S, D · $80 por día</div>
+  <div class="row2"><div class="btn2">Visita puntual</div><div class="btn">Ofrecer</div></div></div>
+ <div class="c"><b>Ofertas</b>
+  <div class="r"><div>Karina S.<small>Naples Yacht Club · enviada Oct 31</small></div><span class="neu">Pendiente</span></div>
+  <div class="r"><div>Yanilsy M.<small>Naples Yacht Club · Oct 28</small></div><span class="ok">Aceptada</span></div>
+  <div class="r"><div>Estela M. <span class="neu">Sin acceso</span><small>Visita puntual Nov 2</small></div><span class="a" style="color:#0F766E;font-weight:800;font-size:13px">Registrar respuesta</span></div>
+ </div>
+</div></div>
+<div><p class="step">3 · El 1099 recibe la oferta</p><div class="ph">
+ <div class="hero"><b style="font-size:17px">Nueva oferta de trabajo</b><small>Naples Yacht Club · Franja de acceso del cliente 11:00 pm – 3:00 am · 6 días por semana · $80 por día de servicio</small>
+  <div class="row2"><div class="btnw2">Rechazar</div><div class="btnw">Aceptar</div></div></div>
+ <div class="note">Puedes aceptar o rechazar sin ninguna consecuencia.</div>
+</div></div>
+<div><p class="step">4 · Advertencias (Super Admin)</p><div class="ph">
+ <div class="c"><div class="r"><b>Advertencias escritas</b><span class="warn">2 de 3</span></div>
+  <div class="r"><div>Oct 12, 2026<small>No marcó el día como completado y no avisó</small></div><span class="neu">Vigente</span></div>
+  <div class="r"><div>Sep 30, 2026<small>Llegó fuera de la franja de acceso · PDF</small></div><span class="neu">Vigente</span></div>
+  <div class="btn2">Nueva advertencia</div></div>
+ <div class="amber">Al llegar a 3 te avisamos para revisar si corresponde terminar el contrato por escrito.</div>
+</div></div>
+</div>
