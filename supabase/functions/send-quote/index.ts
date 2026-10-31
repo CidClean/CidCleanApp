@@ -6,12 +6,14 @@
 // (por ejemplo si falló).
 import { CORS, clienteDeQuienLlama, clienteDeServicio, errorDeBase, responder } from '../_shared/comun.ts';
 import { correoQuote, enviarCorreo, fecha, lang, pdfQuote, type QuoteMail } from '../_shared/quotes.ts';
+import { nombreDeQuote, numeroDeQuote } from '../_shared/fileName.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-async function enviarATodos(destinos: string[], d: QuoteMail, pdf: Uint8Array | null, version: string) {
+async function enviarATodos(destinos: string[], d: QuoteMail, pdf: Uint8Array | null, nombre: string) {
   const m = correoQuote(d);
-  const adjuntos = pdf ? [{ filename: `Cid Clean quote ${version}.pdf`, content: pdf }] : [];
+  // D-296: "Cid Clean - Quote Q-0012 v1.2 - Naples Yacht Club.pdf".
+  const adjuntos = pdf ? [{ filename: nombre, content: pdf }] : [];
   let enviados = 0;
   for (const to of destinos) if (await enviarCorreo(to, m, adjuntos)) enviados++;
   return { sent: enviados, failed: destinos.length - enviados };
@@ -52,7 +54,8 @@ Deno.serve(async (req) => {
       const f = await servicio.storage.from('quote-files').download(data.pdf_path);
       if (f.data) pdf = new Uint8Array(await f.data.arrayBuffer());
     }
-    const r = await enviarATodos(data.recipients, datosCorreo(data, data.expires_at, `${base}/q/${data.token}`), pdf, data.version);
+    const r = await enviarATodos(data.recipients, datosCorreo(data, data.expires_at, `${base}/q/${data.token}`), pdf,
+      nombreDeQuote(await numeroDeQuote(servicio, String(data.pdf_path ?? '').split('/')[0]), data.version, data.company));
     return responder(200, r);
   }
 
@@ -80,7 +83,8 @@ Deno.serve(async (req) => {
       const e = errorDeBase(e2.code);
       return responder(e.status, { error: e.error });
     }
-    const r = await enviarATodos(p.recipients, datosCorreo(p, c.expires_at, `${base}/q/${c.token}`), pdf, p.version);
+    const r = await enviarATodos(p.recipients, datosCorreo(p, c.expires_at, `${base}/q/${c.token}`), pdf,
+      nombreDeQuote(await numeroDeQuote(servicio, p.quote_id), p.version, p.company));
     return responder(200, r);
   } catch (_e) {
     return responder(500, { error: 'server_error' });

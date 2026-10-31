@@ -4,6 +4,7 @@
 // service role, lo descifra con W9_FILE_KEY y lo devuelve sin guardar copia en ningún lado (no-store).
 import { claveW9, descifrar, sha256Hex, tipoDeRuta } from '../_shared/cifrado.ts';
 import { clienteDeServicio } from '../_shared/comun.ts';
+import { disposicion, nombreLegible } from '../_shared/fileName.ts';
 
 const ENLACE = /^[A-Za-z0-9_-]{40,64}$/;
 const CABECERAS = {
@@ -33,9 +34,13 @@ Deno.serve(async (req) => {
   try {
     const plano = await descifrar(await claveW9(Deno.env.get('W9_FILE_KEY')), new Uint8Array(await archivo.arrayBuffer()));
     const { ext, mime } = tipoDeRuta(ruta);
+    // D-296: "Cid Clean - W-9 - {persona}.pdf" (la ruta empieza con el perfil). Con ?download=1, como descarga.
+    const { data: perfil } = await servicio.from('profiles').select('full_name').eq('id', ruta.split('/')[0]).maybeSingle();
+    const nombre = nombreLegible(['W-9', perfil?.full_name], ext);
+    const tipo = new URL(req.url).searchParams.get('download') === '1' ? 'attachment' : 'inline';
     return new Response(plano, {
       status: 200,
-      headers: { ...CABECERAS, 'Content-Type': mime, 'Content-Disposition': `inline; filename="W-9.${ext}"` },
+      headers: { ...CABECERAS, 'Content-Type': mime, 'Content-Disposition': disposicion(nombre, tipo) },
     });
   } catch {
     return fallo(500);

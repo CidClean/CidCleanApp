@@ -3,6 +3,7 @@
 // solo uso y 15 días de vida), código de 6 dígitos al correo del ICA, firma con nombre completo y la casilla de
 // consentimiento. En inglés (D-285). Todo pasa por funciones de la base que solo puede llamar la service role
 // (ica_portal_*). Acciones: state, request, verify, data, file, sign. Este archivo no contiene llaves.
+import { nombreLegible } from '../_shared/fileName.ts';
 import { clienteDeServicio } from '../_shared/comun.ts';
 import { codigo, enviarCorreo, sha256, tokenAleatorio } from '../_shared/quotes.ts';
 import { REMITENTE_DOCUMENTOS } from '../_shared/contratoCorreos.ts';
@@ -80,9 +81,12 @@ Deno.serve(async (req) => {
       if (!sessionHash) return r(401, { error: 'session' });
       const { data, error } = await db.rpc('ica_portal_data', { p_session_hash: sessionHash });
       if (error) return r(500, { error: 'server_error' });
-      const path = (data as { unsigned_path?: string } | null)?.unsigned_path;
+      const x = data as { unsigned_path?: string; ica?: string; contractor_name?: string; contractor?: string } | null;
+      const path = x?.unsigned_path;
       if (!path) return r(401, { error: 'session' });
-      const { data: s, error: e2 } = await db.storage.from('contractor-docs').createSignedUrl(path, 60);
+      // D-296: la descarga del portal baja como "Cid Clean - ICA-0003 - Karina Sarmiento.pdf".
+      const nombre = nombreLegible([x?.ica ?? 'ICA', x?.contractor_name || x?.contractor]);
+      const { data: s, error: e2 } = await db.storage.from('contractor-docs').createSignedUrl(path, 60, { download: nombre });
       return e2 || !s ? r(500, { error: 'server_error' }) : r(200, { url: s.signedUrl });
     }
     case 'sign': {

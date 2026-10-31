@@ -7,6 +7,7 @@
 //   void   { warning_id, reason }                                       anular, con motivo
 //   open   { warning_id }                                               URL de 60 s del documento (queda en el historial)
 // Este archivo no contiene llaves.
+import { nombreLegible } from '../_shared/fileName.ts';
 import { CORS, clienteDeQuienLlama, clienteDeServicio, errorDeBase, responder } from '../_shared/comun.ts';
 import { tokenAleatorio } from '../_shared/quotes.ts';
 
@@ -91,7 +92,11 @@ Deno.serve(async (req) => {
       const { data, error } = await quien.rpc('open_warning_document', { p_warning: id('warning_id') });
       if (error) return fallo(error);
       const { data: s, error: e2 } = await servicio.storage.from(BUCKET).createSignedUrl(data as string, 60);
-      return e2 || !s ? responder(500, { error: 'server_error' }) : responder(200, { url: s.signedUrl, expires_in: 60 });
+      // D-296: "Cid Clean - Written Warning - {persona} - {fecha}.{ext}".
+      const { data: w } = await servicio.from('written_warnings').select('profile_id, issued_on').eq('id', id('warning_id')).maybeSingle();
+      const { data: p } = w ? await servicio.from('profiles').select('full_name').eq('id', w.profile_id).maybeSingle() : { data: null };
+      const nombre = nombreLegible(['Written Warning', p?.full_name, w?.issued_on], String(data).split('.').pop() ?? 'pdf');
+      return e2 || !s ? responder(500, { error: 'server_error' }) : responder(200, { url: s.signedUrl, expires_in: 60, file_name: nombre });
     }
     default:
       return responder(400, { error: 'invalid' });

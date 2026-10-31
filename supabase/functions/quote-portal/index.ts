@@ -1,6 +1,7 @@
 // Portal del cliente (D-129, D-209): verify_jwt desactivado, porque lo usa el cliente sin cuenta. Todo pasa por
 // funciones de la base que solo puede llamar la service role (portal_*). Nunca devuelve datos internos.
 // Acciones: state, request, verify, quote, file, decide.
+import { nombreDeQuote, nombreLegible, numeroDeQuote } from '../_shared/fileName.ts';
 import { clienteDeServicio, responder } from '../_shared/comun.ts';
 import { codigo, correoCodigo, correoDecision, enviarCorreo, sha256, tokenAleatorio } from '../_shared/quotes.ts';
 import { correoCopiaAceptacion } from '../_shared/contratoCorreos.ts';
@@ -83,9 +84,16 @@ Deno.serve(async (req) => {
       if (error) return r(500, { error: 'server_error' });
       if (!path) return r(kind === 'terms' ? 404 : 401, { error: kind === 'terms' ? 'not_found' : 'session' });
       const bucket = kind === 'terms' ? 'terms' : 'quote-files';
-      const { data: s, error: e2 } = await db.storage.from(bucket).createSignedUrl(path, 60);
+      // D-296: la descarga del portal baja con el nombre legible (download=<nombre>).
+      let nombre = nombreLegible(['Terms']);
+      if (kind !== 'terms') {
+        const { data: q } = await db.rpc('portal_quote', { p_session_hash: sessionHash });
+        const numero = await numeroDeQuote(db, String(path).split('/')[0]);
+        nombre = nombreDeQuote(numero, q?.version, q?.company, kind === 'sow' ? 'SOW' : 'Quote');
+      }
+      const { data: s, error: e2 } = await db.storage.from(bucket).createSignedUrl(path, 60, { download: nombre });
       if (e2 || !s) return r(500, { error: 'server_error' });
-      return r(200, { url: s.signedUrl });
+      return r(200, { url: s.signedUrl, file_name: nombre });
     }
     case 'decide': {
       const kind = b.kind;
@@ -122,7 +130,7 @@ Deno.serve(async (req) => {
           const adj: { filename: string; content: Uint8Array }[] = [];
           if (d.pdf_path) {
             const f = await db.storage.from('quote-files').download(d.pdf_path);
-            if (f.data) adj.push({ filename: `Quote-${d.quote_number}-${d.version}.pdf`, content: new Uint8Array(await f.data.arrayBuffer()) });
+            if (f.data) adj.push({ filename: nombreDeQuote(d.quote_number ?? null, d.version, d.company), content: new Uint8Array(await f.data.arrayBuffer()) });
           }
           const ok = await enviarCorreo(d.client_email, correoCopiaAceptacion({
             quoteNumber: d.quote_number, version: d.version, company: d.company, site: d.site, signer: d.signer_name,

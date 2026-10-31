@@ -7,6 +7,7 @@
 //    (`<walkthrough>/v<versión>-sin-fotos.pdf`) y no se anota en walkthrough_versions.
 import { CORS, clienteDeQuienLlama, clienteDeServicio, errorDeBase, responder } from '../_shared/comun.ts';
 import { armarPdf, type Fuente } from './pdf.ts';
+import { diaDe, nombreLegible } from '../_shared/fileName.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SEGUNDOS = 60;
@@ -37,6 +38,8 @@ Deno.serve(async (req) => {
   }
 
   const servicio = clienteDeServicio();
+  // D-296: "Cid Clean - Walkthrough - Naples Yacht Club - 2026-10-21.pdf" (fecha de cierre de la versión).
+  const nombre = nombreLegible(['Walkthrough', (fuente as Fuente).company, diaDe((fuente as Fuente).closed_at)]);
   if ((fuente as { photos?: boolean }).photos !== true) {
     const sinFotos = sinFotosDe(fuente as Fuente);
     const rutaSinFotos = `${id}/v${version}-sin-fotos.pdf`;
@@ -49,7 +52,7 @@ Deno.serve(async (req) => {
     }
     const { data, error: errorFirma } = await servicio.storage.from(BUCKET).createSignedUrl(rutaSinFotos, SEGUNDOS);
     if (errorFirma || !data?.signedUrl) return responder(500, { error: 'server_error' });
-    return responder(200, { url: data.signedUrl, expires_in: SEGUNDOS, path: rutaSinFotos });
+    return responder(200, { url: data.signedUrl, expires_in: SEGUNDOS, path: rutaSinFotos, file_name: nombre });
   }
   let ruta = (fuente as Fuente).pdf_path;
   if (!ruta) {
@@ -74,7 +77,7 @@ Deno.serve(async (req) => {
 
   const { data, error: errorFirma } = await servicio.storage.from(BUCKET).createSignedUrl(ruta, SEGUNDOS);
   if (errorFirma || !data?.signedUrl) return responder(500, { error: 'server_error' });
-  return responder(200, { url: data.signedUrl, expires_in: SEGUNDOS, path: ruta });
+  return responder(200, { url: data.signedUrl, expires_in: SEGUNDOS, path: ruta, file_name: nombre });
 });
 
 /** La misma fuente sin las fotos de ningún área (D-284: quien no es admin no las ve). */

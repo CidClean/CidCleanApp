@@ -9,6 +9,7 @@
 //   upload      { profile_id, file, mime_type }  ICA firmado en papel (PDF o imagen, base64): "Firmado por ambas partes"
 //   open        { agreement_id }           URL de 60 s del ICA firmado (queda en el historial)
 // Correos desde documents@mail.cidclean.com con respuesta a info@cidclean.com (D-268). Este archivo no contiene llaves.
+import { nombreLegible } from '../_shared/fileName.ts';
 import { CORS, clienteDeQuienLlama, clienteDeServicio, errorDeBase, responder } from '../_shared/comun.ts';
 import { enviarCorreo, fecha, sha256, tokenAleatorio } from '../_shared/quotes.ts';
 import { sha256Bytes } from '../_shared/contrato.ts';
@@ -85,7 +86,9 @@ Deno.serve(async (req) => {
       const up = await servicio.storage.from(BUCKET).upload(path, pdf, { contentType: 'application/pdf', upsert: true });
       if (up.error) return responder(500, { error: 'server_error' });
       const url = await urlFirmada(path);
-      return url ? responder(200, { url, missing: c.missing }) : responder(500, { error: 'server_error' });
+      // D-296: "Cid Clean - ICA-0003 - Karina Sarmiento.pdf".
+      const nombre = nombreLegible([c.ica, camposDeIca(c).contractor_name || String(c.contractor ?? '')]);
+      return url ? responder(200, { url, missing: c.missing, file_name: nombre }) : responder(500, { error: 'server_error' });
     }
     case 'send': {
       if (!id('agreement_id')) return responder(400, { error: 'invalid' });
@@ -163,7 +166,7 @@ Deno.serve(async (req) => {
         return fallo(r.error);
       }
       const copias = await enviarCopias(c.contractor_signer_email as string, campos.contractor_name || String(c.contractor ?? ''), c.ica, ahora,
-        [{ filename: `${c.ica}-signed.pdf`, content: pdf }], false);
+        [{ filename: nombreLegible([c.ica, campos.contractor_name || String(c.contractor ?? '')]), content: pdf }], false);
       return responder(200, { id: c.id, status: 'signed', signed_at: ahora.toISOString(), copies: copias });
     }
     case 'upload': {
@@ -190,7 +193,7 @@ Deno.serve(async (req) => {
       const d = r.data as Fila;
       const copias = d.fields.contractor_email
         ? await enviarCopias(d.fields.contractor_email, d.fields.contractor_name || d.contractor as string, d.ica, new Date(),
-          [{ filename: `${d.ica}-signed.${EXT[mime]}`, content: datos }], true)
+          [{ filename: nombreLegible([d.ica, d.fields.contractor_name || String(d.contractor ?? '')], EXT[mime]), content: datos }], true)
         : {};
       return responder(200, { id: d.id, status: d.status, copies: copias });
     }
@@ -199,7 +202,13 @@ Deno.serve(async (req) => {
       const { data, error } = await quien.rpc('ica_open', { p_agreement: id('agreement_id') });
       if (error) return fallo(error);
       const url = await urlFirmada(data as string);
-      return url ? responder(200, { url, expires_in: 60 }) : responder(500, { error: 'server_error' });
+      // D-296: "Cid Clean - ICA-0003 - {contratista}.{ext}".
+      const { data: a } = await servicio.from('contractor_agreements').select('number, profile_id, fields').eq('id', id('agreement_id')).maybeSingle();
+      const { data: p } = a ? await servicio.from('profiles').select('full_name').eq('id', a.profile_id).maybeSingle() : { data: null };
+      const quien1099 = (a?.fields as { contractor_name?: string } | null)?.contractor_name || p?.full_name;
+      const ica = a?.number ? `ICA-${String(a.number).padStart(4, '0')}` : 'ICA';
+      const nombre = nombreLegible([ica, quien1099], String(data).split('.').pop() ?? 'pdf');
+      return url ? responder(200, { url, expires_in: 60, file_name: nombre }) : responder(500, { error: 'server_error' });
     }
     default:
       return responder(400, { error: 'invalid' });

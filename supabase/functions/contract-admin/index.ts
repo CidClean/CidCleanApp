@@ -7,6 +7,7 @@
 //   send       { contract_id, email? }     PDF sin firmar, link de un solo uso por 15 días y correo al cliente
 //   countersign { contract_id }            contrafirma: PDF firmado con certificado, documento del jobsite y copias
 // Correos desde documents@mail.cidclean.com con respuesta a info@cidclean.com (D-268). Este archivo no contiene llaves.
+import { nombreLegible } from '../_shared/fileName.ts';
 import { CORS, clienteDeQuienLlama, clienteDeServicio, errorDeBase, responder } from '../_shared/comun.ts';
 import { enviarCorreo, fecha, sha256, tokenAleatorio } from '../_shared/quotes.ts';
 import { camposDe, filasCertificadoContrato, sha256Bytes, type ContratoDb } from '../_shared/contrato.ts';
@@ -71,7 +72,9 @@ Deno.serve(async (req) => {
       const up = await servicio.storage.from(BUCKET).upload(path, pdf, { contentType: 'application/pdf', upsert: true });
       if (up.error) return responder(500, { error: 'server_error' });
       const { data: s, error: e2 } = await servicio.storage.from(BUCKET).createSignedUrl(path, 60);
-      return e2 || !s ? responder(500, { error: 'server_error' }) : responder(200, { url: s.signedUrl, missing: c.missing });
+      // D-296: "Cid Clean - Service Agreement CSA-0007 - Naples Yacht Club.pdf".
+      const nombre = nombreLegible([`Service Agreement ${c.csa}`, camposDe(c).client_legal_name]);
+      return e2 || !s ? responder(500, { error: 'server_error' }) : responder(200, { url: s.signedUrl, missing: c.missing, file_name: nombre });
     }
     case 'send': {
       if (!id('contract_id')) return responder(400, { error: 'invalid' });
@@ -154,7 +157,7 @@ Deno.serve(async (req) => {
       }
       const d = r.data as Fila & { company: string; cc_email: string | null };
       // Copia del contrato firmado a ambas partes (D-283).
-      const adj = [{ filename: `${c.csa}-signed.pdf`, content: pdf }];
+      const adj = [{ filename: nombreLegible([`Service Agreement ${c.csa}`, camposDe(c).client_legal_name || d.company]), content: pdf }];
       const copias: { to: string; cc: boolean }[] = [{ to: c.client_signer_email as string, cc: false }];
       copias.push({ to: 'info@cidclean.com', cc: true }); // D-289: copia a info@cidclean.com
       const enviados: Record<string, boolean> = {};

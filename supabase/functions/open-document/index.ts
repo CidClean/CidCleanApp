@@ -7,6 +7,7 @@
 //    las dos quedan en el historial.
 import { sha256Hex, tipoDeRuta } from '../_shared/cifrado.ts';
 import { CORS, clienteDeQuienLlama, clienteDeServicio, errorDeBase, responder } from '../_shared/comun.ts';
+import { nombreLegible } from '../_shared/fileName.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SEGUNDOS = 60;
@@ -35,8 +36,11 @@ Deno.serve(async (req) => {
   }
 
   const servicio = clienteDeServicio();
-  const { data: doc, error: errorDoc } = await servicio.from('profile_documents').select('encrypted').eq('id', documento).single();
+  const { data: doc, error: errorDoc } = await servicio.from('profile_documents').select('encrypted, kind, profile_id').eq('id', documento).single();
   if (errorDoc || !doc) return responder(500, { error: 'server_error' });
+  // D-296: "Cid Clean - W-9 - Estela Medina.pdf" / "Cid Clean - Insurance Certificate - … .pdf".
+  const { data: perfil } = await servicio.from('profiles').select('full_name').eq('id', doc.profile_id).maybeSingle();
+  const nombre = nombreLegible([doc.kind === 'w9' ? 'W-9' : 'Insurance Certificate', perfil?.full_name], tipoDeRuta(ruta).ext);
   if (doc.encrypted) {
     const bytes = crypto.getRandomValues(new Uint8Array(32));
     const token = btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -44,11 +48,14 @@ Deno.serve(async (req) => {
       .from('w9_open_tokens')
       .insert({ token_hash: await sha256Hex(token), document_id: documento, action: accion });
     if (errorToken) return responder(500, { error: 'server_error' });
-    const url = `${Deno.env.get('SUPABASE_URL')}/functions/v1/w9-file/${token}/w9.${tipoDeRuta(ruta).ext}`;
-    return responder(200, { url, expires_in: SEGUNDOS });
+    const url = `${Deno.env.get('SUPABASE_URL')}/functions/v1/w9-file/${token}/w9.${tipoDeRuta(ruta).ext}${accion === 'download' ? '?download=1' : ''}`;
+    return responder(200, { url, expires_in: SEGUNDOS, file_name: nombre });
   }
 
-  const { data, error: errorFirma } = await servicio.storage.from('employee-docs').createSignedUrl(ruta, SEGUNDOS);
+  // Al descargar, Storage entrega el archivo con el nombre legible (download=<nombre>); al abrir, el visor lo guarda así.
+  const { data, error: errorFirma } = await servicio.storage
+    .from('employee-docs')
+    .createSignedUrl(ruta, SEGUNDOS, accion === 'download' ? { download: nombre } : undefined);
   if (errorFirma || !data?.signedUrl) return responder(500, { error: 'server_error' });
-  return responder(200, { url: data.signedUrl, expires_in: SEGUNDOS });
+  return responder(200, { url: data.signedUrl, expires_in: SEGUNDOS, file_name: nombre });
 });

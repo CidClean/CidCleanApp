@@ -3,6 +3,7 @@
 // token, de un solo uso y 15 días de vida), código de 6 dígitos al correo del contrato, firma con nombre, cargo y la
 // casilla de consentimiento. Todo pasa por funciones de la base que solo puede llamar la service role
 // (contract_portal_*). Acciones: state, request, verify, data, file, sign. Este archivo no contiene llaves.
+import { nombreLegible } from '../_shared/fileName.ts';
 import { clienteDeServicio } from '../_shared/comun.ts';
 import { codigo, enviarCorreo, sha256, tokenAleatorio } from '../_shared/quotes.ts';
 import { correoCodigoContrato, correoFirmaCliente, REMITENTE_DOCUMENTOS } from '../_shared/contratoCorreos.ts';
@@ -80,9 +81,12 @@ Deno.serve(async (req) => {
       if (!sessionHash) return r(401, { error: 'session' });
       const { data, error } = await db.rpc('contract_portal_data', { p_session_hash: sessionHash });
       if (error) return r(500, { error: 'server_error' });
-      const path = (data as { unsigned_path?: string } | null)?.unsigned_path;
+      const x = data as { unsigned_path?: string; csa?: string; company?: string; client_legal_name?: string } | null;
+      const path = x?.unsigned_path;
       if (!path) return r(401, { error: 'session' });
-      const { data: s, error: e2 } = await db.storage.from('jobsite-docs').createSignedUrl(path, 60);
+      // D-296: la descarga del portal baja como "Cid Clean - Service Agreement CSA-0007 - Naples Yacht Club.pdf".
+      const nombre = nombreLegible([`Service Agreement ${x?.csa ?? ''}`, x?.client_legal_name || x?.company]);
+      const { data: s, error: e2 } = await db.storage.from('jobsite-docs').createSignedUrl(path, 60, { download: nombre });
       return e2 || !s ? r(500, { error: 'server_error' }) : r(200, { url: s.signedUrl });
     }
     case 'sign': {
