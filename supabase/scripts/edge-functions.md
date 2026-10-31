@@ -147,3 +147,17 @@ npx supabase@latest functions deploy upload-w9 --project-ref <ref> --use-api
 npx supabase@latest functions deploy w9-file --project-ref <ref> --use-api --no-verify-jwt
 npx supabase@latest functions deploy w9-portal --project-ref <ref> --use-api --no-verify-jwt
 ```
+
+## Fase C: quote no es contrato y contrato del cliente (órdenes 61 a 63, D-283)
+
+Migraciones (sin aplicar, en este orden): `20261030000012_quote_no_es_contrato.sql` y `20261030000013_contratos.sql`. La 012 deja todos los jobsites que ya existen como "Firmado por ambas partes" (migración de datos) y programa la tarea diaria `cidclean-contratos-vencidos` (15 días sin firma → "Requiere actualización"). Pruebas: `supabase/tests/quote_no_es_contrato.sql`, `supabase/tests/contratos.sql` (psql, terminan en rollback) y `node --test supabase/tests/contrato.test.mjs`.
+
+- `quote-portal` (redesplegar, `--no-verify-jwt`): al aceptar manda al cliente la copia de la aceptación con el PDF del quote (desde `quotes@`); la aceptación guarda navegador, IP, versión 1.0 de los Client Portal Terms y el texto de la casilla de rev. 3.
+- `contract-admin` (nueva, `verify_jwt` activado, solo Super Admin): `get`, `save`, `preview`, `send` (link `PORTAL_BASE_URL/contract/<token>`, 15 días, desde `documents@mail.cidclean.com`), `countersign` (PDF con certificado en `jobsite-docs/<jobsite>/contract/…`, copia a ambas partes).
+- `contract-portal` (nueva, **sin** `verify_jwt`): `state`, `request`, `verify`, `data`, `file`, `sign`. Usa `PORTAL_CODE_PEPPER` y `RESEND_QUOTES_KEY` como los otros portales.
+
+```
+npx supabase@latest functions deploy quote-portal --project-ref <ref> --use-api --no-verify-jwt
+npx supabase@latest functions deploy contract-admin --project-ref <ref> --use-api
+npx supabase@latest functions deploy contract-portal --project-ref <ref> --use-api --no-verify-jwt
+```
