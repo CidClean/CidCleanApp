@@ -7,6 +7,7 @@ import { AppButton } from '@/components/AppButton';
 import { AppText } from '@/components/AppText';
 import { Icon } from '@/components/Icon';
 import { ListRow } from '@/components/ListRow';
+import { lineLabel } from '@/lib/summaryPl';
 import { Sheet } from '@/components/Sheet';
 import { TopBar } from '@/components/TopBar';
 import { useAccountingStrings } from '@/i18n/useAccountingStrings';
@@ -40,7 +41,7 @@ export default function ExpenseCategoriesScreen() {
   const load = useCallback(async () => {
     const result = await fetchExpenseCategories();
     if (result.ok) {
-      setCategories(activeReasons(result.data));
+      setCategories(activeReasons(result.data) as ExpenseCategory[]);
       setError((e) => (e === 'load' ? null : e));
     } else {
       setError('load');
@@ -84,7 +85,7 @@ export default function ExpenseCategoriesScreen() {
           <ListRow
             key={c.id}
             title={reasonLabel(c, locale)}
-            detail={other(c)}
+            detail={`${other(c)} · ${lineLabel(c.scheduleCLine)}`} // D-200: la línea del Schedule C (D-295) a la vista
             last={i === categories.length - 1}
             right={
               <View style={styles.icons}>

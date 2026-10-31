@@ -46,9 +46,9 @@ import ExpenseCategoryFormScreen from '@/app/(app)/settings/expense-categories/e
 import ExpenseCategoriesScreen from '@/app/(app)/settings/expense-categories/index';
 
 const categories = [
-  { id: 'c1', labelEs: 'Suministros', labelEn: 'Supplies', sort: 1, active: true },
-  { id: 'c2', labelEs: 'Equipo', labelEn: 'Equipment', sort: 2, active: true },
-  { id: 'c9', labelEs: 'Vieja', labelEn: 'Old', sort: 9, active: false },
+  { id: 'c1', labelEs: 'Suministros', labelEn: 'Supplies', sort: 1, active: true, scheduleCLine: '22' },
+  { id: 'c2', labelEs: 'Equipo', labelEn: 'Equipment', sort: 2, active: true, scheduleCLine: '22' },
+  { id: 'c9', labelEs: 'Vieja', labelEn: 'Old', sort: 9, active: false, scheduleCLine: '27a' },
 ];
 
 beforeEach(() => {
@@ -78,7 +78,7 @@ describe('Ajustes → Categorías de gastos (D-113, D-114, D-130, D-254)', () =>
     mockRemove.mockResolvedValue({ ok: true, data: 'deactivated' });
     await render(<ExpenseCategoriesScreen />);
     expect(await screen.findByText('Suministros')).toBeTruthy();
-    expect(screen.getByText('Supplies')).toBeTruthy();
+    expect(screen.getByText('Supplies · 22 · Supplies')).toBeTruthy();
     expect(screen.queryByText('Vieja')).toBeNull();
     await fireEvent.press(screen.getByLabelText('Eliminar Suministros'));
     expect(screen.getByText('¿Eliminar Suministros?')).toBeTruthy();
@@ -110,7 +110,7 @@ describe('Ajustes → Categorías de gastos (D-113, D-114, D-130, D-254)', () =>
     expect(screen.getByText('Escribe la categoría en inglés.')).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText('En inglés'), 'Food');
     await fireEvent.press(screen.getByText('Guardar'));
-    await waitFor(() => expect(mockCreate).toHaveBeenCalledWith('Comida', 'Food', 10));
+    await waitFor(() => expect(mockCreate).toHaveBeenCalledWith('Comida', 'Food', 10, '27a'));
     expect(mockBack).toHaveBeenCalled();
   });
 
@@ -126,6 +126,6 @@ describe('Ajustes → Categorías de gastos (D-113, D-114, D-130, D-254)', () =>
     expect(screen.getByText('Editar categoría')).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText('En inglés'), 'Tools');
     await fireEvent.press(screen.getByText('Guardar'));
-    await waitFor(() => expect(mockUpdate).toHaveBeenCalledWith('c2', 'Equipo', 'Tools'));
+    await waitFor(() => expect(mockUpdate).toHaveBeenCalledWith('c2', 'Equipo', 'Tools', '22'));
   });
 });

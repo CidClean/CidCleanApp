@@ -20,6 +20,7 @@ let mockOwnId: string | null = 'yo';
 let mockParams: Record<string, string> = { id: 'e1' };
 
 // D-292: las secciones de la fase D (ICA, ofertas y advertencias) sin red en las pruebas de pantallas.
+jest.mock('@/components/summary/EmployeeSummary', () => ({ EmployeeSummary: () => null }));
 jest.mock('@/lib/icaApi', () => ({
   fetchIcaInfo: async () => ({ ok: true, data: null }),
   fetchOffersFor: async () => ({ ok: true, data: [] }),

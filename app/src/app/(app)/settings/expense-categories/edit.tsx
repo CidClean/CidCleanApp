@@ -6,22 +6,28 @@ import { FormScroll } from '@/components/FormScroll';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
+import { AppText } from '@/components/AppText';
+import { SelectField } from '@/components/SelectField';
 import { TopBar } from '@/components/TopBar';
 import { useAccountingStrings } from '@/i18n/useAccountingStrings';
 import { useStrings } from '@/i18n/useStrings';
+import { useSummaryPlStrings } from '@/i18n/useSummaryPlStrings';
+import { lineLabel, SCHEDULE_C_LINES } from '@/lib/summaryPl';
 import { createExpenseCategory, fetchExpenseCategories, updateExpenseCategory } from '@/lib/accountingApi';
 import { nextReasonSort, validateReasonForm, type ReasonForm, type ReasonFormErrors } from '@/lib/leadRules';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions } from '@/lib/session';
-import { useTheme } from '@/theme';
+import { sample, useTheme } from '@/theme';
 
-/** Categoría de gastos (D-113, D-114, D-130): texto en español y en inglés y Guardar. Sin `id` crea una nueva al final de la lista. */
+/** Categoría de gastos (D-113, D-114, D-130): texto en español y en inglés, línea del Schedule C (D-295) y Guardar. Sin `id` crea una nueva al final de la lista. */
 export default function ExpenseCategoryFormScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const goBack = useGoBack();
   const { colors } = useTheme();
   const strings = useStrings();
   const a = useAccountingStrings();
+  const t = useSummaryPlStrings();
+  const [line, setLine] = useState('27a'); // D-200: una categoría nueva parte en 27a Other expenses
   const { isSuperAdmin } = usePermissions();
   const [form, setForm] = useState<ReasonForm>({ labelEs: '', labelEn: '' });
   const [sort, setSort] = useState<number | null>(null);
@@ -40,7 +46,10 @@ export default function ExpenseCategoryFormScreen() {
       setSort(nextReasonSort(result.data));
       const found = id ? result.data.find((c) => c.id === id) : undefined;
       if (id && !found) setFailure('load');
-      if (found) setForm({ labelEs: found.labelEs, labelEn: found.labelEn });
+      if (found) {
+        setForm({ labelEs: found.labelEs, labelEn: found.labelEn });
+        setLine(found.scheduleCLine);
+      }
     });
     return () => {
       cancelled = true;
@@ -57,8 +66,8 @@ export default function ExpenseCategoryFormScreen() {
     if (found.labelEs || found.labelEn) return;
     setSaving(true);
     const result = id
-      ? await updateExpenseCategory(id, form.labelEs, form.labelEn)
-      : await createExpenseCategory(form.labelEs, form.labelEn, sort);
+      ? await updateExpenseCategory(id, form.labelEs, form.labelEn, line)
+      : await createExpenseCategory(form.labelEs, form.labelEn, sort, line);
     setSaving(false);
     if (!result.ok) {
       setFailure('save');
@@ -84,6 +93,15 @@ export default function ExpenseCategoryFormScreen() {
           onChangeText={(v) => setForm({ ...form, labelEn: v })}
           error={errors.labelEn ? a.categories.errorEn : null}
         />
+        <SelectField
+          label={t.scheduleCLine}
+          options={SCHEDULE_C_LINES.map((l) => ({ value: l.line, label: lineLabel(l.line, l.name) }))}
+          value={line}
+          onChange={setLine}
+        />
+        <AppText size={sample.noteSize} color={colors.secondary}>
+          {t.scheduleCLineHelp}
+        </AppText>
         <View style={{ height: 4 }} />
         {failure === 'save' ? <AppAlert tone="error" text={a.categories.errorSave} /> : null}
         <AppButton label={strings.common.save} onPress={() => void save()} disabled={saving || sort === null} />

@@ -15,6 +15,7 @@ import { ChartIcon, ClockIcon, DocIcon, PeopleIcon, QuoteDueIcon } from '@/compo
 import { useAccountingStrings } from '@/i18n/useAccountingStrings';
 import { useServiceDaysStrings } from '@/i18n/useServiceDaysStrings';
 import { useStrings } from '@/i18n/useStrings';
+import { useSummaryPlStrings } from '@/i18n/useSummaryPlStrings';
 import { fetchAccountingJobsites, fetchDashboard, fetchRecurring, type AccountingJobsite } from '@/lib/accountingApi';
 import { accountingAccess, isRange, money, type DashboardFigures } from '@/lib/accountingRules';
 import { useGoBack } from '@/lib/navigation';
@@ -35,6 +36,7 @@ export default function AccountingScreen() {
   const strings = useStrings();
   const a = useAccountingStrings();
   const sd = useServiceDaysStrings();
+  const pl = useSummaryPlStrings();
   const { access } = usePermissions();
   const acc = accountingAccess(access);
   const { period, setPeriod, jobsiteId, setJobsiteId, params } = usePeriod();
@@ -140,6 +142,10 @@ export default function AccountingScreen() {
           ) : null}
           {acc.expenses ? (
             <Tile tone="plain" icon={<DocIcon />} title={a.expenses} figure={seesFigures && data ? money(data.expenses) : null} onPress={() => go('/accounting/expenses')} />
+          ) : null}
+          {acc.global ? (
+            // D-295: Profit & Loss del año (permiso dashboard_global, el que ya ve los totales).
+            <Tile tone="plain" icon={<ChartIcon />} title={pl.plTitle} line={pl.plLine} onPress={() => router.push('/accounting/profit-loss')} />
           ) : null}
           {acc.recurring ? (
             <Tile

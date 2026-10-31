@@ -19,6 +19,7 @@ let mockAccess: { isSuperAdmin: boolean; permissions: Set<string> } = { isSuperA
 let mockOwnId: string | null = 'yo';
 
 // D-292: las secciones de la fase D (ICA, ofertas y advertencias) sin red en las pruebas de pantallas.
+jest.mock('@/components/summary/EmployeeSummary', () => ({ EmployeeSummary: () => null }));
 jest.mock('@/lib/icaApi', () => ({
   fetchIcaInfo: async () => ({ ok: true, data: null }),
   fetchOffersFor: async () => ({ ok: true, data: [] }),
