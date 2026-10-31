@@ -3,6 +3,9 @@ import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { AppAlert } from "../AppAlert";
+import { AmberNote } from "../contract/ContractParts";
+import { useContractStrings } from "@/i18n/contract";
+import { fetchUnsignedJobsites } from "@/lib/contractApi";
 import { AppButton } from "../AppButton";
 import { AppText } from "../AppText";
 import { Dialog } from "../Dialog";
@@ -47,6 +50,7 @@ export function ScheduleWeek({
   const { colors, brand } = useTheme();
   const s = useSalesStrings();
   const t = useWorkStrings();
+  const k = useContractStrings();
   const [sunday, setSunday] = useState(() => sundayOf(new Date()));
   const [plan, setPlan] = useState<WeekPlan | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string[][]>>({});
@@ -68,7 +72,9 @@ export function ScheduleWeek({
       ? { ...p, jobsites: p.jobsites.filter((j) => j.id === jobsiteId) }
       : p;
 
+  const [unsigned, setUnsigned] = useState<Set<string>>(new Set());
   const load = useCallback(async () => {
+    void fetchUnsignedJobsites().then(setUnsigned);
     const r = await fetchWeekPlan(key);
     if (!r.ok) {
       onError(t.errorLoad);
@@ -270,6 +276,10 @@ export function ScheduleWeek({
             >
               {time ? `${time} · ${t.weekHint}` : t.noTimeSite}
             </AppText>
+            {/* D-289: sin contrato firmado por ambas partes no se programa (el servidor también lo rechaza). */}
+            {unsigned.has(j.id) ? (
+              <AmberNote title={k.noContractTitle} text={k.noContract} />
+            ) : null}
             {time ? (
               <Pressable
                 accessibilityRole="button"

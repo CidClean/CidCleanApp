@@ -6,7 +6,7 @@
 import { clienteDeServicio } from '../_shared/comun.ts';
 import { codigo, enviarCorreo, sha256, tokenAleatorio } from '../_shared/quotes.ts';
 import { correoCodigoContrato, correoFirmaCliente, REMITENTE_DOCUMENTOS } from '../_shared/contratoCorreos.ts';
-import { CONSENT_TEXT } from '../_shared/legal/csa-sow-1.0.ts';
+import { consentText } from '../_shared/legal/csa-sow-1.0.ts';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
       if (error) return r(500, { error: 'server_error' });
       if (!data) return r(401, { error: 'session' });
       const { unsigned_path: _, ...resto } = data as Record<string, unknown>;
-      return r(200, { ...resto, consent_text: CONSENT_TEXT });
+      return r(200, { ...resto, consent_text: consentText(String(resto.company ?? '')) });
     }
     case 'file': {
       // El contrato sin firmar, para leerlo antes de firmar (URL firmada de 60 segundos).

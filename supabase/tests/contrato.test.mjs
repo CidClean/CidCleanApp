@@ -6,7 +6,7 @@ import { test } from 'node:test';
 
 import { AUTOMATICAS, camposDe, filasCertificadoContrato, llaves, rellenar, sha256Bytes } from '../functions/_shared/contrato.ts';
 import { correoContrato, correoContratoFirmado, correoCopiaAceptacion, REMITENTE_DOCUMENTOS } from '../functions/_shared/contratoCorreos.ts';
-import { CONSENT_TEXT, PLANTILLA, TEMPLATE_VERSION } from '../functions/_shared/legal/csa-sow-1.0.ts';
+import { consentText, PLANTILLA, TEMPLATE_VERSION } from '../functions/_shared/legal/csa-sow-1.0.ts';
 
 const sql = readFileSync(new URL('../migrations/20261030000013_contratos.sql', import.meta.url), 'utf8');
 const editables = [...sql.slice(sql.indexOf('create function contract_editable_keys'), sql.indexOf('create function contract_mmddyyyy'))
@@ -46,7 +46,7 @@ test('camposDe agrega números de CSA, SOW y quote', () => {
 test('certificado: nombre, correo verificado, fecha y hora con zona, IP, navegador, consentimiento y contrafirma', () => {
   const at = new Date('2026-11-02T14:05:09Z');
   const filas = Object.fromEntries(filasCertificadoContrato({
-    csa: 'CSA-0001', sow: 'SOW-0001', pdfSha256: 'a'.repeat(64), signatureId: 'id-1',
+    csa: 'CSA-0001', sow: 'SOW-0001', pdfSha256: 'a'.repeat(64), signatureId: 'id-1', company: 'Acme LLC',
     cliente: { name: 'Ana Ruiz', title: 'Manager', email: 'ana@x.com', at, ip: '1.2.3.4', userAgent: 'UA', signatureId: 's' },
     cidClean: { name: 'Humberto V.', title: 'Managing Member', email: 'admin@cidclean.com', at, ip: null, userAgent: null },
     sentAt: at, sentBy: 'Humberto V.',
@@ -56,7 +56,8 @@ test('certificado: nombre, correo verificado, fecha y hora con zona, IP, navegad
   assert.match(filas['Client signed on'], /November 2, 2026, 9:05:09 AM EST \(America\/New_York\) · 2026-11-02 14:05:09 UTC/);
   assert.equal(filas['Client IP address'], '1.2.3.4');
   assert.equal(filas['Client browser'], 'UA');
-  assert.ok(filas['Consent to sign electronically'].includes(CONSENT_TEXT));
+  assert.ok(filas['Consent to sign electronically'].includes('I agree to sign this agreement electronically, and I am authorized to sign on behalf of Acme LLC.'));
+  assert.equal(consentText('X'), 'I agree to sign this agreement electronically, and I am authorized to sign on behalf of X.');
   assert.match(filas['Countersigned by'], /Humberto V\., Managing Member, Cid Clean LLC/);
 });
 

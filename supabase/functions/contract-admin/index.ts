@@ -3,13 +3,13 @@
 // Acciones:
 //   get        { jobsite_id }              contrato del jobsite (crea el borrador con los campos de la app)
 //   save       { contract_id, fields }     guarda los campos editables (vuelve a borrador si ya se había enviado)
-//   preview    { jobsite_id }              PDF sin firmar en base64 (para revisar antes de enviar)
+//   preview    { jobsite_id }              URL de 60 s del PDF (sin firmar, o con la firma del cliente)
 //   send       { contract_id, email? }     PDF sin firmar, link de un solo uso por 15 días y correo al cliente
 //   countersign { contract_id }            contrafirma: PDF firmado con certificado, documento del jobsite y copias
 // Correos desde documents@mail.cidclean.com con respuesta a info@cidclean.com (D-268). Este archivo no contiene llaves.
 import { CORS, clienteDeQuienLlama, clienteDeServicio, errorDeBase, responder } from '../_shared/comun.ts';
 import { enviarCorreo, fecha, sha256, tokenAleatorio } from '../_shared/quotes.ts';
-import { base64, camposDe, filasCertificadoContrato, sha256Bytes, type ContratoDb } from '../_shared/contrato.ts';
+import { camposDe, filasCertificadoContrato, sha256Bytes, type ContratoDb } from '../_shared/contrato.ts';
 import { correoContrato, correoContratoFirmado, REMITENTE_DOCUMENTOS } from '../_shared/contratoCorreos.ts';
 import { agregarCertificadoContrato, NOTA_CERTIFICADO_CONTRATO, pdfContrato } from '../_shared/contratoPdf.ts';
 
@@ -51,15 +51,27 @@ Deno.serve(async (req) => {
       return error ? fallo(error) : responder(200, data);
     }
     case 'preview': {
+      // "Ver PDF" (sin firmar) y "Ver PDF firmado" (con la firma del cliente, antes de contrafirmar), D-289. Se guarda
+      // en jobsite-docs/<jobsite>/contract-draft/preview.pdf (privado, sin fila en jobsite_documents) y se devuelve una
+      // URL firmada de 60 s para el visor.
       if (!id('jobsite_id')) return responder(400, { error: 'invalid' });
       const { data, error } = await quien.rpc('contract_prepare', { p_jobsite: id('jobsite_id') });
       if (error) return fallo(error);
       const c = data as Fila;
+      let pdf: Uint8Array;
       try {
-        return responder(200, { pdf: base64(await pdfContrato({ campos: camposDe(c), csa: c.csa })), missing: c.missing });
+        const cliente = c.client_signed_at
+          ? { name: c.client_signer_name as string, title: c.client_signer_title as string, at: new Date(c.client_signed_at) }
+          : null;
+        pdf = await pdfContrato({ campos: camposDe(c), csa: c.csa, firmas: { cliente } });
       } catch {
         return responder(500, { error: 'server_error' });
       }
+      const path = `${c.jobsite_id}/contract-draft/preview.pdf`;
+      const up = await servicio.storage.from(BUCKET).upload(path, pdf, { contentType: 'application/pdf', upsert: true });
+      if (up.error) return responder(500, { error: 'server_error' });
+      const { data: s, error: e2 } = await servicio.storage.from(BUCKET).createSignedUrl(path, 60);
+      return e2 || !s ? responder(500, { error: 'server_error' }) : responder(200, { url: s.signedUrl, missing: c.missing });
     }
     case 'send': {
       if (!id('contract_id')) return responder(400, { error: 'invalid' });
@@ -118,7 +130,7 @@ Deno.serve(async (req) => {
         });
         hash = await sha256Bytes(pdf);
         pdf = await agregarCertificadoContrato(pdf, `${c.csa} · ${c.sow}`, filasCertificadoContrato({
-          csa: c.csa, sow: c.sow, pdfSha256: hash, signatureId,
+          csa: c.csa, sow: c.sow, pdfSha256: hash, signatureId, company: campos.client_legal_name ?? '',
           cliente: {
             name: c.client_signer_name as string, title: c.client_signer_title as string, email: c.client_signer_email as string,
             at: clienteAt, ip: c.client_ip, userAgent: c.client_user_agent, signatureId: c.client_signature_id,
@@ -144,7 +156,7 @@ Deno.serve(async (req) => {
       // Copia del contrato firmado a ambas partes (D-283).
       const adj = [{ filename: `${c.csa}-signed.pdf`, content: pdf }];
       const copias: { to: string; cc: boolean }[] = [{ to: c.client_signer_email as string, cc: false }];
-      if (d.cc_email) copias.push({ to: d.cc_email, cc: true });
+      copias.push({ to: 'info@cidclean.com', cc: true }); // D-289: copia a info@cidclean.com
       const enviados: Record<string, boolean> = {};
       for (const x of copias) {
         try {

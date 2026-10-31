@@ -1,4 +1,5 @@
 import { Redirect, useRouter } from "expo-router";
+import { ContractCard } from "../contract/ContractCard";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -706,6 +707,10 @@ export function QuoteEditor({ source }: { source: QuoteSource }) {
             onFile={openFile}
             extra={extra}
           />
+        ) : null}
+        {/* D-289: quote aceptado del sitio → ficha del contrato del cliente. */}
+        {latest && latest.status === "accepted" && source.kind === "site" ? (
+          <ContractCard siteId={source.siteId} />
         ) : null}
         {latest && latest.status === "draft" && !actions.edit ? (
           <SentVersion

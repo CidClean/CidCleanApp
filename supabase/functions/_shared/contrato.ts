@@ -1,7 +1,7 @@
 // Contrato del cliente (orden 62, D-283): relleno de la plantilla y filas del certificado de firma. Sin pdf-lib, para
 // probarlo con Node (supabase/tests/contrato.test.mjs). El PDF se arma en contratoPdf.ts. Este archivo no contiene llaves.
 import { horaNaples } from './contratoCorreos.ts';
-import { CONSENT_TEXT, TEMPLATE_VERSION } from './legal/csa-sow-1.0.ts';
+import { consentText, TEMPLATE_VERSION } from './legal/csa-sow-1.0.ts';
 
 export type Campos = Record<string, string>;
 
@@ -47,7 +47,7 @@ export const AUTOMATICAS = ['sow_no', 'csa_no', 'quote_no', 'quote_version', 'so
 
 /** Filas del certificado de la firma electrónica (D-283, como D-268 (4) del W-9). */
 export function filasCertificadoContrato(o: {
-  csa: string; sow: string; pdfSha256: string; signatureId: string;
+  csa: string; sow: string; pdfSha256: string; signatureId: string; company: string;
   cliente: { name: string; title: string; email: string; at: Date; ip: string | null; userAgent: string | null; signatureId: string | null };
   cidClean: { name: string; title: string; email: string | null; at: Date; ip: string | null; userAgent: string | null };
   sentAt: Date | null; sentBy: string | null;
@@ -61,7 +61,7 @@ export function filasCertificadoContrato(o: {
     ['Client signed on', `${horaNaples(o.cliente.at, true)} (America/New_York) · ${utc(o.cliente.at)}`],
     ['Client IP address', o.cliente.ip ?? 'Not available'],
     ['Client browser', o.cliente.userAgent || 'Not available'],
-    ['Consent to sign electronically', `Accepted. Checkbox: "${CONSENT_TEXT}"`],
+    ['Consent to sign electronically', `Accepted. Checkbox: "${consentText(o.company)}"`],
     ['Client signature ID', o.cliente.signatureId ?? 'Not available'],
     ['Countersigned by', `${o.cidClean.name}, ${o.cidClean.title}, Cid Clean LLC${o.cidClean.email ? ` (${o.cidClean.email})` : ''}`],
     ['Countersigned on', `${horaNaples(o.cidClean.at, true)} (America/New_York) · ${utc(o.cidClean.at)}`],

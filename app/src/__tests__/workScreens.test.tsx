@@ -12,6 +12,7 @@ const mockApprove = jest.fn();
 const mockNoShow = jest.fn();
 const mockRecord = jest.fn();
 
+jest.mock('@/lib/contractApi', () => ({ fetchContractInfo: async () => ({ ok: true, data: null }), fetchCleaningType: async () => null, saveCleaningType: async () => true, fetchUnsignedJobsites: async () => new Set(), fetchContractPreviewUrl: async () => ({ ok: false, reason: 'server' }), contractStep: () => 1, fieldsToShow: () => [] })); // D-289
 jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: jest.fn(), push: mockPush, navigate: jest.fn(), back: mockBack, canGoBack: () => true }),
   useLocalSearchParams: () => ({ id: 'v1' }),

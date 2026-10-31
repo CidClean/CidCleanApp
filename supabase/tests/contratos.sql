@@ -181,6 +181,13 @@ begin
   perform pg_temp.prueba('ya firmado no se edita', 'ERR:22023', pg_temp.valor('super', format('select contract_save_fields(%L, %L)::text', c, '{"storage":"x"}')));
   perform pg_temp.prueba('historial: preparado, enviado, firmado por el cliente y por ambas partes', '4',
     (select count(*)::text from change_log where entity_id = j and action in ('contrato_preparado', 'contrato_enviado', 'contrato_firmado_cliente', 'contrato_firmado')));
+  -- Migración 20261031000001 (D-289): lo que leen las pantallas.
+  perform pg_temp.prueba('contract_info: ficha, quien aceptó y el contrato firmado', 'both_signed|Luis Paz|signed|true',
+    (select (x->>'status') || '|' || (x->>'accepted_by') || '|' || (x->'contract'->>'status') || '|' || (x->>'can_manage') from (select pg_temp.valor('super', format('select contract_info(%L)::text', j))::jsonb x) t));
+  perform pg_temp.prueba('contract_info: quien ve clientes la lee sin poder gestionar', 'false',
+    (pg_temp.valor('clientes', format('select contract_info(%L)::text', j))::jsonb->>'can_manage'));
+  perform pg_temp.prueba('el Schedule ya no lo lista como sin contrato', 'false',
+    pg_temp.valor('clientes', format('select (%L::uuid in (select schedule_unsigned_jobsites()))::text', j)));
   insert into visits (jobsite_id, starts_at, minutes, local_date) values (j, now() + interval '1 day', 60, current_date + 1);
   perform pg_temp.prueba('ahora sí se programa una visita', '1', (select count(*)::text from visits where jobsite_id = j));
 end $$;

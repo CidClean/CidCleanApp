@@ -138,6 +138,6 @@ export const PLANTILLA: Bloque[] = [
   { t: 'small', text: 'When signed electronically, an e-signature certificate page (name, verified email, date and time, IP address, browser, and consent to sign electronically) is attached as the last page.' },
 ];
 
-/** Texto de la casilla de consentimiento del portal de firma (D-283; D-200). */
-export const CONSENT_TEXT =
-  'I agree to sign this Commercial Service Agreement and Scope of Work electronically. Typing my name and title is my electronic signature, with the same effect as a handwritten signature (E-SIGN Act; s. 668.50, Fla. Stat.). I am authorized to sign on behalf of the Client.';
+/** Texto de la casilla de consentimiento del portal de firma, aprobado (D-289). */
+export const consentText = (client: string) =>
+  `I agree to sign this agreement electronically, and I am authorized to sign on behalf of ${client}.`;
