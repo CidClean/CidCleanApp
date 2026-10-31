@@ -160,7 +160,6 @@ export const workEs = {
   errorNoTime: 'Un jobsite no tiene hora ni duración de visita. Toca "Poner hora" en su tarjeta.', // D-234
   errorNoDay: 'Marcaste un día que ese jobsite no trabaja.', // D-234
   errorContract: (j: string) => `${j}: el contrato aún no está firmado por ambas partes. No se puede programar.`, // D-200 (D-283)
-  errorIca: (n: string) => `${n} no tiene el ICA firmado por ambas partes y el W-9 firmado. No se le puede asignar trabajo.`, // D-200 (D-285)
   noPeopleSite: 'Nadie asignado a este jobsite. Agrega a alguien para armar su semana.', // D-200
   noDay: (site: string, day: string) => `${site} no tiene visita el ${day}`, // APROBADO (muestra D-232, lector de pantalla)
   weekNote: 'Lo que guardes crea las visitas de esa semana. Los cambios de un día puntual se hacen tocando la tarjeta en Simple.', // D-200 (muestra D-232, sin generación 4 semanas)
@@ -312,7 +311,6 @@ export const workEn: WorkStrings = {
   errorNoTime: 'A jobsite has no visit time or length. Tap "Set time" on its card.',
   errorNoDay: "You marked a day that jobsite doesn't work.",
   errorContract: (j: string) => `${j}: the contract isn't signed by both parties yet. It can't be scheduled.`,
-  errorIca: (n: string) => `${n} doesn't have the ICA signed by both parties and a signed W-9. Work can't be assigned.`,
   noPeopleSite: 'Nobody is assigned to this jobsite. Add someone to plan its week.',
   noDay: (site: string, day: string) => `${site} has no visit on ${day}`,
   weekNote: 'Saving creates that week\'s visits. One-off changes for a day are made by tapping the card in Simple.',

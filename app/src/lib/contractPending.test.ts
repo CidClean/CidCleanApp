@@ -13,10 +13,3 @@ describe('contrato pendiente', () => {
     expect(failureFrom('22023', 'otra cosa')).toBe('invalid');
   });
 });
-
-describe('ICA pendiente (D-285)', () => {
-  it('reconoce ica_required en las dos capas', () => {
-    expect(workFailure('22023', 'ica_required:Prueba nuevo')).toEqual({ reason: 'ica_required', detail: 'Prueba nuevo' });
-    expect(failureFrom('22023', 'ica_required:Prueba nuevo')).toBe('icaRequired');
-  });
-});

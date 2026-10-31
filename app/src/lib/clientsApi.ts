@@ -9,13 +9,12 @@ import { supabase } from './supabase';
  * con las reglas por fila; la tarifa, los pagos, el margen y el contrato solo por funciones que registran cada apertura.
  */
 
-export type ClientsFailure = 'forbidden' | 'contractPending' | 'icaRequired' | 'invalid' | 'minWage' | 'not_found' | 'network' | 'server';
+export type ClientsFailure = 'forbidden' | 'contractPending' | 'invalid' | 'minWage' | 'not_found' | 'network' | 'server';
 export type ClientsResult<T> = { ok: true; data: T } | { ok: false; reason: ClientsFailure };
 
 export function failureFrom(code: string | undefined, message?: string): ClientsFailure {
   if (code === '42501') return 'forbidden';
   if (code === '22023' && (message ?? '').startsWith('contract_pending')) return 'contractPending'; // D-283
-  if (code === '22023' && (message ?? '').startsWith('ica_required')) return 'icaRequired'; // D-285
   if (code === '23514' && /m[ií]nimo/i.test(message ?? '')) return 'minWage';
   if (code === '22023' || code === '23514' || code === '23505' || code === '22P02' || code === '22008') return 'invalid';
   if (code === 'P0002') return 'not_found';

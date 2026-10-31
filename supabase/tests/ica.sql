@@ -1,4 +1,5 @@
--- Pruebas del ICA y de la regla de D-285 (migración 20261031000002, orden 65).
+-- Pruebas del ICA (migraciones 20261031000002 y 20261031000005; órdenes 65 y 69). D-292: el ICA es opcional y no
+-- bloquea asignar, programar, ofrecer ni registrar días.
 -- Repetibles: todo termina en rollback. Uso (desde la raíz del repositorio): psql -f supabase/tests/ica.sql
 -- (la última consulta lista cada prueba con ok = true/false).
 
@@ -79,8 +80,6 @@ begin
   insert into profile_permissions (profile_id, permission_key)
   select pg_temp.pid('admin'), k from unnest(array['empleados_ver', 'empleados_asignar_pago', 'empleados_ver_pagos', 'schedule_ver_editar',
                                                    'work_registrar_por_otros', 'work_aprobar', 'empleados_gestionar_documentos']) k;
-  -- El viejo ya trabajaba en js antes de la migración: se simula lo que hace la migración.
-  insert into contractor_ica_legacy (profile_id, jobsite_id) values (pg_temp.pid('viejo'), js);
 end $$;
 
 do $$
@@ -88,22 +87,16 @@ declare
   r text; js uuid := pg_temp.id('js'); js2 uuid := pg_temp.id('js2'); nuevo uuid := pg_temp.pid('nuevo'); viejo uuid := pg_temp.pid('viejo');
   ica uuid; v uuid; p text; tok text := repeat('a', 64); ses text := repeat('b', 64);
 begin
-  -- Regla D-285
-  perform pg_temp.prueba('W-2 se asigna sin ICA', 'ok',
-    case when pg_temp.valor('admin', format('select assign_employee(%L, %L, %L::date)', js, pg_temp.pid('w2'), cc_today())) like 'ERR%' then 'mal' else 'ok' end);
-  r := pg_temp.valor('admin', format('select assign_employee(%L, %L, %L::date)', js, nuevo, cc_today()));
-  perform pg_temp.prueba('1099 sin ICA ni W-9 no se asigna (ica_required)', 'ERR:22023:ica_required:Prueba nuevo', r);
-  perform pg_temp.prueba('anterior a la app: se asigna en su jobsite de antes', 'ok',
-    case when pg_temp.valor('admin', format('select assign_employee(%L, %L, %L::date)', js, viejo, cc_today())) like 'ERR%' then 'mal' else 'ok' end);
-  perform pg_temp.prueba('anterior a la app: no se asigna a un jobsite nuevo', 'ERR:22023:ica_required:Prueba viejo',
-    pg_temp.valor('admin', format('select assign_employee(%L, %L, %L::date)', js2, viejo, cc_today())));
+  -- D-292: sin ICA ni W-9 no se frena nada
+  perform pg_temp.prueba('1099 sin ICA ni W-9 se asigna', 'ok',
+    case when pg_temp.valor('admin', format('select assign_employee(%L, %L, %L::date)', js, nuevo, cc_today())) like 'ERR%' then 'mal' else 'ok' end);
   insert into visits (jobsite_id, starts_at, minutes, local_date) values (js2, now() + interval '2 days', 120, local_day(now() + interval '2 days')) returning id into v;
-  insert into ids values ('v2', v);
-  perform pg_temp.prueba('1099 sin ICA no entra a una visita', 'ERR:22023:ica_required:Prueba nuevo',
-    pg_temp.valor('admin', format('select set_visit_staff(%L, array[%L]::uuid[])::text', v, nuevo)));
-  perform pg_temp.prueba('ica_info: anterior a la app = legacy_pending', 'legacy_pending|f',
-    pg_temp.valor('admin', format($q$ select (ica_info(%L))->>'state' || '|' || left((ica_info(%L))->>'can_be_assigned', 1) $q$, viejo, viejo)));
-  perform pg_temp.prueba('ica_info: sin nada = missing', 'missing', pg_temp.valor('admin', format($q$ select ica_info(%L)->>'state' $q$, nuevo)));
+  perform pg_temp.prueba('1099 sin ICA entra a una visita de otro jobsite', 'ok',
+    case when pg_temp.valor('admin', format('select set_visit_staff(%L, array[%L]::uuid[])::text', v, viejo)) like 'ERR%' then 'mal' else 'ok' end);
+  perform pg_temp.prueba('la regla ya no existe', '0|0',
+    (select count(*) from pg_trigger where tgname in ('jobsite_assignments_ica', 'visit_staff_ica', 'service_days_ica'))::text || '|' ||
+    (select count(*) from pg_proc where proname in ('ica_can_work', 'ica_check'))::text);
+  perform pg_temp.prueba('ica_info: sin ICA = none (ficha "Sin ICA")', 'none', pg_temp.valor('admin', format($q$ select ica_info(%L)->>'state' $q$, nuevo)));
   perform pg_temp.prueba('ica_info: W-2 = not_required', 'not_required', pg_temp.valor('admin', format($q$ select ica_info(%L)->>'state' $q$, pg_temp.pid('w2'))));
   perform pg_temp.prueba('ica_info: otro empleado sin permiso no lo ve', 'ERR:42501', left(pg_temp.valor('w2', format('select ica_info(%L)', nuevo)), 9));
 
@@ -145,20 +138,14 @@ begin
     (select status || '|' || contractor_signer_name || '|' || contractor_signer_email || '|' || contractor_ip || '|' || contractor_user_agent || '|' ||
             left(contractor_consent::text, 1) from contractor_agreements where id = ica));
   perform pg_temp.prueba('el link es de un solo uso', 'not_found', pg_temp.servicio(format($q$ select ica_portal_state(%L)->>'state' $q$, tok)));
-  perform pg_temp.prueba('firmado por el contratista no deja asignar', 'ERR:22023:ica_required:Prueba nuevo',
-    pg_temp.valor('admin', format('select assign_employee(%L, %L, %L::date)', js2, nuevo, cc_today())));
+  perform pg_temp.prueba('ica_info: contractor_signed', 'contractor_signed', pg_temp.valor('admin', format($q$ select ica_info(%L)->>'state' $q$, nuevo)));
 
   -- Contrafirma
   perform pg_temp.prueba('solo el Super Admin contrafirma', 'ERR:42501', left(pg_temp.valor('admin', format('select ica_countersign_prepare(%L)', ica)), 9));
   r := pg_temp.valor('super', format('select ica_countersign_confirm(%L, %L, %L, gen_random_uuid(), now(), %L, %L)',
                                       ica, nuevo || '/ica/ICA-signed.pdf', repeat('1', 64), '5.6.7.8', 'UA2'));
   perform pg_temp.prueba('firmado por ambas partes', 'signed', (r::jsonb)->>'status');
-  perform pg_temp.prueba('con ICA pero sin W-9 sigue sin asignarse', 'ERR:22023:ica_required:Prueba nuevo',
-    pg_temp.valor('admin', format('select assign_employee(%L, %L, %L::date)', js2, nuevo, cc_today())));
-  insert into profile_documents (profile_id, kind, file_path) values (nuevo, 'w9', nuevo || '/w9/x.pdf');
-  perform pg_temp.prueba('con ICA y W-9 se asigna', 'ok',
-    case when pg_temp.valor('admin', format('select assign_employee(%L, %L, %L::date)', js2, nuevo, cc_today())) like 'ERR%' then 'mal' else 'ok' end);
-  perform pg_temp.prueba('ica_info: signed y asignable', 'signed|true', pg_temp.valor('admin', format($q$ select ica_info(%L)->>'state' || '|' || (ica_info(%L)->>'can_be_assigned') $q$, nuevo, nuevo)));
+  perform pg_temp.prueba('ica_info: signed', 'signed', pg_temp.valor('admin', format($q$ select ica_info(%L)->>'state' $q$, nuevo)));
   perform pg_temp.prueba('abrir el ICA firmado: solo Super Admin', 'ERR:42501', left(pg_temp.valor('admin', format('select ica_open(%L)', ica)), 9));
   p := pg_temp.valor('super', format('select ica_open(%L)', ica));
   perform pg_temp.prueba('abrir el ICA firmado deja historial', nuevo || '/ica/ICA-signed.pdf|1',
@@ -172,8 +159,8 @@ begin
   r := pg_temp.valor('super', format('select ica_upload_paper(%L, %L, %L)', viejo, viejo || '/ica/p.pdf', repeat('2', 64)));
   perform pg_temp.prueba('papel: firmado por ambas partes, subido por', 'signed|paper|t',
     (r::jsonb)->>'status' || '|' || ((r::jsonb)->>'source') || '|' || (((r::jsonb)->>'uploaded_by') is not null)::text::char);
-  perform pg_temp.prueba('ica_info del viejo: signed (sin W-9 no asignable)', 'signed|false',
-    pg_temp.valor('admin', format($q$ select ica_info(%L)->>'state' || '|' || (ica_info(%L)->>'can_be_assigned') $q$, viejo, viejo)));
+  perform pg_temp.prueba('ica_info del viejo: signed (papel)', 'signed|paper',
+    pg_temp.valor('admin', format($q$ select ica_info(%L)->>'state' || '|' || (ica_info(%L)->'agreement'->>'source') $q$, viejo, viejo)));
   perform pg_temp.prueba('las tablas no se leen directo', 'ERR:42501', left(pg_temp.valor('super', 'select count(*) from contractor_agreements'), 9));
 end $$;
 

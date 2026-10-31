@@ -82,7 +82,7 @@ export function ScheduleSimple({ onError, jobsiteId }: { onError: (text: string 
     const r = await setVisitStaff(editing.id, [...chosen]);
     setBusy(false);
     if (!r.ok) {
-      setDialogError(r.reason === 'over_32' ? t.over32(r.detail ?? '') : r.reason === 'ica_required' ? t.errorIca(r.detail ?? '') : t.errorSave);
+      setDialogError(r.reason === 'over_32' ? t.over32(r.detail ?? '') : t.errorSave);
       return;
     }
     setWarn(r.data.length ? t.warn28(r.data.map((w) => w.name).join(', ')) : null);

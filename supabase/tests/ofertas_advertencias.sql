@@ -79,11 +79,9 @@ begin
   insert into profile_permissions (profile_id, permission_key)
   select pg_temp.pid('admin'), k from unnest(array['empleados_ver', 'empleados_asignar_pago', 'empleados_ver_pagos', 'schedule_ver_editar',
                                                    'work_registrar_por_otros', 'work_aprobar', 'empleados_gestionar_documentos']) k;
-  -- El viejo ya trabajaba en js antes de la migración: se simula lo que hace la migración.
-  insert into contractor_ica_legacy (profile_id, jobsite_id) values (pg_temp.pid('viejo'), js);
 end $$;
 
--- nuevo y sinapp: ICA firmado por ambas partes y W-9 firmado.
+-- nuevo y sinapp: ICA firmado por ambas partes y W-9 firmado (desde D-292 no hace falta para ofrecer).
 insert into contractor_agreements (profile_id, source, status, signed_path, signed_sha256, uploaded_by, uploaded_at)
 select pg_temp.pid(x), 'paper', 'signed', pg_temp.pid(x) || '/ica/p.pdf', repeat('0', 64), pg_temp.pid(x), now() from unnest(array['nuevo', 'sinapp']) x;
 insert into profile_documents (profile_id, kind, file_path) select pg_temp.pid(x), 'w9', pg_temp.pid(x) || '/w9/p.pdf' from unnest(array['nuevo', 'sinapp']) x;
@@ -97,8 +95,8 @@ begin
   -- Ofertas
   perform pg_temp.prueba('sin permiso no ofrece', 'ERR:42501', left(pg_temp.valor('w2', format('select create_job_offer(%L, %L, null, 90, %L::date, null)', nuevo, js, hoy)), 9));
   perform pg_temp.prueba('no se ofrece a un W-2', 'ERR:22023:not_contractor', pg_temp.valor('admin', format('select create_job_offer(%L, %L, null, 90, %L::date, null)', pg_temp.pid('w2'), js, hoy)));
-  perform pg_temp.prueba('anterior a la app: no se le ofrece un jobsite nuevo', 'ERR:22023:ica_required:Prueba viejo',
-    pg_temp.valor('admin', format('select create_job_offer(%L, %L, null, 90, %L::date, null)', viejo, js2, hoy)));
+  perform pg_temp.prueba('D-292: a un 1099 sin ICA ni W-9 se le ofrece trabajo', 'pending',
+    (pg_temp.valor('admin', format('select create_job_offer(%L, %L, null, 90, %L::date, null)', viejo, js2, hoy))::jsonb)->>'status');
   r := pg_temp.valor('admin', format('select create_job_offer(%L, %L, null, 90, %L::date, %L)', nuevo, js, hoy, 'Lobby y baños'));
   o := (r::jsonb)->>'id';
   perform pg_temp.prueba('oferta de jobsite con franja y pago', 'pending|jobsite|22:00|01:00|90.00',

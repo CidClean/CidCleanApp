@@ -69,14 +69,6 @@ begin
                  ('sow', 'clientes_ver'), ('sow', 'clientes_editar_walkthrough_sow')) as p(n, k) on p.n = a.nombre;
 end $$;
 
--- D-285 (20261031000002): los 1099 de prueba tienen el ICA firmado por ambas partes y el W-9 firmado.
-insert into contractor_agreements (profile_id, source, status, signed_path, signed_sha256, uploaded_by, uploaded_at)
-select p.id, 'paper', 'signed', p.id || '/ica/prueba.pdf', repeat('0', 64), p.id, now()
-  from actores a join profiles p on p.id = a.profile_id where p.worker_type = '1099';
-insert into profile_documents (profile_id, kind, file_path)
-select p.id, 'w9', p.id || '/w9/prueba-ica.pdf' from actores a join profiles p on p.id = a.profile_id
- where p.worker_type = '1099' and not exists (select 1 from profile_documents d where d.profile_id = p.id and d.kind = 'w9' and d.replaced_at is null);
-
 -- Pruebas --------------------------------------------------------------------------------------------
 do $$
 declare

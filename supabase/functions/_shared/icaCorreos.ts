@@ -10,7 +10,7 @@ const PAPEL = 'You can ask for a free paper copy at any time: reply to this emai
 export function correoIca(o: { name: string | null; ica: string; link: string; expires: string }) {
   const first = (o.name ?? '').trim().split(/\s+/)[0] ?? '';
   const subject = `Please sign your Independent Contractor Agreement ${o.ica}`;
-  const intro = 'Your Independent Contractor Agreement with Cid Clean LLC is ready to sign. Jobs can be offered to you only after both parties sign it and your Form W-9 is signed.';
+  const intro = 'Your Independent Contractor Agreement with Cid Clean LLC is ready to sign.';
   const seguro = "We'll send a code to this email so only you can open it. You sign by typing your full name.";
   const vence = `This link can be used once and expires on ${o.expires}.`;
   const html = correoHtml({
