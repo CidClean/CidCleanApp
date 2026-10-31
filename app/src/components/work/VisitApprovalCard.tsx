@@ -86,18 +86,20 @@ export function VisitApprovalCard({ card, onChanged, onError, onApproved }: Prop
     !!r.serviceDay && can(access, 'work_editar') && seesPay && (r.serviceDay.status !== 'approved' || access.isSuperAdmin);
   const hasW2 = card.rows.some((r) => !r.contractor);
 
-  const failText = (r: WorkFailure) =>
-    r === 'service_days_pending'
+  const failText = (r: WorkFailure, detail?: string) =>
+    r === 'ica_required'
+      ? t.errorIca(detail ?? '')
+      : r === 'service_days_pending'
       ? sd.errorPendingDays
       : r === 'already_approved'
         ? sd.errorApproved
         : r === 'open_shift' ? t.errorOpen : r === 'gps_pending' ? t.errorGps : r === 'missing_time' ? t.errorMissing : r === 'no_work' ? t.errorNoWork : t.errorSave;
 
-  async function run(action: () => Promise<{ ok: boolean; reason?: WorkFailure }>) {
+  async function run(action: () => Promise<{ ok: boolean; reason?: WorkFailure; detail?: string }>) {
     setBusy(true);
     const r = await action();
     setBusy(false);
-    onError(r.ok ? null : failText(r.reason ?? 'server'));
+    onError(r.ok ? null : failText(r.reason ?? 'server', r.detail));
     await onChanged();
     return r.ok;
   }

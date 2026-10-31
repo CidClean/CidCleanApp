@@ -142,6 +142,8 @@ export function ScheduleWeek({
           ? t.over32(r.detail ?? "")
           : r.reason === "contract_pending"
             ? t.errorContract(r.detail ?? "")
+            : r.reason === "ica_required"
+            ? t.errorIca(r.detail ?? "")
             : r.reason === "no_time"
             ? t.errorNoTime
             : r.reason === "no_day"

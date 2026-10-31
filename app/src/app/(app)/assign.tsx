@@ -33,7 +33,7 @@ export default function AssignScreen() {
   const [options, setOptions] = useState<Option[] | null>(null);
   const [choice, setChoice] = useState('');
   const [start, setStart] = useState(formatUsDate(dayKey(today)));
-  const [error, setError] = useState<'start' | 'save' | 'contract' | null>(null);
+  const [error, setError] = useState<'start' | 'save' | 'contract' | 'ica' | null>(null);
   const [saving, setSaving] = useState(false);
   // D-241: en jobsites de clientes previos la fecha de inicio puede ser pasada.
   const [legacyIds, setLegacyIds] = useState<Set<string>>(new Set());
@@ -75,7 +75,7 @@ export default function AssignScreen() {
       : await assignEmployee(choice, params.profile as string, key);
     setSaving(false);
     if (!r.ok) {
-      setError(r.reason === 'contractPending' ? 'contract' : 'save');
+      setError(r.reason === 'contractPending' ? 'contract' : r.reason === 'icaRequired' ? 'ica' : 'save');
       return;
     }
     goBack();
@@ -110,6 +110,7 @@ export default function AssignScreen() {
         />
         {error === 'save' ? <AppAlert tone="error" text={c.assign.errorSave} /> : null}
         {error === 'contract' ? <AppAlert tone="error" text={c.assign.errorContract} /> : null}
+        {error === 'ica' ? <AppAlert tone="error" text={c.assign.errorIca} /> : null}
         <AppButton label={c.assign.submit} onPress={() => void submit()} disabled={saving || !choice} />
       </ScrollView>
     </View>
