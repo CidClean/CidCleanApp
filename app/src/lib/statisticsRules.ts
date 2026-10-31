@@ -6,7 +6,7 @@
 import type { AccountingStrings } from '@/i18n/accounting';
 import type { StatisticsStrings } from '@/i18n/statistics';
 import { hoursText, monthTitle, money, periodTitle, toCsv, type Period } from './accountingRules';
-import { BRAND_PDF_CSS, brandFooterHtml, brandHeaderHtml } from './pdfBrand';
+import { docHtml, docTable } from './docPdf';
 import { can, canAny, type Access } from './visibility';
 
 // --- Tipos -------------------------------------------------------------------------------------------------
@@ -314,43 +314,39 @@ function esc(x: string): string {
   return x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/** PDF de Estadísticas con el encabezado y el pie de la marca (D-250): cuentas, empleados, faltas y tendencia. */
+/** PDF de Estadísticas como documento (orden 70, D-293, lib/docPdf): cuentas, empleados, faltas y tendencia. */
 export function statsHtml(r: StatisticsReport, p: Period, s: StatisticsStrings, a: AccountingStrings): string {
   const c = s.csv;
-  const table = (head: string[], rows: string[][]) =>
-    `<table><thead><tr>${head.map((x) => `<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${rows
-      .map((row) => `<tr>${row.map((x) => `<td>${esc(x)}</td>`).join('')}</tr>`)
-      .join('')}</tbody></table>`;
-  const accounts = table(
+  const accounts = docTable(
     [c.account, c.workedHours, c.paidHours, c.unworkedAmount, c.expected, c.staff, c.profit, c.margin, c.incomePerHour, c.costPerHour, c.worked],
     r.accounts.map((x) => [
       `${x.name} · ${x.client}`, hours(x.workedMinutes), hours(x.paidMinutes), money(x.unworkedAmount), money(x.expected), money(x.staff),
       money(x.profit), x.margin === null ? '—' : `${pct(x.margin)}%`, (() => { const v = perHour(x.expected, x.workedMinutes); return v === null ? '—' : money(v); })(),
       (() => { const v = perHour(x.staff, x.workedMinutes); return v === null ? '—' : money(v); })(), `${x.scheduledWorked}/${x.scheduled}`,
     ]),
+    { num: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] },
   );
-  const employees = table(
+  const employees = docTable(
     [c.employee, c.worked, c.workedHours, c.paidHours, c.unworkedAmount, c.cost, c.punctualOnTime],
     r.employees.map((e) => [
       e.name, `${e.scheduledWorked}/${e.scheduled}`, hours(e.workedMinutes), hours(e.paidMinutes), money(e.unworkedAmount), money(e.cost),
       e.punctualSelf > 0 ? `${e.punctualOnTime}/${e.punctualSelf}` : '—',
     ]),
+    { num: [1, 2, 3, 4, 5, 6] },
   );
   const absences = r.employees.flatMap((e) => e.absences);
   const absTable = absences.length
-    ? `<h2>${esc(c.absences)}</h2>${table([c.employee, c.account, c.day], absences.map((x) => [x.name, x.jobsite, x.day.slice(0, 10)]))}`
+    ? `<h2>${esc(c.absences)}</h2>${docTable([c.employee, c.account, c.day], absences.map((x) => [x.name, x.jobsite, x.day.slice(0, 10)]))}`
     : '';
-  const trend = table(
+  const trend = docTable(
     [c.month, c.expected, c.staff, c.expenses, c.profit],
     r.trend.map((m) => [monthTitle(m.month.slice(0, 7), a), money(m.expected), money(m.staff), money(m.expenses), money(m.profit)]),
+    { num: [1, 2, 3, 4] },
   );
-  return `<!doctype html><html><head><meta charset="utf-8"><style>
-body{font-family:Manrope,Arial,sans-serif;color:#1E2A28;background:#FBF6EF;margin:24px}
-h1{font-size:22px;margin:0 0 2px}h2{font-size:15px;margin:18px 0 6px}.s{color:#6B5F52;font-size:13px;margin-bottom:12px}
-table{width:100%;border-collapse:collapse;background:#FFFFFF;font-size:11px}
-th,td{padding:6px;border-bottom:1px solid #EFE5D8;text-align:right}th:first-child,td:first-child{text-align:left}
-${BRAND_PDF_CSS}
-</style></head><body>${brandHeaderHtml()}<h1>${esc(s.title)}</h1><div class="s">${esc(periodTitle(p, a))}</div>
-<h2>${esc(s.tabs.accounts)}</h2>${accounts}<h2>${esc(s.tabs.employees)}</h2>${employees}${absTable}<h2>${esc(s.tabs.trend)}</h2>${trend}
-${brandFooterHtml()}</body></html>`;
+  return docHtml({
+    title: s.title,
+    subtitle: periodTitle(p, a),
+    landscape: true, // D-200: la tabla de cuentas tiene 11 columnas
+    body: `<h2>${esc(s.tabs.accounts)}</h2>${accounts}<h2>${esc(s.tabs.employees)}</h2>${employees}${absTable}<h2>${esc(s.tabs.trend)}</h2>${trend}`,
+  });
 }

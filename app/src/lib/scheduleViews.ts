@@ -2,7 +2,7 @@ import { dateFromKey, dayKey } from "./leadRules";
 import type { ScheduleVisit } from "./scheduleApi";
 import { addDays, formatMinutes, sundayOf } from "./scheduleRules";
 import { formatTime } from "./week";
-import { BRAND_PDF_CSS, brandFooterHtml, brandHeaderHtml } from "./pdfBrand";
+import { docHtml } from "./docPdf";
 
 /** Reglas puras de las vistas Tabla y Calendario del Schedule (D-231). Sin red ni React: se prueban solas. */
 
@@ -228,8 +228,8 @@ type PdfStrings = {
 };
 
 /**
- * HTML del PDF de la semana en el estilo C1 (D-223, D-226): fondo crema #FBF6EF, tarjeta blanca de 24px, Manrope 800
- * en los títulos y el color de marca #0F766E; encabezado y pie con la marca (orden 33, D-250, lib/pdfBrand). Empleado → días va en hoja horizontal; Día → empleados en vertical.
+ * HTML del PDF de la semana como documento de impresión (orden 70, D-293, lib/docPdf). Empleado → días va en hoja
+ * horizontal; Día → empleados en vertical.
  */
 export function scheduleHtml(
   mode: "employee" | "day",
@@ -250,7 +250,7 @@ export function scheduleHtml(
     body = weekBlocks(days)
       .map(
         (b) =>
-          `<table><thead><tr><th class="name">${esc(s.employee)}</th>${b.days
+          `<table class="wk"><thead><tr><th class="name">${esc(s.employee)}</th>${b.days
             .map(
               (d, i) =>
                 `<th${b.inRange[i] ? "" : ' class="out"'}>${esc(s.dayHeaders[dateFromKey(d).getDay()] ?? "")}<br><small>${dateFromKey(d).getDate()}</small></th>`,
@@ -286,34 +286,17 @@ export function scheduleHtml(
       )
       .join("");
   }
-  return `<!doctype html><html><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&display=swap" rel="stylesheet">
-<style>
-@page { size: letter ${mode === "employee" ? "landscape" : "portrait"}; margin: 24px; }
-* { box-sizing: border-box; }
-body { margin: 0; background: #FBF6EF; color: #1E2A28; font-family: Manrope, -apple-system, Roboto, Arial, sans-serif; font-size: 11px; }
-.card { background: #FFFFFF; border-radius: 24px; padding: 20px; }
-h1 { font-weight: 800; font-size: 22px; margin: 0; }
-.range { color: #6B5F52; margin: 4px 0 16px; font-size: 13px; }
-.brand { color: #0F766E; font-weight: 800; font-size: 12px; letter-spacing: 0.4px; margin-bottom: 6px; }
-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-th { background: #0F766E; color: #FFFFFF; font-weight: 700; padding: 8px 4px; text-align: center; }
-table + table { margin-top: 16px; }
-th.out { background: #5E9E97; }
-td.out { background: #F6EFE6; }
-tr { page-break-inside: avoid; }
-th:first-child { border-top-left-radius: 12px; } th:last-child { border-top-right-radius: 12px; }
-td { border-bottom: 0.5px solid #EADFD2; padding: 6px 4px; vertical-align: top; }
-.name { width: 15%; text-align: left; font-weight: 700; }
-.v { background: #DDEFEC; border-radius: 8px; padding: 4px 6px; margin-bottom: 4px; }
-.v b { display: block; color: #0F766E; } .v span { color: #1E2A28; }
-.day { border-bottom: 0.5px solid #EADFD2; padding: 10px 0; }
-.day h3 { margin: 0 0 6px; font-weight: 800; font-size: 13px; }
-.chip { display: inline-block; background: #DDEFEC; color: #0F766E; border-radius: 999px; padding: 4px 10px; margin: 0 6px 6px 0; font-weight: 700; }
-.chip.warn { background: #FBE3C7; color: #8A4B0F; }
-.muted { color: #6B5F52; }
-${BRAND_PDF_CSS}
-</style></head><body><div class="card">${brandHeaderHtml()}<h1>${esc(s.title)}</h1><div class="range">${esc(s.range)}</div>${body}${brandFooterHtml()}</div></body></html>`;
+  // Estilo de documento (D-293, lib/docPdf): sin fondo crema ni fichas de color; bordes finos y la marca solo en la
+  // línea del encabezado. Empleado → días va en hoja horizontal; Día → empleados en vertical.
+  const css = `
+table.wk{table-layout:fixed}
+table.wk th{text-align:center}table.wk th.name,table.wk td.name{text-align:left;width:15%;font-weight:700}
+table.wk th.out,table.wk td.out{color:#BBBBBB;background:#F5F5F5}
+.v{margin-bottom:4px}.v b{display:block}.v span{color:#555555}
+.day{border-bottom:1px solid #E5E5E5;padding:6px 0}.day h3{margin:0 0 4px;font-size:11px}
+.chip{display:inline-block;margin:0 12px 3px 0}.chip.warn{font-weight:700}
+`;
+  return docHtml({ title: s.title, subtitle: s.range, body, landscape: mode === "employee", css });
 }
 
 // --- Semana por semana (D-232) ----------------------------------------------------------------------------------

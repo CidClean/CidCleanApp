@@ -1,10 +1,8 @@
 // Quote y portal del cliente (hito 4, D-209): textos de los correos, formato de montos, fechas y frecuencia, y el
 // PDF de una página. Este archivo no contiene llaves: RESEND_QUOTES_KEY, PORTAL_CODE_PEPPER y PORTAL_BASE_URL son
 // secretos de las funciones.
-import { PDFDocument, rgb } from 'npm:pdf-lib@1.17.1';
-
 import { correoHtml, EMPRESA, esc, filas, nota, parrafo, pieTexto, titulo, boton, codigoGrande, firma } from './correo.ts';
-import { ALTO, ALTO_PIE, ANCHO, C, caja, encabezado, fuentesMarca, LADO, logoMarca, partir, pie, recortar } from './pdfMarca.ts';
+import { C, Documento, LADO, partir, recortar } from './docPdf.ts';
 
 export type Lang = 'es' | 'en';
 export type Line = { label: string; description?: string; amount?: number; taxable?: boolean; kind?: 'amount' | 'percent'; value?: number };
@@ -297,55 +295,49 @@ const PDF_T = {
     salesTax: (r: number) => `Tax (${r}%)`, included: 'tax incluido', // D-200
     howTitle: 'Cómo aceptar:', // D-200
     how: 'abre el enlace del correo que te enviamos, escribe el código que te mandamos por correo, lee el alcance del trabajo y acepta en línea.', // D-200
-    page: 'Página 1 de 1', // D-200
   },
   en: {
     preparedFor: 'Prepared for', details: 'Details', visitTime: 'Visit time',
     salesTax: (r: number) => `Sales tax (${r}%)`, included: 'tax included',
     howTitle: 'How to accept:',
     how: 'open the link in the email we sent, enter the code we email you, read the scope of work and accept online.',
-    page: 'Page 1 of 1',
   },
 };
 
 /**
- * PDF de una página (D-209) con la marca (D-250, surveys/marca-aprobado/quote-pdf-aprobado.pdf): logo y "Cid Clean
- * LLC", número de quote, franja, tarjetas "Prepared for" y "Details", servicios y add-ons con descripción, descuentos,
- * total con tax en tarjeta verde, "How to accept" y pie de contacto. Un extra (D-238) lleva "Total" y la fecha del
- * servicio en vez de la frecuencia.
+ * PDF del quote (D-209) como documento de impresión (orden 70, D-293, docPdf.ts): título con el número de quote,
+ * "Prepared for" y "Details" en dos columnas, servicios y add-ons con descripción, descuentos, subtotal, tax y total
+ * en la fila de total, "How to accept" y el pie con página. Un extra (D-238) lleva "Total" y la fecha del servicio en
+ * vez de la frecuencia.
  */
 export async function pdfQuote(d: PdfData): Promise<Uint8Array> {
   const l = d.language;
   const t = T[l];
   const p = PDF_T[l];
-  const doc = await PDFDocument.create();
-  doc.setTitle(`${t.quote} ${d.version} · ${d.company}`);
-  doc.setAuthor('Cid Clean LLC');
-  const page = doc.addPage([ANCHO, ALTO]);
-  const f = await fuentesMarca(doc);
-  const logo = await logoMarca(doc);
-  const W = ANCHO - 2 * LADO;
-  let y = encabezado(page, f, logo, { etiqueta: t.quote, valor: d.version });
+  const D = await Documento.crear(`${t.quote} ${d.version} · ${d.company}`);
+  const { f } = D;
+  D.titulo(`${t.quote} ${d.version}`, [d.company, d.site].filter(Boolean).join(' · '));
 
-  // Tarjetas "Prepared for" (1.3fr) y "Details" (1fr), 12 pt de separación.
-  const gap = 12;
-  const w1 = ((W - gap) * 1.3) / 2.3;
-  const w2 = W - gap - w1;
+  // "Prepared for" y "Details" en dos columnas, sin tarjetas.
+  const gap = 18;
+  const w1 = ((D.ancho - gap) * 1.3) / 2.3;
   const x2 = LADO + w1 + gap;
-  const pad = 12;
-  const h4 = (s: string, x: number, yy: number) => {
-    let cx = x;
-    for (const ch of s.toUpperCase()) {
-      page.drawText(ch, { x: cx, y: yy, size: 7.1, font: f.extra, color: C.gris });
-      cx += f.extra.widthOfTextAtSize(ch, 7.1) + 0.7;
-    }
-  };
-  const izq: { s: string; size: number; font: typeof f.regular }[] = [
-    ...partir(d.company, f.extra, 12, w1 - 2 * pad).map((s) => ({ s, size: 12, font: f.extra })),
-    ...(d.contact_name ? [{ s: recortar(d.contact_name, 8.25, f.regular, w1 - 2 * pad), size: 8.25, font: f.regular }] : []),
-    ...partir([d.site, d.address && d.address !== d.site ? d.address : ''].filter(Boolean).join(' · '), f.regular, 8.25, w1 - 2 * pad)
-      .map((s) => ({ s, size: 8.25, font: f.regular })),
+  const w2 = D.ancho - gap - w1;
+  const h4 = (s: string, x: number, y: number) => D.page.drawText(s.toUpperCase(), { x, y, size: 6.75, font: f.bold, color: C.gris });
+  const top = D.y;
+  h4(p.preparedFor, LADO, top - 7);
+  h4(p.details, x2, top - 7);
+  let yy = top - 7 - 6;
+  const izq: { s: string; bold?: boolean }[] = [
+    ...partir(d.company, f.bold, 9.5, w1).map((s) => ({ s, bold: true })),
+    ...(d.contact_name ? [{ s: recortar(d.contact_name, 8.25, f.regular, w1) }] : []),
+    ...partir([d.site, d.address && d.address !== d.site ? d.address : ''].filter(Boolean).join(' · '), f.regular, 8.25, w1).map((s) => ({ s })),
   ];
+  for (const r of izq) {
+    yy -= 12;
+    D.page.drawText(r.s, { x: LADO, y: yy, size: r.bold ? 9.5 : 8.25, font: r.bold ? f.bold : f.regular, color: C.texto });
+  }
+  const yIzq = yy;
   const det: [string, string][] = [
     [t.date, fecha(d.sent_at, l)],
     [t.validUntil, fecha(d.expires_at, l)],
@@ -354,98 +346,49 @@ export async function pdfQuote(d: PdfData): Promise<Uint8Array> {
       : [t.frequency, frecuenciaPdf(d.frequency, l) || '—'],
   ];
   if (!d.extra && d.visit_time) det.push([p.visitTime, horaCorreo(d.visit_time)]);
-  const altoIzq = 10.5 + 7.1 + 6 + izq.reduce((a, r) => a + r.size * 1.45, 0) + 10.5;
-  const altoDer = 10.5 + 7.1 + 6 + det.length * 12.4 + 10.5;
-  const altoCaja = Math.max(altoIzq, altoDer);
-  caja(page, LADO, y, w1, altoCaja, 12, C.crema);
-  caja(page, x2, y, w2, altoCaja, 12, C.crema);
-  h4(p.preparedFor, LADO + pad, y - 10.5 - 7.1);
-  h4(p.details, x2 + pad, y - 10.5 - 7.1);
-  let yy = y - 10.5 - 7.1 - 6;
-  for (const r of izq) {
-    yy -= r.size * 1.45;
-    page.drawText(r.s, { x: LADO + pad, y: yy + r.size * 0.3, size: r.size, font: r.font, color: C.texto });
-  }
   const dtW = Math.max(...det.map(([k]) => f.regular.widthOfTextAtSize(k, 8.25))) + 9;
-  yy = y - 10.5 - 7.1 - 6;
+  yy = top - 7 - 6;
   for (const [k, v] of det) {
-    yy -= 12.4;
-    page.drawText(k, { x: x2 + pad, y: yy + 2.5, size: 8.25, font: f.regular, color: C.gris });
-    page.drawText(recortar(v, 8.25, f.bold, w2 - 2 * pad - dtW), { x: x2 + pad + dtW, y: yy + 2.5, size: 8.25, font: f.bold, color: C.texto });
+    yy -= 12;
+    D.page.drawText(k, { x: x2, y: yy, size: 8.25, font: f.regular, color: C.gris });
+    D.page.drawText(recortar(v, 8.25, f.bold, w2 - dtW), { x: x2 + dtW, y: yy, size: 8.25, font: f.bold, color: C.texto });
   }
-  y -= altoCaja;
+  D.y = Math.min(yIzq, yy) - 14;
 
-  // Secciones: título en marca y filas con nombre, descripción y monto.
-  const limite = ALTO_PIE + 150; // deja sitio para totales, "How to accept" y pie
-  const seccion = (titulo: string, rows: { label: string; detail?: string; value: string }[]) => {
+  // Servicios, add-ons y descuentos: una tabla con la descripción debajo del nombre y el monto a la derecha.
+  const filas: string[][] = [];
+  const item = (x: Line) => [x.description?.trim() ? `${x.label}\n${x.description.trim()}` : x.label, money(x.amount ?? 0)];
+  const grupo = (titulo: string, rows: string[][]) => {
     if (rows.length === 0) return;
-    y -= 16.5;
-    let cx = LADO;
-    for (const ch of titulo.toUpperCase()) {
-      page.drawText(ch, { x: cx, y: y - 7.5, size: 7.5, font: f.extra, color: C.marca });
-      cx += f.extra.widthOfTextAtSize(ch, 7.5) + 0.75;
-    }
-    y -= 7.5 + 4.5;
-    for (const r of rows) {
-      if (y < limite) break;
-      const alto = 6.75 + 9 + (r.detail ? 10.5 : 0) + 6.75;
-      page.drawText(recortar(r.label, 9, f.bold, W - 90), { x: LADO, y: y - 6.75 - 8, size: 9, font: f.bold, color: C.texto });
-      if (r.detail) {
-        page.drawText(recortar(r.detail, 7.9, f.regular, W - 90), { x: LADO, y: y - 6.75 - 9 - 9, size: 7.9, font: f.regular, color: C.gris });
-      }
-      page.drawText(r.value, { x: ANCHO - LADO - f.bold.widthOfTextAtSize(r.value, 9), y: y - 6.75 - 8, size: 9, font: f.bold, color: C.texto });
-      y -= alto;
-      page.drawLine({ start: { x: LADO, y }, end: { x: ANCHO - LADO, y }, thickness: 0.75, color: C.linea });
-    }
+    filas.push([titulo.toUpperCase(), '']);
+    filas.push(...rows);
   };
-  const item = (x: Line) => ({ label: x.label, detail: x.description?.trim() || undefined, value: money(x.amount ?? 0) });
-  seccion(t.services, d.lines.services.map(item));
-  seccion(t.addons, d.lines.addons.map(item));
-  seccion(
+  grupo(t.services, d.lines.services.map(item));
+  grupo(t.addons, d.lines.addons.map(item));
+  grupo(
     t.discounts,
-    d.lines.discounts.map((x) => ({
-      label: x.kind === 'percent' ? `${x.label} (${x.value}%)` : x.label,
-      value: '−' + money(x.kind === 'percent' ? (d.subtotal * (x.value ?? 0)) / 100 : (x.value ?? 0)),
-    })),
+    d.lines.discounts.map((x) => [
+      x.kind === 'percent' ? `${x.label} (${x.value}%)` : x.label,
+      '-' + money(x.kind === 'percent' ? (d.subtotal * (x.value ?? 0)) / 100 : (x.value ?? 0)),
+    ]),
+  );
+  filas.push([t.subtotal, money(d.subtotal)]);
+  if (d.discount > 0) filas.push([t.discounts, '-' + money(d.discount)]);
+  filas.push([p.salesTax(Number(d.tax_rate)), money(d.tax)]);
+  D.tabla(
+    [{ head: l === 'es' ? 'Concepto' : 'Item', w: 4 }, { head: l === 'es' ? 'Monto' : 'Amount', w: 1, num: true }], // D-200
+    filas,
+    { total: [`${d.extra ? t.totalOnce : t.total} (${p.included})`, money(d.total)], boldFirst: true },
   );
 
-  // Totales a la derecha, 217.5 pt (290 px) de ancho.
-  y -= 12;
-  const wt = 217.5;
-  const xt = ANCHO - LADO - wt;
-  const filaTot = (k: string, v: string) => {
-    y -= 3 + 8.25;
-    page.drawText(k, { x: xt, y, size: 8.25, font: f.regular, color: C.gris });
-    page.drawText(v, { x: ANCHO - LADO - f.regular.widthOfTextAtSize(v, 8.25), y, size: 8.25, font: f.regular, color: C.gris });
-    y -= 3;
-  };
-  filaTot(t.subtotal, money(d.subtotal));
-  if (d.discount > 0) filaTot(t.discounts, '−' + money(d.discount));
-  filaTot(p.salesTax(Number(d.tax_rate)), money(d.tax));
-  y -= 6;
-  const hg = 42;
-  caja(page, xt, y, wt, hg, 10.5, C.marca);
-  page.drawText(d.extra ? t.totalOnce : t.total, { x: xt + 12, y: y - 18, size: 9, font: f.bold, color: C.blanco });
-  page.drawText(p.included, { x: xt + 12, y: y - 30, size: 7.5, font: f.regular, color: rgb(0.85, 0.93, 0.92) });
-  const tot = money(d.total);
-  page.drawText(tot, { x: ANCHO - LADO - 12 - f.extra.widthOfTextAtSize(tot, 18), y: y - 27, size: 18, font: f.extra, color: C.blanco });
-  y -= hg + 13.5;
-
   // "How to accept".
-  const anchoNota = W - 21;
-  const lineas = partir(`${p.howTitle} ${p.how}`, f.regular, 8.25, anchoNota);
-  const hn = 9 + lineas.length * 12.4 + 9;
-  caja(page, LADO, y, W, hn, 10.5, C.suave);
-  lineas.forEach((s, i) => {
-    const yl = y - 9 - (i + 1) * 12.4 + 3;
-    if (i === 0 && s.startsWith(p.howTitle)) {
-      page.drawText(p.howTitle, { x: LADO + 10.5, y: yl, size: 8.25, font: f.extra, color: C.texto });
-      page.drawText(s.slice(p.howTitle.length), { x: LADO + 10.5 + f.extra.widthOfTextAtSize(p.howTitle, 8.25), y: yl, size: 8.25, font: f.regular, color: C.texto });
-    } else page.drawText(s, { x: LADO + 10.5, y: yl, size: 8.25, font: f.regular, color: C.texto });
-  });
+  D.y -= 4;
+  D.espacio(30);
+  D.page.drawText(p.howTitle, { x: LADO, y: D.y - 8.25, size: 8.25, font: f.bold, color: C.texto });
+  D.y -= 12;
+  D.parrafo(p.how, { size: 8.25 });
 
-  pie(page, f, `${t.quote} ${d.version} · ${p.page}`);
-  return await doc.save();
+  return await D.guardar();
 }
 
 /** Frecuencia del PDF como en la muestra: "Mon, Wed and Fri" en inglés; en español la de siempre. */

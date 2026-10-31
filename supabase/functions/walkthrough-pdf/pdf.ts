@@ -1,12 +1,10 @@
-// Diseño del PDF del resumen del walkthrough (D-212; D-208: lo diseña el arquitecto con el sistema visual aprobado).
-// Carta (612 x 792 pt), márgenes de 48 pt, Manrope 400/500 (D-026), color de marca #0F766E (D-024), texto #1A1A1A,
-// gris #6B6B6B, líneas #E2E2E2 y superficie #F4F4F4 (D-033), recuadros con esquinas de 12 (D-025).
-// Contenido: encabezado con la marca (orden 33, D-250: logo y "Cid Clean LLC", franja de degradado; en cada página),
-// Sitio y contacto, Áreas en tabla y Frecuencia; las fotos van en un anexo; pie con los datos de contacto en cada
+// PDF del resumen del walkthrough (D-212) como documento de impresión (orden 70, D-293, _shared/docPdf.ts): hoja
+// blanca carta, Helvetica, encabezado con el logo y la dirección sobre la línea #0F766E en cada hoja, título y
+// subtítulo; Sitio y contacto, Áreas en tabla y Frecuencia; las fotos van en un anexo; pie con "Generated" y la
 // página. Las notas internas NO salen (flujo: no salen al cliente).
-import { PDFDocument, rgb, type PDFFont, type PDFPage } from 'npm:pdf-lib@1.17.1';
+import { PDFDocument, type PDFFont, type PDFPage, type RGB } from 'npm:pdf-lib@1.17.1';
 
-import { C, encabezado, fuentesMarca, logoMarca, partir as partirMarca, pie } from '../_shared/pdfMarca.ts';
+import { ALTO_PIE, C, encabezado, fuentesDoc, hoja, LADO, logoDoc, partir as partirDoc, pies, titulo as tituloDoc } from '../_shared/docPdf.ts';
 
 export type Fuente = {
   company: string;
@@ -30,16 +28,13 @@ export type Fuente = {
   };
 };
 
-// Paleta de D-223/D-250.
-const MARCA = C.marca;
+// Colores del documento (D-293).
 const TEXTO = C.texto;
 const GRIS = C.gris;
 const LINEA = C.linea;
-const SUPERFICIE = C.crema;
 
 const ANCHO = 612;
-const ALTO = 792;
-const MARGEN = 34.5; // el mismo margen del encabezado de la marca (46 px)
+const MARGEN = LADO;
 const UTIL = ANCHO - MARGEN * 2;
 
 const T = {
@@ -64,7 +59,6 @@ const T = {
     annex: 'Anexo: fotos',
     noPhotos: 'Sin fotos.',
     unsupported: 'Foto en un formato que el PDF no muestra.',
-    page: (a: number, b: number) => `Página ${a} de ${b}`,
     types: {
       bathroom: 'Baño', office: 'Oficina', lobby: 'Lobby', kitchen: 'Cocina', conference: 'Sala de juntas',
       hallway: 'Pasillo', reception: 'Recepción', stairs: 'Escaleras', storage: 'Almacén', other: 'Otro',
@@ -95,7 +89,6 @@ const T = {
     annex: 'Appendix: photos',
     noPhotos: 'No photos.',
     unsupported: "Photo in a format the PDF can't show.",
-    page: (a: number, b: number) => `Page ${a} of ${b}`,
     types: {
       bathroom: 'Bathroom', office: 'Office', lobby: 'Lobby', kitchen: 'Kitchen', conference: 'Conference room',
       hallway: 'Hallway', reception: 'Reception', stairs: 'Stairs', storage: 'Storage room', other: 'Other',
@@ -107,14 +100,11 @@ const T = {
   },
 };
 
-const partir = partirMarca;
+const partir = partirDoc;
 
-/** Recuadro con esquinas redondeadas (borde de 1 pt). */
-function recuadro(page: PDFPage, x: number, yTop: number, w: number, h: number, r: number, borde = LINEA, fondo?: ReturnType<typeof rgb>) {
-  const path =
-    `M ${r} 0 H ${w - r} A ${r} ${r} 0 0 1 ${w} ${r} V ${h - r} A ${r} ${r} 0 0 1 ${w - r} ${h} ` +
-    `H ${r} A ${r} ${r} 0 0 1 0 ${h - r} V ${r} A ${r} ${r} 0 0 1 ${r} 0 Z`;
-  page.drawSvgPath(path, { x, y: yTop, borderColor: borde, borderWidth: 1, color: fondo });
+/** Recuadro de línea fina, sin fondo. */
+function recuadro(page: PDFPage, x: number, yTop: number, w: number, h: number, borde: RGB = LINEA) {
+  page.drawRectangle({ x, y: yTop - h, width: w, height: h, borderColor: borde, borderWidth: 0.75 });
 }
 
 export async function armarPdf(
@@ -124,8 +114,8 @@ export async function armarPdf(
 ): Promise<Uint8Array> {
   const t = T[idioma];
   const doc = await PDFDocument.create();
-  const fuentes = await fuentesMarca(doc);
-  const logo = await logoMarca(doc);
+  const fuentes = await fuentesDoc(doc);
+  const logo = await logoDoc(doc);
   const fReg = fuentes.regular;
   const fMed = fuentes.bold;
   doc.setTitle(`${t.title} · ${f.company}`);
@@ -135,33 +125,27 @@ export async function armarPdf(
   const fecha = new Date(f.closed_at);
   const fechaTexto = t.date(fecha.getUTCDate(), t.months[fecha.getUTCMonth()], fecha.getUTCFullYear());
 
-  const marca = { etiqueta: 'Walkthrough', valor: `v${f.version}` };
-  let page = doc.addPage([ANCHO, ALTO]);
-  let y = encabezado(page, fuentes, logo, marca);
+  let page = hoja(doc);
+  let y = encabezado(page, fuentes, logo);
 
   const nuevaPagina = () => {
-    page = doc.addPage([ANCHO, ALTO]);
-    y = encabezado(page, fuentes, logo, marca);
+    page = hoja(doc);
+    y = encabezado(page, fuentes, logo);
   };
   const espacio = (alto: number) => {
-    if (y - alto < MARGEN + 30) nuevaPagina();
+    if (y - alto < ALTO_PIE + 8) nuevaPagina();
   };
   const texto = (s: string, x: number, tam: number, fuente: PDFFont, color = TEXTO) => {
     page.drawText(s, { x, y: y - tam, size: tam, font: fuente, color });
   };
 
-  // Título bajo el encabezado de la marca.
-  texto(t.title, MARGEN, 15, fuentes.extra);
-  y -= 22;
-  texto(`${f.company} · ${sitio} · ${t.version(f.version)} · ${fechaTexto}`, MARGEN, 10, fReg, GRIS);
-  y -= 22;
-  page.drawLine({ start: { x: MARGEN, y }, end: { x: ANCHO - MARGEN, y }, thickness: 0.5, color: LINEA });
-  y -= 18;
+  // Título y subtítulo bajo el encabezado.
+  y = tituloDoc(page, fuentes, y, t.title, `${f.company} · ${sitio} · ${t.version(f.version)} · ${fechaTexto}`);
 
   const titulo = (s: string) => {
     espacio(40);
-    texto(s, MARGEN, 12, fMed, MARCA);
-    y -= 20;
+    texto(s, MARGEN, 10, fMed);
+    y -= 16;
   };
 
   // Sitio y contacto: filas de etiqueta gris y valor.
@@ -200,9 +184,10 @@ export async function armarPdf(
     const xs = anchos.map((_, i) => MARGEN + anchos.slice(0, i).reduce((a, b) => a + b, 0));
     const encabezado = () => {
       espacio(26);
-      recuadro(page, MARGEN, y, UTIL, 22, 6, LINEA, SUPERFICIE);
-      t.cols.forEach((col, i) => page.drawText(col, { x: xs[i] + 6, y: y - 15, size: 9, font: fMed, color: TEXTO }));
-      y -= 26;
+      t.cols.forEach((col, i) => page.drawText(col.toUpperCase(), { x: xs[i] + 6, y: y - 12, size: 7, font: fMed, color: GRIS }));
+      y -= 17;
+      page.drawLine({ start: { x: MARGEN, y }, end: { x: ANCHO - MARGEN, y }, thickness: 0.75, color: C.regla });
+      y -= 2;
     };
     encabezado();
     for (const a of areas) {
@@ -216,7 +201,7 @@ export async function armarPdf(
         String(a.photos?.length ?? 0),
       ].map((v, i) => partir(v, fReg, 9.5, anchos[i] - 12));
       const alto = Math.max(...celdas.map((l) => l.length)) * 13 + 10;
-      if (y - alto < MARGEN + 30) {
+      if (y - alto < ALTO_PIE + 8) {
         nuevaPagina();
         encabezado();
       }
@@ -254,8 +239,8 @@ export async function armarPdf(
 
   // Anexo: fotos, dos por fila con su nota debajo.
   nuevaPagina();
-  texto(t.annex, MARGEN, 15, fMed);
-  y -= 28;
+  texto(t.annex, MARGEN, 12.75, fMed);
+  y -= 24;
   const conFotos = areas.filter((a) => (a.photos ?? []).length > 0);
   if (conFotos.length === 0) {
     texto(t.noPhotos, MARGEN, 10.5, fReg, GRIS);
@@ -264,8 +249,8 @@ export async function armarPdf(
   const maxAlto = 180;
   for (const a of conFotos) {
     espacio(40);
-    texto(a.name ?? '', MARGEN, 12, fMed, MARCA);
-    y -= 20;
+    texto(a.name ?? '', MARGEN, 10, fMed);
+    y -= 16;
     const fotos = a.photos ?? [];
     for (let i = 0; i < fotos.length; i += 2) {
       const par = await Promise.all(
@@ -289,7 +274,7 @@ export async function armarPdf(
         const x = MARGEN + k * (col + 12);
         if (p.img) page.drawImage(p.img, { x, y: y - p.dims.height, width: p.dims.width, height: p.dims.height });
         else {
-          recuadro(page, x, y, col, 40, 12, LINEA, SUPERFICIE);
+          recuadro(page, x, y, col, 40);
           page.drawText(t.unsupported, { x: x + 10, y: y - 24, size: 9, font: fReg, color: GRIS });
         }
         p.nota.forEach((l, j) => {
@@ -301,9 +286,8 @@ export async function armarPdf(
     y -= 8;
   }
 
-  // Pie de contacto en todas, con el número de página a la derecha.
-  const paginas = doc.getPages();
-  paginas.forEach((p, i) => pie(p, fuentes, t.page(i + 1, paginas.length)));
+  // Pie de documento en todas, con "Page n of m" (D-293).
+  pies(doc, fuentes, { ref: `Walkthrough v${f.version}` }); // D-200: la referencia va en el pie
 
   return await doc.save();
 }

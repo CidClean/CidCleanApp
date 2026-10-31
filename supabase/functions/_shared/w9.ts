@@ -6,7 +6,7 @@ import { degrees, PDFDocument, rgb, StandardFonts } from 'npm:pdf-lib@1.17.1';
 
 import { boton, codigoGrande, correoHtml, esc, nota, parrafo, pieTexto, titulo } from './correo.ts';
 import { FW9_PDF_BASE64 } from './irs/fw9.ts';
-import * as m from './pdfMarca.ts';
+import * as m from './docPdf.ts';
 
 export const FORM_VERSION = 'Form W-9 (Rev. March 2024)';
 /** Remitente de los correos del W-9 (D-268 (1)); la respuesta va a info@cidclean.com (REPLY_TO de quotes.ts). */
@@ -191,7 +191,7 @@ export function base64(bytes: Uint8Array): string {
 }
 
 // Certificado de la firma electrónica (D-268 (4)): última hoja del W-9 firmado, en inglés, con la marca como los otros
-// PDFs (pdfMarca.ts). No lleva el número de identificación.
+// PDFs de documento (docPdf.ts, D-293). No lleva el número de identificación.
 
 /** Texto de la casilla de firma, tal como se ve en el portal (app/src/i18n/w9.ts, `agree`). */
 export const AGREE_TEXT = {
@@ -249,12 +249,12 @@ export const NOTA_CERTIFICADO =
 /** Agrega el certificado como última hoja del PDF firmado. */
 export async function agregarCertificado(pdf: Uint8Array, c: Certificado): Promise<Uint8Array> {
   const doc = await PDFDocument.load(pdf);
-  const f = await m.fuentesMarca(doc);
-  const logo = await m.logoMarca(doc);
-  const page = doc.addPage([m.ANCHO, m.ALTO]);
-  let y = m.encabezado(page, f, logo, { etiqueta: 'Form W-9', valor: 'Certificate' });
+  const f = await m.fuentesDoc(doc);
+  const logo = await m.logoDoc(doc);
+  const page = m.hoja(doc);
+  let y = m.encabezado(page, f, logo);
   const ancho = m.ANCHO - 2 * m.LADO;
-  page.drawText('Electronic signature certificate', { x: m.LADO, y: y - 18, size: 18, font: f.extra, color: m.C.texto });
+  page.drawText('Electronic signature certificate', { x: m.LADO, y: y - 14, size: 14, font: f.extra, color: m.C.texto });
   y -= 40;
   const etiqueta = 150;
   for (const [k, v] of filasCertificado(c)) {
@@ -267,10 +267,10 @@ export async function agregarCertificado(pdf: Uint8Array, c: Certificado): Promi
   }
   y -= 6;
   for (const l of m.partir(NOTA_CERTIFICADO, f.regular, 8.5, ancho)) {
-    page.drawText(l, { x: m.LADO, y, size: 8.5, font: f.regular, color: m.C.ambar });
+    page.drawText(l, { x: m.LADO, y, size: 8.5, font: f.regular, color: m.C.gris });
     y -= 12;
   }
-  m.pie(page, f, `Page ${doc.getPageCount()} of ${doc.getPageCount()}`);
+  m.pie(page, f, doc.getPageCount(), doc.getPageCount(), { ref: 'Form W-9' });
   return await doc.save();
 }
 

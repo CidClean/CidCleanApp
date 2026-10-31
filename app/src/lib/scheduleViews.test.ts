@@ -66,7 +66,7 @@ describe('vistas del Schedule (D-231)', () => {
     expect(hourLabel(13)).toBe('1 PM');
   });
 
-  it('abrevia el jobsite y arma el PDF en el estilo C1 sin dejar pasar HTML', () => {
+  it('abrevia el jobsite y arma el PDF de documento (D-293) sin dejar pasar HTML', () => {
     expect(abbreviate('Naples Yacht Club')).toBe('Naples Yach…');
     expect(abbreviate('Break TAX')).toBe('Break TAX');
     const days = viewDays('table', 'week', anchor);
@@ -80,7 +80,8 @@ describe('vistas del Schedule (D-231)', () => {
       dayTitle: (k) => k,
       hours: { h: 'h' },
     });
-    expect(html).toContain('#FBF6EF');
+    expect(html).toContain('Cid Clean LLC');
+    expect(html).not.toContain('#FBF6EF');
     expect(html).toContain('landscape');
     expect(html).toContain('&lt;b&gt;Rosemary&lt;/b&gt;');
     expect(html).toContain('1.5 h');
@@ -133,5 +134,20 @@ describe('mes en bloques semanales (D-236)', () => {
   });
   it('una semana es un solo bloque', () => {
     expect(weekBlocks(tableDays('week', new Date(2026, 9, 24)))).toHaveLength(1);
+  });
+});
+
+describe('PDF de documento (D-293)', () => {
+  it('encabezado, pie con página y cifras a la derecha con fila de total', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { docHtml, docTable } = require('./docPdf') as typeof import('./docPdf');
+    const html = docHtml({ title: 'P&L', subtitle: '2026', body: docTable(['A', 'B'], [['x', '1']], { num: [1], total: ['Total', '1'] }), generated: new Date(2026, 9, 31) });
+    expect(html).toContain('Cid Clean LLC');
+    expect(html).toContain('3727 Milano Lakes Cir');
+    expect(html).toContain('Generated Oct 31, 2026 · Cid Clean LLC');
+    expect(html).toContain('counter(pages)');
+    expect(html).toContain('<td class="n">1</td>');
+    expect(html).toContain('<tr class="t">');
+    expect(html).toContain('P&amp;L');
   });
 });

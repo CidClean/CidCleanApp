@@ -15,7 +15,6 @@ import { useStrings } from '@/i18n/useStrings';
 import { accountingAccess, money, monthKeyOf, monthStart, monthTitle, shiftMonth } from '@/lib/accountingRules';
 import { rowDate } from '@/lib/myHours';
 import { useGoBack } from '@/lib/navigation';
-import { BRAND_PDF_CSS, brandFooterHtml, brandHeaderHtml } from '@/lib/pdfBrand';
 import { fetchStatement, statementCsv, statementHtml, type Statement } from '@/lib/serviceDays';
 import { usePermissions } from '@/lib/session';
 import { shareCsv, sharePdf } from '@/lib/sharePdf';
@@ -65,7 +64,6 @@ export default function StatementScreen() {
     const html = statementHtml(
       data,
       { title: t.statementTitle, monthTitle: monthTitle(month, a), payBefore: t.payBefore(due), note: t.statementNote, header: t.csvHeader },
-      { css: BRAND_PDF_CSS, header: brandHeaderHtml(), footer: brandFooterHtml() },
       money,
     );
     result(await sharePdf(html, `${t.statementTitle} ${monthTitle(month, a)}`));

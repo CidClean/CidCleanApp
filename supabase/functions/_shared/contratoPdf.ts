@@ -1,10 +1,10 @@
 // PDF del contrato del cliente (orden 62, D-283): Scope of Work + Commercial Service Agreement con el texto exacto de
-// la plantilla 1.0 (legal/csa-sow-1.0.ts), con el encabezado y el pie de la marca (pdfMarca.ts, D-250) en cada hoja.
+// la plantilla 1.0 (legal/csa-sow-1.0.ts), con el encabezado y el pie de documento (docPdf.ts, D-293) en cada hoja.
 // Sin firmar (el que se envía), o con las firmas escritas en Times Italic (como el W-9, D-268) y la hoja de certificado
 // al final. Este archivo no contiene llaves.
 import { PDFDocument, StandardFonts, type PDFFont, type PDFPage } from 'npm:pdf-lib@1.17.1';
 
-import * as m from './pdfMarca.ts';
+import * as m from './docPdf.ts';
 import { rellenar, type Campos, type Firmas } from './contrato.ts';
 import { fechaCorta } from './contratoCorreos.ts';
 import { PLANTILLA } from './legal/csa-sow-1.0.ts';
@@ -78,15 +78,15 @@ export async function pdfContrato(o: { campos: Campos; csa: string; firmas?: Fir
   const doc = await PDFDocument.create();
   doc.setTitle(`Commercial Service Agreement ${o.csa} · ${o.campos.client_legal_name ?? ''}`);
   doc.setAuthor('Cid Clean LLC');
-  const f = await m.fuentesMarca(doc);
-  const logo = await m.logoMarca(doc);
+  const f = await m.fuentesDoc(doc);
+  const logo = await m.logoDoc(doc);
   const firma = await doc.embedFont(StandardFonts.TimesRomanItalic);
   const l = {} as Lienzo;
   Object.assign(l, {
     doc, f, firma,
     nueva: () => {
-      l.page = doc.addPage([m.ANCHO, m.ALTO]);
-      l.y = m.encabezado(l.page, f, logo, { etiqueta: 'Agreement', valor: o.csa });
+      l.page = m.hoja(doc);
+      l.y = m.encabezado(l.page, f, logo);
     },
   });
   l.nueva();
@@ -138,19 +138,18 @@ export async function pdfContrato(o: { campos: Campos; csa: string; firmas?: Fir
     }
   }
   // El pie con "Page X of N" cuando ya se sabe cuántas hojas hay (la hoja del certificado se suma después).
-  const total = doc.getPageCount() + (o.conCertificado ? 1 : 0);
-  doc.getPages().forEach((p, i) => m.pie(p, f, `Page ${i + 1} of ${total}`));
+  m.pies(doc, f, { extra: o.conCertificado ? 1 : 0, ref: `Agreement ${o.csa}` }); // D-200: la referencia va en el pie
   return await doc.save();
 }
 
 /** Hoja de certificado como última página (D-283; como el W-9, D-268 (4)). El PDF se armó con `conCertificado`. */
 export async function agregarCertificadoContrato(pdf: Uint8Array, csa: string, filas: [string, string][], nota: string): Promise<Uint8Array> {
   const doc = await PDFDocument.load(pdf);
-  const f = await m.fuentesMarca(doc);
-  const logo = await m.logoMarca(doc);
-  const page = doc.addPage([m.ANCHO, m.ALTO]);
-  let y = m.encabezado(page, f, logo, { etiqueta: 'Agreement', valor: 'Certificate' });
-  page.drawText('Electronic signature certificate', { x: m.LADO, y: y - 18, size: 18, font: f.extra, color: m.C.texto });
+  const f = await m.fuentesDoc(doc);
+  const logo = await m.logoDoc(doc);
+  const page = m.hoja(doc);
+  let y = m.encabezado(page, f, logo);
+  page.drawText('Electronic signature certificate', { x: m.LADO, y: y - 14, size: 14, font: f.extra, color: m.C.texto });
   page.drawText(limpio(csa), { x: m.LADO, y: y - 32, size: 9, font: f.regular, color: m.C.gris });
   y -= 52;
   const etiqueta = 150;
@@ -164,10 +163,10 @@ export async function agregarCertificadoContrato(pdf: Uint8Array, csa: string, f
   }
   y -= 4;
   for (const t of m.partir(limpio(nota), f.regular, 8.5, ANCHO_TXT)) {
-    page.drawText(t, { x: m.LADO, y, size: 8.5, font: f.regular, color: m.C.ambar });
+    page.drawText(t, { x: m.LADO, y, size: 8.5, font: f.regular, color: m.C.gris });
     y -= 12;
   }
-  m.pie(page, f, `Page ${doc.getPageCount()} of ${doc.getPageCount()}`);
+  m.pie(page, f, doc.getPageCount(), doc.getPageCount());
   return await doc.save();
 }
 

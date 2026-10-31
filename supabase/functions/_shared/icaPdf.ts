@@ -1,10 +1,10 @@
-// PDF del ICA (orden 65, D-285): texto exacto de la plantilla 1.0 (legal/ica-1.0.ts) con el encabezado y el pie de la
-// marca (pdfMarca.ts, D-250) en cada hoja. Sin firmar (el que se envía), o con las firmas escritas en Times Italic
+// PDF del ICA (orden 65, D-285): texto exacto de la plantilla 1.0 (legal/ica-1.0.ts) con el encabezado y el pie de
+// documento (docPdf.ts, D-293) en cada hoja. Sin firmar (el que se envía), o con las firmas escritas en Times Italic
 // (como el W-9 y el contrato del cliente, D-268) y la hoja de certificado al final (agregarCertificadoContrato).
 // Este archivo no contiene llaves.
 import { PDFDocument, StandardFonts } from 'npm:pdf-lib@1.17.1';
 
-import * as m from './pdfMarca.ts';
+import * as m from './docPdf.ts';
 import { rellenar } from './contrato.ts';
 import { fechaCorta } from './contratoCorreos.ts';
 import { ANCHO_TXT, filaTabla, LIMITE, limpio, lineas, type Lienzo } from './contratoPdf.ts';
@@ -40,15 +40,15 @@ export async function pdfIca(o: { campos: CamposIca; ica: string; firmas?: Firma
   const doc = await PDFDocument.create();
   doc.setTitle(`Independent Contractor Agreement ${o.ica} · ${o.campos.contractor_name ?? ''}`);
   doc.setAuthor('Cid Clean LLC');
-  const f = await m.fuentesMarca(doc);
-  const logo = await m.logoMarca(doc);
+  const f = await m.fuentesDoc(doc);
+  const logo = await m.logoDoc(doc);
   const firma = await doc.embedFont(StandardFonts.TimesRomanItalic);
   const l = {} as Lienzo;
   Object.assign(l, {
     doc, f, firma,
     nueva: () => {
-      l.page = doc.addPage([m.ANCHO, m.ALTO]);
-      l.y = m.encabezado(l.page, f, logo, { etiqueta: 'Agreement', valor: o.ica });
+      l.page = m.hoja(doc);
+      l.y = m.encabezado(l.page, f, logo);
     },
   });
   l.nueva();
@@ -81,7 +81,6 @@ export async function pdfIca(o: { campos: CamposIca; ica: string; firmas?: Firma
       case 'signatures': firmas(l, c, o.firmas ?? {}, firmado); break;
     }
   }
-  const total = doc.getPageCount() + (o.conCertificado ? 1 : 0);
-  doc.getPages().forEach((p, i) => m.pie(p, f, `Page ${i + 1} of ${total}`));
+  m.pies(doc, f, { extra: o.conCertificado ? 1 : 0, ref: `Agreement ${o.ica}` }); // D-200: la referencia va en el pie
   return await doc.save();
 }

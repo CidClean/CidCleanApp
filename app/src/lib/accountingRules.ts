@@ -6,7 +6,7 @@ import type { AccountingStrings } from '@/i18n/accounting';
 import type { StaffCost } from './accountingApi';
 import type { Access } from './visibility';
 import { can, canAny } from './visibility';
-import { BRAND_PDF_CSS, brandFooterHtml, brandHeaderHtml } from './pdfBrand';
+import { docHtml, docTable } from './docPdf';
 
 // --- Periodos (D-069 mes con flechas; D-215 por mes o rango) ----------------------------------------------------
 
@@ -213,30 +213,27 @@ function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/** HTML de una página para el PDF del dashboard, con encabezado y pie de la marca (orden 33, D-250): las cuatro cifras, Recibido / Pendiente y la tabla por mes. */
+/** PDF del dashboard como documento (orden 70, D-293, lib/docPdf): las cuatro cifras, Recibido / Pendiente y la tabla por mes con su total. */
 export function dashboardHtml(d: DashboardFigures, p: Period, scope: string, a: AccountingStrings): string {
-  const tile = (label: string, value: number, brand = false) =>
-    `<div class="t${brand ? ' b' : ''}"><div class="l">${esc(label)}</div><div class="v">${esc(money(value))}</div></div>`;
-  const rows = d.months
-    .map(
-      (m) =>
-        `<tr><td>${esc(monthTitle(monthOf(m.month), a))}</td><td>${money(m.expected)}</td><td>${money(m.received)}</td><td>${money(m.pending)}</td><td>${money(m.staff)}</td><td>${money(m.expenses)}</td><td>${money(m.profit)}</td></tr>`,
-    )
-    .join('');
   const c = a.csv;
-  return `<!doctype html><html><head><meta charset="utf-8"><style>
-body{font-family:Manrope,Arial,sans-serif;color:#1E2A28;background:#FBF6EF;margin:24px}
-h1{font-size:22px;margin:0 0 2px}.s{color:#6B5F52;font-size:13px;margin-bottom:16px}
-.g{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}.t{flex:1 1 40%;background:#FFFFFF;border-radius:24px;padding:16px}
-.t.b{background:#0F766E;color:#FFFFFF}.l{font-size:13px;opacity:.85}.v{font-size:20px;font-weight:800;margin-top:4px}
-.rp{font-size:13px;color:#6B5F52;margin-bottom:16px}table{width:100%;border-collapse:collapse;background:#FFFFFF;font-size:12px}
-th,td{padding:8px;border-bottom:1px solid #EFE5D8;text-align:right}th:first-child,td:first-child{text-align:left}
-${BRAND_PDF_CSS}
-</style></head><body>${brandHeaderHtml()}<h1>${esc(a.title)}</h1><div class="s">${esc(scope)} · ${esc(periodTitle(p, a))}</div>
-<div class="g">${tile(a.income, d.expected)}${tile(a.staff, d.staff)}${tile(a.expenses, d.expenses)}${tile(a.profit, d.profit, true)}</div>
-<div class="rp">${esc(a.receivedPending(money(d.received), money(d.pending)))}</div>
-<table><thead><tr><th>${esc(c.month)}</th><th>${esc(c.expected)}</th><th>${esc(c.received)}</th><th>${esc(c.pending)}</th><th>${esc(c.staff)}</th><th>${esc(c.expenses)}</th><th>${esc(c.profit)}</th></tr></thead><tbody>${rows}</tbody></table>
-${brandFooterHtml()}</body></html>`;
+  const summary = docTable(
+    [a.title, ''],
+    [[a.income, { text: money(d.expected), num: true }], [a.staff, { text: money(d.staff), num: true }], [a.expenses, { text: money(d.expenses), num: true }]],
+    { num: [1], total: [a.profit, { text: money(d.profit), num: true }] },
+  );
+  const months = docTable(
+    [c.month, c.expected, c.received, c.pending, c.staff, c.expenses, c.profit],
+    d.months.map((m) => [monthTitle(monthOf(m.month), a), money(m.expected), money(m.received), money(m.pending), money(m.staff), money(m.expenses), money(m.profit)]),
+    {
+      num: [1, 2, 3, 4, 5, 6],
+      total: d.months.length > 1 ? ['Total', money(d.expected), money(d.received), money(d.pending), money(d.staff), money(d.expenses), money(d.profit)] : undefined,
+    },
+  );
+  return docHtml({
+    title: a.title,
+    subtitle: `${scope} · ${periodTitle(p, a)}`,
+    body: `${summary}<div class="note">${esc(a.receivedPending(money(d.received), money(d.pending)))}</div>${months}`,
+  });
 }
 
 // --- Gastos recurrentes (D-103, D-215) --------------------------------------------------------------------------
