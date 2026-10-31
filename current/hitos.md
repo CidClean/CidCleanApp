@@ -39,13 +39,17 @@ Legal rev. 3 (D-275 a D-285), en este orden:
 1. Fase A: HECHA y publicada el 2026-10-30 (días de servicio, conversión de 90 registros con $6,980 intactos, W-2 con ubicación obligatoria).
 2. Fase B: HECHA y publicada el 2026-10-30 (términos en inglés con bloqueo y aviso, privacidad versionada, eliminar cuenta en Mi perfil, fotos solo admin, W-9 cifrado con 4 de 4 vigentes cifrados). Falta publicar en la app los términos v1.0 y la privacidad v1.0 (legal/rev3/web/pdf/), cuando el dueño diga: avisa por correo a todo el personal y bloquea hasta aceptar.
 3. Fase C: HECHA y publicada el 2026-10-31 (quote ≠ contrato, contrato del cliente con firma y contrafirma, 30 días de vigencia, 15 de precio, residencial sin 6%; los 3 jobsites existentes quedan firmados). Pendiente menor: la cuadrícula del Schedule sigue visible en un jobsite sin contrato (el servidor rechaza programar); retención del contrato desde la fecha de fin de la relación (fase E).
-4. Fase D: ICA antes del primer trabajo, ofertas de trabajo y advertencias (D-285).
+4. Fase D: HECHA y publicada el 2026-10-31 (ICA opcional, ofertas, advertencias; proveedor de cuentas D-291).
 5. Fase E: retención y borrado automático (D-281); W-2 sin acceso con corrección en 7 días, salario mínimo y horas extra (D-278).
 
 6. D-291: marca "Proveedor de cuentas" en el cliente (Wilson Franquicia), sus jobsites sin quote ni contrato.
 
 7. D-293: PDFs de documento real (todos).
 8. D-294: Resumen del empleado.
+9. D-295: Profit & Loss con vista Schedule C.
+
+7. D-293: todos los PDF como documentos reales.
+8. D-294: resumen del empleado.
 9. D-295: Profit & Loss con vista Schedule C.
 
 Pendiente: prueba real de Ida en iPhone con Safari.
