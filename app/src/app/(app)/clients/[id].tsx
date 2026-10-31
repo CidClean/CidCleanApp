@@ -7,6 +7,7 @@ import { CardBlock } from '@/components/bento/Card';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppText } from '@/components/AppText';
+import { Checkbox } from '@/components/Checkbox';
 import { Chip } from '@/components/Chip';
 import { ClientFields, clientPayload, clientPhoneOk, type ClientForm } from '@/components/clients/ClientFields';
 import { formatPhone } from '@/lib/phone';
@@ -17,7 +18,7 @@ import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useClientsStrings } from '@/i18n/useClientsStrings';
 import { useStrings } from '@/i18n/useStrings';
 import { canCreateLegacy, canEditClientData, canSeeAccounts, statusTone, type Client, type Jobsite } from '@/lib/clientRules';
-import { fetchClient, fetchJobsites, updateClient } from '@/lib/clientsApi';
+import { fetchClient, fetchJobsites, setClientAccountProvider, updateClient } from '@/lib/clientsApi';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions } from '@/lib/session';
 import { sample, useTheme } from '@/theme';
@@ -44,6 +45,7 @@ export default function ClientScreen() {
   const [phoneError, setPhoneError] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [providerError, setProviderError] = useState(false);
 
   const load = useCallback(async () => {
     const [cl, js] = await Promise.all([fetchClient(id), fetchJobsites(id)]);
@@ -83,6 +85,19 @@ export default function ClientScreen() {
     await load();
   }
 
+  async function toggleProvider(value: boolean) {
+    if (!client || saving) return;
+    setSaving(true);
+    setProviderError(false);
+    const r = await setClientAccountProvider(client.id, value);
+    setSaving(false);
+    if (!r.ok) {
+      setProviderError(true);
+      return;
+    }
+    await load();
+  }
+
   const editAction =
     client && canEditClientData(access)
       ? form
@@ -108,7 +123,7 @@ export default function ClientScreen() {
             <MainCard
               title={client.name}
               subtitle={`${c.client.barTitle} · ${c.list.jobsitesCount(jobsites.length)}`}
-              chip={client.legacy ? c.legacy : undefined}
+              chip={client.accountProvider ? c.accountProvider : client.legacy ? c.legacy : undefined}
               contact={{ phone: client.phone, email: client.email, callLabel: s.detail.call, mailLabel: s.detail.mail }}
             />
             {form ? (
@@ -125,6 +140,15 @@ export default function ClientScreen() {
                 <ListRow title={c.client.address} detail={value(client.address)} />
                 <ListRow title={c.client.notes} detail={value(client.notes)} last />
                 </CardBlock>
+                {canEditClientData(access) ? (
+                  <View style={{ marginTop: 10 }}>
+                    <Checkbox label={c.accountProvider} checked={!!client.accountProvider} onChange={(v) => void toggleProvider(v)} />
+                    <AppText size={sample.noteSize} color={colors.secondary} style={{ marginTop: 4 }}>
+                      {c.accountProviderNote}
+                    </AppText>
+                    {providerError ? <AppAlert tone="error" text={c.accountProviderError} /> : null}
+                  </View>
+                ) : null}
                 <AppText size={sample.labelSize} color={colors.secondary} style={styles.section}>
                   {c.client.jobsites}
                 </AppText>
@@ -147,7 +171,7 @@ export default function ClientScreen() {
                 ))}
                 </CardBlock>
                 ) : null}
-                {client.legacy && canCreateLegacy(access) ? (
+                {(client.legacy || client.accountProvider) && canCreateLegacy(access) ? (
                   <View style={{ marginTop: 12 }}>
                     <AppButton
                       label={c.client.addJobsite}
