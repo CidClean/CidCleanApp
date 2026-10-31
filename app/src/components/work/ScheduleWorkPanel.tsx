@@ -27,6 +27,7 @@ import {
   tableDays,
   type TableRange,
 } from "@/lib/scheduleViews";
+import { periodPart, readableFileName } from "@/lib/fileName";
 import { sharePdf } from "@/lib/sharePdf";
 import { usePermissions } from "@/lib/session";
 import { can, canAny } from "@/lib/visibility";
@@ -130,7 +131,9 @@ export function ScheduleWorkPanel({
       dayTitle,
       hours: t.hours,
     });
-    const r = await sharePdf(html, range === 'month' ? t.pdfTitleMonth : t.pdfTitle);
+    // D-296: "Cid Clean - Schedule - 2026-10-26 a 2026-11-01.pdf" (el mes: AAAA-MM).
+    const period = range === 'month' ? from.slice(0, 7) : periodPart(from, to);
+    const r = await sharePdf(html, range === 'month' ? t.pdfTitleMonth : t.pdfTitle, readableFileName(['Schedule', period], 'pdf'));
     if (r === "unavailable") setNotice(t.shareSoon);
     else if (r === "error") setNotice(t.shareError);
   }

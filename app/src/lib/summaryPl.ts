@@ -1,3 +1,4 @@
+import { readableFileName } from './fileName';
 import type { AccountingStrings } from '@/i18n/accounting';
 import type { SummaryPlStrings } from '@/i18n/summaryPl';
 
@@ -239,6 +240,7 @@ export function plHtml(p: ProfitAndLoss, view: 'summary' | 'schedule_c', t: Summ
   return docHtml({ title: t.plTitle, subtitle, body, generated });
 }
 
-export function plFileName(year: number, view: 'summary' | 'schedule_c'): string {
-  return `cidclean-profit-and-loss-${year}${view === 'schedule_c' ? '-schedule-c' : ''}.csv`;
+/** D-296: "Cid Clean - Profit and Loss - 2026.pdf" (con "Schedule C" en esa vista). */
+export function plFileName(year: number, view: 'summary' | 'schedule_c', ext: 'csv' | 'pdf' = 'csv'): string {
+  return readableFileName(['Profit and Loss', view === 'schedule_c' ? 'Schedule C' : null, year], ext);
 }

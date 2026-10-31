@@ -3,6 +3,7 @@
  * y dinero los hace la base (migración 20261027000014: statistics_report y admin_home); aquí solo hay la lectura de
  * la respuesta, los derivados por hora y en %, quién ve cada tarjeta, y los archivos CSV y HTML del PDF.
  */
+import { periodPart, readableFileName } from './fileName';
 import type { AccountingStrings } from '@/i18n/accounting';
 import type { StatisticsStrings } from '@/i18n/statistics';
 import { hoursText, monthTitle, money, periodTitle, toCsv, type Period } from './accountingRules';
@@ -306,8 +307,9 @@ export function statsCsv(tab: StatsTab, r: StatisticsReport, s: StatisticsString
   );
 }
 
-export function statsFileName(tab: StatsTab, p: Period): string {
-  return `cidclean-estadisticas-${tab}-${p.from}${p.from !== p.to ? `_${p.to}` : ''}.csv`;
+/** D-296: "Cid Clean - Estadísticas - {pestaña} - {período}.{ext}". */
+export function statsFileName(title: string, tab: string | null, p: Period, ext: 'csv' | 'pdf'): string {
+  return readableFileName([title, tab, periodPart(p.from, p.to)], ext);
 }
 
 function esc(x: string): string {

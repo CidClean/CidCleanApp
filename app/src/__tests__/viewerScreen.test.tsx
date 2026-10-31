@@ -75,7 +75,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockPdfViewAvailable = true;
   mockParams = { source: 'document', documentId: 'd1', title: es.employee.w9 };
-  mockFetchDocumentUrl.mockResolvedValue({ ok: true, data: { url: 'https://x/object/sign/employee-docs/p1/w9/abc.pdf?token=t' } });
+  mockFetchDocumentUrl.mockResolvedValue({ ok: true, data: { url: 'https://x/object/sign/employee-docs/p1/w9/abc.pdf?token=t', fileName: 'Cid Clean - W-9 - Estela Medina.pdf' } });
   mockFetchTermsUrl.mockResolvedValue({ ok: true, data: { url: 'https://x/object/sign/terms/staff/abc.pdf?token=t' } });
   mockDownload.mockResolvedValue(cached);
 });
@@ -86,7 +86,8 @@ describe('visor de PDF dentro de la app (D-196)', () => {
     await waitFor(() => expect(screen.getByTestId('pdf-view')).toBeTruthy());
     expect(mockFetchDocumentUrl).toHaveBeenCalledWith('d1');
     expect(mockFetchTermsUrl).not.toHaveBeenCalled();
-    expect(mockDownload).toHaveBeenCalledWith('https://x/object/sign/employee-docs/p1/w9/abc.pdf?token=t');
+    // D-296: se guarda con el nombre legible que da open-document.
+    expect(mockDownload).toHaveBeenCalledWith('https://x/object/sign/employee-docs/p1/w9/abc.pdf?token=t', 'Cid Clean - W-9 - Estela Medina.pdf');
     expect(screen.getByTestId('pdf-view').props.accessibilityLabel).toBe(cached.uri);
   });
 

@@ -308,10 +308,10 @@ export const uploadJobsiteDocument = (jobsiteId: string, kind: DocKind, file: Pi
 
 /** URL firmada de 60 s (Edge Function open-jobsite-document: registra cada apertura). */
 export const fetchJobsiteDocumentUrl = (documentId: string) =>
-  run<{ url: string }>(async () => {
+  run<{ url: string; fileName?: string }>(async () => {
     const { data, error } = await supabase.functions.invoke('open-jobsite-document', { body: { document_id: documentId } });
     if (error) return { ok: false, reason: 'server' };
     const url: unknown = data?.url;
     if (typeof url !== 'string') return { ok: false, reason: 'server' };
-    return { ok: true, data: { url } };
+    return { ok: true, data: { url, fileName: typeof data?.file_name === 'string' ? data.file_name : undefined } }; // D-296
   });

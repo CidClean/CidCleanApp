@@ -60,7 +60,7 @@ export default function ExportScreen() {
       setNotice(a.shareError);
       return;
     }
-    report(await shareCsv(reportCsv(kind, r.data, a, locale), reportFileName(kind, period), label[kind]));
+    report(await shareCsv(reportCsv(kind, r.data, a, locale), reportFileName(label[kind], period, 'csv'), label[kind]));
     setBusy(null);
   }
 
@@ -74,7 +74,7 @@ export default function ExportScreen() {
       setNotice(a.shareError);
       return;
     }
-    report(await sharePdf(dashboardHtml(r.data, period, a.global, a), a.pdfTitle(periodTitle(period, a))));
+    report(await sharePdf(dashboardHtml(r.data, period, a.global, a), a.pdfTitle(periodTitle(period, a)), reportFileName('Dashboard', period, 'pdf')));
     setBusy(null);
   }
 

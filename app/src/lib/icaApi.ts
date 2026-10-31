@@ -103,8 +103,8 @@ export const saveIcaFields = async (agreementId: string, fields: Record<string, 
 };
 export const sendIca = (agreementId: string) => fn<{ id: string; sent: boolean; expires_at: string }>('ica-admin', { action: 'send', agreement_id: agreementId });
 export const countersignIca = (agreementId: string) => fn<{ id: string; status: string }>('ica-admin', { action: 'countersign', agreement_id: agreementId });
-export const fetchIcaPreviewUrl = (profileId: string) => fn<{ url: string }>('ica-admin', { action: 'preview', profile_id: profileId });
-export const fetchIcaSignedUrl = (agreementId: string) => fn<{ url: string }>('ica-admin', { action: 'open', agreement_id: agreementId });
+export const fetchIcaPreviewUrl = (profileId: string) => fn<{ url: string; file_name?: string }>('ica-admin', { action: 'preview', profile_id: profileId });
+export const fetchIcaSignedUrl = (agreementId: string) => fn<{ url: string; file_name?: string }>('ica-admin', { action: 'open', agreement_id: agreementId });
 
 export async function uploadSignedIca(profileId: string, file: PickedFile): Promise<Result<{ id: string }>> {
   try {
@@ -227,7 +227,7 @@ export async function createWarning(profileId: string, issuedOn: string, reason:
   }
 }
 export const voidWarning = (warningId: string, reason: string) => fn('warnings-admin', { action: 'void', warning_id: warningId, reason });
-export const fetchWarningUrl = (warningId: string) => fn<{ url: string }>('warnings-admin', { action: 'open', warning_id: warningId });
+export const fetchWarningUrl = (warningId: string) => fn<{ url: string; file_name?: string }>('warnings-admin', { action: 'open', warning_id: warningId });
 
 // Portal --------------------------------------------------------------------------------------------------------------
 

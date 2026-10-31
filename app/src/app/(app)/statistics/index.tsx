@@ -106,7 +106,7 @@ export default function StatisticsScreen() {
     if (!data || busy) return;
     setBusy(true);
     setNotice(null);
-    shared(await shareCsv(statsCsv(tab, data, s), statsFileName(tab, period), s.tabs[tab]));
+    shared(await shareCsv(statsCsv(tab, data, s), statsFileName(s.title, s.tabs[tab], period, 'csv'), s.tabs[tab]));
     setBusy(false);
   }
 
@@ -114,7 +114,7 @@ export default function StatisticsScreen() {
     if (!data || busy) return;
     setBusy(true);
     setNotice(null);
-    shared(await sharePdf(statsHtml(data, period, s, a), s.pdfTitle(periodTitle(period, a))));
+    shared(await sharePdf(statsHtml(data, period, s, a), s.pdfTitle(periodTitle(period, a)), statsFileName(s.title, null, period, 'pdf')));
     setBusy(false);
   }
 

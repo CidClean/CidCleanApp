@@ -59,7 +59,7 @@ export async function fetchWalkthroughPdfUrl(
   walkthroughId: string,
   version: number,
   language: 'es' | 'en' = 'es',
-): Promise<{ ok: true; data: { url: string } } | { ok: false; reason: 'network' | 'server' }> {
+): Promise<{ ok: true; data: { url: string; fileName?: string } } | { ok: false; reason: 'network' | 'server' }> {
   try {
     const { data, error } = await supabase.functions.invoke('walkthrough-pdf', {
       body: { walkthrough_id: walkthroughId, version, language },
@@ -67,7 +67,7 @@ export async function fetchWalkthroughPdfUrl(
     if (error) return { ok: false, reason: isNetworkError(error) ? 'network' : 'server' };
     const url: unknown = data?.url;
     if (typeof url !== 'string') return { ok: false, reason: 'server' };
-    return { ok: true, data: { url } };
+    return { ok: true, data: { url, fileName: typeof data?.file_name === 'string' ? data.file_name : undefined } }; // D-296
   } catch {
     return { ok: false, reason: 'network' };
   }

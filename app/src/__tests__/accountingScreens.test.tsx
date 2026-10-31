@@ -283,10 +283,10 @@ describe('Personal y Exportar (D-067, D-215)', () => {
     const buttons = screen.getAllByText(a.shareCsv);
     expect(buttons).toHaveLength(4);
     await fireEvent.press(buttons[1]);
-    await waitFor(() => expect(mockShareCsv).toHaveBeenCalledWith(expect.stringContaining('Ana R.,W-2,Sede A,42.5,765.00'), 'cidclean-staff-2026-10.csv', a.reportStaff));
+    await waitFor(() => expect(mockShareCsv).toHaveBeenCalledWith(expect.stringContaining('Ana R.,W-2,Sede A,42.5,765.00'), `Cid Clean - ${a.reportStaff} - 2026-10.csv`, a.reportStaff));
     expect(mockApi.report).toHaveBeenCalledWith('staff', { from: '2026-10', to: '2026-10' });
     await fireEvent.press(screen.getByText(a.sharePdf));
-    await waitFor(() => expect(mockSharePdf).toHaveBeenCalledWith(expect.stringContaining('$394.71'), a.pdfTitle('Octubre 2026')));
+    await waitFor(() => expect(mockSharePdf).toHaveBeenCalledWith(expect.stringContaining('$394.71'), a.pdfTitle('Octubre 2026'), 'Cid Clean - Dashboard - 2026-10.pdf'));
   });
 
   test('solo los reportes con permiso', async () => {

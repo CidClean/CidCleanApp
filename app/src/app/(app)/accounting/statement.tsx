@@ -17,6 +17,7 @@ import { rowDate } from '@/lib/myHours';
 import { useGoBack } from '@/lib/navigation';
 import { fetchStatement, statementCsv, statementHtml, type Statement } from '@/lib/serviceDays';
 import { usePermissions } from '@/lib/session';
+import { readableFileName } from '@/lib/fileName';
 import { shareCsv, sharePdf } from '@/lib/sharePdf';
 import { iconStrokeWidth, radius, sample, useTheme } from '@/theme';
 
@@ -58,6 +59,10 @@ export default function StatementScreen() {
   const due = data ? rowDate(data.dueOn, strings) : '';
   const result = (r: 'shared' | 'unavailable' | 'error') => setNotice(r === 'unavailable' ? a.shareUnavailable : r === 'error' ? a.shareError : null);
 
+  // D-296: "Cid Clean - Statement - {contratista si es uno solo} - 2026-10.pdf".
+  const statementFileName = (ext: 'pdf' | 'csv') =>
+    readableFileName(['Statement', data && data.rows.length === 1 ? data.rows[0].name : null, month], ext);
+
   async function exportPdf() {
     if (!data || busy) return;
     setBusy(true);
@@ -66,14 +71,14 @@ export default function StatementScreen() {
       { title: t.statementTitle, monthTitle: monthTitle(month, a), payBefore: t.payBefore(due), note: t.statementNote, header: t.csvHeader },
       money,
     );
-    result(await sharePdf(html, `${t.statementTitle} ${monthTitle(month, a)}`));
+    result(await sharePdf(html, `${t.statementTitle} ${monthTitle(month, a)}`, statementFileName('pdf')));
     setBusy(false);
   }
 
   async function exportCsv() {
     if (!data || busy) return;
     setBusy(true);
-    result(await shareCsv(statementCsv(data, t.csvHeader), `estado-de-cuenta-${month}.csv`, t.statementTitle));
+    result(await shareCsv(statementCsv(data, t.csvHeader), statementFileName('csv'), t.statementTitle));
     setBusy(false);
   }
 

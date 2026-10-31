@@ -127,8 +127,8 @@ describe('exportes (D-215)', () => {
     expect(csv).toContain('2026-10,Cliente,Sede,1150.00,1100.00,50.00,2026-10-20,"Extra, hablado"');
   });
   test('nombre del archivo', () => {
-    expect(reportFileName('staff', { from: '2026-10', to: '2026-10' })).toBe('cidclean-staff-2026-10.csv');
-    expect(reportFileName('profit', { from: '2026-10', to: '2026-12' })).toBe('cidclean-profit-2026-10_2026-12.csv');
+    expect(reportFileName('Gastos', { from: '2026-10', to: '2026-10' }, 'csv')).toBe('Cid Clean - Gastos - 2026-10.csv');
+    expect(reportFileName('Dashboard', { from: '2026-10', to: '2026-12' }, 'pdf')).toBe('Cid Clean - Dashboard - 2026-10 a 2026-12.pdf');
   });
   test('PDF del dashboard: las cuatro cifras, Recibido / Pendiente y la tabla por mes', () => {
     const html = dashboardHtml(

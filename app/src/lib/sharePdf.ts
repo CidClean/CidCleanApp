@@ -8,15 +8,23 @@ export function shareAvailable(): boolean {
   return requireOptionalNativeModule('ExpoPrint') !== null && requireOptionalNativeModule('ExpoSharing') !== null;
 }
 
-export async function sharePdf(html: string, title: string): Promise<'shared' | 'unavailable' | 'error'> {
+/**
+ * D-296: el PDF de expo-print sale con un nombre al azar ("a64caa6b-….pdf"); antes de compartirlo se mueve a la caché
+ * privada con el nombre legible (lib/fileName).
+ */
+export async function sharePdf(html: string, title: string, fileName: string): Promise<'shared' | 'unavailable' | 'error'> {
   if (!shareAvailable()) return 'unavailable';
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Print = require('expo-print') as typeof import('expo-print');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Sharing = require('expo-sharing') as typeof import('expo-sharing');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const FS = require('expo-file-system') as typeof import('expo-file-system');
     const { uri } = await Print.printToFileAsync({ html });
-    await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: title });
+    const named = namedCacheFile(FS, fileName);
+    await new FS.File(uri).move(named);
+    await Sharing.shareAsync(named.uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: title });
     return 'shared';
   } catch {
     return 'error';
@@ -34,8 +42,7 @@ export async function shareCsv(csv: string, fileName: string, title: string): Pr
     const FS = require('expo-file-system') as typeof import('expo-file-system');
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Sharing = require('expo-sharing') as typeof import('expo-sharing');
-    const file = new FS.File(FS.Paths.cache, fileName);
-    if (file.exists) file.delete();
+    const file = namedCacheFile(FS, fileName);
     file.create();
     // Con BOM para que la hoja de cálculo lea bien los acentos.
     file.write('﻿' + csv);
@@ -44,4 +51,13 @@ export async function shareCsv(csv: string, fileName: string, title: string): Pr
   } catch {
     return 'error';
   }
+}
+
+/** Archivo en la caché privada (`Paths.cache/share`) con el nombre legible; si ya había uno con ese nombre, se borra. */
+function namedCacheFile(FS: typeof import('expo-file-system'), fileName: string): import('expo-file-system').File {
+  const directory = new FS.Directory(FS.Paths.cache, 'share');
+  directory.create({ idempotent: true, intermediates: true });
+  const file = new FS.File(directory, fileName);
+  if (file.exists) file.delete();
+  return file;
 }

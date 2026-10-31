@@ -68,7 +68,7 @@ export default function ProfitLossScreen() {
   async function exportPdf() {
     if (!data || busy) return;
     setBusy(true);
-    result(await sharePdf(plHtml(data, view, t, locale), `${t.plTitle} ${data.year}`));
+    result(await sharePdf(plHtml(data, view, t, locale), `${t.plTitle} ${data.year}`, plFileName(data.year, view, 'pdf')));
     setBusy(false);
   }
 

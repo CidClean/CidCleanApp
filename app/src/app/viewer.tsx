@@ -18,10 +18,10 @@ import { useGoBack } from '@/lib/navigation';
 import { fetchQuoteFileUrl } from '@/lib/quotesApi';
 import { useSession } from '@/lib/session';
 import { fetchTermsUrl, type TermsKind } from '@/lib/termsApi';
-import { downloadToCache, kindFromUrl, loadPdfView, removeCachedFile, type ViewerKind } from '@/lib/viewerFile';
+import { downloadOnWeb, downloadToCache, kindFromUrl, loadPdfView, removeCachedFile, viewerFileName, type ViewerKind } from '@/lib/viewerFile';
 import { sample, useTheme } from '@/theme';
 
-type State = { status: 'loading' } | { status: 'error' } | { status: 'ready'; kind: ViewerKind; uri: string };
+type State = { status: 'loading' } | { status: 'error' } | { status: 'ready'; kind: ViewerKind; uri: string; fileName: string };
 
 /**
  * Visor de PDF dentro de la app (D-196): los términos del staff (D-176) y los documentos de los 1099 (D-175).
@@ -30,7 +30,9 @@ type State = { status: 'loading' } | { status: 'error' } | { status: 'ready'; ki
  * open-document (documentos; deja la apertura en el historial) o de Storage firmado (términos).
  */
 export default function ViewerScreen() {
-  const { source, documentId, title, path, version, language, download, note, kind: termsKindParam } = useLocalSearchParams<{
+  const { source, documentId, title, path, version, language, download, note, fileName: fileNameParam, kind: termsKindParam } = useLocalSearchParams<{
+    /** D-296: nombre legible del archivo cuando la pantalla lo sabe (si no, el que da el servidor o el título). */
+    fileName?: string;
     /** source 'terms': staff (por defecto), portal o privacy (D-282). */
     kind?: string;
     /** D-271: 'own-w9' en el W-9 que abre su dueño muestra "Solo lo ven tú y el Super Admin de Cid Clean." */
@@ -87,8 +89,10 @@ export default function ViewerScreen() {
       }
       const url = result.data.url;
       const kind = kindFromUrl(url);
+      const given = result.data as { fileName?: string; file_name?: string };
+      const fileName = viewerFileName(url, title, fileNameParam ?? given.fileName ?? given.file_name);
       if (Platform.OS === 'web') {
-        setState({ status: 'ready', kind, uri: url });
+        setState({ status: 'ready', kind, uri: url, fileName });
         return;
       }
       if (kind === 'pdf' && loadPdfView() === null) {
@@ -97,12 +101,12 @@ export default function ViewerScreen() {
         if (!cancelled) goBack();
         return;
       }
-      file = await downloadToCache(url);
+      file = await downloadToCache(url, fileName);
       if (cancelled) {
         removeCachedFile(file);
         return;
       }
-      setState({ status: 'ready', kind, uri: file.uri });
+      setState({ status: 'ready', kind, uri: file.uri, fileName });
     }
 
     load().catch(() => {
@@ -133,16 +137,17 @@ export default function ViewerScreen() {
                 accessibilityLabel: strings.employee.download,
                 onPress: () => {
                   const uri = state.uri;
+                  const fileName = state.fileName;
                   // D-280: cada descarga del W-9 queda en el historial. En la web el enlace del W-9 cifrado es de un
-                  // solo uso: se pide uno nuevo (que registra la descarga) y se abre en una pestaña.
+                  // solo uso: se pide uno nuevo (que registra la descarga). D-296: se baja con el nombre legible.
                   if (Platform.OS === 'web') {
                     if (source === 'document' && documentId) {
                       void fetchDocumentUrl(documentId, 'download').then((r) => {
-                        if (r.ok) window.open(r.data.url, '_blank', 'noopener');
+                        if (r.ok) void downloadOnWeb(r.data.url, fileName);
                       });
                       return;
                     }
-                    window.open(uri, '_blank', 'noopener');
+                    void downloadOnWeb(uri, fileName);
                     return;
                   }
                   if (source === 'document' && documentId) void logDocumentDownload(documentId);

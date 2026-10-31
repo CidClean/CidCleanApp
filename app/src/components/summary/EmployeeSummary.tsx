@@ -13,6 +13,7 @@ import { useAccountingStrings } from '@/i18n/useAccountingStrings';
 import { useStrings } from '@/i18n/useStrings';
 import { useSummaryPlStrings } from '@/i18n/useSummaryPlStrings';
 import { hoursText, money } from '@/lib/accountingRules';
+import { readableFileName } from '@/lib/fileName';
 import { shareCsv, sharePdf } from '@/lib/sharePdf';
 import {
   accountLine,
@@ -63,14 +64,14 @@ export function EmployeeSummary({ profileId }: { profileId: string }) {
   async function exportPdf() {
     if (!data || busy) return;
     setBusy(true);
-    result(await sharePdf(summaryHtml(data, t, a), `${t.summaryTitle} ${data.name} ${data.year}`));
+    result(await sharePdf(summaryHtml(data, t, a), `${t.summaryTitle} ${data.name} ${data.year}`, readableFileName(['Resumen', data.name, data.year], 'pdf')));
     setBusy(false);
   }
 
   async function exportCsv() {
     if (!data || busy) return;
     setBusy(true);
-    result(await shareCsv(summaryCsv(data, t), `resumen-${data.year}.csv`, t.summaryTitle));
+    result(await shareCsv(summaryCsv(data, t), readableFileName(['Resumen', data.name, data.year], 'csv'), t.summaryTitle));
     setBusy(false);
   }
 

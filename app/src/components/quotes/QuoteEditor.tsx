@@ -1,4 +1,5 @@
 import { Redirect, useRouter } from "expo-router";
+import { readableFileName } from "@/lib/fileName";
 import { ContractCard } from "../contract/ContractCard";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -375,10 +376,11 @@ export function QuoteEditor({ source }: { source: QuoteSource }) {
     setBusy(false);
   }
 
-  function openFile(path: string, title: string) {
+  function openFile(path: string, title: string, document: string = title) {
     router.push({
       pathname: "/viewer",
-      params: { source: "quote-file", path, title },
+      // D-296: el archivo se guarda como "Cid Clean - {SOW o Quote vX} - {empresa}.pdf".
+      params: { source: "quote-file", path, title, fileName: readableFileName([document, ctx?.company], "pdf") },
     });
   }
 
@@ -665,7 +667,7 @@ export function QuoteEditor({ source }: { source: QuoteSource }) {
                     title={q.readSow}
                     chevron
                     last
-                    onPress={() => openFile(latest.sowPath as string, q.sow)}
+                    onPress={() => openFile(latest.sowPath as string, q.sow, 'SOW')}
                   />
                 ) : (
                   <AppText
@@ -767,7 +769,7 @@ export function QuoteEditor({ source }: { source: QuoteSource }) {
                 last={i === rows.length - 1}
                 onPress={
                   v.pdfPath
-                    ? () => openFile(v.pdfPath as string, q.version(v.version))
+                    ? () => openFile(v.pdfPath as string, q.version(v.version), `Quote v${v.version}`)
                     : undefined
                 }
               />
@@ -1054,7 +1056,7 @@ function SentVersion({
   q: ReturnType<typeof useQuoteStrings>;
   v: QuoteVersion;
   locale: "es" | "en";
-  onFile: (path: string, title: string) => void;
+  onFile: (path: string, title: string, document?: string) => void;
   extra?: boolean;
 }) {
   const { colors } = useTheme();
@@ -1180,7 +1182,7 @@ function SentVersion({
           <ListRow
             title={q.viewPdf}
             chevron
-            onPress={() => onFile(v.pdfPath as string, q.version(v.version))}
+            onPress={() => onFile(v.pdfPath as string, q.version(v.version), `Quote v${v.version}`)}
             last={!v.sowPath}
           />
         ) : null}
@@ -1189,7 +1191,7 @@ function SentVersion({
             title={q.readSow}
             chevron
             last
-            onPress={() => onFile(v.sowPath as string, q.sow)}
+            onPress={() => onFile(v.sowPath as string, q.sow, "SOW")}
           />
         ) : null}
       </View>

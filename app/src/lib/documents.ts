@@ -80,7 +80,7 @@ export async function uploadDocument(profileId: string, kind: DocumentKind, file
  * Edge Function open-document, que exige empleados_gestionar_documentos, registra quién y cuándo en el historial y
  * firma una URL de 60 s. El visor de la app la descarga a la caché privada y la lee ahí.
  */
-export async function fetchDocumentUrl(documentId: string, action: 'open' | 'download' = 'open'): Promise<ApiResult<{ url: string }>> {
+export async function fetchDocumentUrl(documentId: string, action: 'open' | 'download' = 'open'): Promise<ApiResult<{ url: string; fileName?: string }>> {
   try {
     // D-280: un W-9 cifrado vuelve como enlace de un solo uso de 60 s a w9-file, que lo entrega descifrado.
     const { data, error } = await supabase.functions.invoke('open-document', {
@@ -89,7 +89,7 @@ export async function fetchDocumentUrl(documentId: string, action: 'open' | 'dow
     if (error) return { ok: false, reason: await functionFailure(error) };
     const url: unknown = data?.url;
     if (typeof url !== 'string') return { ok: false, reason: 'server' };
-    return { ok: true, data: { url } };
+    return { ok: true, data: { url, fileName: typeof data?.file_name === 'string' ? data.file_name : undefined } }; // D-296
   } catch {
     return { ok: false, reason: 'network' };
   }

@@ -167,7 +167,7 @@ describe('Quote en la app (D-077, D-208, D-209)', () => {
     expect(screen.getByText(q.note('Menos días'))).toBeTruthy();
     expect(screen.queryByText(q.send)).toBeNull();
     await fireEvent.press(screen.getByText(q.viewPdf));
-    expect(mockPush).toHaveBeenCalledWith({ pathname: '/viewer', params: { source: 'quote-file', path: 'q1/v1/quote-1.0.pdf', title: q.version('1.0') } });
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/viewer', params: { source: 'quote-file', path: 'q1/v1/quote-1.0.pdf', title: q.version('1.0'), fileName: expect.stringMatching(/^Cid Clean - Quote v1\.0.*\.pdf$/) } });
     mockNewVersion.mockResolvedValue({ ok: true, data: 'v2' });
     await fireEvent.press(screen.getByText(q.newVersion));
     await waitFor(() => expect(mockNewVersion).toHaveBeenCalledWith('q1'));

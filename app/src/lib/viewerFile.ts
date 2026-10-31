@@ -3,6 +3,8 @@ import { Directory, File, Paths } from 'expo-file-system';
 import type { ComponentType } from 'react';
 import { Platform, type ViewProps } from 'react-native';
 
+import { readableFileName } from './fileName';
+
 /**
  * Visor de archivos dentro de la app (D-196). El archivo se descarga a la carpeta privada de caché de la app
  * (`Paths.cache/viewer`, no es Descargas ni una carpeta pública) y se borra al cerrar el visor.
@@ -32,17 +34,53 @@ export function cacheFileName(extension: string, now: number = Date.now(), rando
 
 const viewerDirectory = () => new Directory(Paths.cache, 'viewer');
 
-/** Descarga la URL firmada a la caché privada. Quien llama debe borrar el archivo con `removeCachedFile`. */
-export async function downloadToCache(url: string): Promise<File> {
-  const directory = viewerDirectory();
+/**
+ * Nombre con que se guarda el archivo del visor (D-296): el que dio el servidor o la pantalla, o "Cid Clean - {título}",
+ * siempre con la extensión real del archivo.
+ */
+export function viewerFileName(url: string, title: string | null | undefined, given?: string | null): string {
+  const ext = extensionFromUrl(url) || 'pdf';
+  const base = given ? given.replace(/\.[a-z0-9]{1,5}$/i, '') : null;
+  return readableFileName([base ?? title ?? null], ext);
+}
+
+/**
+ * Descarga la URL firmada a la caché privada con el nombre legible (D-296), dentro de una carpeta propia para que dos
+ * archivos con el mismo nombre no choquen. Quien llama debe borrar el archivo con `removeCachedFile`.
+ */
+export async function downloadToCache(url: string, fileName: string): Promise<File> {
+  const directory = new Directory(viewerDirectory(), cacheFileName('d').replace(/\.d$/, ''));
   directory.create({ idempotent: true, intermediates: true });
-  const destination = new File(directory, cacheFileName(extensionFromUrl(url)));
+  const destination = new File(directory, fileName);
   return File.downloadFileAsync(url, destination);
+}
+
+/**
+ * Web (D-296): baja el archivo y lo guarda con el nombre legible (atributo download de un enlace a un blob local; el
+ * atributo no sirve con URLs de otro dominio). Si no se puede leer, se abre la URL en una pestaña.
+ */
+export async function downloadOnWeb(url: string, fileName: string): Promise<void> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('download');
+    const href = URL.createObjectURL(await response.blob());
+    const link = document.createElement('a');
+    link.href = href;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 10_000);
+  } catch {
+    window.open(url, '_blank', 'noopener');
+  }
 }
 
 export function removeCachedFile(file: File | null): void {
   try {
+    const parent = file?.parentDirectory;
     file?.delete();
+    if (parent && parent.uri !== viewerDirectory().uri) parent.delete();
   } catch {
     // ya no existe
   }

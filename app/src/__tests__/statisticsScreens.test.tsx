@@ -226,7 +226,7 @@ describe('Estadísticas (D-252, D-253)', () => {
     await fireEvent.press(screen.getByText(s.exportCsv));
     await waitFor(() => expect(mockShareCsv).toHaveBeenCalled());
     const [csv, name] = mockShareCsv.mock.calls[0];
-    expect(name).toBe('cidclean-estadisticas-accounts-2026-10.csv');
+    expect(name).toBe('Cid Clean - Estadísticas - Cuentas - 2026-10.csv');
     expect(csv).toContain('Naples Yacht Club,Wilson Franquicia,17,51,203.10,204.00');
     await fireEvent.press(screen.getByText(s.exportPdf));
     await waitFor(() => expect(mockSharePdf).toHaveBeenCalled());

@@ -107,6 +107,6 @@ describe('exportar (D-253)', () => {
     expect(statsCsv('trend', r, statisticsEs).split('\r\n')[1]).toBe('2026-09,1000.00,240.00,0.00,760.00');
   });
   test('nombre del archivo por pestaña y periodo', () => {
-    expect(statsFileName('employees', { from: '2026-09', to: '2026-10' })).toBe('cidclean-estadisticas-employees-2026-09_2026-10.csv');
+    expect(statsFileName('Estadísticas', 'Empleados', { from: '2026-09', to: '2026-10' }, 'csv')).toBe('Cid Clean - Estadísticas - Empleados - 2026-09 a 2026-10.csv');
   });
 });

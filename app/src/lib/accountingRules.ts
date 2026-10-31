@@ -7,6 +7,7 @@ import type { StaffCost } from './accountingApi';
 import type { Access } from './visibility';
 import { can, canAny } from './visibility';
 import { docHtml, docTable } from './docPdf';
+import { periodPart, readableFileName } from './fileName';
 
 // --- Periodos (D-069 mes con flechas; D-215 por mes o rango) ----------------------------------------------------
 
@@ -192,8 +193,9 @@ export function reportCsv(kind: ReportKind, rows: readonly Record<string, unknow
   );
 }
 
-export function reportFileName(kind: ReportKind, p: Period): string {
-  return `cidclean-${kind}-${p.from}${isRange(p) ? `_${p.to}` : ''}.csv`;
+/** D-296: "Cid Clean - {exporte} - {período}.{ext}" (por ejemplo "Cid Clean - Gastos por categoría - 2026-10.csv"). */
+export function reportFileName(label: string, p: Period, ext: 'csv' | 'pdf'): string {
+  return readableFileName([label, periodPart(p.from, p.to)], ext);
 }
 
 // --- PDF del dashboard (D-215, con lib/sharePdf) -------------------------------------------------------------------

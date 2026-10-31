@@ -285,7 +285,7 @@ describe('Estado de cuenta (D-286 (4))', () => {
     expect(screen.getByText('7 días aprobados · 1 editado')).toBeTruthy();
     await fireEvent.press(screen.getByText('CSV'));
     const { shareCsv } = require('@/lib/sharePdf');
-    await waitFor(() => expect(shareCsv).toHaveBeenCalledWith(expect.stringContaining('Humberto V.,12,0,960.00'), 'estado-de-cuenta-2026-10.csv', 'Estado de cuenta'));
+    await waitFor(() => expect(shareCsv).toHaveBeenCalledWith(expect.stringContaining('Humberto V.,12,0,960.00'), 'Cid Clean - Statement - 2026-10.csv', 'Estado de cuenta'));
   });
 
   it('sin el permiso de costo de personal no entra', async () => {

@@ -144,9 +144,9 @@ export const sendContract = (contractId: string) =>
 export const countersignContract = (contractId: string) =>
   admin<{ id: string; status: string; signed_at: string; copies: Record<string, boolean> }>({ action: 'countersign', contract_id: contractId });
 /** URL de 60 s del PDF del contrato para el visor (sin firmar, o con la firma del cliente). */
-export const fetchContractPreviewUrl = async (jobsiteId: string): Promise<{ ok: true; data: { url: string } } | { ok: false; reason: string }> => {
-  const r = await admin<{ url: string }>({ action: 'preview', jobsite_id: jobsiteId });
-  return r.ok && typeof r.data.url === 'string' ? { ok: true, data: { url: r.data.url } } : { ok: false, reason: 'server' };
+export const fetchContractPreviewUrl = async (jobsiteId: string): Promise<{ ok: true; data: { url: string; fileName?: string } } | { ok: false; reason: string }> => {
+  const r = await admin<{ url: string; file_name?: string }>({ action: 'preview', jobsite_id: jobsiteId });
+  return r.ok && typeof r.data.url === 'string' ? { ok: true, data: { url: r.data.url, fileName: r.data.file_name } } : { ok: false, reason: 'server' };
 };
 
 /** Campos que se muestran en "Preparar contrato" (D-289): fecha de inicio, área, franja de acceso y los demás vacíos. */
