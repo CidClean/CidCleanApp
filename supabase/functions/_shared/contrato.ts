@@ -8,7 +8,7 @@ export type Campos = Record<string, string>;
 /** Datos del contrato tal como los devuelve contract_json() en la base. */
 export type ContratoDb = {
   id: string; jobsite_id: string; csa: string; sow: string; template_version: string; quote_number: string;
-  quote_version: string; fields: Campos; missing: string[];
+  quote_version: string; fields: Campos; missing: string[]; cleaning_type?: 'residential' | 'non_residential';
   client_signer_name: string | null; client_signer_title: string | null; client_signer_email: string | null;
   client_signed_at: string | null; client_ip: string | null; client_user_agent: string | null; client_signature_id: string | null;
   sent_at: string | null; sent_by_name?: string | null;
@@ -25,6 +25,10 @@ export function camposDe(c: ContratoDb): Campos {
     ...c.fields,
     sow_no: c.sow, csa_no: c.csa, quote_no: c.quote_number, quote_version: c.quote_version, sow_version: c.quote_version,
     template_version: c.template_version,
+    // D-290: residencial no lleva el 6% (D-283); el texto del abogado decía siempre "plus 6% Florida sales tax".
+    tax_clause: c.cleaning_type === 'residential'
+      ? 'with no Florida sales tax (residential cleaning)'
+      : 'plus 6% Florida sales tax (non-residential cleaning)',
   };
 }
 
@@ -43,7 +47,7 @@ export function llaves(texto: string): string[] {
   return [...texto.matchAll(/\{\{([a-z0-9_]+)\}\}/g)].map((m) => m[1]);
 }
 
-export const AUTOMATICAS = ['sow_no', 'csa_no', 'quote_no', 'quote_version', 'sow_version', 'template_version'];
+export const AUTOMATICAS = ['sow_no', 'csa_no', 'quote_no', 'quote_version', 'sow_version', 'template_version', 'tax_clause'];
 
 /** Filas del certificado de la firma electrónica (D-283, como D-268 (4) del W-9). */
 export function filasCertificadoContrato(o: {

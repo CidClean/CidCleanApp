@@ -72,7 +72,7 @@ export const PLANTILLA: Bloque[] = [
   { t: 'bullet', text: "Work photos may be taken for Cid Clean's internal quality control and records only. They are used exclusively by Cid Clean administration and are never used commercially or on social media." },
   { t: 'bullet', text: 'Quality inspections: {{inspections}}. Report service issues within 24 hours to info@cidclean.com or (786) 250-1324; Cid Clean will correct qualifying issues at no charge at the next scheduled service or within 2 business days, whichever is sooner.' },
   { t: 'h2', text: 'A8. Pricing reference' },
-  { t: 'p', text: 'Pricing is stated in the related quote {{quote_no}} version {{quote_version}}: {{price}}, plus 6% Florida sales tax (non-residential cleaning). Accepting the quote and this SOW does not create a contract; services begin only after both parties sign the Commercial Service Agreement. Changes to this SOW require a change order or new quote version accepted by both parties.' },
+  { t: 'p', text: 'Pricing is stated in the related quote {{quote_no}} version {{quote_version}}: {{price}}, {{tax_clause}}. Accepting the quote and this SOW does not create a contract; services begin only after both parties sign the Commercial Service Agreement. Changes to this SOW require a change order or new quote version accepted by both parties.' },
   { t: 'h2', text: 'A9. Client confirmation' },
   { t: 'check', text: 'I have read this Scope of Work (SOW {{sow_no}}, version {{sow_version}}).' },
   { t: 'p', text: 'Name: {{a9_name}} Title: {{a9_title}} Date/time: {{a9_datetime}} (Recorded electronically via the client portal – confirmation of reading only, not a contract signature.)' },
