@@ -1,0 +1,62 @@
+<!doctype html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contrato del cliente</title>
+<!-- D-289: aprobado por el dueño ("Dale", 2026-10-31). Colores C1 (D-226). Datos de ejemplo. -->
+<style>
+body{background:#EDE6DA;font-family:Manrope,system-ui,sans-serif;color:#1E2A28;margin:0;padding:16px}
+.w{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;max-width:1240px;margin:auto}
+.step{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0F766E;margin:0 0 8px}
+.ph{background:#FBF6EF;border-radius:30px;padding:16px 14px;display:flex;flex-direction:column;gap:10px}
+.top{font-weight:800;font-size:20px}
+.c{background:#fff;border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.btn{background:#0F766E;color:#fff;border-radius:16px;padding:12px;text-align:center;font-weight:800;font-size:14px}
+.btn2{border:1px solid #0F766E;color:#0F766E;border-radius:16px;padding:11px;text-align:center;font-weight:800;font-size:14px}
+.r{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px}
+.ok{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#DDEFEC;color:#0F766E;white-space:nowrap}
+.warn{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#FBE3C7;color:#8A4B0F;white-space:nowrap}
+.neu{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#F1EBE2;color:#6B5F52;white-space:nowrap}
+.lb{font-size:12px;color:#6B5F52;font-weight:600;margin-bottom:-4px}
+.in{border:1px solid #E8DCC9;border-radius:14px;padding:10px 12px;font-size:14px}
+.note{font-size:12px;color:#6B5F52;line-height:1.45}
+.tl{display:flex;flex-direction:column;gap:6px;font-size:13px}.tl div{display:flex;gap:8px;align-items:center}
+.d{width:10px;height:10px;border-radius:50%;background:#0F766E}.d.o{background:#E8DCC9}
+.seg{display:flex;gap:6px}.seg span{flex:1;text-align:center;font-size:13px;font-weight:700;padding:9px;border-radius:12px;background:#F6EFE6}.seg .on{background:#0F766E;color:#fff}
+.amber{background:#FBE3C7;color:#8A4B0F;border-radius:14px;padding:10px 12px;font-size:13px;line-height:1.4}
+.chk{display:flex;gap:8px;font-size:12px;line-height:1.45}.chk b{flex:none;width:18px;height:18px;border-radius:5px;background:#0F766E;color:#fff;font-size:12px;display:grid;place-items:center}
+</style>
+<div class="w">
+<div><p class="step">1 · Quote aceptado (admin)</p><div class="ph">
+ <div class="c"><div class="r"><b>Naples Yacht Club · Q-0012 v2</b><span class="warn">Contrato pendiente</span></div>
+  <div class="tl"><div><span class="d"></span>Aceptado · Oct 30 por Ana Ruiz (Office Manager)</div><div><span class="d o"></span>Contrato enviado</div><div><span class="d o"></span>Firmado por el cliente</div><div><span class="d o"></span>Firmado por ambas partes</div></div>
+  <div class="note">El precio se mantiene hasta Nov 14 (15 días). Después pasa a "Requiere actualización".</div>
+  <div class="btn">Preparar contrato</div></div>
+ <div class="c"><b>Preparar contrato</b>
+  <div class="lb">Fecha de inicio del servicio</div><div class="in">Nov 3, 2026</div>
+  <div class="lb">Área aproximada (sq ft)</div><div class="in">12,500</div>
+  <div class="lb">Franja de acceso del cliente</div><div class="in">After 6:00 PM; must finish by 6:00 AM</div>
+  <div class="note">Lo demás sale del quote, del walkthrough y del cliente.</div>
+  <div class="btn2">Ver PDF</div><div class="btn">Enviar para firma</div></div>
+</div></div>
+<div><p class="step">2 · El cliente firma (portal)</p><div class="ph">
+ <div class="top">Commercial Service Agreement</div>
+ <div class="c"><div class="r"><b>Naples Yacht Club</b><span class="neu">CSA-0007</span></div>
+  <div class="btn2">Read the agreement and SOW (PDF)</div>
+  <div class="lb">Full name</div><div class="in">Ana Ruiz</div>
+  <div class="lb">Title</div><div class="in">Office Manager</div>
+  <div class="chk"><b>✓</b><span>I agree to sign this agreement electronically, and I am authorized to sign on behalf of Naples Yacht Club.</span></div>
+  <div class="btn">Sign agreement</div></div>
+ <div class="note">Entra con el link del correo y un código de 6 dígitos, como en el W-9. Al final del PDF va la hoja de certificado.</div>
+</div></div>
+<div><p class="step">3 · Contrafirma (Super Admin)</p><div class="ph">
+ <div class="c"><div class="r"><b>Naples Yacht Club · CSA-0007</b><span class="warn">Firmado por el cliente</span></div>
+  <div class="note">Ana Ruiz firmó el Nov 1 a las 10:42 AM.</div>
+  <div class="btn2">Ver PDF firmado</div><div class="btn">Contrafirmar</div></div>
+ <div class="c"><div class="r"><b>Naples Yacht Club · CSA-0007</b><span class="ok">Firmado por ambas partes</span></div>
+  <div class="note">Copia enviada a Ana Ruiz y a info@cidclean.com.</div></div>
+</div></div>
+<div><p class="step">4 · Tipo de limpieza y Schedule</p><div class="ph">
+ <div class="c"><div class="lb">Tipo de limpieza</div><div class="seg"><span class="on">No residencial</span><span>Residencial</span></div>
+  <div class="note">Residencial no lleva el 6% de Florida.</div></div>
+ <div class="amber"><b>Sin contrato firmado.</b> No se pueden programar visitas de este jobsite hasta que el contrato esté firmado por ambas partes.</div>
+</div></div>
+</div>
