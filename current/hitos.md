@@ -46,11 +46,8 @@ Legal rev. 3 (D-275 a D-285), en este orden:
 
 7. D-293: PDFs de documento real (todos).
 8. D-294: Resumen del empleado.
-9. D-295: Profit & Loss con vista Schedule C.
 
-7. D-293: todos los PDF como documentos reales.
-8. D-294: resumen del empleado.
-9. D-295: Profit & Loss con vista Schedule C.
+7-9. D-293, D-294, D-295: HECHO y publicado el 2026-10-31 (PDFs de documento, Resumen del empleado, Profit & Loss).
 
 Pendiente: prueba real de Ida en iPhone con Safari.
 
