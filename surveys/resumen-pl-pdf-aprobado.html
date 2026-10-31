@@ -1,0 +1,103 @@
+<!doctype html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Resumen, P&amp;L y PDFs</title>
+<!-- D-293 a D-295: aprobado por el dueño ("Así está bien", 2026-10-31). Colores C1 (D-226). Datos de ejemplo. -->
+<style>
+body{background:#EDE6DA;font-family:Manrope,system-ui,sans-serif;color:#1E2A28;margin:0;padding:16px}
+.w{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;max-width:1260px;margin:auto}
+.step{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0F766E;margin:0 0 8px}
+.ph{background:#FBF6EF;border-radius:30px;padding:16px 14px;display:flex;flex-direction:column;gap:10px}
+.top{font-weight:800;font-size:20px}
+.c{background:#fff;border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.r{display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:4px 0}
+.r small{display:block;color:#6B5F52;font-size:12px}
+.b{font-weight:800}
+.mb{display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:20px;padding:10px 14px;font-weight:800}.mb span{color:#0F766E;font-size:20px;padding:0 6px}
+.hero{background:#0F766E;color:#fff;border-radius:24px;padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.hero small{display:block;opacity:.85;font-size:12px}.hero b{font-size:22px}
+.btn2{border:1px solid #0F766E;color:#0F766E;border-radius:16px;padding:11px;text-align:center;font-weight:800;font-size:14px}
+.seg{display:flex;gap:6px}.seg span{flex:1;text-align:center;font-size:13px;font-weight:700;padding:9px;border-radius:12px;background:#F6EFE6}.seg .on{background:#0F766E;color:#fff}
+.ok{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#DDEFEC;color:#0F766E}
+.neu{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#F1EBE2;color:#6B5F52}
+.line{border-top:1px solid #E8DCC9;margin:4px 0}
+.note{font-size:12px;color:#6B5F52;line-height:1.45}
+/* PDF de muestra: documento real, fondo blanco */
+.pdf{background:#fff;border-radius:6px;box-shadow:0 2px 12px rgba(0,0,0,.12);padding:28px 26px;font-family:Helvetica,Arial,sans-serif;color:#111;font-size:11px}
+.pdf .hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0F766E;padding-bottom:10px;margin-bottom:14px}
+.pdf .lg{display:flex;gap:8px;align-items:center}.pdf .lg i{width:26px;height:26px;border-radius:6px;background:#0F766E;display:inline-block}
+.pdf .lg b{color:#0F766E;font-size:14px}
+.pdf h1{font-size:16px;margin:0 0 2px}.pdf .sub{color:#555;font-size:10px}
+.pdf table{width:100%;border-collapse:collapse;margin:8px 0}
+.pdf th{text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#555;border-bottom:1px solid #999;padding:4px 2px}
+.pdf td{padding:4px 2px;border-bottom:1px solid #e5e5e5}.pdf td.n{text-align:right;font-variant-numeric:tabular-nums}
+.pdf tr.t td{font-weight:700;border-top:1px solid #111;border-bottom:none}
+.pdf .ft{border-top:1px solid #ccc;margin-top:16px;padding-top:6px;color:#777;font-size:8.5px;display:flex;justify-content:space-between}
+</style>
+<div class="w">
+<div><p class="step">1 · Resumen del empleado</p><div class="ph">
+ <div class="top">Estela Medina</div>
+ <div class="seg"><span>Datos</span><span>Permisos</span><span>Pago</span><span class="on">Resumen</span></div>
+ <div class="mb"><span>‹</span>2026<span>›</span></div>
+ <div class="hero"><div><small>Días de servicio</small><b>15</b></div><div><small>Pagado</small><b>$1,350</b></div></div>
+ <div class="c"><b>Cuentas</b>
+  <div class="r"><div>Naples Yacht Club<small>Wilson Franquicia · desde Sep 17, 2026</small></div><span class="ok">Vigente</span></div>
+  <div class="r"><div>Clinica Quirúrgica<small>Wilson Franquicia · Aug 1 – Aug 31, 2026</small></div><span class="neu">Terminada</span></div></div>
+ <div class="c"><b>Por mes</b>
+  <div class="r"><span>Agosto</span><span>15 días · $1,350.00</span></div>
+  <div class="r"><span>Septiembre</span><span>0 días · $0.00</span></div>
+  <div class="r"><span>Octubre</span><span>8 días · $640.00</span></div>
+  <div class="line"></div><div class="r b"><span>Total 2026</span><span>23 días · $1,990.00</span></div></div>
+ <div class="btn2">Exportar (PDF / CSV)</div>
+ <div class="note">W-2: horas en lugar de días. Solo lo ve quien puede ver pagos.</div>
+</div></div>
+<div><p class="step">2 · Accounting → Profit &amp; Loss</p><div class="ph">
+ <div class="top">Profit &amp; Loss</div>
+ <div class="mb"><span>‹</span>2026<span>›</span></div>
+ <div class="seg"><span class="on">Resumen</span><span>Schedule C</span></div>
+ <div class="c">
+  <div class="r b"><span>Ingresos</span><span>$24,456.00</span></div>
+  <div class="line"></div>
+  <div class="r"><span>Personal 1099 (Contract labor)</span><span>$13,870.00</span></div>
+  <div class="r"><span>Personal W-2 (Wages)</span><span>$0.00</span></div>
+  <div class="r"><span>Suministros</span><span>$412.30</span></div>
+  <div class="r"><span>Seguro</span><span>$811.60</span></div>
+  <div class="r"><span>Otro</span><span>$450.00</span></div>
+  <div class="line"></div>
+  <div class="r b"><span>Ganancia neta</span><span>$8,912.10</span></div></div>
+ <div class="btn2">Exportar (PDF / CSV)</div>
+ <div class="note">Ingresos cobrados en el año, sin el sales tax.</div>
+</div></div>
+<div><p class="step">3 · Vista Schedule C</p><div class="ph">
+ <div class="c"><b>Schedule C (Form 1040) · 2026</b>
+  <div class="r"><span>1 · Gross receipts</span><span>$24,456.00</span></div>
+  <div class="r"><span>11 · Contract labor</span><span>$13,870.00</span></div>
+  <div class="r"><span>15 · Insurance</span><span>$811.60</span></div>
+  <div class="r"><span>22 · Supplies</span><span>$412.30</span></div>
+  <div class="r"><span>26 · Wages</span><span>$0.00</span></div>
+  <div class="r"><span>27a · Other expenses</span><span>$450.00</span></div>
+  <div class="line"></div><div class="r b"><span>31 · Net profit</span><span>$8,912.10</span></div></div>
+ <div class="c"><b>Línea de cada categoría</b>
+  <div class="r"><span>Suministros</span><span>22 · Supplies</span></div>
+  <div class="r"><span>Equipo</span><span>22 · Supplies</span></div>
+  <div class="r"><span>Seguro</span><span>15 · Insurance</span></div>
+  <div class="r"><span>Vehículos</span><span>9 · Car and truck</span></div>
+  <div class="r"><span>Software</span><span>18 · Office expense</span></div>
+  <div class="r"><span>Otro</span><span>27a · Other</span></div>
+  <div class="note">Se puede cambiar en Ajustes → Categorías de gastos. Confírmalo con tu contador.</div></div>
+</div></div>
+<div><p class="step">4 · Así se ve un PDF</p>
+ <div class="pdf">
+  <div class="hd"><div class="lg"><i></i><b>Cid Clean LLC</b></div><div style="text-align:right" class="sub">3727 Milano Lakes Cir<br>Naples, FL 34114<br>(786) 250-1324 · cidclean.com</div></div>
+  <h1>Profit &amp; Loss</h1><div class="sub">January 1 – December 31, 2026 · Cash basis</div>
+  <table><tr><th>Line</th><th>Category</th><th style="text-align:right">Amount</th></tr>
+   <tr><td>1</td><td>Gross receipts</td><td class="n">24,456.00</td></tr>
+   <tr><td>11</td><td>Contract labor</td><td class="n">13,870.00</td></tr>
+   <tr><td>15</td><td>Insurance</td><td class="n">811.60</td></tr>
+   <tr><td>22</td><td>Supplies</td><td class="n">412.30</td></tr>
+   <tr><td>27a</td><td>Other expenses</td><td class="n">450.00</td></tr>
+   <tr class="t"><td>31</td><td>Net profit</td><td class="n">8,912.10</td></tr></table>
+  <div class="ft"><span>Generated Oct 31, 2026 · Cid Clean LLC</span><span>Page 1 of 1</span></div>
+ </div>
+ <div class="note" style="margin-top:8px">Hoja blanca tamaño carta, tipografía de documento, encabezado y pie con la marca, tablas para imprimir. Así quedan todos: quote, walkthrough, horario, exportes, estado de cuenta, P&amp;L y resumen.</div>
+</div>
+</div>

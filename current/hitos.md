@@ -44,6 +44,10 @@ Legal rev. 3 (D-275 a D-285), en este orden:
 
 6. D-291: marca "Proveedor de cuentas" en el cliente (Wilson Franquicia), sus jobsites sin quote ni contrato.
 
+7. D-293: PDFs de documento real (todos).
+8. D-294: Resumen del empleado.
+9. D-295: Profit & Loss con vista Schedule C.
+
 Pendiente: prueba real de Ida en iPhone con Safari.
 
 Preguntas abiertas para el dueño:

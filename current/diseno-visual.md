@@ -172,3 +172,4 @@ Copia visual de lo aprobado, la más reciente primero:
 - Solo ronda 1: [`../surveys/ronda-01-identidad-aprobado.html`](../surveys/ronda-01-identidad-aprobado.html). Sus grises eran provisionales y los reemplaza la ronda 2 (D-033).
 
 Todo lo que no está en esta tabla no se ha decidido todavía. No se construye hasta que el dueño lo elija.
+| PDFs | Documento de impresión: hoja blanca carta, encabezado con logo y datos, línea `#0F766E`, tablas con cifras a la derecha y total en negrita, pie con fecha y página | D-293 | 2026-10-31 |
