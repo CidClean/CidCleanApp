@@ -12,6 +12,7 @@ import { useStrings } from '@/i18n/useStrings';
 import { fetchDocumentUrl, logDocumentDownload } from '@/lib/documents';
 import { fetchJobsiteDocumentUrl } from '@/lib/clientsApi';
 import { fetchContractPreviewUrl } from '@/lib/contractApi';
+import { fetchIcaPreviewUrl, fetchIcaSignedUrl, fetchWarningUrl } from '@/lib/icaApi';
 import { fetchWalkthroughPdfUrl } from '@/lib/walkthroughApi';
 import { useGoBack } from '@/lib/navigation';
 import { fetchQuoteFileUrl } from '@/lib/quotesApi';
@@ -36,7 +37,7 @@ export default function ViewerScreen() {
     note?: string;
     /** D-260: '1' en el W-9 (solo lo abre el Super Admin) muestra "Descargar". */
     download?: string;
-    source: 'terms' | 'document' | 'quote-file' | 'walkthrough' | 'jobsite' | 'contract';
+    source: 'terms' | 'document' | 'quote-file' | 'walkthrough' | 'jobsite' | 'contract' | 'ica' | 'ica-signed' | 'warning';
     documentId?: string;
     title?: string;
     /** source 'quote-file': ruta en el bucket quote-files (SOW o PDF del quote, hito 4). */
@@ -72,6 +73,12 @@ export default function ViewerScreen() {
                 ? await fetchJobsiteDocumentUrl(documentId ?? '')
                 : source === 'contract'
                 ? await fetchContractPreviewUrl(documentId ?? '') // D-289: documentId es el jobsite
+                : source === 'ica'
+                ? await fetchIcaPreviewUrl(documentId ?? '') // D-292: documentId es el perfil (ICA sin firmar)
+                : source === 'ica-signed'
+                ? await fetchIcaSignedUrl(documentId ?? '') // D-292: documentId es el ICA (solo Super Admin)
+                : source === 'warning'
+                ? await fetchWarningUrl(documentId ?? '') // D-285: documento de una advertencia
                 : await fetchDocumentUrl(documentId ?? '');
       if (cancelled) return;
       if (!result.ok) {

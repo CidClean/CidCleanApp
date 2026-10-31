@@ -10,16 +10,16 @@ import { fechaCorta } from './contratoCorreos.ts';
 import { PLANTILLA } from './legal/csa-sow-1.0.ts';
 
 /** Las fuentes estándar (WinAnsi) no dibujan todo: se quitan los caracteres que no pueden (como en w9.ts). */
-function limpio(s: string): string {
+export function limpio(s: string): string {
   return s.normalize('NFC').replace(/[^\x20-\x7E -ÿ‘’“”–—•…]/g, '');
 }
 
-type Lienzo = { doc: PDFDocument; page: PDFPage; y: number; f: m.Fuentes; firma: PDFFont; nueva: () => void };
+export type Lienzo = { doc: PDFDocument; page: PDFPage; y: number; f: m.Fuentes; firma: PDFFont; nueva: () => void };
 
-const ANCHO_TXT = m.ANCHO - 2 * m.LADO;
-const LIMITE = m.ALTO_PIE + 12;
+export const ANCHO_TXT = m.ANCHO - 2 * m.LADO;
+export const LIMITE = m.ALTO_PIE + 12;
 
-function lineas(l: Lienzo, texto: string, font: PDFFont, size: number, x: number, ancho: number, color = m.C.texto, lh = size * 1.38) {
+export function lineas(l: Lienzo, texto: string, font: PDFFont, size: number, x: number, ancho: number, color = m.C.texto, lh = size * 1.38) {
   for (const linea of m.partir(limpio(texto), font, size, ancho)) {
     if (l.y - lh < LIMITE) l.nueva();
     l.y -= lh;
@@ -31,7 +31,7 @@ function alto(texto: string, font: PDFFont, size: number, ancho: number, lh = si
   return m.partir(limpio(texto), font, size, ancho).length * lh;
 }
 
-function filaTabla(l: Lienzo, celdas: { text: string; w: number; bold?: boolean }[], size = 9) {
+export function filaTabla(l: Lienzo, celdas: { text: string; w: number; bold?: boolean }[], size = 9) {
   const lh = size * 1.38;
   const h = Math.max(...celdas.map((c) => alto(c.text, c.bold ? l.f.bold : l.f.regular, size, c.w - 8, lh))) + 8;
   if (l.y - h < LIMITE) l.nueva();

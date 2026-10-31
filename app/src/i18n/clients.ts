@@ -9,6 +9,9 @@ export const clientsEs = {
   atRisk: 'Margen en riesgo', // APROBADO (D-060, D-097)
   perMonth: (m: string) => `${m} al mes`, // APROBADO (muestra ronda 9: "$1,850.00 al mes")
   legacy: 'Previo a la app', // APROBADO (D-210)
+  accountProvider: 'Proveedor de cuentas', // D-291
+  accountProviderNote: 'Sus jobsites se manejan directo, sin quote ni contrato con el cliente final.', // D-291
+  accountProviderError: 'No se pudo guardar. Inténtalo otra vez.', // D-200 (D-291)
 
   list: {
     kicker: 'Operaciones', // D-200 (D-226)
@@ -195,6 +198,9 @@ export const clientsEn: ClientsStrings = {
   atRisk: 'Margin at risk',
   perMonth: (m: string) => `${m} per month`,
   legacy: 'Before the app',
+  accountProvider: 'Account provider',
+  accountProviderNote: 'Its jobsites are handled directly, with no quote or contract with the end client.',
+  accountProviderError: "Couldn't save. Try again.",
   list: {
     kicker: 'Operations',
     statActive: 'Active',

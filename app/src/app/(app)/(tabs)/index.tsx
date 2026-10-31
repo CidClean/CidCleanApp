@@ -23,6 +23,7 @@ import { canAny, homeKind } from '@/lib/visibility';
 import { formatTime } from '@/lib/week';
 import { ClockCard } from '@/components/work/ClockCard';
 import { ServiceDayCard } from '@/components/work/ServiceDayCard';
+import { OfferCards } from '@/components/ica/OfferCard';
 import { useServiceDaysStrings } from '@/i18n/useServiceDaysStrings';
 import { fetchMyServiceDays, type MyServiceDays } from '@/lib/serviceDays';
 import { ListRow } from '@/components/ListRow';
@@ -468,6 +469,8 @@ function StaffHome() {
     <View style={{ flex: 1, backgroundColor: useTheme().colors.background }}>
       <ScrollView contentContainerStyle={styles.page}>
         <Greeting name={profile?.fullName ?? ''} />
+        {/* D-292: ofertas de trabajo pendientes del 1099 (surveys/ica-ofertas-aprobado.html (3)). */}
+        {contractor ? <OfferCards onChanged={reload} /> : null}
         <StaffCards visits={visits} onChanged={() => { reload(); days.reload(); }} contractor={contractor} />
         {/* D-279, D-286 (1): el 1099 ve "Mis días de servicio" con el resumen del mes; el W-2, Mis horas (D-274). */}
         <CardBlock style={{ marginTop: 12 }}>

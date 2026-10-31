@@ -29,7 +29,7 @@ async function run<T>(fn: () => Promise<ClientsResult<T>>): Promise<ClientsResul
   }
 }
 
-type ClientRow = { id: string; name: string; legacy: boolean; phone: string | null; email: string | null; address: string | null; notes: string | null };
+type ClientRow = { id: string; name: string; legacy: boolean; account_provider?: boolean; phone: string | null; email: string | null; address: string | null; notes: string | null };
 type JobsiteRow = {
   id: string;
   client_id: string;
@@ -49,18 +49,18 @@ type JobsiteRow = {
   start_date: string | null;
   status: JobsiteStatus;
   walkthrough_version: number | null;
-  clients: { name: string; legacy: boolean } | null;
+  clients: { name: string; legacy: boolean; account_provider?: boolean } | null;
 };
 
 const JOBSITE_COLUMNS =
   'id, client_id, name, address, plus_code, contact_name, contact_phone, contact_email, emergency_name, emergency_phone, ' +
   'emergency_relation, emergency_email, frequency, est_hours_per_visit, visits_per_month, start_date, status, walkthrough_version, ' +
-  'clients(name, legacy)';
+  'clients(name, legacy, account_provider)';
 
 const num = (v: number | string | null) => (v === null ? null : Number(v));
 
 export function rowToClient(r: ClientRow): Client {
-  return { id: r.id, name: r.name, legacy: r.legacy, phone: r.phone, email: r.email, address: r.address, notes: r.notes };
+  return { id: r.id, name: r.name, legacy: r.legacy, accountProvider: r.account_provider ?? false, phone: r.phone, email: r.email, address: r.address, notes: r.notes };
 }
 
 export function rowToJobsite(r: JobsiteRow): Jobsite {
@@ -69,6 +69,7 @@ export function rowToJobsite(r: JobsiteRow): Jobsite {
     clientId: r.client_id,
     clientName: r.clients?.name ?? '',
     clientLegacy: r.clients?.legacy ?? false,
+    clientAccountProvider: r.clients?.account_provider ?? false,
     name: r.name,
     address: r.address,
     plusCode: r.plus_code,
@@ -90,14 +91,14 @@ export function rowToJobsite(r: JobsiteRow): Jobsite {
 
 export const fetchClients = () =>
   run<Client[]>(async () => {
-    const { data, error } = await supabase.from('clients').select('id, name, legacy, phone, email, address, notes').order('name');
+    const { data, error } = await supabase.from('clients').select('id, name, legacy, account_provider, phone, email, address, notes').order('name');
     if (error) return { ok: false, reason: failureFrom(error.code, error.message) };
     return { ok: true, data: (data as ClientRow[]).map(rowToClient) };
   });
 
 export const fetchClient = (id: string) =>
   run<Client>(async () => {
-    const { data, error } = await supabase.from('clients').select('id, name, legacy, phone, email, address, notes').eq('id', id).maybeSingle();
+    const { data, error } = await supabase.from('clients').select('id, name, legacy, account_provider, phone, email, address, notes').eq('id', id).maybeSingle();
     if (error) return { ok: false, reason: failureFrom(error.code, error.message) };
     if (!data) return { ok: false, reason: 'not_found' };
     return { ok: true, data: rowToClient(data as ClientRow) };
@@ -156,6 +157,10 @@ export const createLegacyClient = (c: { name: string; phone: string; email: stri
 
 export const updateClient = (id: string, c: { name: string; phone: string; email: string; address: string; notes: string }) =>
   rpc('update_client', { p_client: id, p_name: c.name, p_phone: c.phone, p_email: c.email, p_address: c.address, p_notes: c.notes }, () => null);
+
+/** D-291: marcar o desmarcar un cliente como proveedor de cuentas. */
+export const setClientAccountProvider = (id: string, value: boolean) =>
+  rpc('set_client_account_provider', { p_client: id, p_value: value }, () => null);
 
 export const createLegacyJobsite = (clientId: string, data: unknown, rate: number) =>
   rpc('create_legacy_jobsite', { p_client: clientId, p_data: data, p_rate: rate }, (d) => d as string);

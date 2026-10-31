@@ -5,6 +5,21 @@ import { getStrings } from '@/i18n';
 // --- Simulaciones --------------------------------------------------------------------------------------------
 const mockBack = jest.fn();
 let mockParams: Record<string, string> = {};
+// D-292: las secciones de la fase D (ICA, ofertas y advertencias) sin red en las pruebas de pantallas.
+jest.mock('@/lib/icaApi', () => ({
+  fetchIcaInfo: async () => ({ ok: true, data: null }),
+  fetchOffersFor: async () => ({ ok: true, data: [] }),
+  fetchMyOffers: async () => ({ ok: true, data: [] }),
+  fetchWarnings: async () => ({ ok: false, reason: 'forbidden' }),
+  fetchOfferJobsites: async () => [],
+  fetchOfferVisits: async () => [],
+  fetchIcaPreviewUrl: jest.fn(),
+  fetchIcaSignedUrl: jest.fn(),
+  fetchWarningUrl: jest.fn(),
+  hour12: (x: string | null) => x ?? '',
+  windowEnd: () => null,
+  ICA_FIELDS: [],
+}));
 jest.mock('@/lib/contractApi', () => ({ fetchContractInfo: async () => ({ ok: true, data: null }), fetchCleaningType: async () => null, saveCleaningType: async () => true, fetchUnsignedJobsites: async () => new Set(), fetchContractPreviewUrl: async () => ({ ok: false, reason: 'server' }), contractStep: () => 1, fieldsToShow: () => [] })); // D-289
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: mockBack, push: jest.fn(), replace: jest.fn(), canGoBack: () => true }),

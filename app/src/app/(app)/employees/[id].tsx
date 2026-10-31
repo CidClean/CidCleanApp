@@ -28,6 +28,9 @@ import { Switch } from '@/components/Switch';
 import { Tabs } from '@/components/Tabs';
 import { TopBar } from '@/components/TopBar';
 import { W9ProfileSection } from '@/components/w9/W9ProfileSection';
+import { IcaSection } from '@/components/ica/IcaSection';
+import { OffersSection } from '@/components/ica/OffersSection';
+import { WarningsSection } from '@/components/ica/WarningsSection';
 import { AddressFields } from '@/components/employees/AddressFields';
 import { useStrings } from '@/i18n/useStrings';
 import type { Strings } from '@/i18n/es';
@@ -627,6 +630,8 @@ export default function EmployeeProfileScreen() {
                   currentW9DocumentId={documents.find((d) => d.kind === 'w9')?.id ?? null}
                   onChanged={() => void loadDocuments()}
                 />
+                {/* D-292: ICA opcional del 1099 (surveys/ica-ofertas-aprobado.html (1)). */}
+                {employee.workerType === '1099' ? <IcaSection profileId={employee.id} /> : null}
                 <View style={{ height: 8 }} />
                 {documentError ? (
                   <AppAlert
@@ -645,6 +650,13 @@ export default function EmployeeProfileScreen() {
                   }}
                 />
               </View>
+            ) : null}
+            {/* D-292: ofertas de trabajo (opcionales) y advertencias escritas (muestra (2) y (4)). */}
+            {tab === 'data' && !editing && employee.workerType === '1099' && employee.active && can('empleados_asignar_pago') && can('empleados_ver_pagos') ? (
+              <OffersSection profileId={employee.id} fullName={employee.fullName} hasAppAccess={employee.hasAppAccess} />
+            ) : null}
+            {tab === 'data' && !editing && !targetIsSuper && (access.isSuperAdmin || can('empleados_editar_desactivar')) ? (
+              <WarningsSection profileId={employee.id} fullName={employee.fullName} />
             ) : null}
           </>
         ) : null}

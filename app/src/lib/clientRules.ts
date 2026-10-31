@@ -19,6 +19,8 @@ export type Client = {
   id: string;
   name: string;
   legacy: boolean;
+  /** D-291: sus jobsites se manejan directo, sin quote ni contrato con el cliente final. */
+  accountProvider?: boolean;
   phone: string | null;
   email: string | null;
   address: string | null;
@@ -30,6 +32,7 @@ export type Jobsite = {
   clientId: string;
   clientName: string;
   clientLegacy: boolean;
+  clientAccountProvider?: boolean;
   name: string;
   address: string;
   plusCode: string | null;
@@ -85,6 +88,8 @@ export const canSeeAccounts = (a: Access) => can(a, 'clientes_ver');
 export const canSeeRate = (a: Access) => can(a, 'clientes_ver_tarifa');
 export const canEditClientData = (a: Access) => can(a, 'clientes_editar_datos');
 /** Alta manual de clientes previos y su tarifa: editar datos y ver tarifa (D-210). */
+/** Jobsites que se manejan directo (previo a la app, D-210, o proveedor de cuentas, D-291): alta a mano y tarifa editable. */
+export const isDirectJobsite = (j: Pick<Jobsite, 'clientLegacy' | 'clientAccountProvider'>) => j.clientLegacy || !!j.clientAccountProvider;
 export const canCreateLegacy = (a: Access) => can(a, 'clientes_editar_datos') && can(a, 'clientes_ver_tarifa');
 export const canChangeStatus = (a: Access) => can(a, 'clientes_cambiar_estado');
 export const canSeePay = (a: Access) => can(a, 'empleados_ver_pagos');
@@ -121,14 +126,14 @@ export function statusOptions(current: JobsiteStatus): JobsiteStatus[] {
 
 // --- Lista de Cuentas (D-082) --------------------------------------------------------------------------
 
-export type ClientGroup = { clientId: string; clientName: string; legacy: boolean; jobsites: Jobsite[] };
+export type ClientGroup = { clientId: string; clientName: string; legacy: boolean; accountProvider?: boolean; jobsites: Jobsite[] };
 
 /** Agrupada por cliente, en orden alfabético de cliente y de jobsite; Terminados al final de su grupo. */
 export function groupByClient(jobsites: readonly Jobsite[], clients: readonly Client[] = []): ClientGroup[] {
   const groups = new Map<string, ClientGroup>();
-  for (const c of clients) groups.set(c.id, { clientId: c.id, clientName: c.name, legacy: c.legacy, jobsites: [] });
+  for (const c of clients) groups.set(c.id, { clientId: c.id, clientName: c.name, legacy: c.legacy, accountProvider: c.accountProvider ?? false, jobsites: [] });
   for (const j of jobsites) {
-    const g = groups.get(j.clientId) ?? { clientId: j.clientId, clientName: j.clientName, legacy: j.clientLegacy, jobsites: [] };
+    const g = groups.get(j.clientId) ?? { clientId: j.clientId, clientName: j.clientName, legacy: j.clientLegacy, accountProvider: j.clientAccountProvider ?? false, jobsites: [] };
     g.jobsites.push(j);
     groups.set(j.clientId, g);
   }

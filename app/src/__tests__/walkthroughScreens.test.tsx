@@ -2,6 +2,21 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 
 // Hito 6: el Inicio y el Horario del jobsite leen el schedule; en estas pruebas no hay visitas.
 // Hito 7: el Inicio, el Menú y el jobsite leen cifras de Accounting.
+// D-292: las secciones de la fase D (ICA, ofertas y advertencias) sin red en las pruebas de pantallas.
+jest.mock('@/lib/icaApi', () => ({
+  fetchIcaInfo: async () => ({ ok: true, data: null }),
+  fetchOffersFor: async () => ({ ok: true, data: [] }),
+  fetchMyOffers: async () => ({ ok: true, data: [] }),
+  fetchWarnings: async () => ({ ok: false, reason: 'forbidden' }),
+  fetchOfferJobsites: async () => [],
+  fetchOfferVisits: async () => [],
+  fetchIcaPreviewUrl: jest.fn(),
+  fetchIcaSignedUrl: jest.fn(),
+  fetchWarningUrl: jest.fn(),
+  hour12: (x: string | null) => x ?? '',
+  windowEnd: () => null,
+  ICA_FIELDS: [],
+}));
 jest.mock('@/lib/accountingApi', () => ({
   fetchDashboard: jest.fn(async () => ({ ok: false, reason: 'network' })),
   fetchRecurring: jest.fn(async () => ({ ok: true, data: [] })),

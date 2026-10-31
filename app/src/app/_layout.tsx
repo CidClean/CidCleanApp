@@ -16,7 +16,7 @@ SplashScreen.preventAutoHideAsync();
 
 /**
  * Exportación web del portal del cliente (quote.cidclean.com, D-161, D-209): EXPO_PUBLIC_PORTAL_ONLY=1 deja solo
- * las rutas /q, /w9 (D-256) y /contract (D-289); la app del staff no se publica ahí.
+ * las rutas /q, /w9 (D-256), /contract (D-289) y /ica (D-292); la app del staff no se publica ahí.
  */
 const PORTAL_ONLY = process.env.EXPO_PUBLIC_PORTAL_ONLY === '1';
 
@@ -73,6 +73,8 @@ function Routes() {
         <Stack.Screen name="w9/[token]" />
         {/* Firma del contrato del cliente (D-283, D-289): mismo portal, sin sesión del staff. */}
         <Stack.Screen name="contract/[token]" />
+        {/* Firma del ICA del 1099 (D-285, D-292): mismo portal, sin sesión del staff. */}
+        <Stack.Screen name="ica/[token]" />
         <Stack.Protected guard={!PORTAL_ONLY && status === 'out'}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>

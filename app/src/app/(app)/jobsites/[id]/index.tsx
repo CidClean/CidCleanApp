@@ -63,6 +63,7 @@ import {
   type JobsiteStatus,
   type Pay,
   type StaffRow,
+  isDirectJobsite,
 } from "@/lib/clientRules";
 import { canAny } from "@/lib/visibility";
 import {
@@ -211,6 +212,11 @@ export default function JobsiteScreen() {
                     mailLabel: s.detail.mail,
                   }}
                 />
+                {jobsite.clientAccountProvider ? (
+                  <View style={{ flexDirection: "row", marginTop: 8 }}>
+                    <Chip label={c.accountProvider} />
+                  </View>
+                ) : null}
                 <Bento>
                   <Card
                     onPress={() => setTab("documents")}
@@ -335,7 +341,7 @@ function Summary({
   const [busy, setBusy] = useState(false);
   const none = c.jobsite.none;
   const rateEditable =
-    jobsite.clientLegacy &&
+    isDirectJobsite(jobsite) &&
     canCreateLegacy(access) &&
     jobsite.status !== "terminated";
   const v = (x: string | null | undefined) => (x && x.trim() !== "" ? x : none);
@@ -521,7 +527,7 @@ function Summary({
           last
         />
       </CardBlock>
-      {!jobsite.clientLegacy && canSeeRate(access) ? (
+      {!isDirectJobsite(jobsite) && canSeeRate(access) ? (
         <AppText
           size={sample.noteSize}
           color={colors.secondary}

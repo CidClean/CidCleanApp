@@ -99,6 +99,7 @@ export default function AccountsScreen() {
               <AppText size={sample.labelSize} color={colors.secondary}>
                 {g.clientName}
               </AppText>
+              {g.accountProvider ? <Chip label={c.accountProvider} /> : null}
               <Icon name="chevron-right" size={14} strokeWidth={iconStrokeWidth} color={colors.secondary} />
             </Pressable>
             {g.jobsites.length === 0 ? (
