@@ -9,11 +9,12 @@ import { supabase } from './supabase';
  * con las reglas por fila; la tarifa, los pagos, el margen y el contrato solo por funciones que registran cada apertura.
  */
 
-export type ClientsFailure = 'forbidden' | 'invalid' | 'minWage' | 'not_found' | 'network' | 'server';
+export type ClientsFailure = 'forbidden' | 'contractPending' | 'invalid' | 'minWage' | 'not_found' | 'network' | 'server';
 export type ClientsResult<T> = { ok: true; data: T } | { ok: false; reason: ClientsFailure };
 
 export function failureFrom(code: string | undefined, message?: string): ClientsFailure {
   if (code === '42501') return 'forbidden';
+  if (code === '22023' && (message ?? '').startsWith('contract_pending')) return 'contractPending'; // D-283
   if (code === '23514' && /m[ií]nimo/i.test(message ?? '')) return 'minWage';
   if (code === '22023' || code === '23514' || code === '23505' || code === '22P02' || code === '22008') return 'invalid';
   if (code === 'P0002') return 'not_found';
@@ -90,14 +91,14 @@ export function rowToJobsite(r: JobsiteRow): Jobsite {
 export const fetchClients = () =>
   run<Client[]>(async () => {
     const { data, error } = await supabase.from('clients').select('id, name, legacy, phone, email, address, notes').order('name');
-    if (error) return { ok: false, reason: failureFrom(error.code) };
+    if (error) return { ok: false, reason: failureFrom(error.code, error.message) };
     return { ok: true, data: (data as ClientRow[]).map(rowToClient) };
   });
 
 export const fetchClient = (id: string) =>
   run<Client>(async () => {
     const { data, error } = await supabase.from('clients').select('id, name, legacy, phone, email, address, notes').eq('id', id).maybeSingle();
-    if (error) return { ok: false, reason: failureFrom(error.code) };
+    if (error) return { ok: false, reason: failureFrom(error.code, error.message) };
     if (!data) return { ok: false, reason: 'not_found' };
     return { ok: true, data: rowToClient(data as ClientRow) };
   });
@@ -107,7 +108,7 @@ export const fetchJobsites = (clientId?: string) =>
     let q = supabase.from('jobsites').select(JOBSITE_COLUMNS).order('name');
     if (clientId) q = q.eq('client_id', clientId);
     const { data, error } = await q;
-    if (error) return { ok: false, reason: failureFrom(error.code) };
+    if (error) return { ok: false, reason: failureFrom(error.code, error.message) };
     return { ok: true, data: (data as unknown as JobsiteRow[]).map(rowToJobsite) };
   });
 
@@ -115,14 +116,14 @@ export const fetchJobsites = (clientId?: string) =>
 export const fetchLegacyJobsiteIds = () =>
   run<Set<string>>(async () => {
     const { data, error } = await supabase.from('jobsites').select('id, clients!inner(legacy)').eq('clients.legacy', true);
-    if (error) return { ok: false, reason: failureFrom(error.code) };
+    if (error) return { ok: false, reason: failureFrom(error.code, error.message) };
     return { ok: true, data: new Set((data as { id: string }[]).map((r) => r.id)) };
   });
 
 export const fetchJobsite = (id: string) =>
   run<Jobsite>(async () => {
     const { data, error } = await supabase.from('jobsites').select(JOBSITE_COLUMNS).eq('id', id).maybeSingle();
-    if (error) return { ok: false, reason: failureFrom(error.code) };
+    if (error) return { ok: false, reason: failureFrom(error.code, error.message) };
     if (!data) return { ok: false, reason: 'not_found' };
     return { ok: true, data: rowToJobsite(data as unknown as JobsiteRow) };
   });
@@ -262,7 +263,7 @@ export const fetchDocuments = (jobsiteId: string) =>
       .eq('jobsite_id', jobsiteId)
       .is('replaced_at', null)
       .order('uploaded_at', { ascending: false });
-    if (error) return { ok: false, reason: failureFrom(error.code) };
+    if (error) return { ok: false, reason: failureFrom(error.code, error.message) };
     return {
       ok: true,
       data: (data as { id: string; kind: DocKind; title: string | null; version: number; uploaded_at: string }[]).map((d) => ({
@@ -296,7 +297,7 @@ export const uploadJobsiteDocument = (jobsiteId: string, kind: DocKind, file: Pi
     const up = await supabase.storage.from('jobsite-docs').upload(path, bytes, { contentType: 'application/pdf' });
     if (up.error) return { ok: false, reason: 'server' };
     const { data, error } = await supabase.rpc('register_jobsite_document', { p_jobsite: jobsiteId, p_kind: kind, p_path: path, p_title: title });
-    if (error) return { ok: false, reason: failureFrom(error.code) };
+    if (error) return { ok: false, reason: failureFrom(error.code, error.message) };
     return { ok: true, data: data as string };
   });
 

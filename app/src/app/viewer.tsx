@@ -11,6 +11,7 @@ import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
 import { fetchDocumentUrl, logDocumentDownload } from '@/lib/documents';
 import { fetchJobsiteDocumentUrl } from '@/lib/clientsApi';
+import { fetchContractPreviewUrl } from '@/lib/contractApi';
 import { fetchWalkthroughPdfUrl } from '@/lib/walkthroughApi';
 import { useGoBack } from '@/lib/navigation';
 import { fetchQuoteFileUrl } from '@/lib/quotesApi';
@@ -35,7 +36,7 @@ export default function ViewerScreen() {
     note?: string;
     /** D-260: '1' en el W-9 (solo lo abre el Super Admin) muestra "Descargar". */
     download?: string;
-    source: 'terms' | 'document' | 'quote-file' | 'walkthrough' | 'jobsite';
+    source: 'terms' | 'document' | 'quote-file' | 'walkthrough' | 'jobsite' | 'contract';
     documentId?: string;
     title?: string;
     /** source 'quote-file': ruta en el bucket quote-files (SOW o PDF del quote, hito 4). */
@@ -69,6 +70,8 @@ export default function ViewerScreen() {
               ? await fetchWalkthroughPdfUrl(documentId ?? '', Number(version), language === 'en' ? 'en' : 'es')
               : source === 'jobsite'
                 ? await fetchJobsiteDocumentUrl(documentId ?? '')
+                : source === 'contract'
+                ? await fetchContractPreviewUrl(documentId ?? '') // D-289: documentId es el jobsite
                 : await fetchDocumentUrl(documentId ?? '');
       if (cancelled) return;
       if (!result.ok) {

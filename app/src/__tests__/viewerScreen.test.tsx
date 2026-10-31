@@ -5,6 +5,7 @@ import { getStrings } from '@/i18n';
 // --- Simulaciones --------------------------------------------------------------------------------------------
 const mockBack = jest.fn();
 let mockParams: Record<string, string> = {};
+jest.mock('@/lib/contractApi', () => ({ fetchContractInfo: async () => ({ ok: true, data: null }), fetchCleaningType: async () => null, saveCleaningType: async () => true, fetchUnsignedJobsites: async () => new Set(), fetchContractPreviewUrl: async () => ({ ok: false, reason: 'server' }), contractStep: () => 1, fieldsToShow: () => [] })); // D-289
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: mockBack, push: jest.fn(), replace: jest.fn(), canGoBack: () => true }),
   useLocalSearchParams: () => mockParams,

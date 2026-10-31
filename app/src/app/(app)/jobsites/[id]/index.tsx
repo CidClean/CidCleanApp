@@ -33,6 +33,8 @@ import {
 } from "@/components/illustrations";
 import { useSalesStrings } from "@/i18n/useSalesStrings";
 import { JobsiteExtras } from "@/components/quotes/JobsiteExtras";
+import { ContractCard } from "@/components/contract/ContractCard";
+import { CleaningTypeField } from "@/components/contract/CleaningTypeField";
 import { AccountMonthCard } from "@/components/accounting/AccountMonthCard";
 import { UsDateField } from "@/components/UsDateField";
 import type { ClientsStrings } from "@/i18n/clients";
@@ -273,6 +275,13 @@ export default function JobsiteScreen() {
                 day={day}
                 onChanged={load}
               />
+            ) : null}
+            {/* D-289: contrato del cliente y tipo de limpieza. */}
+            {tab === "summary" ? (
+              <>
+                <ContractCard jobsiteId={jobsite.id} />
+                <CleaningTypeField kind="jobsite" id={jobsite.id} canEdit={canAny(access, ["clientes_editar_datos"])} />
+              </>
             ) : null}
             {/* D-238: quotes de extra de la cuenta y "Nuevo quote". */}
             {tab === "summary" ? (

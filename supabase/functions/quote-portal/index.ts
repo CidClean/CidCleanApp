@@ -3,6 +3,7 @@
 // Acciones: state, request, verify, quote, file, decide.
 import { clienteDeServicio, responder } from '../_shared/comun.ts';
 import { codigo, correoCodigo, correoDecision, enviarCorreo, sha256, tokenAleatorio } from '../_shared/quotes.ts';
+import { correoCopiaAceptacion } from '../_shared/contratoCorreos.ts';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -114,6 +115,25 @@ Deno.serve(async (req) => {
         }
       } catch (e) {
         console.error('copiar SOW', e);
+      }
+      // D-283: copia de la aceptación al cliente de inmediato, con el PDF del quote.
+      try {
+        if (kind === 'accepted' && d.client_email) {
+          const adj: { filename: string; content: Uint8Array }[] = [];
+          if (d.pdf_path) {
+            const f = await db.storage.from('quote-files').download(d.pdf_path);
+            if (f.data) adj.push({ filename: `Quote-${d.quote_number}-${d.version}.pdf`, content: new Uint8Array(await f.data.arrayBuffer()) });
+          }
+          const ok = await enviarCorreo(d.client_email, correoCopiaAceptacion({
+            quoteNumber: d.quote_number, version: d.version, company: d.company, site: d.site, signer: d.signer_name,
+            title: d.signer_title ?? null, email: d.client_email, acceptedAt: new Date(d.accepted_at), total: Number(d.total),
+            extra: d.extra === true, acceptanceText: d.acceptance_text ?? null, termsVersion: d.portal_terms_version ?? null,
+            userAgent: d.user_agent ?? null,
+          }), adj);
+          if (ok) await db.rpc('portal_mark_acceptance_copy', { p_decision: d.decision_id });
+        }
+      } catch (e) {
+        console.error('copia de la aceptación', e);
       }
       try {
         if (d.sender_email) await enviarCorreo(d.sender_email, correoDecision(kind, d.company, d.site, d.version, d.extra === true));

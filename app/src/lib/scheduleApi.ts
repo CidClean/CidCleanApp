@@ -25,6 +25,7 @@ export type WorkFailure =
   | 'service_days_pending'
   | 'already_approved'
   | 'not_yet'
+  | 'contract_pending'
   | 'not_found'
   | 'network'
   | 'server';
@@ -41,6 +42,7 @@ export function workFailure(code: string | undefined, message: string | undefine
   if (code === '42501') return { reason: 'forbidden' };
   if (code === 'P0002') return { reason: 'not_found' };
   if (m.startsWith('over_32:')) return { reason: 'over_32', detail: m.slice(8) };
+  if (m.startsWith('contract_pending:')) return { reason: 'contract_pending', detail: m.slice(17) };
   for (const k of ['already_in', 'not_today', 'open_shift', 'gps_pending', 'no_work', 'missing_time', 'no_time', 'no_day', 'location_required', 'note_required', 'needs_correction', 'service_days_pending', 'already_approved', 'not_yet'] as const) if (m.startsWith(k)) return { reason: k };
   if (code === '22023' || code === '22P02' || code === '22008' || code === '23514') return { reason: 'invalid' };
   return { reason: 'server' };

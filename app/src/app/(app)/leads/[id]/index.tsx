@@ -1,4 +1,5 @@
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { CleaningTypeField } from '@/components/contract/CleaningTypeField';
 import { useCallback, useState } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -276,6 +277,8 @@ export default function LeadDetailScreen() {
         ) : null}
 
         {/* La lista de quotes de cada sitio (D-208). */}
+        {/* D-289: tipo de limpieza del lead (Residencial no lleva el 6 %). */}
+        {lead && section === 'quote' ? <CleaningTypeField kind="lead" id={lead.id} canEdit={canEdit} /> : null}
         {lead && section === 'quote' ? <LeadQuotes leadId={lead.id} sites={lead.sites} /> : null}
 
         {lead && section === 'notes' && !editing ? (
