@@ -84,10 +84,10 @@ Deno.serve(async (req) => {
       const x = data as { unsigned_path?: string; ica?: string; contractor_name?: string; contractor?: string } | null;
       const path = x?.unsigned_path;
       if (!path) return r(401, { error: 'session' });
-      // D-296: la descarga del portal baja como "Cid Clean - ICA-0003 - Karina Sarmiento.pdf".
+      // D-296: nombre legible en la respuesta; sin download= para que el PDF se ABRA para leerlo (iPhone incluido).
       const nombre = nombreLegible([x?.ica ?? 'ICA', x?.contractor_name || x?.contractor]);
-      const { data: s, error: e2 } = await db.storage.from('contractor-docs').createSignedUrl(path, 60, { download: nombre });
-      return e2 || !s ? r(500, { error: 'server_error' }) : r(200, { url: s.signedUrl });
+      const { data: s, error: e2 } = await db.storage.from('contractor-docs').createSignedUrl(path, 60);
+      return e2 || !s ? r(500, { error: 'server_error' }) : r(200, { url: s.signedUrl, file_name: nombre });
     }
     case 'sign': {
       if (!sessionHash) return r(401, { error: 'session' });

@@ -84,10 +84,10 @@ Deno.serve(async (req) => {
       const x = data as { unsigned_path?: string; csa?: string; company?: string; client_legal_name?: string } | null;
       const path = x?.unsigned_path;
       if (!path) return r(401, { error: 'session' });
-      // D-296: la descarga del portal baja como "Cid Clean - Service Agreement CSA-0007 - Naples Yacht Club.pdf".
+      // D-296: nombre legible en la respuesta; sin download= para que el contrato se ABRA para leerlo antes de firmar.
       const nombre = nombreLegible([`Service Agreement ${x?.csa ?? ''}`, x?.client_legal_name || x?.company]);
-      const { data: s, error: e2 } = await db.storage.from('jobsite-docs').createSignedUrl(path, 60, { download: nombre });
-      return e2 || !s ? r(500, { error: 'server_error' }) : r(200, { url: s.signedUrl });
+      const { data: s, error: e2 } = await db.storage.from('jobsite-docs').createSignedUrl(path, 60);
+      return e2 || !s ? r(500, { error: 'server_error' }) : r(200, { url: s.signedUrl, file_name: nombre });
     }
     case 'sign': {
       if (!sessionHash) return r(401, { error: 'session' });

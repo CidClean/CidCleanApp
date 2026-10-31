@@ -84,14 +84,14 @@ Deno.serve(async (req) => {
       if (error) return r(500, { error: 'server_error' });
       if (!path) return r(kind === 'terms' ? 404 : 401, { error: kind === 'terms' ? 'not_found' : 'session' });
       const bucket = kind === 'terms' ? 'terms' : 'quote-files';
-      // D-296: la descarga del portal baja con el nombre legible (download=<nombre>).
+      // D-296: nombre legible en la respuesta; sin download= para que el SOW y el quote se ABRAN para leerlos.
       let nombre = nombreLegible(['Terms']);
       if (kind !== 'terms') {
         const { data: q } = await db.rpc('portal_quote', { p_session_hash: sessionHash });
         const numero = await numeroDeQuote(db, String(path).split('/')[0]);
         nombre = nombreDeQuote(numero, q?.version, q?.company, kind === 'sow' ? 'SOW' : 'Quote');
       }
-      const { data: s, error: e2 } = await db.storage.from(bucket).createSignedUrl(path, 60, { download: nombre });
+      const { data: s, error: e2 } = await db.storage.from(bucket).createSignedUrl(path, 60);
       if (e2 || !s) return r(500, { error: 'server_error' });
       return r(200, { url: s.signedUrl, file_name: nombre });
     }
