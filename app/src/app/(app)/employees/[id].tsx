@@ -26,6 +26,8 @@ import { SelectField } from '@/components/SelectField';
 import { Sheet } from '@/components/Sheet';
 import { Switch } from '@/components/Switch';
 import { Tabs } from '@/components/Tabs';
+import { EmployeeSummary } from '@/components/summary/EmployeeSummary';
+import { useSummaryPlStrings } from '@/i18n/useSummaryPlStrings';
 import { TopBar } from '@/components/TopBar';
 import { W9ProfileSection } from '@/components/w9/W9ProfileSection';
 import { IcaSection } from '@/components/ica/IcaSection';
@@ -83,7 +85,7 @@ import {
 import { usePermissions, useSession } from '@/lib/session';
 import { iconStrokeWidth, radius, sample, useTheme } from '@/theme';
 
-type Tab = 'data' | 'permissions' | 'pay';
+type Tab = 'data' | 'permissions' | 'pay' | 'summary';
 type ConfirmSheet = 'deactivate' | 'reactivate' | null;
 type UploadStep = { step: 'kind' } | { step: 'source'; kind: DocumentKind } | null;
 
@@ -103,6 +105,7 @@ export default function EmployeeProfileScreen() {
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [tab, setTab] = useState<Tab>('data');
+  const summaryStrings = useSummaryPlStrings();
 
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<EditForm | null>(null);
@@ -467,6 +470,8 @@ export default function EmployeeProfileScreen() {
                 { key: 'data', label: strings.employee.tabData },
                 { key: 'permissions', label: strings.employee.tabPermissions },
                 { key: 'pay', label: strings.employee.tabPay },
+                // D-294: la pestaña Resumen solo para quien puede ver pagos.
+                ...(canSeePay(access) ? [{ key: 'summary' as const, label: summaryStrings.tabSummary }] : []),
               ]}
             />
 
@@ -496,6 +501,7 @@ export default function EmployeeProfileScreen() {
             {tab === 'pay' && canSeePay(access) && employee ? (
               <EmployeePay profileId={employee.id} workerType={employee.workerType} />
             ) : null}
+            {tab === 'summary' && canSeePay(access) && employee ? <EmployeeSummary profileId={employee.id} /> : null}
             {tab === 'pay' && !canSeePay(access) ? (
               <View style={styles.noPay}>
                 <Icon name="lock" size={26} strokeWidth={iconStrokeWidth} color={colors.secondary} />
