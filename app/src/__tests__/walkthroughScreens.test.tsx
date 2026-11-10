@@ -288,7 +288,7 @@ describe('Resumen (D-212)', () => {
     await fireEvent.press(screen.getByText('Ver PDF'));
     expect(mockPush).toHaveBeenCalledWith({
       pathname: '/viewer',
-      params: { source: 'walkthrough', documentId: doc.id, version: '1', language: 'es', title: 'Walkthrough · Gulf Coast Dental' },
+      params: { source: 'walkthrough', documentId: doc.id, version: '1', language: 'es', title: 'Walkthrough · Gulf Coast Dental', download: '1' },
     });
     await fireEvent.press(screen.getByText('Editar'));
     expect(await screen.findByText('Corrigiendo la versión 1: al cerrar se guarda la versión 2.')).toBeTruthy();

@@ -222,6 +222,7 @@ export default function WalkthroughScreen() {
                       version: String(doc.version),
                       language: locale,
                       title: w.summary.pdfTitle(doc.company),
+                      download: '1', // D-297: "Descargar" con el nombre legible (D-296)
                     },
                   })
                 }

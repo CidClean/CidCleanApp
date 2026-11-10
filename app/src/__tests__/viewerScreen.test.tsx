@@ -109,6 +109,18 @@ describe('visor de PDF dentro de la app (D-196)', () => {
     expect(mockFetchDocumentUrl).not.toHaveBeenCalled();
   });
 
+  test('D-297: el walkthrough con download=1 muestra "Descargar" y se guarda con el nombre legible (D-296)', async () => {
+    mockParams = { source: 'walkthrough', documentId: 'w1', version: '2', language: 'es', title: 'Walkthrough · Gulf', download: '1' };
+    mockFetchWalkthroughPdf.mockResolvedValue({
+      ok: true,
+      data: { url: 'https://x/object/sign/walkthrough-pdfs/w1/v2.pdf?token=t', fileName: 'Cid Clean - Walkthrough - Gulf - 2026-10-21.pdf' },
+    });
+    await render(<ViewerScreen />);
+    await waitFor(() => expect(screen.getByTestId('pdf-view')).toBeTruthy());
+    expect(mockDownload).toHaveBeenCalledWith('https://x/object/sign/walkthrough-pdfs/w1/v2.pdf?token=t', 'Cid Clean - Walkthrough - Gulf - 2026-10-21.pdf');
+    expect(screen.getByLabelText(es.employee.download)).toBeTruthy();
+  });
+
   test('términos: usa el Storage firmado de terms, no open-document', async () => {
     mockParams = { source: 'terms', title: es.settings.termsRow };
     await render(<ViewerScreen />);

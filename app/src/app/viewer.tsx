@@ -37,7 +37,7 @@ export default function ViewerScreen() {
     kind?: string;
     /** D-271: 'own-w9' en el W-9 que abre su dueño muestra "Solo lo ven tú y el Super Admin de Cid Clean." */
     note?: string;
-    /** D-260: '1' en el W-9 (solo lo abre el Super Admin) muestra "Descargar". */
+    /** D-260: '1' en el W-9 (solo lo abre el Super Admin) muestra "Descargar"; D-297: también el PDF del walkthrough. */
     download?: string;
     source: 'terms' | 'document' | 'quote-file' | 'walkthrough' | 'jobsite' | 'contract' | 'ica' | 'ica-signed' | 'warning';
     documentId?: string;
