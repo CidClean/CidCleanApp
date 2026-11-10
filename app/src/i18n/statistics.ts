@@ -98,7 +98,7 @@ export const statisticsEs = {
     receivable: 'Por cobrar', // APROBADO
     receivableSub: (month: string) => `${month} sin marcar recibido`, // APROBADO
     toApprove: 'Por aprobar', // APROBADO
-    toApproveSub: 'turnos esperando', // APROBADO
+    toApproveSub: 'visitas esperando', // APROBADO D-299
     today: (time: string) => `Hoy · ${time}`, // APROBADO
     scheduledChip: (n: number) => `${n} ${n === 1 ? 'programado' : 'programados'}`, // APROBADO
     noClockIn: 'sin clock in', // APROBADO
@@ -206,7 +206,7 @@ export const statisticsEn: StatisticsStrings = {
     receivable: 'To collect',
     receivableSub: (month: string) => `${month} not marked received`,
     toApprove: 'To approve',
-    toApproveSub: 'shifts waiting',
+    toApproveSub: 'visits waiting', // APROBADO D-299
     today: (time: string) => `Today · ${time}`,
     scheduledChip: (n: number) => `${n} scheduled`,
     noClockIn: 'no clock in',

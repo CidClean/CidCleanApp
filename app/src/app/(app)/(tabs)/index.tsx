@@ -152,7 +152,7 @@ function AdminHome() {
       };
     }, []),
   );
-  const approveCount = home?.toApprove?.shifts ?? 0;
+  const approveCount = home?.toApprove?.visits ?? 0; // D-299: visitas, no turnos
   const nothing = pending.length === 0 && ongoing.length === 0 && workCards.length === 0 && !myToday && approveCount === 0;
 
   return (
@@ -167,7 +167,7 @@ function AdminHome() {
             <NumberCard
               tone={home.toApprove.urgent > 0 ? 'attention' : 'plain'}
               label={st.home.toApprove}
-              value={home.toApprove.shifts}
+              value={home.toApprove.visits}
               sub={st.home.toApproveSub}
               onPress={() => router.push({ pathname: '/schedule', params: { tab: 'approve' } })}
             />

@@ -162,6 +162,13 @@ describe('Inicio del admin nuevo (D-253)', () => {
     await fireEvent.press(await screen.findByLabelText(`${s.home.toApprove}: 0 ${s.home.toApproveSub}`));
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/schedule', params: { tab: 'approve' } });
   });
+
+  test('D-299: cuenta las visitas por aprobar (también la de un 1099 sin marcar), no los turnos', async () => {
+    mockStats.home.mockResolvedValue({ ok: true, data: { ...home, toApprove: { visits: 2, shifts: 0, urgent: 0 } } });
+    await render(<HomeScreen />);
+    expect(await screen.findByLabelText(`${s.home.toApprove}: 2 ${s.home.toApproveSub}`)).toBeTruthy();
+    expect(s.home.toApproveSub).toBe('visitas esperando');
+  });
 });
 
 describe('Estadísticas (D-252, D-253)', () => {
