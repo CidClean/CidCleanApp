@@ -38,7 +38,7 @@ Legal rev. 3 fases A a D, términos v3 y privacidad v1 publicados en la app, pro
 ## Por construir
 
 1. Fase E (D-278, D-281): fecha de fin de la relación en personal y clientes, retención y borrado automático diario con "retención legal", y para W-2 la corrección de horas en 7 días, salario mínimo por fecha y horas extra.
-2. D-297: "Descargar" en el PDF del walkthrough. Detalles menores: ocultar la cuadrícula del Schedule en un jobsite sin contrato; revisar en el teléfono el pie "Page n of m" de los PDF que arma la app.
+2. D-297: "Descargar" en el PDF del walkthrough. D-298: pestaña "Aprobados" en Schedule & Work. D-299: el Inicio cuenta visitas por aprobar. Detalles menores: ocultar la cuadrícula del Schedule en un jobsite sin contrato; revisar en el teléfono el pie "Page n of m" de los PDF que arma la app.
 3. Hito 8 (lanzamiento): revisión de seguridad independiente, pruebas con usuarios reales, publicación en Google Play y App Store (con TestFlight), y notificaciones en el teléfono.
 
 Preguntas abiertas para el dueño:
