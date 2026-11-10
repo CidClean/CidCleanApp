@@ -213,6 +213,8 @@ export type WorkRow = {
   hasPay: boolean;
   contractor: boolean;
   serviceDay: RowServiceDay | null;
+  /** Monto de la fila (W-2: pago de las horas; 1099: monto del día). Solo llega con permiso de ver pagos (D-298). */
+  payAmount?: number | null;
 };
 /** Tarjeta de una visita (D-266): cuenta · fecha y una fila por persona (programados sin No show ∪ registros). */
 export type VisitCard = {
@@ -249,6 +251,7 @@ type RawRow = {
   gps_reviewed: boolean;
   has_app_access: boolean;
   has_pay: boolean;
+  pay_amount?: number | string | null;
   worker_type?: string | null;
   service_day?: {
     id: string;
@@ -308,6 +311,7 @@ export function mapVisitCard(r: RawCard): VisitCard {
       hasAppAccess: e.has_app_access,
       hasPay: e.has_pay,
       contractor: e.worker_type === '1099',
+      payAmount: e.pay_amount === null || e.pay_amount === undefined ? null : Number(e.pay_amount),
       serviceDay: e.service_day
         ? {
             id: e.service_day.id,
@@ -327,6 +331,15 @@ export function mapVisitCard(r: RawCard): VisitCard {
 
 /** "To approve" (D-266): una tarjeta por visita, la más antigua primero (antes llena los registros automáticos). */
 export const fetchToApprove = () => rpc('work_to_approve', {}, (d) => ((d ?? []) as RawCard[]).map(mapVisitCard));
+/** Visita aprobada (D-298): la tarjeta de To approve más quién aprobó y cuándo. */
+export type ApprovedCard = VisitCard & { approvedAt: Date | null; approvedBy: string | null };
+type RawApproved = RawCard & { approved_at?: string | null; approved_by?: string | null };
+export function mapApprovedCard(r: RawApproved): ApprovedCard {
+  return { ...mapVisitCard(r), approvedAt: r.approved_at ? new Date(r.approved_at) : null, approvedBy: r.approved_by ?? null };
+}
+/** "Aprobados" (D-298): visitas aprobadas del mes (`month` = AAAA-MM), la más reciente primero. */
+export const fetchApproved = (month: string) =>
+  rpc('work_approved', { p_month: `${month}-01` }, (d) => ((d ?? []) as RawApproved[]).map(mapApprovedCard));
 export const fetchVisitWork = (visitId: string) => rpc('visit_work', { p_visit: visitId }, (d) => mapVisitCard(d as RawCard));
 export const markNoShow = (visitId: string, profileId: string) => rpc('mark_no_show', { p_visit: visitId, p_profile: profileId }, () => null);
 export const undoNoShow = (visitId: string, profileId: string) => rpc('undo_no_show', { p_visit: visitId, p_profile: profileId }, () => null);

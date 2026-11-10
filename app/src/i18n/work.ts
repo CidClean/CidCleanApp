@@ -8,6 +8,10 @@ export const workEs = {
   title: 'Schedule y Work', // APROBADO (D-134)
   tabSchedule: 'Schedule', // APROBADO (flujo)
   tabApprove: 'Por aprobar', // APROBADO (D-053)
+  tabApproved: 'Aprobados', // APROBADO (D-298)
+  approvedOn: (date: string, name: string) => `Aprobado el ${date} por ${name}`, // APROBADO (D-298)
+  approvedOnNoName: (date: string) => `Aprobado el ${date}`, // D-200 (si no se sabe quién)
+  nothingApproved: 'No hay visitas aprobadas en este mes.', // D-200
   thisWeek: 'Esta semana', // APROBADO (D-093)
   nextWeek: 'Próxima semana', // APROBADO (D-093)
   previousWeek: 'Semana anterior', // D-200: flecha (lector de pantalla)
@@ -172,6 +176,10 @@ export const workEn: WorkStrings = {
   title: 'Schedule & Work',
   tabSchedule: 'Schedule',
   tabApprove: 'To approve',
+  tabApproved: 'Approved', // APROBADO (D-298)
+  approvedOn: (date: string, name: string) => `Approved on ${date} by ${name}`, // APROBADO (D-298)
+  approvedOnNoName: (date: string) => `Approved on ${date}`,
+  nothingApproved: 'No approved visits this month.',
   thisWeek: 'This week',
   nextWeek: 'Next week',
   previousWeek: 'Previous week',

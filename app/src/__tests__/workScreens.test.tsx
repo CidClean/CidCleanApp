@@ -61,7 +61,8 @@ jest.mock('@/lib/scheduleApi', () => ({
   undoNoShow: jest.fn(async () => ({ ok: true, data: null })),
   fetchAddableStaff: jest.fn(async () => ({ ok: true, data: [{ id: 'p9', name: 'Sustituto', hasPay: false }] })),
   fetchSchedule: (...a: unknown[]) => mockSchedule(...a),
-  fetchToApprove: jest.fn(async () => ({ ok: true, data: [] })),
+  fetchToApprove: (...a: unknown[]) => mockToApprove(...a),
+  fetchApproved: (...a: unknown[]) => mockApproved(...a),
   fetchSchedulable: jest.fn(async () => ({
     ok: true,
     data: [
@@ -74,6 +75,8 @@ jest.mock('@/lib/scheduleApi', () => ({
   saveWeek: (...a: unknown[]) => mockSaveWeek(...a),
 }));
 const mockSchedule = jest.fn();
+const mockToApprove = jest.fn(async (..._a: unknown[]) => ({ ok: true, data: [] as unknown[] }));
+const mockApproved = jest.fn();
 const mockSetStaff = jest.fn();
 const mockWeekPlan = jest.fn();
 const mockSaveWeek = jest.fn();
@@ -270,7 +273,8 @@ describe('Schedule: Detallado (D-231, D-235)', () => {
     expect(await screen.findByText('Compartir llega con la versión 1.3.0 de la app.')).toBeTruthy();
     await fireEvent.press(screen.getByText('Mes'));
     // El mes va del 1 al último día.
-    expect(await screen.findByText(/ 1$/)).toBeTruthy();
+    // D-200: según la fecha puede haber más de un texto que termina en " 1" (prueba dependiente de la fecha).
+    expect((await screen.findAllByText(/^[DLMXJVS] 1$/)).length).toBeGreaterThan(0);
     await fireEvent.press(screen.getByText('Break TAX O…'));
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/schedule/visit/[id]', params: { id: 'v1', day: key } });
   });
@@ -394,5 +398,71 @@ describe('Schedule por semana (D-232)', () => {
     }));
     await fireEvent.press(screen.getByText('Copiar semana anterior'));
     expect(await screen.findByLabelText('Diego Mié')).toBeTruthy();
+  });
+});
+
+describe('To approve y Aprobados (D-298, D-299)', () => {
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const row = (o: Record<string, unknown>) => ({
+    entryId: null, clockIn: null, clockOut: null, inStatus: null, outStatus: null, status: 'ok', distanceM: null,
+    offline: false, unscheduled: false, manual: false, gpsPending: false, gpsReviewed: false, hasAppAccess: true,
+    hasPay: true, contractor: false, serviceDay: null, payAmount: null, ...o,
+  });
+  const visitCard = (o: Record<string, unknown> = {}) => ({
+    id: 'vn', jobsiteId: 'j1', jobsite: 'Naples Yacht Club', client: 'Naples Yacht Club', day: '2026-11-09',
+    startsAt: new Date(2026, 10, 9, 18, 0), minutes: 240, approved: false, w2Pending: false, ended: true, urgent: false,
+    noShow: [], rows: [row({ profileId: 'h1', name: 'Humbe', contractor: true, status: 'day_missing' })], ...o,
+  });
+
+  it('To approve lista la visita de un 1099 que terminó y nadie marcó, con "Registrar y aprobar"', async () => {
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['work_aprobar', 'work_registrar_por_otros']) };
+    mockToApprove.mockResolvedValueOnce({ ok: true, data: [visitCard()] });
+    await render(<ScheduleScreen />);
+    expect(await screen.findByText('Naples Yacht Club · Lun 9 nov')).toBeTruthy();
+    expect(screen.getByText('No ha marcado')).toBeTruthy();
+    expect(screen.getByLabelText('Registrar y aprobar Humbe')).toBeTruthy();
+  });
+
+  it('pestaña Aprobados: mes con flechas, tarjetas en modo lectura con "Aprobado el … por …", montos con permiso y abre el detalle', async () => {
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['work_aprobar', 'empleados_ver_pagos']) };
+    const approvedCard = {
+      ...visitCard({ approved: true }),
+      approvedAt: new Date(2026, 10, 10, 9, 0),
+      approvedBy: 'Wilson',
+      rows: [
+        row({ profileId: 'h1', name: 'Humbe', contractor: true, status: 'day_approved',
+              serviceDay: { id: 'd1', status: 'approved', note: null, markedAt: null, selfMarked: false, amount: 80, amountEdited: false, expectedAmount: 80 } }),
+        row({ profileId: 'a1', name: 'Ana', entryId: 'e1', clockIn: new Date(2026, 10, 9, 18, 0), clockOut: new Date(2026, 10, 9, 22, 0), payAmount: 72 }),
+      ],
+    };
+    mockApproved.mockResolvedValue({ ok: true, data: [approvedCard] });
+    await render(<ScheduleScreen />);
+    await fireEvent.press(await screen.findByText('Aprobados'));
+    expect(await screen.findByText('Aprobado el Mar 10 nov por Wilson')).toBeTruthy();
+    expect(mockApproved).toHaveBeenCalledWith(ym);
+    expect(screen.getByText('$80.00')).toBeTruthy();
+    expect(screen.getByText('$72.00')).toBeTruthy();
+    expect(screen.getByText('6:00 PM – 10:00 PM · 4 h')).toBeTruthy();
+    expect(screen.queryByText('Approve')).toBeNull();
+    expect(screen.queryByText('No show')).toBeNull();
+    await fireEvent.press(screen.getByLabelText('Mes anterior'));
+    await waitFor(() => expect(mockApproved).toHaveBeenCalledTimes(2));
+    expect(mockApproved.mock.calls[1][0]).not.toBe(ym);
+    await fireEvent.press(await screen.findByLabelText('Naples Yacht Club · Lun 9 nov'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/schedule/work/[id]', params: { id: 'vn' } });
+  });
+
+  it('Aprobados sin permiso de ver pagos no muestra montos; mes vacío lo dice', async () => {
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['work_aprobar']) };
+    mockApproved.mockResolvedValueOnce({ ok: true, data: [{ ...visitCard({ approved: true }), approvedAt: new Date(2026, 10, 10), approvedBy: 'Wilson',
+      rows: [row({ profileId: 'a1', name: 'Ana', payAmount: 72 })] }] });
+    await render(<ScheduleScreen />);
+    await fireEvent.press(await screen.findByText('Aprobados'));
+    expect(await screen.findByText('Ana')).toBeTruthy();
+    expect(screen.queryByText('$72.00')).toBeNull();
+    mockApproved.mockResolvedValueOnce({ ok: true, data: [] });
+    await fireEvent.press(screen.getByLabelText('Mes anterior'));
+    expect(await screen.findByText('No hay visitas aprobadas en este mes.')).toBeTruthy();
   });
 });

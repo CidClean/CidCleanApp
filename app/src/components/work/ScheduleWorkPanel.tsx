@@ -8,16 +8,21 @@ import { Icon } from "../Icon";
 import { Segmented } from "../Segmented";
 import { ScheduleSimple } from "./ScheduleSimple";
 import { ScheduleTable } from "./ScheduleTable";
+import { ApprovedVisitCard } from "./ApprovedVisitCard";
 import { ScheduleWeek } from "./ScheduleWeek";
 import { ModeSeg } from "./SimpleParts";
 import { VisitApprovalCard } from "./VisitApprovalCard";
+import { useAccountingStrings } from "@/i18n/useAccountingStrings";
 import { useSalesStrings } from "@/i18n/useSalesStrings";
 import { useStrings } from "@/i18n/useStrings";
 import { useWorkStrings } from "@/i18n/useWorkStrings";
+import { monthKeyOf, monthTitle, shiftMonth } from "@/lib/accountingRules";
 import { dateFromKey, formatShortDate } from "@/lib/leadRules";
 import {
+  fetchApproved,
   fetchSchedule,
   fetchToApprove,
+  type ApprovedCard,
   type ScheduleVisit,
   type VisitCard,
 } from "@/lib/scheduleApi";
@@ -34,6 +39,7 @@ import { can, canAny } from "@/lib/visibility";
 import { iconStrokeWidth, sample, useTheme } from "@/theme";
 
 type ScheduleMode = "simple" | "week" | "detail";
+type Tab = "schedule" | "approve" | "approved";
 const MODES: ScheduleMode[] = ["simple", "week", "detail"];
 
 export const WORK_KEYS = [
@@ -47,14 +53,15 @@ export const WORK_KEYS = [
  * Contenido de Schedule & Work (D-214, D-235). Se usa en la pantalla del menú (todos los jobsites) y dentro de cada
  * jobsite con `jobsiteId` (solo ese jobsite). Schedule: Simple (Hoy, 3 días, Semana), Semana (se arma y guarda) y
  * Detallado (tabla Empleado → días por semana o por mes, con Compartir en PDF). Por aprobar por visita (D-266): una
- * tarjeta por visita con Edit, No show, + Agregar persona y Approve.
+ * tarjeta por visita con Edit, No show, + Agregar persona y Approve. Aprobados (D-298): las visitas aprobadas del mes,
+ * la más reciente primero, en modo lectura; tocar una abre su detalle (el Super Admin corrige ahí, D-262).
  */
 export function ScheduleWorkPanel({
   jobsiteId,
   initialTab,
 }: {
   jobsiteId?: string;
-  initialTab?: "schedule" | "approve";
+  initialTab?: Tab;
 }) {
   const router = useRouter();
   const { colors } = useTheme();
@@ -64,9 +71,12 @@ export function ScheduleWorkPanel({
   const { access } = usePermissions();
   const seesSchedule = can(access, "schedule_ver_editar");
   const seesWork = canAny(access, WORK_KEYS);
-  const [tab, setTab] = useState<"schedule" | "approve">(
-    initialTab === "approve" || !seesSchedule ? "approve" : "schedule",
+  const a = useAccountingStrings();
+  const [tab, setTab] = useState<Tab>(
+    initialTab === "approved" ? "approved" : initialTab === "approve" || !seesSchedule ? "approve" : "schedule",
   );
+  const [month, setMonth] = useState(() => monthKeyOf(new Date()));
+  const [approved, setApproved] = useState<ApprovedCard[] | null>(null);
   const [mode, setMode] = useState<ScheduleMode>("simple");
   const [range, setRange] = useState<TableRange>("week");
   const [anchor, setAnchor] = useState(() => new Date());
@@ -97,7 +107,16 @@ export function ScheduleWorkPanel({
         );
       else setFailed(true);
     }
-  }, [tab, mode, from, to, seesSchedule, seesWork, jobsiteId]);
+    if (tab === "approved" && seesWork) {
+      setApproved(null);
+      const r = await fetchApproved(month);
+      if (r.ok)
+        setApproved(
+          jobsiteId ? r.data.filter((w) => w.jobsiteId === jobsiteId) : r.data,
+        );
+      else setFailed(true);
+    }
+  }, [tab, mode, from, to, month, seesSchedule, seesWork, jobsiteId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -145,6 +164,16 @@ export function ScheduleWorkPanel({
           options={[
             { value: "schedule", label: t.tabSchedule },
             { value: "approve", label: t.tabApprove },
+            { value: "approved", label: t.tabApproved },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
+      ) : seesWork ? (
+        <Segmented
+          options={[
+            { value: "approve", label: t.tabApprove },
+            { value: "approved", label: t.tabApproved },
           ]}
           value={tab}
           onChange={setTab}
@@ -263,6 +292,45 @@ export function ScheduleWorkPanel({
               card={w}
               onChanged={load}
               onError={setApproveError}
+            />
+          ))}
+        </View>
+      ) : null}
+
+      {tab === "approved" ? (
+        <View style={{ gap: 10 }}>
+          {/* D-298: mes con flechas (D-069), sin "Rango". */}
+          <View style={[styles.week, { backgroundColor: colors.card, marginBottom: 2 }]}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={a.previousMonth}
+              onPress={() => setMonth((m) => shiftMonth(m, -1))}
+              hitSlop={12}
+            >
+              <Icon name="chevron-left" size={20} strokeWidth={iconStrokeWidth} color={colors.text} />
+            </Pressable>
+            <AppText weight="bold" accessibilityRole="header">
+              {monthTitle(month, a)}
+            </AppText>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={a.nextMonth}
+              onPress={() => setMonth((m) => shiftMonth(m, 1))}
+              hitSlop={12}
+            >
+              <Icon name="chevron-right" size={20} strokeWidth={iconStrokeWidth} color={colors.text} />
+            </Pressable>
+          </View>
+          {approved && approved.length === 0 ? (
+            <AppText size={sample.noteSize} color={colors.secondary}>
+              {t.nothingApproved}
+            </AppText>
+          ) : null}
+          {(approved ?? []).map((w) => (
+            <ApprovedVisitCard
+              key={w.id}
+              card={w}
+              onOpen={() => router.push({ pathname: "/schedule/work/[id]", params: { id: w.id } })}
             />
           ))}
         </View>
