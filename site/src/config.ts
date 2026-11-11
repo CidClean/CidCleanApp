@@ -11,7 +11,7 @@ export const SITE = {
   city: 'Naples, FL',
   // Estimador: Edge Function pública site-estimate (orden 91). Las tarifas viven en la base, no aquí.
   estimateEndpoint: 'https://noammaqhtdfgbheeiugo.supabase.co/functions/v1/site-estimate',
-  googleBusinessUrl: '',
+  googleBusinessUrl: 'https://share.google/ICdSzGaHzuCWvEnxZ',
   social: {
     instagram: 'https://www.instagram.com/cidclean',
     facebook: 'https://www.facebook.com/share/1HYRBdqPmq/',
