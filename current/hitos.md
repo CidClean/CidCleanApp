@@ -38,7 +38,7 @@ Legal rev. 3 fases A a D, términos v3 y privacidad v1 publicados en la app, pro
 ## Por construir
 
 1-2. D-301 y D-302: HECHO y publicado el 2026-11-11 (21 sitios de leads y 1 jobsite quedan con "Completa la dirección").
-3. Hito 8 (empezó el 2026-11-11): revisión de seguridad independiente (incluye: `visit_card` envía `pay_amount` a quien no ve pagos).
+3. Hito 8 (empezó el 2026-11-11). Revisión de seguridad hecha; respuestas del dueño en D-303 a D-306. Por corregir: pago visible sin permiso en To approve (A1), precios del quote con solo `quotes_enviar` (M4), cabeceras de seguridad de la web (M1), sesión que vence y se corta en el servidor (M2, D-126), dos pasos del Super Admin (D-306), rol admin solo del Super Admin (D-304) y los puntos menores B2, B3, B4, B5, B6, B7, B9 y B10.: revisión de seguridad independiente (incluye: `visit_card` envía `pay_amount` a quien no ve pagos).
 4. Año que viene (D-300): Google Play, App Store (dudosa, $99 al año) y notificaciones en el teléfono.
 5. Hito final (D-300): fase E legal (D-278, D-281).
 

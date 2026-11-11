@@ -23,4 +23,4 @@ El rol es solo una plantilla: al crear un perfil se marcan estos permisos y desp
 | Supervisor (8) | `leads_ver`, `walkthroughs_hacer`, `clientes_ver`, `empleados_ver`, `schedule_ver_editar`, `work_registrar_por_otros`, `work_editar`, `work_revisar_gps` |
 | Admin (36) | Los 37 permisos menos `empleados_gestionar_permisos`. Incluye `gastos_registrar_editar`, `empleados_gestionar_documentos` y `estadisticas_ver` (D-252). |
 
-El Supervisor parte sin ver tarifas ni pagos y sin Accounting. El Admin no puede dar ni quitar permisos mientras no se le dé `empleados_gestionar_permisos` a mano. El Super Admin tiene todo y no usa plantilla.
+El Supervisor parte sin ver tarifas ni pagos y sin Accounting. El Admin no puede dar ni quitar permisos mientras no se le dé `empleados_gestionar_permisos` a mano. El Super Admin tiene todo y no usa plantilla. Solo el Super Admin da o quita el rol de admin (D-304); `empleados_gestionar_permisos` da y quita permisos, no ese rol. El costo por empleado de Estadísticas lo ve quien tiene `estadisticas_ver` (D-303). El Super Admin entra con dos pasos: código por correo y app de autenticación (D-306).
