@@ -172,3 +172,16 @@ Función a desplegar (usa `_shared/address.ts` para la línea de la dirección d
 ```
 npx supabase@latest functions deploy walkthrough-pdf --project-ref <ref> --use-api
 ```
+
+## Orden 91: site-estimate (estimador y contacto de cidclean.com, D-307, D-309)
+
+- **Sin** `verify_jwt` (la usa el sitio público): desplegar con `--no-verify-jwt`. CORS solo para `https://cidclean.com` y `https://www.cidclean.com`.
+- Recibe `kind` (`estimate` o `contact`), `name`, `company` (opcional), `email`, `phone`, `city` (Naples, Bonita Springs, Estero, Marco Island u Other), `zip` (opcional); para `estimate` `type`, `sqft` (200–1,000,000) y `frequency`; para `contact` `message`. Anti-spam: campo trampa `website` y `elapsed_ms` ≥ 3 s (si no, responde `{ ok: true }` sin crear nada); límite en la base de 5 envíos por hora por IP (hash con `PORTAL_CODE_PEPPER`, IP de `_shared/ip.ts`) y 3 por hora por correo (429 `rate_limited`).
+- Todo pasa por `site_submit` (migración `20261113000001`, solo service role): calcula con las tarifas de `estimator_settings` (las edita el Super Admin en Ajustes → Estimador del sitio), crea el lead (`source='web'`, `status='new'`, `cleaning_type='non_residential'`, nota con los datos y el rango, `lead_site` con ciudad, FL y ZIP para completar) o agrega la nota al lead abierto del mismo correo.
+- Correos con `RESEND_QUOTES_KEY` (dominio `mail.cidclean.com`): al cliente "Your Cid Clean estimate" desde `Cid Clean <estimates@mail.cidclean.com>` con Reply-To `info@cidclean.com`; aviso interno a `info@cidclean.com` con enlace a `https://app.cidclean.com/leads/<id>` y Reply-To el correo del cliente. Si un correo falla, el lead ya quedó creado.
+- Devuelve `{ ok, range_low, range_high, per_visit, walkthrough_recommended }` (estimado) o `{ ok }` (contacto). Errores: `invalid` 400 (con `fields`), `rate_limited` 429, `server_error` 500.
+- Pruebas: `node --test supabase/tests/site-estimate.test.mjs` (Resend simulado, nunca manda correos) y `psql -f supabase/tests/estimador_sitio.sql`.
+
+```
+npx supabase@latest functions deploy site-estimate --project-ref <ref> --use-api --no-verify-jwt
+```
