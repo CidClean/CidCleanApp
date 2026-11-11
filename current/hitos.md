@@ -13,7 +13,7 @@ Plan para terminar la app, aprobado por el dueño el 2026-10-21 (D-170). Cada hi
 | 6 | Operaciones B: Schedule y Work | Programar trabajos, que el staff registre sus visitas y que el Inicio del staff muestre la visita de hoy | Hecho |
 | 6b | Cobro por planes (D-227) | Descartado por el dueño (D-237): los extras son otro quote y el invoice va fuera de la app por ahora | Descartado |
 | 7 | Accounting y avisos | Registrar ingresos y gastos, ver márgenes, calcular lo que se debe a cada empleado; notificaciones y alerta de 32 h | Hecho (las notificaciones en el teléfono pasan al año que viene, D-300) |
-| 8 | Cierre y lanzamiento | Revisión de seguridad completa, pruebas con usuarios reales, cuentas de Apple y Google, tiendas y portal en su subdominio | En curso: revisión de seguridad y correcciones hechas, portal en quote.cidclean.com y sitio nuevo publicados; falta la prueba con usuarios reales; tiendas al año que viene (D-300) |
+| 8 | Cierre y lanzamiento | Revisión de seguridad completa, pruebas con usuarios reales, cuentas de Apple y Google, tiendas y portal en su subdominio | En curso: revisión de seguridad y correcciones hechas, portal en quote.cidclean.com y sitio nuevo publicados; falta la prueba con usuarios reales (D-315, guía: https://claude.ai/artifact/HXtt4W4BjJQHSTeMQzFg2r); tiendas al año que viene (D-300) |
 
 ## Cómo se trabaja cada hito
 
