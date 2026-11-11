@@ -1,0 +1,95 @@
+---
+import { Picture } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import Faq from '../../components/Faq.astro';
+import HowWeWork from '../../components/HowWeWork.astro';
+import Estimator from '../../components/Estimator.astro';
+import Cta from '../../components/Cta.astro';
+import { LOCATIONS, locationBySlug, type Location } from '../../data/locations';
+import { serviceBySlug } from '../../data/services';
+import drop from '../../assets/img/drop.jpg';
+import { SITE } from '../../config';
+
+export function getStaticPaths() {
+  return LOCATIONS.map((l) => ({ params: { slug: l.slug }, props: { l } }));
+}
+const { l } = Astro.props as { l: Location };
+const path = `/locations/${l.slug}`;
+const crumbs = [{ name: 'Locations', path: '/locations/naples' }, { name: l.name, path }];
+const services = l.services.map((s) => serviceBySlug(s)!).filter(Boolean);
+const jsonld = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: l.faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  },
+];
+---
+<Base title={l.title} description={l.description} path={path} og="drop" ogAlt="A drop of water on smooth stone" crumbs={crumbs} jsonld={jsonld}>
+  <section class="page-hero">
+    <div class="wrap">
+      <div class="copy">
+        <Crumbs items={crumbs} />
+        <span class="eyebrow">Service area · {l.name}, FL</span>
+        <h1>{l.h1}</h1>
+        {l.intro.map((p) => <p class="lead">{p}</p>)}
+        <div class="form-actions"><a class="btn btn-primary" href="#estimator">Get an estimate</a><a class="btn btn-outline" href={SITE.phoneHref}>Call {SITE.phone}</a></div>
+      </div>
+      <div class="media" style="aspect-ratio:16/9"><Picture src={drop} formats={['avif', 'webp']} widths={[480, 800, 1344]} sizes="(max-width: 860px) 92vw, 440px" alt="A single drop of water landing on smooth stone" width={1344} height={756} loading="eager" fetchpriority="high" /></div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="biz-h">
+    <div class="wrap">
+      <div class="head"><span class="eyebrow">Who we clean for</span><h2 id="biz-h">Businesses we clean in {l.name}</h2></div>
+      <div class="grid">{l.businesses.map((b) => <div class="card reveal"><h3>{b.h}</h3><p>{b.p}</p></div>)}</div>
+    </div>
+  </section>
+
+  <section class="section alt">
+    <div class="wrap cols2" style="align-items:start">
+      <div class="prose">
+        {l.local.map((b) => (<><h2>{b.h}</h2>{b.p.map((p) => <p>{p}</p>)}</>))}
+      </div>
+      <div class="card reveal">
+        <h2 style="font-size:22px">Areas we serve in {l.name}</h2>
+        <p>{l.areasText}</p>
+        <ul class="checks">{l.areas.map((a) => <li>{a}</li>)}</ul>
+        <p class="muted">Not sure if we cover your address? Call <a href={SITE.phoneHref}>{SITE.phone}</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="svc-h">
+    <div class="wrap">
+      <div class="head"><h2 id="svc-h">Our services in {l.name}</h2></div>
+      <ul class="chips">{services.map((s) => <li><a href={`/services/${s.slug}`}>{s.name} in {l.name}</a></li>)}</ul>
+    </div>
+  </section>
+
+  <HowWeWork heading={`How we work in ${l.name}`} />
+
+  <section class="section" aria-labelledby="est-h">
+    <div class="wrap cols2" style="align-items:start">
+      <div class="prose">
+        <span class="eyebrow">Instant estimate</span>
+        <h2 id="est-h">Estimate your cleaning in {l.name}</h2>
+        <p>Choose your type of space, size and frequency. After you leave your details, you'll see an estimated monthly range. Then book your free walkthrough in {l.name} and we'll send you an exact quote.</p>
+        <p class="note">This is an estimate, not a final price. Your exact price is set after a free walkthrough.</p>
+      </div>
+      <Estimator id="estimator" heading="Get your instant estimate" />
+    </div>
+  </section>
+
+  <Faq items={l.faqs} />
+
+  <section class="section alt">
+    <div class="wrap">
+      <div class="head"><h2>Nearby areas we serve</h2></div>
+      <ul class="chips">{l.nearby.map((n) => locationBySlug(n)!).map((n) => <li><a href={`/locations/${n.slug}`}>Commercial cleaning in {n.name}</a></li>)}</ul>
+    </div>
+  </section>
+
+  <Cta title={`Ready for a cleaner space in ${l.name}?`} />
+</Base>

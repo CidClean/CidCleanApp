@@ -1,0 +1,95 @@
+---
+// Estimador (D-309): paso 1 tipo, sq ft y frecuencia; paso 2 datos de contacto; el rango se ve después de enviar.
+import { SITE, CITIES } from '../config';
+import { PLACE_TYPES, FREQUENCIES } from '../data/estimator';
+interface Props { variant?: 'short' | 'full'; id?: string; defaultType?: string; heading?: string }
+const { variant = 'full', id = 'estimator', defaultType = 'office', heading = 'Get your instant estimate' } = Astro.props;
+const p = (n: string) => `${id}-${n}`;
+---
+<form class="form-card" data-site-form="estimate" data-endpoint={SITE.estimateEndpoint} novalidate aria-labelledby={p('title')} id={id}>
+  <div>
+    <h2 class="title" id={p('title')}>{heading}</h2>
+    {variant === 'full' && <p class="muted">Two quick steps. You'll see your estimated monthly range right after you send your details.</p>}
+  </div>
+  <div class="stepper" aria-hidden="true"><span class="on">1 · Your space</span><span>2 · Your details</span></div>
+  <noscript><p class="note">Our online estimator needs JavaScript. Call <a href={SITE.phoneHref}>{SITE.phone}</a> or email <a href={`mailto:${SITE.email}`}>{SITE.email}</a> and we'll give you an estimate.</p></noscript>
+
+  <fieldset data-step="1" style="border:0;padding:0;margin:0;min-width:0">
+    <legend class="sr-only">Step 1 of 2: your space</legend>
+    <div class="fields">
+      <div class="field">
+        <label for={p('type')}>Type of space</label>
+        <select id={p('type')} name="type" required>
+          {PLACE_TYPES.map((t) => <option value={t.key} selected={t.key === defaultType}>{t.label}</option>)}
+        </select>
+      </div>
+      <div class="field">
+        <label for={p('sqft')}>Size (sq ft)</label>
+        <input id={p('sqft')} name="sqft" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. 3,000" required aria-describedby={p('sqft-err')} />
+        <span class="err" id={p('sqft-err')} data-err="sqft" hidden></span>
+      </div>
+      <div class="field">
+        <label for={p('frequency')}>How often</label>
+        <select id={p('frequency')} name="frequency" required>
+          {FREQUENCIES.map((f) => <option value={f.key} selected={f.key === 'weekly_3'}>{f.label}</option>)}
+        </select>
+      </div>
+    </div>
+    <div class="form-actions" style="margin-top:14px">
+      <button type="button" class="btn btn-primary" data-next>Next: your details</button>
+    </div>
+  </fieldset>
+
+  <fieldset data-step="2" hidden style="border:0;padding:0;margin:0;min-width:0">
+    <legend class="sr-only">Step 2 of 2: your details</legend>
+    <div class="fields">
+      <div class="field">
+        <label for={p('name')}>Your name</label>
+        <input id={p('name')} name="name" autocomplete="name" required maxlength="100" aria-describedby={p('name-err')} />
+        <span class="err" id={p('name-err')} data-err="name" hidden></span>
+      </div>
+      <div class="field">
+        <label for={p('company')}>Company <span class="opt">(optional)</span></label>
+        <input id={p('company')} name="company" autocomplete="organization" maxlength="120" />
+      </div>
+      <div class="field">
+        <label for={p('email')}>Email</label>
+        <input id={p('email')} name="email" type="email" autocomplete="email" required maxlength="160" aria-describedby={p('email-err')} />
+        <span class="err" id={p('email-err')} data-err="email" hidden></span>
+      </div>
+      <div class="field">
+        <label for={p('phone')}>Phone</label>
+        <input id={p('phone')} name="phone" type="tel" autocomplete="tel" required maxlength="20" aria-describedby={p('phone-err')} />
+        <span class="err" id={p('phone-err')} data-err="phone" hidden></span>
+      </div>
+      <div class="field">
+        <label for={p('city')}>City</label>
+        <select id={p('city')} name="city" required>
+          {CITIES.map((c) => <option value={c}>{c}</option>)}
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for={p('zip')}>ZIP code <span class="opt">(optional)</span></label>
+        <input id={p('zip')} name="zip" inputmode="numeric" autocomplete="postal-code" maxlength="10" aria-describedby={p('zip-err')} />
+        <span class="err" id={p('zip-err')} data-err="zip" hidden></span>
+      </div>
+    </div>
+    <div class="trap" aria-hidden="true"><label for={p('website')}>Website</label><input id={p('website')} name="website" tabindex="-1" autocomplete="off" /></div>
+    <div class="form-actions" style="margin-top:14px">
+      <button type="button" class="btn btn-outline" data-back>Back</button>
+      <button type="submit" class="btn btn-primary">See my estimate</button>
+    </div>
+    <p class="muted" style="font-size:14px;margin-top:10px">We use your details to send your estimate and to schedule a free walkthrough if you want one. No spam.</p>
+  </fieldset>
+  <p class="form-error" role="alert" data-form-error hidden></p>
+
+  <div class="result" data-result hidden aria-live="polite">
+    <span class="eyebrow">Estimated monthly range</span>
+    <span class="range" data-range></span>
+    <span class="muted" data-per-visit></span>
+    <p class="note" data-walkthrough hidden>For spaces over 25,000 sq ft we recommend a free walkthrough so we can price your building accurately.</p>
+    <p><strong>This is an estimate, not a final price. Your exact price is set after a free walkthrough.</strong></p>
+    <p>We sent a copy to your email. To schedule your free walkthrough, call <a href={SITE.phoneHref}>{SITE.phone}</a> or email <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+  </div>
+</form>

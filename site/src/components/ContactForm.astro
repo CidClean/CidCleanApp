@@ -1,0 +1,55 @@
+---
+// Formulario de contacto: kind='contact' en site-estimate (orden 91).
+import { SITE, CITIES } from '../config';
+const id = 'contact';
+const p = (n: string) => `${id}-${n}`;
+---
+<form class="form-card" data-site-form="contact" data-endpoint={SITE.estimateEndpoint} novalidate aria-labelledby={p('title')} id={id}>
+  <h2 class="title" id={p('title')}>Send us a message</h2>
+  <noscript><p class="note">This form needs JavaScript. Call <a href={SITE.phoneHref}>{SITE.phone}</a> or email <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p></noscript>
+  <div class="fields" data-step-contact data-hide-on-done>
+    <div class="field">
+      <label for={p('name')}>Your name</label>
+      <input id={p('name')} name="name" autocomplete="name" required maxlength="100" aria-describedby={p('name-err')} />
+      <span class="err" id={p('name-err')} data-err="name" hidden></span>
+    </div>
+    <div class="field">
+      <label for={p('company')}>Company <span class="opt">(optional)</span></label>
+      <input id={p('company')} name="company" autocomplete="organization" maxlength="120" />
+    </div>
+    <div class="field">
+      <label for={p('email')}>Email</label>
+      <input id={p('email')} name="email" type="email" autocomplete="email" required maxlength="160" aria-describedby={p('email-err')} />
+      <span class="err" id={p('email-err')} data-err="email" hidden></span>
+    </div>
+    <div class="field">
+      <label for={p('phone')}>Phone</label>
+      <input id={p('phone')} name="phone" type="tel" autocomplete="tel" required maxlength="20" aria-describedby={p('phone-err')} />
+      <span class="err" id={p('phone-err')} data-err="phone" hidden></span>
+    </div>
+    <div class="field">
+      <label for={p('city')}>City</label>
+      <select id={p('city')} name="city" required>
+        {CITIES.map((c) => <option value={c}>{c}</option>)}
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for={p('zip')}>ZIP code <span class="opt">(optional)</span></label>
+      <input id={p('zip')} name="zip" inputmode="numeric" autocomplete="postal-code" maxlength="10" aria-describedby={p('zip-err')} />
+      <span class="err" id={p('zip-err')} data-err="zip" hidden></span>
+    </div>
+    <div class="field full">
+      <label for={p('message')}>How can we help?</label>
+      <textarea id={p('message')} name="message" required maxlength="2000" aria-describedby={p('message-err')}></textarea>
+      <span class="err" id={p('message-err')} data-err="message" hidden></span>
+    </div>
+  </div>
+  <div class="trap" aria-hidden="true"><label for={p('website')}>Website</label><input id={p('website')} name="website" tabindex="-1" autocomplete="off" /></div>
+  <div class="form-actions" data-hide-on-done><button type="submit" class="btn btn-primary">Send message</button></div>
+  <p class="form-error" role="alert" data-form-error hidden></p>
+  <div class="result" data-result hidden aria-live="polite">
+    <span class="range" style="font-size:24px">Thanks, we got your message.</span>
+    <p>We'll reply by email or phone, usually within one business day. If it's urgent, call <a href={SITE.phoneHref}>{SITE.phone}</a>.</p>
+  </div>
+</form>

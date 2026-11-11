@@ -1,0 +1,30 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import { POSTS } from '../../data/posts';
+const crumbs = [{ name: 'Blog', path: '/blog' }];
+---
+<Base title="Commercial Cleaning Guides | Cid Clean Blog" description="Practical guides for Naples-area businesses: what commercial cleaning costs, how often to clean, and how to choose a cleaning plan." path="/blog" og="drop" ogAlt="A drop of water on smooth stone" crumbs={crumbs}>
+  <section class="page-hero">
+    <div class="wrap" style="grid-template-columns:1fr">
+      <div class="copy">
+        <Crumbs items={crumbs} />
+        <span class="eyebrow">Blog</span>
+        <h1>Commercial cleaning guides</h1>
+        <p class="lead">Straight answers to the questions business owners in Naples, Bonita Springs, Estero and Marco Island ask us most.</p>
+      </div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap grid">
+      {POSTS.map((p) => (
+        <a class="card svc tilt reveal" href={`/blog/${p.slug}`} style="padding:24px">
+          <span class="eyebrow">Guide</span>
+          <h2 style="font-size:22px">{p.title}</h2>
+          <p class="muted">{p.description}</p>
+          <span class="more">Read the guide →</span>
+        </a>
+      ))}
+    </div>
+  </section>
+</Base>

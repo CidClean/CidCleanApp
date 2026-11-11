@@ -1,0 +1,93 @@
+---
+import { Picture } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import Faq from '../../components/Faq.astro';
+import HowWeWork from '../../components/HowWeWork.astro';
+import ServiceCards from '../../components/ServiceCards.astro';
+import Estimator from '../../components/Estimator.astro';
+import Cta from '../../components/Cta.astro';
+import { SERVICES, type Service } from '../../data/services';
+import { LOCATIONS } from '../../data/locations';
+import { SITE, CITIES } from '../../config';
+
+export function getStaticPaths() {
+  return SERVICES.map((s) => ({ params: { slug: s.slug }, props: { s } }));
+}
+const { s } = Astro.props as { s: Service };
+const path = `/services/${s.slug}`;
+const crumbs = [{ name: 'Services', path: '/services/office-cleaning' }, { name: s.name, path }];
+const jsonld = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: s.name,
+    serviceType: s.name,
+    description: s.description,
+    url: SITE.url + path,
+    provider: { '@id': `${SITE.url}/#business` },
+    areaServed: CITIES.map((c) => ({ '@type': 'City', name: `${c}, FL` })),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: s.faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  },
+];
+---
+<Base title={s.title} description={s.description} path={path} og={s.og} ogAlt={s.imageAlt} crumbs={crumbs} jsonld={jsonld}>
+  <section class="page-hero">
+    <div class="wrap">
+      <div class="copy">
+        <Crumbs items={crumbs} />
+        <span class="eyebrow">Commercial cleaning · {SITE.city}</span>
+        <h1>{s.h1}</h1>
+        {s.intro.map((p) => <p class="lead">{p}</p>)}
+        <div class="form-actions"><a class="btn btn-primary" href="#estimator">Get an estimate</a><a class="btn btn-outline" href={SITE.phoneHref}>Call {SITE.phone}</a></div>
+      </div>
+      <div class="media"><Picture src={s.image} formats={['avif', 'webp']} widths={[480, 800, 1168]} sizes="(max-width: 860px) 92vw, 440px" alt={s.imageAlt} width={1168} height={876} loading="eager" fetchpriority="high" /></div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="inc-h">
+    <div class="wrap">
+      <div class="head"><span class="eyebrow">What's included</span><h2 id="inc-h">What our {s.name.toLowerCase()} includes</h2><p class="lead">A typical visit covers the list below. Your plan is written after the walkthrough, so we add what your space needs and skip what it doesn't.</p></div>
+      <div class="grid">
+        {s.includes.map((g) => <div class="card reveal"><h3>{g.group}</h3><ul class="checks">{g.items.map((i) => <li>{i}</li>)}</ul></div>)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt">
+    <div class="wrap prose">
+      {s.blocks.map((b) => (<><h2>{b.h}</h2>{b.p.map((p) => <p>{p}</p>)}</>))}
+    </div>
+  </section>
+
+  <HowWeWork />
+
+  <section class="section" aria-labelledby="est-h">
+    <div class="wrap cols2" style="align-items:start">
+      <div class="prose">
+        <span class="eyebrow">Instant estimate</span>
+        <h2 id="est-h">See a price range in a minute</h2>
+        <p>Tell us the size of your space and how often you want cleaning. After you leave your contact details, you'll see an estimated monthly range and we'll email you a copy.</p>
+        <p class="note">This is an estimate, not a final price. Your exact price is set after a free walkthrough.</p>
+      </div>
+      <Estimator id="estimator" defaultType={s.estimatorType} heading={`Estimate your ${s.name.toLowerCase()}`} />
+    </div>
+  </section>
+
+  <Faq items={s.faqs} />
+
+  <section class="section alt" aria-labelledby="where-h">
+    <div class="wrap">
+      <div class="head"><h2 id="where-h">{s.name} near you</h2><p class="lead">We provide {s.name.toLowerCase()} in all four of our service areas.</p></div>
+      <ul class="chips">{LOCATIONS.map((l) => <li><a href={`/locations/${l.slug}`}>{s.name} in {l.name}</a></li>)}</ul>
+      <div class="head" style="margin-top:40px"><h2>Other services</h2></div>
+      <ServiceCards exclude={s.slug} />
+    </div>
+  </section>
+
+  <Cta />
+</Base>

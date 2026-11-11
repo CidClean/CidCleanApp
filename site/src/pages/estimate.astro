@@ -1,0 +1,29 @@
+---
+import Base from '../layouts/Base.astro';
+import Crumbs from '../components/Crumbs.astro';
+import Estimator from '../components/Estimator.astro';
+import HowWeWork from '../components/HowWeWork.astro';
+import { SITE } from '../config';
+const crumbs = [{ name: 'Get an estimate', path: '/estimate' }];
+---
+<Base title="Commercial Cleaning Estimate | Naples, FL | Cid Clean" description="Get an instant monthly price range for commercial cleaning in Naples, Bonita Springs, Estero and Marco Island. Choose your space, size and frequency." path="/estimate" crumbs={crumbs}>
+  <section class="page-hero">
+    <div class="wrap" style="align-items:start">
+      <div class="copy">
+        <Crumbs items={crumbs} />
+        <span class="eyebrow">Instant estimate</span>
+        <h1>Commercial cleaning estimate</h1>
+        <p class="lead">Answer three questions about your space, then leave your contact details. You'll see an estimated monthly range right away, and we'll email you a copy.</p>
+        <div class="prose">
+          <h2 style="font-size:22px;margin-top:12px">How the estimate works</h2>
+          <p>The range is based on your type of space, its size in square feet and how often you want cleaning. Spaces with more restrooms, exam rooms or heavy foot traffic take more time per square foot, so medical offices and gyms cost more per foot than open warehouses. Cleaning more often lowers the cost of each visit, but raises the monthly total.</p>
+          <p>Every visit has a minimum, so very small spaces will see the minimum applied. For buildings over 25,000 sq ft we recommend a free walkthrough, because large spaces vary a lot.</p>
+          <p class="note">This is an estimate, not a final price. Your exact price is set after a free walkthrough.</p>
+          <p>Prefer to talk? Call <a href={SITE.phoneHref}>{SITE.phone}</a> or email <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+        </div>
+      </div>
+      <Estimator variant="full" id="estimator" />
+    </div>
+  </section>
+  <HowWeWork heading="What happens after your estimate" />
+</Base>

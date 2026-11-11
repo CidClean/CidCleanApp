@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../config';
+---
+<Base title="Page not found | Cid Clean" description="The page you were looking for doesn't exist." path="/404" noindex>
+  <section class="section">
+    <div class="wrap prose">
+      <span class="eyebrow">404</span>
+      <h1>We couldn't find that page</h1>
+      <p>The page may have moved. Try one of these instead:</p>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/estimate">Get an estimate</a></li>
+        <li><a href="/services/office-cleaning">Our services</a></li>
+        <li><a href="/contact">Contact us</a> or call <a href={SITE.phoneHref}>{SITE.phone}</a></li>
+      </ul>
+    </div>
+  </section>
+</Base>

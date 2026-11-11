@@ -1,0 +1,15 @@
+---
+interface Props { heading?: string }
+const { heading = 'How we work' } = Astro.props;
+---
+<section class="section alt" aria-labelledby="how-h">
+  <div class="wrap">
+    <div class="head"><span class="eyebrow">Simple from the first call</span><h2 id="how-h">{heading}</h2></div>
+    <ol class="steps">
+      <li class="reveal"><h3>Free walkthrough</h3><p>We visit your space, look at every room and surface, and ask how your business runs day to day.</p></li>
+      <li class="reveal"><h3>Clear quote</h3><p>You get a written monthly price with the exact tasks, days and times. No surprises later.</p></li>
+      <li class="reveal"><h3>Simple agreement</h3><p>Once you approve the quote, we sign a service agreement and set your start date.</p></li>
+      <li class="reveal"><h3>Scheduled cleaning</h3><p>Our team cleans on your schedule, and every visit is logged in our app with clock-in and clock-out times.</p></li>
+    </ol>
+  </div>
+</section>

@@ -1,0 +1,19 @@
+---
+import { SITE } from '../config';
+interface Props { title?: string; text?: string }
+const { title = 'Ready for a cleaner space?', text = 'Get an instant estimate online, then book a free walkthrough. We set your exact price after we see the space.' } = Astro.props;
+---
+<section class="section">
+  <div class="wrap">
+    <div class="cta reveal">
+      <div style="display:flex;flex-direction:column;gap:8px;max-width:60ch">
+        <h2>{title}</h2>
+        <p>{text}</p>
+      </div>
+      <div class="form-actions">
+        <a class="btn btn-primary" href="/estimate">Get an estimate</a>
+        <a class="plain" href={SITE.phoneHref}>or call {SITE.phone}</a>
+      </div>
+    </div>
+  </div>
+</section>

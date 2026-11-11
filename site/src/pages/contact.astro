@@ -1,0 +1,28 @@
+---
+import Base from '../layouts/Base.astro';
+import Crumbs from '../components/Crumbs.astro';
+import ContactForm from '../components/ContactForm.astro';
+import { SITE } from '../config';
+const crumbs = [{ name: 'Contact', path: '/contact' }];
+---
+<Base title="Contact Cid Clean | Commercial Cleaning in Naples, FL" description="Contact Cid Clean for commercial cleaning in Naples, Bonita Springs, Estero and Marco Island. Call (786) 250-1324 or email info@cidclean.com." path="/contact" crumbs={crumbs}>
+  <section class="page-hero">
+    <div class="wrap" style="align-items:start">
+      <div class="copy">
+        <Crumbs items={crumbs} />
+        <span class="eyebrow">Contact</span>
+        <h1>Talk to Cid Clean</h1>
+        <p class="lead">Questions, a free walkthrough, or a change to your current service? Call, email or send us a message and we'll get back to you, usually within one business day.</p>
+        <div class="card">
+          <p><strong>Phone:</strong> <a href={SITE.phoneHref}>{SITE.phone}</a></p>
+          <p><strong>Email:</strong> <a href={`mailto:${SITE.email}`}>{SITE.email}</a></p>
+          <p><strong>Based in:</strong> {SITE.city}</p>
+          <p><strong>Service areas:</strong> Naples, Bonita Springs, Estero and Marco Island</p>
+          {SITE.googleBusinessUrl && <p><a href={SITE.googleBusinessUrl} rel="noopener">See us on Google</a></p>}
+        </div>
+        <p>Want a price first? <a href="/estimate">Get an instant estimate</a>.</p>
+      </div>
+      <ContactForm />
+    </div>
+  </section>
+</Base>

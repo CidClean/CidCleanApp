@@ -1,0 +1,41 @@
+---
+import Base from '../layouts/Base.astro';
+import Crumbs from '../components/Crumbs.astro';
+import Cta from '../components/Cta.astro';
+import { LOCATIONS } from '../data/locations';
+import { SERVICES } from '../data/services';
+const crumbs = [{ name: 'About', path: '/about' }];
+---
+<Base title="About Cid Clean | Commercial Cleaning in Naples, FL" description="Cid Clean LLC is a commercial cleaning company based in Naples, FL, serving Bonita Springs, Estero and Marco Island. Insured, eco-friendly, every visit logged." path="/about" og="drop" ogAlt="A drop of water on smooth stone" crumbs={crumbs}>
+  <section class="page-hero">
+    <div class="wrap" style="grid-template-columns:1fr">
+      <div class="copy">
+        <Crumbs items={crumbs} />
+        <span class="eyebrow">About us</span>
+        <h1>A commercial cleaning company built on doing the basics right</h1>
+        <p class="lead">Cid Clean LLC is a commercial cleaning company based in Naples, Florida. We clean offices, medical and dental practices, stores and showrooms, warehouses and gyms in Naples, Bonita Springs, Estero and Marco Island.</p>
+      </div>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap cols2" style="align-items:start">
+      <div class="prose">
+        <h2>What we believe</h2>
+        <p>Good cleaning is not complicated, but it has to be consistent. The trash goes out, the restrooms are fresh, the glass is clear and the floors are clean, every visit, on the days we agreed. That is what our clients pay for, and that is what we focus on.</p>
+        <p>We only do commercial cleaning. That focus lets us build our schedules, products and training around businesses, which usually need cleaning after hours, around customers and patients, and without disrupting the work.</p>
+        <h2>How we stay accountable</h2>
+        <p>Every visit is logged in our own app: our team clocks in and out at your location, so we always know when your space was cleaned and by whom. Every client gets a written quote with the tasks, days and times before anything is signed, and one point of contact for changes.</p>
+        <p>We are insured with general liability coverage and use eco-friendly products for everyday cleaning.</p>
+        <h2>Honest pricing</h2>
+        <p>Our online estimator gives you an approximate monthly range before we meet. Then we do a free walkthrough and set your exact price based on what we actually see. No hidden fees and no pressure.</p>
+      </div>
+      <div class="card">
+        <h2 style="font-size:22px">What we clean</h2>
+        <ul class="checks">{SERVICES.map((s) => <li><a href={`/services/${s.slug}`}>{s.name}</a></li>)}</ul>
+        <h2 style="font-size:22px;margin-top:12px">Where</h2>
+        <ul class="checks">{LOCATIONS.map((l) => <li><a href={`/locations/${l.slug}`}>{l.name}, FL</a></li>)}</ul>
+      </div>
+    </div>
+  </section>
+  <Cta />
+</Base>

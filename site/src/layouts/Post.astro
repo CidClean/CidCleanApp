@@ -1,0 +1,49 @@
+---
+import Base from './Base.astro';
+import Crumbs from '../components/Crumbs.astro';
+import Cta from '../components/Cta.astro';
+import { SITE } from '../config';
+import { POSTS } from '../data/posts';
+interface Props { slug: string; faqs?: { q: string; a: string }[] }
+const { slug, faqs = [] } = Astro.props;
+const post = POSTS.find((p) => p.slug === slug)!;
+const path = `/blog/${slug}`;
+const crumbs = [{ name: 'Blog', path: '/blog' }, { name: post.title, path }];
+const jsonld: Record<string, unknown>[] = [{
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: post.title,
+  description: post.description,
+  datePublished: post.date,
+  dateModified: post.date,
+  mainEntityOfPage: SITE.url + path,
+  image: `${SITE.url}/og/${post.og}.jpg`,
+  author: { '@type': 'Organization', name: SITE.legalName, url: SITE.url },
+  publisher: { '@type': 'Organization', name: SITE.legalName, logo: { '@type': 'ImageObject', url: `${SITE.url}/icon-512.png` } },
+}];
+if (faqs.length) jsonld.push({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) });
+const others = POSTS.filter((p) => p.slug !== slug);
+---
+<Base title={`${post.title} | Cid Clean`} description={post.description} path={path} og={post.og} crumbs={crumbs} jsonld={jsonld} type="article">
+  <article>
+    <header class="page-hero">
+      <div class="wrap" style="grid-template-columns:1fr">
+        <div class="copy">
+          <Crumbs items={crumbs} />
+          <span class="eyebrow">Guide · <time datetime={post.date}>{new Date(post.date + 'T12:00:00Z').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}</time></span>
+          <h1>{post.title}</h1>
+          <p class="lead">{post.description}</p>
+        </div>
+      </div>
+    </header>
+    <div class="section" style="padding-top:24px">
+      <div class="wrap prose">
+        <slot />
+        {faqs.length > 0 && (<><h2>Frequently asked questions</h2>{faqs.map((f) => (<><h3>{f.q}</h3><p>{f.a}</p></>))}</>)}
+        <h2>Keep reading</h2>
+        <ul>{others.map((o) => <li><a href={`/blog/${o.slug}`}>{o.title}</a></li>)}</ul>
+      </div>
+    </div>
+  </article>
+  <Cta />
+</Base>

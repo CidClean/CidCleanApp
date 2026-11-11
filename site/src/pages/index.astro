@@ -1,0 +1,92 @@
+---
+import { getImage } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Estimator from '../components/Estimator.astro';
+import ServiceCards from '../components/ServiceCards.astro';
+import HowWeWork from '../components/HowWeWork.astro';
+import Faq from '../components/Faq.astro';
+import Cta from '../components/Cta.astro';
+import hero from '../assets/img/hero.jpg';
+import { LOCATIONS } from '../data/locations';
+import { SITE } from '../config';
+
+// Póster del hero en AVIF/WebP (es el LCP); el video se carga después y solo si conviene (scripts/site.ts).
+const sizes = [640, 960, 1344];
+const avif = await Promise.all(sizes.map((w) => getImage({ src: hero, width: w, format: 'avif', quality: 55 })));
+const webp = await Promise.all(sizes.map((w) => getImage({ src: hero, width: w, format: 'webp', quality: 70 })));
+const srcset = (list: typeof avif) => list.map((i, k) => `${i.src} ${sizes[k]}w`).join(', ');
+const poster = webp[1].src;
+
+const faqs = [
+  { q: 'What areas do you serve?', a: 'We clean businesses in Naples, Bonita Springs, Estero and Marco Island, Florida. If you are close to these areas, call us and we will tell you if we can help.' },
+  { q: 'Is the estimate on this site my final price?', a: 'No. The estimator gives you an approximate monthly range based on your type of space, size and frequency. Your exact price is set after a free walkthrough and written in your quote.' },
+  { q: 'Is the walkthrough really free?', a: 'Yes. The walkthrough is free and there is no obligation. We visit your space, ask about your needs and send you a written monthly quote.' },
+  { q: 'Are you insured?', a: 'Yes. Cid Clean is insured with general liability coverage.' },
+  { q: 'What products do you use?', a: 'We use eco-friendly cleaning products for everyday work. If your business requires a specific product for certain surfaces, we can use it.' },
+  { q: 'Do you clean homes?', a: 'No. We focus only on commercial cleaning: offices, medical and dental offices, retail stores and showrooms, warehouses and light industrial spaces, and gyms.' },
+];
+const jsonld = [{
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+}, {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Cid Clean',
+  url: SITE.url,
+}];
+---
+<Base title="Commercial Cleaning in Naples, FL | Cid Clean" description="Commercial cleaning for offices, medical practices, retail, warehouses and gyms in Naples, Bonita Springs, Estero and Marco Island. Get an instant estimate." path="/" jsonld={jsonld}>
+  <link slot="head" rel="preload" as="image" type="image/avif" imagesrcset={srcset(avif)} imagesizes="100vw" fetchpriority="high" />
+  <section class="hero" aria-labelledby="hero-h">
+    <div class="hero-media" aria-hidden="true">
+      <picture>
+        <source type="image/avif" srcset={srcset(avif)} sizes="100vw" />
+        <source type="image/webp" srcset={srcset(webp)} sizes="100vw" />
+        <img src={poster} alt="" width="1344" height="752" fetchpriority="high" decoding="async" />
+      </picture>
+      <video data-hero data-mp4="/media/hero-1280.mp4" data-webm="/media/hero-1280.webm" muted loop playsinline preload="none" width="1280" height="720"></video>
+    </div>
+    <div class="wrap">
+      <div class="hero-copy">
+        <span class="eyebrow">Commercial cleaning · Naples, FL</span>
+        <h1 id="hero-h">Spotless spaces for Naples businesses.</h1>
+        <p class="sub">Office, medical, retail, warehouse and gym cleaning on your schedule, across Naples, Bonita Springs, Estero and Marco Island.</p>
+        <ul class="badges"><li>Insured (general liability)</li><li>Eco-friendly products</li><li>Free walkthrough</li></ul>
+        <div class="actions"><a class="btn btn-primary" href="#estimator">Get a free estimate</a><a class="btn btn-outline" href={SITE.phoneHref}>Call {SITE.phone}</a></div>
+      </div>
+      <Estimator variant="short" id="estimator" heading="Instant estimate" />
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="svc-h">
+    <div class="wrap">
+      <div class="head"><span class="eyebrow">Services</span><h2 id="svc-h">Commercial cleaning for every kind of business</h2><p class="lead">We only do commercial cleaning, so our plans, products and schedules are built for businesses, not homes.</p></div>
+      <ServiceCards />
+    </div>
+  </section>
+
+  <section class="section alt" aria-labelledby="why-h">
+    <div class="wrap">
+      <div class="head"><span class="eyebrow">Why Cid Clean</span><h2 id="why-h">A cleaning company that's easy to work with</h2></div>
+      <div class="grid">
+        <div class="card reveal"><h3>Price range in a minute</h3><p>Our estimator shows an approximate monthly range for your space before we ever meet. Then the free walkthrough sets your exact price.</p></div>
+        <div class="card reveal"><h3>Every visit recorded</h3><p>Our team clocks in and out of each visit in our app, so we always know when your space was cleaned and by whom.</p></div>
+        <div class="card reveal"><h3>Insured and careful</h3><p>We are insured with general liability coverage and use eco-friendly products for everyday cleaning.</p></div>
+        <div class="card reveal"><h3>Local to Naples</h3><p>We are based in Naples and serve Bonita Springs, Estero and Marco Island. When you call, you talk to someone who knows the area.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <HowWeWork />
+
+  <section class="section" aria-labelledby="loc-h">
+    <div class="wrap">
+      <div class="head"><span class="eyebrow">Locations</span><h2 id="loc-h">Where we clean</h2><p class="lead">Four communities in Southwest Florida, each with its own page about the businesses and areas we serve there.</p></div>
+      <ul class="chips">{LOCATIONS.map((l) => <li><a href={`/locations/${l.slug}`}>Commercial cleaning in {l.name}</a></li>)}</ul>
+    </div>
+  </section>
+
+  <Faq items={faqs} />
+  <Cta />
+</Base>

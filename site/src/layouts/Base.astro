@@ -1,0 +1,166 @@
+---
+// Plantilla común: SEO (título, descripción, canonical, Open Graph, Twitter, JSON-LD), encabezado y pie.
+import '../styles/global.css';
+import { Image } from 'astro:assets';
+import logo from '../assets/img/logo.png';
+import { SITE, CITIES, socialLinks } from '../config';
+import { SERVICES } from '../data/services';
+import { LOCATIONS } from '../data/locations';
+
+interface Crumb { name: string; path: string }
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+  og?: string;
+  ogAlt?: string;
+  crumbs?: Crumb[];
+  jsonld?: Record<string, unknown>[];
+  noindex?: boolean;
+  type?: 'website' | 'article';
+}
+const { title, description, path, og = 'hero', ogAlt = 'Clean, sunlit commercial lobby in Naples, Florida', crumbs = [], jsonld = [], noindex = false, type = 'website' } = Astro.props;
+const canonical = SITE.url + (path === '/' ? '' : path);
+const ogImage = `${SITE.url}/og/${og}.jpg`;
+const socials = socialLinks();
+
+const business = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  '@id': `${SITE.url}/#business`,
+  name: SITE.legalName,
+  alternateName: SITE.name,
+  url: SITE.url,
+  telephone: SITE.phoneIntl,
+  email: SITE.email,
+  logo: `${SITE.url}/icon-512.png`,
+  image: `${SITE.url}/og/hero.jpg`,
+  description: 'Commercial cleaning for offices, medical practices, retail stores, warehouses and gyms in Naples, Bonita Springs, Estero and Marco Island, Florida.',
+  address: { '@type': 'PostalAddress', addressLocality: 'Naples', addressRegion: 'FL', addressCountry: 'US' },
+  areaServed: CITIES.map((c) => ({ '@type': 'City', name: `${c}, FL` })),
+  ...(SITE.googleBusinessUrl || socials.length ? { sameAs: [SITE.googleBusinessUrl, ...socials.map((s) => s.url)].filter(Boolean) } : {}),
+};
+const breadcrumb = crumbs.length
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [{ name: 'Home', path: '/' }, ...crumbs].map((c, i) => ({
+        '@type': 'ListItem', position: i + 1, name: c.name, item: SITE.url + (c.path === '/' ? '' : c.path),
+      })),
+    }
+  : null;
+const graph = [business, ...(breadcrumb ? [breadcrumb] : []), ...jsonld];
+const nav = [
+  { href: '/services/office-cleaning', label: 'Services', match: '/services' },
+  { href: '/locations/naples', label: 'Locations', match: '/locations' },
+  { href: '/about', label: 'About', match: '/about' },
+  { href: '/blog', label: 'Blog', match: '/blog' },
+  { href: '/contact', label: 'Contact', match: '/contact' },
+];
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  {noindex && <meta name="robots" content="noindex" />}
+  <meta name="theme-color" content="#FBF6EF" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="preload" href="/fonts/manrope-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/manrope-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <slot name="head" />
+  <meta property="og:type" content={type} />
+  <meta property="og:site_name" content="Cid Clean" />
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content={ogAlt} />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
+  <meta name="twitter:image:alt" content={ogAlt} />
+  <script type="application/ld+json" set:html={JSON.stringify(graph.length === 1 ? graph[0] : graph)} />
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap bar">
+      <a class="logo" href="/" aria-label="Cid Clean home">
+        <Image src={logo} alt="" width={40} height={40} densities={[1, 2, 3]} loading="eager" />
+        <span>Cid Clean</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        {nav.map((n) => <a href={n.href} aria-current={path.startsWith(n.match) ? 'page' : undefined}>{n.label}</a>)}
+      </nav>
+      <a class="phone" href={SITE.phoneHref} aria-label={`Call ${SITE.phone}`}>
+        <span class="num">{SITE.phone}</span>
+        <svg class="ico" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+      </a>
+      <a class="btn btn-primary header-cta" href="/estimate">Get an estimate</a>
+      <details class="menu">
+        <summary aria-label="Menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></summary>
+        <div class="menu-panel">
+          <a href="/">Home</a>
+          {SERVICES.map((s) => <a href={`/services/${s.slug}`}>{s.name}</a>)}
+          {LOCATIONS.map((l) => <a href={`/locations/${l.slug}`}>{l.name}</a>)}
+          <a href="/about">About</a>
+          <a href="/blog">Blog</a>
+          <a href="/contact">Contact</a>
+        </div>
+      </details>
+    </div>
+  </header>
+  <main id="main">
+    <slot />
+  </main>
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="cols">
+        <div>
+          <h2>Cid Clean LLC</h2>
+          <p>Commercial cleaning · {SITE.city}</p>
+          <p><a href={SITE.phoneHref}>{SITE.phone}</a></p>
+          <p><a href={`mailto:${SITE.email}`}>{SITE.email}</a></p>
+          <p>Insured (general liability) · Eco-friendly products</p>
+        </div>
+        <div>
+          <h2>Services</h2>
+          <ul>{SERVICES.map((s) => <li><a href={`/services/${s.slug}`}>{s.name}</a></li>)}</ul>
+        </div>
+        <div>
+          <h2>Locations</h2>
+          <ul>{LOCATIONS.map((l) => <li><a href={`/locations/${l.slug}`}>Commercial cleaning in {l.name}</a></li>)}</ul>
+        </div>
+        <div>
+          <h2>Company</h2>
+          <ul>
+            <li><a href="/estimate">Get an estimate</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/blog">Blog</a></li>
+            <li><a href="/contact">Contact</a></li>
+            {SITE.googleBusinessUrl && <li><a href={SITE.googleBusinessUrl} rel="noopener">Google Business profile</a></li>}
+            {socials.map((s) => <li><a href={s.url} rel="noopener">{s.name}</a></li>)}
+          </ul>
+        </div>
+      </div>
+      <div class="legal">
+        <span>© {new Date().getFullYear()} Cid Clean LLC</span>
+        <a href="/privacy">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+  <script>
+    import '../scripts/site';
+  </script>
+</body>
+</html>
