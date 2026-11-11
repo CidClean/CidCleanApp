@@ -174,8 +174,8 @@ begin
   for i in 1..5 loop
     last := pg_temp.servicio(format('select w9_portal_verify_code(%L, %L, %L, %L)', pg_temp.h('segundo'), 'karina@email.com', 'malo', 's-x'));
   end loop;
-  perform pg_temp.prueba('portal: 5 intentos fallidos bloquean el código', 'locked', last);
-  perform pg_temp.prueba('portal: bloqueado aunque después ponga el bueno', 'locked',
+  perform pg_temp.prueba('portal: 5 intentos fallidos bloquean el código (B4: misma respuesta)', 'wrong', last);
+  perform pg_temp.prueba('portal: bloqueado aunque después ponga el bueno (B4: misma respuesta)', 'wrong',
     pg_temp.servicio(format('select w9_portal_verify_code(%L, %L, %L, %L)', pg_temp.h('segundo'), 'karina@email.com', 'c1', 's-x')));
   -- Hasta 5 códigos por hora (ya pidió 1).
   for i in 1..4 loop
@@ -188,7 +188,7 @@ begin
     pg_temp.servicio(format('select w9_portal_verify_code(%L, %L, %L, %L)', pg_temp.h('segundo'), 'karina@email.com', 'c4', 's-x')));
   perform pg_temp.prueba('portal: el último código abre la sesión', 'ok',
     pg_temp.servicio(format('select w9_portal_verify_code(%L, %L, %L, %L)', pg_temp.h('segundo'), 'karina@email.com', 'c5', 'sesion-1')));
-  perform pg_temp.prueba('portal: el código se usa una sola vez', 'expired',
+  perform pg_temp.prueba('portal: el código se usa una sola vez (B4: misma respuesta)', 'wrong',
     pg_temp.servicio(format('select w9_portal_verify_code(%L, %L, %L, %L)', pg_temp.h('segundo'), 'karina@email.com', 'c5', 'sesion-2')));
 end $$;
 select pg_temp.prueba('portal: con sesión ve los datos prellenados y el idioma del perfil', 'open|es|Karina López|individual',

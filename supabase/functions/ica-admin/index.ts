@@ -18,6 +18,7 @@ import { agregarCertificadoContrato } from '../_shared/contratoPdf.ts';
 import { camposDeIca, filasCertificadoIca, NOTA_CERTIFICADO_ICA, type IcaDb } from '../_shared/ica.ts';
 import { correoIca, correoIcaFirmado } from '../_shared/icaCorreos.ts';
 import { pdfIca } from '../_shared/icaPdf.ts';
+import { ipDeQuienLlama } from '../_shared/ip.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const BUCKET = 'contractor-docs';
@@ -51,7 +52,7 @@ Deno.serve(async (req) => {
   const quien = clienteDeQuienLlama(req);
   const servicio = clienteDeServicio();
   const id = (k: string) => (typeof b[k] === 'string' && UUID.test(b[k] as string) ? (b[k] as string) : null);
-  const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null;
+  const ip = ipDeQuienLlama(req.headers);
   const ua = (req.headers.get('user-agent') ?? '').slice(0, 400);
   const urlFirmada = async (path: string) => {
     const { data: s, error } = await servicio.storage.from(BUCKET).createSignedUrl(path, 60);

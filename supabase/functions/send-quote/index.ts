@@ -4,7 +4,7 @@
 // confirma el envío (enlace, vencimiento, reemplazo de la versión anterior) y manda el correo a cada destinatario
 // desde quotes@mail.cidclean.com con respuesta a info@cidclean.com (D-249), siempre en inglés y con el PDF adjunto
 // (D-247, D-250). El PDF sigue en el idioma del lead. { resend: true } reenvía el correo de una versión ya enviada
-// (por ejemplo si falló).
+// (por ejemplo si falló) con un enlace nuevo; el anterior sigue valiendo (la base guarda solo hashes, B5).
 import { CORS, clienteDeQuienLlama, clienteDeServicio, errorDeBase, responder } from '../_shared/comun.ts';
 import { correoQuote, enviarCorreo, fecha, lang, pdfQuote, type QuoteMail } from '../_shared/quotes.ts';
 import { nombreDeQuote, numeroDeQuote } from '../_shared/fileName.ts';
@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
       const e = errorDeBase(e0.code);
       return responder(e.status, { error: e.error });
     }
-    const { data, error } = await servicio.rpc('quote_mail_data_full', { p_version: body.version_id });
+    const { data, error } = await servicio.rpc('quote_resend_data', { p_version: body.version_id });
     if (error) {
       const e = errorDeBase(error.code);
       return responder(e.status, { error: e.error });

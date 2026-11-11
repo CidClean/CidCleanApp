@@ -66,9 +66,11 @@ try {
   // Enviar (PDF + correo solo a admin@cidclean.com, desde quotes@mail.cidclean.com)
   send = await app.functions.invoke('send-quote', { body: { version_id: ids.version } });
   ok('send-quote: enviado a 1 correo', !send.error && send.data?.sent === 1 && send.data?.failed === 0, JSON.stringify(send.data ?? send.error?.message));
-  const row = (await q(`select status, public_token, pdf_path, total::text, expires_at > now() + interval '29 days' vig, snapshot->>'language' lang from quote_versions where id = '${ids.version}'`))[0];
-  ids.token = row.public_token;
-  ok('quedó Enviado con enlace, PDF, total y vigencia de 30 días', row.status === 'sent' && !!row.public_token && /quote-1\.0\.pdf$/.test(row.pdf_path) && row.total === '1851.55' && row.vig && row.lang === 'es', JSON.stringify(row));
+  const row = (await q(`select status, public_token_hash, pdf_path, total::text, expires_at > now() + interval '29 days' vig, snapshot->>'language' lang from quote_versions where id = '${ids.version}'`))[0];
+  // B5: la base guarda solo el hash del enlace; la prueba pone uno suyo para poder abrir el portal.
+  ids.token = randomBytes(24).toString('base64url');
+  await q(`update quote_versions set previous_token_hashes = array_append(previous_token_hashes, public_token_hash), public_token_hash = '${sha(ids.token)}' where id = '${ids.version}'`);
+  ok('quedó Enviado con enlace (solo el hash), PDF, total y vigencia de 30 días', row.status === 'sent' && /^[0-9a-f]{64}$/.test(row.public_token_hash ?? '') && /quote-1\.0\.pdf$/.test(row.pdf_path) && row.total === '1851.55' && row.vig && row.lang === 'es', JSON.stringify(row));
   const pdfFile = await admin.storage.from('quote-files').download(row.pdf_path);
   const pdfBytes = new Uint8Array(await pdfFile.data.arrayBuffer());
   ok('el PDF del quote existe y es un PDF', new TextDecoder().decode(pdfBytes.slice(0, 5)) === '%PDF-' && pdfBytes.length > 2000, String(pdfBytes.length));
@@ -139,7 +141,8 @@ try {
   send = await app.functions.invoke('send-quote', { body: { version_id: ids.v2a } });
   ok('sitio 2: 1.0 enviado', !send.error && send.data?.sent === 1, JSON.stringify(send.data ?? send.error?.message));
   const open2 = async (versionId) => {
-    const t = (await q(`select public_token from quote_versions where id = '${versionId}'`))[0].public_token;
+    const t = randomBytes(24).toString('base64url');
+    await q(`update quote_versions set public_token_hash = '${sha(t)}' where id = '${versionId}'`);
     await portal({ action: 'request', token: t, email: 'admin@cidclean.com' });
     await q(`update quote_portal_codes set code_hash = '${sha(`${pepper}:${t}:${code}`)}' where id = (select id from quote_portal_codes where version_id = '${versionId}' order by seq desc limit 1)`);
     const sv = await portal({ action: 'verify', token: t, email: 'admin@cidclean.com', code });

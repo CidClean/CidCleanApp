@@ -24,6 +24,8 @@ begin
   return resultado;
 end $$;
 
+-- B5 (orden 82): el portal recibe el hash del token, como lo calcula quote-portal.
+create function pg_temp.th(t text) returns text language sql immutable as $$ select encode(sha256(convert_to(t, 'UTF8')), 'hex') $$;
 create function pg_temp.prueba(nombre text, esperado text, obtenido text) returns void language sql as $$
   insert into resultados (prueba, ok, detalle) values (nombre, esperado is not distinct from obtenido,
     'esperado=' || coalesce(esperado, 'null') || ' obtenido=' || coalesce(obtenido, 'null'));
@@ -96,7 +98,7 @@ begin
   perform pg_temp.valor('ventas', format('select set_quote_sow(%L, %L)::text', v, q || '/' || v || '/sow-a.pdf'));
   perform pg_temp.prueba('preparar el envío de un extra', 'Cliente Extra|Sede Extra|true|2026-11-05|en',
     pg_temp.valor('ventas', format('select p->>''company'' || ''|'' || (p->>''site'') || ''|'' || (p->>''extra'') || ''|'' || (p->>''service_date'') || ''|'' || (p->>''language'') from (select prepare_send_quote(%L) p) z', v)));
-  tok := confirm_send_quote(v, ventas, q || '/' || v || '/quote-1.0.pdf', '{"language":"en","company":"Cliente Extra","site":"Sede Extra","address":"9 Bay St","frequency":null}')->>'token';
+  tok := pg_temp.th(confirm_send_quote(v, ventas, q || '/' || v || '/quote-1.0.pdf', '{"language":"en","company":"Cliente Extra","site":"Sede Extra","address":"9 Bay St","frequency":null}')->>'token');
   perform pg_temp.prueba('enviado', 'sent', (select status::text from quote_versions where id = v));
   perform portal_request_code(tok, 'contacto@prueba.local', 'h1');
   perform portal_verify_code(tok, 'contacto@prueba.local', 'h1', 'sesx');
@@ -124,7 +126,7 @@ begin
   perform pg_temp.valor('ventas', format('select save_quote_draft(%L, %L, 6, 30, %L)::text', v2,
     '{"services":[{"label":"Ventanas","amount":100,"taxable":true}],"addons":[],"discounts":[]}', '{}'));
   update quote_versions set sow_path = q2 || '/' || v2 || '/sow-b.pdf' where id = v2;
-  tok := confirm_send_quote(v2, ventas, null, '{"language":"en"}')->>'token';
+  tok := pg_temp.th(confirm_send_quote(v2, ventas, null, '{"language":"en"}')->>'token');
   perform portal_request_code(tok, 'contacto@prueba.local', 'h2');
   perform portal_verify_code(tok, 'contacto@prueba.local', 'h2', 'sesy');
   perform portal_file('sesy', 'sow');

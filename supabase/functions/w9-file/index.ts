@@ -26,7 +26,9 @@ Deno.serve(async (req) => {
   if (!ENLACE.test(enlace)) return fallo(404);
 
   const servicio = clienteDeServicio();
-  const { data: ruta, error } = await servicio.rpc('consume_w9_open_token', { p_hash: await sha256Hex(enlace) });
+  // B6: la acción (abrir o descargar) es la que se guardó con el enlace y quedó en el historial, no la de la URL.
+  const { data: uso, error } = await servicio.rpc('consume_w9_open_token', { p_hash: await sha256Hex(enlace) });
+  const ruta = uso?.path;
   if (error || typeof ruta !== 'string') return fallo(404);
 
   const { data: archivo, error: errorBajar } = await servicio.storage.from('employee-docs').download(ruta);
@@ -34,10 +36,10 @@ Deno.serve(async (req) => {
   try {
     const plano = await descifrar(await claveW9(Deno.env.get('W9_FILE_KEY')), new Uint8Array(await archivo.arrayBuffer()));
     const { ext, mime } = tipoDeRuta(ruta);
-    // D-296: "Cid Clean - W-9 - {persona}.pdf" (la ruta empieza con el perfil). Con ?download=1, como descarga.
+    // D-296: "Cid Clean - W-9 - {persona}.pdf" (la ruta empieza con el perfil). Un enlace de descargar, como descarga.
     const { data: perfil } = await servicio.from('profiles').select('full_name').eq('id', ruta.split('/')[0]).maybeSingle();
     const nombre = nombreLegible(['W-9', perfil?.full_name], ext);
-    const tipo = new URL(req.url).searchParams.get('download') === '1' ? 'attachment' : 'inline';
+    const tipo = uso.action === 'download' ? 'attachment' : 'inline';
     return new Response(plano, {
       status: 200,
       headers: { ...CABECERAS, 'Content-Type': mime, 'Content-Disposition': disposicion(nombre, tipo) },

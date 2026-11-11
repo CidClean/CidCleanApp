@@ -5,6 +5,7 @@ import { nombreDeQuote, nombreLegible, numeroDeQuote } from '../_shared/fileName
 import { clienteDeServicio, responder } from '../_shared/comun.ts';
 import { codigo, correoCodigo, correoDecision, enviarCorreo, sha256, tokenAleatorio } from '../_shared/quotes.ts';
 import { correoCopiaAceptacion } from '../_shared/contratoCorreos.ts';
+import { ipDeQuienLlama } from '../_shared/ip.ts';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -31,12 +32,14 @@ Deno.serve(async (req) => {
   const db = clienteDeServicio();
   const pepper = Deno.env.get('PORTAL_CODE_PEPPER') ?? '';
   const token = typeof b.token === 'string' && TOKEN.test(b.token) ? b.token : null;
+  // B5: la base guarda y busca solo el hash del token (como W-9, contrato e ICA).
+  const tokenHash = token ? await sha256(token) : null;
   const sessionHash = typeof b.session === 'string' && TOKEN.test(b.session) ? await sha256(b.session) : null;
 
   switch (b.action) {
     case 'state': {
       if (!token) return r(400, { error: 'invalid' });
-      const { data, error } = await db.rpc('portal_state', { p_token: token });
+      const { data, error } = await db.rpc('portal_state', { p_token_hash: tokenHash });
       if (error) return r(500, { error: 'server_error' });
       return r(200, data);
     }
@@ -45,7 +48,7 @@ Deno.serve(async (req) => {
       if (!token || !EMAIL.test(email) || email.length > 200) return r(400, { error: 'invalid' });
       const code = codigo();
       const { data, error } = await db.rpc('portal_request_code', {
-        p_token: token, p_email: email, p_code_hash: await sha256(`${pepper}:${token}:${code}`),
+        p_token_hash: tokenHash, p_email: email, p_code_hash: await sha256(`${pepper}:${token}:${code}`),
       });
       if (error) return r(500, { error: 'server_error' });
       if (data === 'closed') return r(409, { error: 'closed' });
@@ -63,12 +66,12 @@ Deno.serve(async (req) => {
       if (!token || !email || !code) return r(400, { error: 'invalid' });
       const session = tokenAleatorio();
       const { data, error } = await db.rpc('portal_verify_code', {
-        p_token: token, p_email: email, p_code_hash: await sha256(`${pepper}:${token}:${code}`), p_session_hash: await sha256(session),
+        p_token_hash: tokenHash, p_email: email, p_code_hash: await sha256(`${pepper}:${token}:${code}`), p_session_hash: await sha256(session),
       });
       if (error) return r(500, { error: 'server_error' });
       if (data === 'ok') return r(200, { session });
-      const status = data === 'locked' ? 423 : data === 'closed' ? 409 : data === 'expired' ? 410 : 400;
-      return r(status, { error: data });
+      // B4: código incorrecto, vencido o bloqueado dan la misma respuesta; el link bloqueado, la de cerrado.
+      return data === 'closed' ? r(409, { error: 'closed' }) : r(400, { error: 'wrong' });
     }
     case 'quote': {
       if (!sessionHash) return r(401, { error: 'session' });
@@ -100,7 +103,7 @@ Deno.serve(async (req) => {
       if (!sessionHash || (kind !== 'accepted' && kind !== 'rejected' && kind !== 'changes_requested')) return r(400, { error: 'invalid' });
       const reason = typeof b.reason_id === 'string' && UUID.test(b.reason_id) ? b.reason_id : null;
       const str = (v: unknown, n: number) => (typeof v === 'string' ? v.slice(0, n) : null);
-      const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null;
+      const ip = ipDeQuienLlama(req.headers);
       const { data: d, error } = await db.rpc('portal_decide', {
         p_session_hash: sessionHash, p_kind: kind, p_name: str(b.name, 120), p_title: str(b.title, 120), p_reason: reason,
         p_note: str(b.note, 2000), p_read_confirmed: b.read_confirmed === true, p_ip: ip,

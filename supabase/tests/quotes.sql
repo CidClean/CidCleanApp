@@ -45,6 +45,8 @@ begin
   return resultado;
 end $$;
 
+-- B5 (orden 82): el portal recibe el hash del token, como lo calcula quote-portal.
+create function pg_temp.th(t text) returns text language sql immutable as $$ select encode(sha256(convert_to(t, 'UTF8')), 'hex') $$;
 create function pg_temp.prueba(nombre text, esperado text, obtenido text) returns void language sql as $$
   insert into resultados (prueba, ok, detalle) values (nombre, esperado is not distinct from obtenido,
     'esperado=' || coalesce(esperado, 'null') || ' obtenido=' || coalesce(obtenido, 'null'));
@@ -179,11 +181,11 @@ declare
   i int;
   d jsonb;
 begin
-  tok := confirm_send_quote(v, ventas, q || '/' || v || '/quote-1.0.pdf', '{"language":"es","company":"Oficinas Prueba","site":"Sede norte","address":"100 Main St, Naples","frequency":{"kind":"weekly","days":[0,2,4],"other":""}}')->>'token';
+  tok := pg_temp.th(confirm_send_quote(v, ventas, q || '/' || v || '/quote-1.0.pdf', '{"language":"es","company":"Oficinas Prueba","site":"Sede norte","address":"100 Main St, Naples","frequency":{"kind":"weekly","days":[0,2,4],"other":""}}')->>'token');
   insert into fx values ('tok10', null);
   update fx set k = 'tok10:' || tok where k = 'tok10';
   perform pg_temp.prueba('enviado: estado, enlace y vencimiento según la vigencia', 'sent|true|30',
-    (select status || '|' || (length(public_token) >= 30)::text || '|' || extract(day from (expires_at - sent_at))::int from quote_versions where id = v));
+    (select status || '|' || (public_token_hash = tok)::text || '|' || extract(day from (expires_at - sent_at))::int from quote_versions where id = v));
   perform pg_temp.prueba('el lead pasa a Quote enviado', 'quote_sent', (select status::text from leads where id = lead));
   perform pg_temp.prueba('el envío queda en el historial', '1', (select count(*)::text from change_log where action = 'quote_enviado' and entity_id = q));
   perform pg_temp.prueba('un quote enviado ya no se edita (22023)', 'ERR:22023',
@@ -199,12 +201,12 @@ begin
   perform pg_temp.prueba('portal: el contacto recibe código (sin distinguir mayúsculas)', 'sent', portal_request_code(tok, ' MARTA@prueba.local', 'h1'));
   for i in 1..4 loop r := portal_verify_code(tok, 'marta@prueba.local', 'malo', 's0'); end loop;
   perform pg_temp.prueba('portal: 4 intentos fallidos', 'wrong', r);
-  perform pg_temp.prueba('portal: el 5º fallido bloquea', 'locked', portal_verify_code(tok, 'marta@prueba.local', 'malo', 's0'));
-  perform pg_temp.prueba('portal: bloqueado aunque el código sea correcto, hasta pedir otro', 'locked', portal_verify_code(tok, 'marta@prueba.local', 'h1', 's0'));
+  perform pg_temp.prueba('portal: el 5º fallido bloquea el código (B4: misma respuesta)', 'wrong', portal_verify_code(tok, 'marta@prueba.local', 'malo', 's0'));
+  perform pg_temp.prueba('portal: bloqueado aunque el código sea correcto, hasta pedir otro (B4: misma respuesta)', 'wrong', portal_verify_code(tok, 'marta@prueba.local', 'h1', 's0'));
   perform pg_temp.prueba('portal: código nuevo', 'sent', portal_request_code(tok, 'marta@prueba.local', 'h2'));
   perform pg_temp.prueba('portal: el código anterior ya no vale', 'wrong', portal_verify_code(tok, 'marta@prueba.local', 'h1', 's0'));
   perform pg_temp.prueba('portal: código correcto abre sesión', 'ok', portal_verify_code(tok, 'marta@prueba.local', 'h2', 'ses1'));
-  perform pg_temp.prueba('portal: un código usado no se reutiliza', 'expired', portal_verify_code(tok, 'marta@prueba.local', 'h2', 'ses9'));
+  perform pg_temp.prueba('portal: un código usado no se reutiliza (B4: misma respuesta)', 'wrong', portal_verify_code(tok, 'marta@prueba.local', 'h2', 'ses9'));
   perform pg_temp.prueba('portal: al entrar pasa a Visto y queda en el historial', 'viewed|1',
     (select status || '|' || (select count(*) from change_log where action = 'quote_visto' and entity_id = q) from quote_versions where id = v));
   perform portal_request_code(tok, 'socio@prueba.local', 'x'); perform portal_request_code(tok, 'marta@prueba.local', 'x');
@@ -298,8 +300,8 @@ begin
   insert into storage.objects (bucket_id, name) values ('quote-files', qa || '/' || va || '/sow-a.pdf'), ('quote-files', qb || '/' || vb || '/sow-b.pdf');
   perform pg_temp.valor('ventas', format('select set_quote_sow(%L, %L)', va, qa || '/' || va || '/sow-a.pdf'));
   perform pg_temp.valor('ventas', format('select set_quote_sow(%L, %L)', vb, qb || '/' || vb || '/sow-b.pdf'));
-  ta := confirm_send_quote(va, ventas, null, '{"language":"en"}')->>'token';
-  tb := confirm_send_quote(vb, ventas, null, '{"language":"en"}')->>'token';
+  ta := pg_temp.th(confirm_send_quote(va, ventas, null, '{"language":"en"}')->>'token');
+  tb := pg_temp.th(confirm_send_quote(vb, ventas, null, '{"language":"en"}')->>'token');
   perform portal_request_code(ta, 'a@prueba.local', 'ca'); perform portal_verify_code(ta, 'a@prueba.local', 'ca', 'sesa');
   perform portal_request_code(tb, 'b@prueba.local', 'cb'); perform portal_verify_code(tb, 'b@prueba.local', 'cb', 'sesb');
   perform pg_temp.prueba('rechazar sin motivo: no (22023)', 'ERR:22023',
@@ -314,7 +316,7 @@ begin
   vb2 := (pg_temp.valor('ventas', format('select new_quote_version(%L)', qb)))::uuid;
   perform pg_temp.prueba('versión nueva 1.1: copia renglones y SOW y queda en borrador', '1|draft|500.00|true',
     (select minor || '|' || status || '|' || subtotal || '|' || (sow_path is not null)::text from quote_versions where id = vb2));
-  tb2 := confirm_send_quote(vb2, ventas, null, '{"language":"en"}')->>'token';
+  tb2 := pg_temp.th(confirm_send_quote(vb2, ventas, null, '{"language":"en"}')->>'token');
   perform pg_temp.prueba('al enviar la 1.1, la 1.0 queda Reemplazada y su enlace lo dice', 'superseded|superseded',
     (select status::text from quote_versions where id = vb) || '|' || (portal_state(tb)->>'state'));
   perform pg_temp.prueba('el enlace viejo ya no da códigos', 'closed', portal_request_code(tb, 'b@prueba.local', 'z'));
@@ -345,8 +347,8 @@ begin
   select id into qa from quotes where site_id = sa; select id into qb from quotes where site_id = sb;
   select id into va from quote_versions where quote_id = qa; select id into vb from quote_versions where quote_id = qb;
   update quote_versions set lines = '{"services":[{"label":"L","amount":5,"taxable":true}],"addons":[],"discounts":[]}', sow_path = 'x' where id in (va, vb);
-  t := confirm_send_quote(va, ventas, null, '{}')->>'token'; perform portal_request_code(t, 'a@prueba.local', 'c'); perform portal_verify_code(t, 'a@prueba.local', 'c', 'p1');
-  t := confirm_send_quote(vb, ventas, null, '{}')->>'token'; perform portal_request_code(t, 'b@prueba.local', 'c'); perform portal_verify_code(t, 'b@prueba.local', 'c', 'p2');
+  t := pg_temp.th(confirm_send_quote(va, ventas, null, '{}')->>'token'); perform portal_request_code(t, 'a@prueba.local', 'c'); perform portal_verify_code(t, 'a@prueba.local', 'c', 'p1');
+  t := pg_temp.th(confirm_send_quote(vb, ventas, null, '{}')->>'token'); perform portal_request_code(t, 'b@prueba.local', 'c'); perform portal_verify_code(t, 'b@prueba.local', 'c', 'p2');
   perform portal_decide('p1', 'rejected', null, null, reason, null, false, null, null);
   perform pg_temp.prueba('primer sitio rechazado: el lead sigue abierto', 'quote_sent', (select status::text from leads where id = l));
   perform portal_decide('p2', 'rejected', null, null, reason, 'Nota final', false, null, null);

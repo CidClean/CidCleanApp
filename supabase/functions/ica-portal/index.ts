@@ -9,6 +9,7 @@ import { codigo, enviarCorreo, sha256, tokenAleatorio } from '../_shared/quotes.
 import { REMITENTE_DOCUMENTOS } from '../_shared/contratoCorreos.ts';
 import { correoCodigoIca, correoFirmaContratista } from '../_shared/icaCorreos.ts';
 import { icaConsentText } from '../_shared/legal/ica-1.0.ts';
+import { ipDeQuienLlama } from '../_shared/ip.ts';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -66,8 +67,8 @@ Deno.serve(async (req) => {
       });
       if (error) return r(500, { error: 'server_error' });
       if (data === 'ok') return r(200, { session });
-      const status = data === 'locked' ? 423 : data === 'closed' ? 409 : data === 'expired' ? 410 : 400;
-      return r(status, { error: data });
+      // B4: código incorrecto, vencido o bloqueado dan la misma respuesta; el link bloqueado, la de cerrado.
+      return data === 'closed' ? r(409, { error: 'closed' }) : r(400, { error: 'wrong' });
     }
     case 'data': {
       if (!sessionHash) return r(401, { error: 'session' });
@@ -93,7 +94,7 @@ Deno.serve(async (req) => {
       if (!sessionHash) return r(401, { error: 'session' });
       const name = typeof b.name === 'string' ? b.name.trim().slice(0, 120) : '';
       if (!name || b.consent !== true) return r(400, { error: 'invalid' });
-      const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null;
+      const ip = ipDeQuienLlama(req.headers);
       const { data, error } = await db.rpc('ica_portal_sign', {
         p_session_hash: sessionHash, p_name: name, p_consent: true, p_ip: ip,
         p_user_agent: (req.headers.get('user-agent') ?? '').slice(0, 400), p_signature_id: crypto.randomUUID(),

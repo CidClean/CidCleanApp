@@ -26,6 +26,22 @@ begin
   reset role;
   return resultado;
 end $$;
+-- Ejecuta una orden sin resultado (insert sin returning) como 'quien': 'ok' o el error.
+create function pg_temp.ejecuta(quien text, consulta text) returns text language plpgsql as $$
+declare
+  resultado text := 'ok';
+begin
+  perform set_config('request.jwt.claims', json_build_object('sub', (select auth_id from actores where nombre = quien),
+                     'role', 'authenticated', 'aal', 'aal1')::text, true);
+  set local role authenticated;
+  begin
+    execute consulta;
+  exception when others then
+    resultado := 'ERR:' || sqlstate || ':' || sqlerrm;
+  end;
+  reset role;
+  return resultado;
+end $$;
 -- El Super Admin entra con aal2 (D-306); el resto, como siempre.
 create function pg_temp.valor(quien text, consulta text) returns text language sql as $$
   select pg_temp.valor_aal(quien, case when quien = 'super' then 'aal2' else 'aal1' end, consulta)
@@ -34,6 +50,7 @@ create function pg_temp.prueba(nombre text, esperado text, obtenido text) return
   insert into resultados (prueba, ok, detalle) values (nombre, esperado is not distinct from obtenido,
     'esperado=' || coalesce(esperado, 'null') || ' obtenido=' || coalesce(obtenido, 'null'));
 $$;
+create function pg_temp.th(t text) returns text language sql immutable as $$ select encode(sha256(convert_to(t, 'UTF8')), 'hex') $$;
 create function pg_temp.id(k text) returns uuid language sql as $$ select v from ids where ids.k = $1 $$;
 create function pg_temp.pid(n text) returns uuid language sql as $$ select profile_id from actores where nombre = $1 $$;
 
@@ -68,7 +85,7 @@ begin
                  ('pagos', 'work_aprobar'), ('pagos', 'empleados_ver_pagos'),
                  ('envia', 'quotes_enviar'), ('precios', 'quotes_enviar'), ('precios', 'quotes_ver_precios'),
                  ('perm', 'empleados_gestionar_permisos'), ('perm', 'empleados_invitar_crear'), ('perm', 'work_editar'),
-                 ('desact', 'empleados_editar_desactivar')) as p(n, k) on p.n = a.nombre;
+                 ('desact', 'empleados_editar_desactivar'), ('precios', 'clientes_editar_datos')) as p(n, k) on p.n = a.nombre;
 end $$;
 
 -- Jobsite con una visita de ayer (terminada, sin aprobar) con horas de w2a pagadas a $72.
@@ -122,17 +139,19 @@ select pg_temp.prueba('M4 prepare_send_quote sin precios: sin lines, subtotal, t
   pg_temp.valor('envia', format($q$select (prepare_send_quote(%L) ?| array['lines','subtotal','tax','total','tax_rate','discount'])::text$q$, pg_temp.id('qv'))));
 select pg_temp.prueba('M4 prepare_send_quote con precios: trae el total', '530.00',
   pg_temp.valor('precios', format($q$select prepare_send_quote(%L)->>'total'$q$, pg_temp.id('qv'))));
-update quote_versions set status = 'sent', public_token = 'h8-token-de-prueba-0123456789abcdef', pdf_path = 'x/y/quote.pdf',
+update quote_versions set status = 'sent', public_token_hash = pg_temp.th('h8-token-de-prueba-0123456789abcdef'), pdf_path = 'x/y/quote.pdf',
        expires_at = now() + interval '30 days', snapshot = '{"site":"Sede H8"}' where id = pg_temp.id('qv');
 select pg_temp.prueba('M4 quote_mail_data sin precios: sin lines, total, pdf_path ni token', 'false',
   pg_temp.valor('envia', format($q$select (quote_mail_data(%L) ?| array['lines','total','pdf_path','token'])::text$q$, pg_temp.id('qv'))));
 select pg_temp.prueba('M4 quote_mail_data con precios: total sí, token no', '530.00|false',
   pg_temp.valor('precios', format($q$select (quote_mail_data(%L)->>'total') || '|' || (quote_mail_data(%L) ? 'token')::text$q$, pg_temp.id('qv'), pg_temp.id('qv'))));
-select pg_temp.prueba('M4 authenticated no ejecuta send_quote_data ni quote_mail_data_full', 'false|false',
+select pg_temp.prueba('M4 authenticated no ejecuta send_quote_data, quote_mail_info ni quote_resend_data', 'false|false|false',
   has_function_privilege('authenticated', 'send_quote_data(uuid)', 'execute')::text || '|' ||
-  has_function_privilege('authenticated', 'quote_mail_data_full(uuid)', 'execute')::text);
-select pg_temp.prueba('M4 service_role ejecuta quote_mail_data_full', 'true',
-  has_function_privilege('service_role', 'quote_mail_data_full(uuid)', 'execute')::text);
+  has_function_privilege('authenticated', 'quote_mail_info(uuid)', 'execute')::text || '|' ||
+  has_function_privilege('authenticated', 'quote_resend_data(uuid)', 'execute')::text);
+select pg_temp.prueba('M4 service_role ejecuta send_quote_data y quote_resend_data', 'true|true',
+  has_function_privilege('service_role', 'send_quote_data(uuid)', 'execute')::text || '|' ||
+  has_function_privilege('service_role', 'quote_resend_data(uuid)', 'execute')::text);
 
 -- B1 / D-304: el rol admin solo lo da o lo quita el Super Admin
 select pg_temp.prueba('B1 con gestionar permisos no se da el rol admin', 'ERR:42501',
@@ -197,7 +216,69 @@ select pg_temp.prueba('M2 revoke_auth_sessions es SECURITY DEFINER con search_pa
 select pg_temp.prueba('M2 reactivar no falla', 'ok',
   pg_temp.valor('desact', format($q$select 'ok' from set_employee_active(%L, true)$q$, pg_temp.pid('w2b'))));
 
--- @@ORDEN82@@
+-- ===== Orden 82 =====
+-- B3: la política de subida de documentos del jobsite se cumple con permiso
+select pg_temp.prueba('B3 con clientes_editar_datos sube un documento "other" del jobsite ', 'ok',
+  pg_temp.ejecuta('precios', format($q$insert into storage.objects (bucket_id, name) values ('jobsite-docs', %L)$q$, pg_temp.id('js') || '/other/doc-h8.pdf')));
+select pg_temp.prueba('B3 el archivo quedó', '1', (select count(*)::text from storage.objects where name = pg_temp.id('js') || '/other/doc-h8.pdf'));
+select pg_temp.prueba('B3 sin permiso no sube', 'ERR:42501',
+  left(pg_temp.ejecuta('w2a', format($q$insert into storage.objects (bucket_id, name) values ('jobsite-docs', %L)$q$, pg_temp.id('js') || '/other/doc-h8b.pdf')), 9));
+select pg_temp.prueba('B3 con permiso pero de un jobsite que no existe: no', 'ERR:42501',
+  left(pg_temp.ejecuta('precios', format($q$insert into storage.objects (bucket_id, name) values ('jobsite-docs', %L)$q$, gen_random_uuid() || '/other/doc-h8.pdf')), 9));
+
+-- B5: el token del quote se guarda solo como hash; reenviar da uno nuevo y el anterior sigue valiendo
+select pg_temp.prueba('B5 el portal abre con el hash del token', 'open', portal_state(pg_temp.th('h8-token-de-prueba-0123456789abcdef'))->>'state');
+select pg_temp.prueba('B5 el token en claro no sirve como llave', 'not_found', portal_state('h8-token-de-prueba-0123456789abcdef')->>'state');
+select pg_temp.prueba('B5 la columna no guarda el token en claro', '0',
+  (select count(*)::text from quote_versions where public_token_hash = 'h8-token-de-prueba-0123456789abcdef'));
+create temp table tok2 as select quote_resend_data(pg_temp.id('qv'))->>'token' as t;
+select pg_temp.prueba('B5 reenviar: el enlace nuevo abre', 'open', portal_state(pg_temp.th((select t from tok2)))->>'state');
+select pg_temp.prueba('B5 reenviar: el enlace anterior sigue valiendo', 'open', portal_state(pg_temp.th('h8-token-de-prueba-0123456789abcdef'))->>'state');
+select pg_temp.prueba('B5 reenviar: la fila guarda el hash del nuevo, no el token', 'true|false',
+  (select (public_token_hash = pg_temp.th((select t from tok2)))::text || '|' || (public_token_hash = (select t from tok2))::text
+     from quote_versions where id = pg_temp.id('qv')));
+select pg_temp.prueba('B5 authenticated no ejecuta quote_resend_data ni portal_state', 'false|false',
+  has_function_privilege('authenticated', 'quote_resend_data(uuid)', 'execute')::text || '|' ||
+  has_function_privilege('authenticated', 'portal_state(text)', 'execute')::text);
+
+-- B4: misma respuesta para "sin código", "no es el destinatario" y "incorrecto"; 15 fallos bloquean el link
+select pg_temp.prueba('B4 correo que no es el destinatario: wrong', 'wrong',
+  portal_verify_code(pg_temp.th((select t from tok2)), 'otro@prueba-h8.local', 'x', 's-h8'));
+select pg_temp.prueba('B4 destinatario sin código pedido: wrong', 'wrong',
+  portal_verify_code(pg_temp.th((select t from tok2)), 'cliente@prueba-h8.local', 'x', 's-h8'));
+select pg_temp.prueba('B4 pide código', 'sent', portal_request_code(pg_temp.th((select t from tok2)), 'cliente@prueba-h8.local', 'bueno'));
+select pg_temp.prueba('B4 código incorrecto: wrong', 'wrong',
+  portal_verify_code(pg_temp.th((select t from tok2)), 'cliente@prueba-h8.local', 'malo', 's-h8'));
+update quote_portal_codes set expires_at = now() - interval '1 minute' where version_id = pg_temp.id('qv');
+select pg_temp.prueba('B4 código vencido (aunque sea el bueno): wrong', 'wrong',
+  portal_verify_code(pg_temp.th((select t from tok2)), 'cliente@prueba-h8.local', 'bueno', 's-h8'));
+select pg_temp.prueba('B4 llevamos 4 fallos en el link', '4',
+  (select failures::text from portal_link_failures where kind = 'quote' and token_hash = pg_temp.th((select t from tok2))));
+select pg_temp.prueba('B4 hasta el 15º fallo sigue respondiendo wrong', 'wrong',
+  (select max(portal_verify_code(pg_temp.th((select t from tok2)), 'otro@prueba-h8.local', 'x', 's-h8')) from generate_series(1, 11)));
+select pg_temp.prueba('B4 con 15 fallos el link queda bloqueado: no da códigos', 'closed',
+  portal_request_code(pg_temp.th((select t from tok2)), 'cliente@prueba-h8.local', 'nuevo'));
+select pg_temp.prueba('B4 bloqueado: verificar responde closed', 'closed',
+  portal_verify_code(pg_temp.th((select t from tok2)), 'cliente@prueba-h8.local', 'bueno', 's-h8'));
+select pg_temp.prueba('B4 bloqueado: el portal lo muestra vencido', 'expired', portal_state(pg_temp.th((select t from tok2)))->>'state');
+select pg_temp.prueba('B4 el tope es por link: el otro enlace sigue abierto', 'open', portal_state(pg_temp.th('h8-token-de-prueba-0123456789abcdef'))->>'state');
+select pg_temp.prueba('B4 el tope es 15 (D-200)', '15', portal_link_max_failures()::text);
+
+-- B6: el enlace de un uso del W-9 recuerda su acción
+do $$
+declare
+  d uuid;
+begin
+  insert into profile_documents (profile_id, kind, file_path) values (pg_temp.pid('w2a'), 'w9', pg_temp.pid('w2a') || '/w9/w9-h8.pdf.enc') returning id into d;
+  insert into w9_open_tokens (token_hash, document_id, action) values (pg_temp.th('abrir-h8'), d, 'open'), (pg_temp.th('bajar-h8'), d, 'download');
+end $$;
+select pg_temp.prueba('B6 enlace de abrir: action open', 'open', consume_w9_open_token(pg_temp.th('abrir-h8'))->>'action');
+select pg_temp.prueba('B6 enlace de descargar: action download y la ruta', 'download|true',
+  (select (r->>'action') || '|' || (r->>'path' like '%/w9/w9-h8.pdf.enc')::text from (select consume_w9_open_token(pg_temp.th('bajar-h8')) r) x));
+select pg_temp.prueba('B6 el enlace es de un solo uso', 'ERR', left(pg_temp.valor('w2a', 'select 1'), 0) ||
+  (select case when exists (select 1 from w9_open_tokens where token_hash = pg_temp.th('abrir-h8') and used_at is null) then 'NO' else 'ERR' end));
+
+-- @@ORDEN83@@
 
 select n, prueba, ok, detalle from resultados order by n;
 rollback;

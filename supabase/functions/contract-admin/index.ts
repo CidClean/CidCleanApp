@@ -13,6 +13,7 @@ import { enviarCorreo, fecha, sha256, tokenAleatorio } from '../_shared/quotes.t
 import { camposDe, filasCertificadoContrato, sha256Bytes, type ContratoDb } from '../_shared/contrato.ts';
 import { correoContrato, correoContratoFirmado, REMITENTE_DOCUMENTOS } from '../_shared/contratoCorreos.ts';
 import { agregarCertificadoContrato, NOTA_CERTIFICADO_CONTRATO, pdfContrato } from '../_shared/contratoPdf.ts';
+import { ipDeQuienLlama } from '../_shared/ip.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const BUCKET = 'jobsite-docs';
@@ -37,7 +38,7 @@ Deno.serve(async (req) => {
   const quien = clienteDeQuienLlama(req);
   const servicio = clienteDeServicio();
   const id = (k: string) => (typeof b[k] === 'string' && UUID.test(b[k] as string) ? (b[k] as string) : null);
-  const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null;
+  const ip = ipDeQuienLlama(req.headers);
   const ua = (req.headers.get('user-agent') ?? '').slice(0, 400);
 
   switch (b.action) {

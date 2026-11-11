@@ -12,6 +12,7 @@ import { cifrar, claveW9 } from '../_shared/cifrado.ts';
 import {
   agregarCertificado, base64, correoCodigoW9, fillW9, FORM_VERSION, REMITENTE_W9, REQUESTER, sha256Bytes, tinValid, type TinType, type W9Data,
 } from '../_shared/w9.ts';
+import { ipDeQuienLlama } from '../_shared/ip.ts';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -79,8 +80,8 @@ Deno.serve(async (req) => {
       });
       if (error) return r(500, { error: 'server_error' });
       if (data === 'ok') return r(200, { session });
-      const status = data === 'locked' ? 423 : data === 'closed' ? 409 : data === 'expired' ? 410 : 400;
-      return r(status, { error: data });
+      // B4: código incorrecto, vencido o bloqueado dan la misma respuesta; el link bloqueado, la de cerrado.
+      return data === 'closed' ? r(409, { error: 'closed' }) : r(400, { error: 'wrong' });
     }
     case 'data': {
       if (!sessionHash) return r(401, { error: 'session' });
@@ -119,7 +120,7 @@ Deno.serve(async (req) => {
         return errorRpc(error.code);
       }
       const ahora = new Date();
-      const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null;
+      const ip = ipDeQuienLlama(req.headers);
       const userAgent = (req.headers.get('user-agent') ?? '').slice(0, 400);
       const { data: cert, error: e1 } = await db.rpc('w9_portal_certificate', { p_session_hash: sessionHash });
       if (e1) {
