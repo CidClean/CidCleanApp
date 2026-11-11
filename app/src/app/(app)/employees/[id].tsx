@@ -55,6 +55,7 @@ import {
   w9CityLine,
   formatDate,
   showsDocuments,
+  assignableRoles,
   validateEdit,
   type DocumentKind,
   type EditForm,
@@ -495,6 +496,7 @@ export default function EmployeeProfileScreen() {
                     onToggle={(key, value) => setWantedPerms(toggled(wantedPerms, key, value))}
                     template={mode === 'edit' ? (templateAsk ?? shownRole) : null}
                     onTemplate={setTemplateAsk}
+                    roles={assignableRoles(access.isSuperAdmin, employee?.role ?? null)}
                   />
                 ) : null}
               </View>

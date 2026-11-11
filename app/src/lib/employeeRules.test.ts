@@ -1,4 +1,5 @@
 import {
+  assignableRoles,
   accessState,
   canCreateEmployees,
   canEditEmployee,
@@ -260,5 +261,19 @@ describe('Fechas', () => {
     expect(formatDate(d, 'es')).toBe('12 oct 2026');
     expect(formatDate(d, 'en')).toBe('Oct 12, 2026');
     expect(formatDate('no es fecha', 'es')).toBe('');
+  });
+});
+
+describe('assignableRoles (D-304)', () => {
+  it('el Super Admin elige los tres roles', () => {
+    expect(assignableRoles(true)).toEqual(['employee', 'supervisor', 'admin']);
+    expect(assignableRoles(true, 'admin')).toEqual(['employee', 'supervisor', 'admin']);
+  });
+  it('sin ser Super Admin no aparece admin', () => {
+    expect(assignableRoles(false)).toEqual(['employee', 'supervisor']);
+    expect(assignableRoles(false, 'supervisor')).toEqual(['employee', 'supervisor']);
+  });
+  it('sin ser Super Admin, a un admin no se le quita el rol', () => {
+    expect(assignableRoles(false, 'admin')).toEqual(['admin']);
   });
 });

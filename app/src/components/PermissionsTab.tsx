@@ -20,6 +20,8 @@ type Props = {
   /** Plantilla de partida mostrada; null cuando no hay selector (solo lectura o bloqueada). */
   template: RoleKey | null;
   onTemplate: (role: RoleKey) => void;
+  /** Roles que se pueden elegir (D-304: admin solo para el Super Admin). */
+  roles?: readonly RoleKey[];
 };
 
 const CHIP_TONE = { all: 'brand', partial: 'success', none: 'muted' } as const;
@@ -33,7 +35,7 @@ function chipLabel(strings: Strings, state: AreaState): string {
  * con su ficha Todo / Parcial / Sin acceso; cada área se abre y lista sus permisos con interruptor de 40px.
  * En el modo bloqueado (Super Admin) todo está encendido, con candado y sin acción.
  */
-export function PermissionsTab({ strings, mode, areas, on, onToggle, template, onTemplate }: Props) {
+export function PermissionsTab({ strings, mode, areas, on, onToggle, template, onTemplate, roles = ['employee', 'supervisor'] }: Props) {
   const { colors } = useTheme();
   const [open, setOpen] = useState<ReadonlySet<AreaKey>>(new Set());
   const locked = mode === 'locked';
@@ -51,11 +53,13 @@ export function PermissionsTab({ strings, mode, areas, on, onToggle, template, o
       {template !== null ? (
         <SelectField
           label={strings.permissions.template}
-          options={[
-            { value: 'employee', label: strings.employees.roleEmployee },
-            { value: 'supervisor', label: strings.employees.roleSupervisor },
-            { value: 'admin', label: strings.employees.roleAdmin },
-          ]}
+          options={(
+            [
+              { value: 'employee', label: strings.employees.roleEmployee },
+              { value: 'supervisor', label: strings.employees.roleSupervisor },
+              { value: 'admin', label: strings.employees.roleAdmin },
+            ] as const
+          ).filter((o) => roles.includes(o.value) || o.value === template)}
           value={template}
           onChange={(role) => {
             if (role !== template) onTemplate(role);

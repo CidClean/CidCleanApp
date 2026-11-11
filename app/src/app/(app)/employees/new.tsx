@@ -16,6 +16,7 @@ import { SelectField } from '@/components/SelectField';
 import { TopBar } from '@/components/TopBar';
 import { useStrings } from '@/i18n/useStrings';
 import {
+  assignableRoles,
   canCreateEmployees,
   emptyNewEmployee,
   hasErrors,
@@ -134,11 +135,7 @@ export default function NewEmployeeScreen() {
         />
         <SelectField
           label={strings.newEmployee.role}
-          options={[
-            { value: 'employee', label: roleLabel(strings, 'employee') },
-            { value: 'supervisor', label: roleLabel(strings, 'supervisor') },
-            { value: 'admin', label: roleLabel(strings, 'admin') },
-          ]}
+          options={assignableRoles(access.isSuperAdmin).map((r) => ({ value: r, label: roleLabel(strings, r) }))}
           value={form.role}
           onChange={(v) => set('role', v)}
         />

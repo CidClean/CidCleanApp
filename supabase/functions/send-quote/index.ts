@@ -1,5 +1,6 @@
 // Envía un quote (D-209): verify_jwt activado. Con el JWT de quien envía, prepare_send_quote valida el permiso
-// (quotes_enviar), el SOW y los destinatarios; el servidor genera el PDF de una página, lo guarda con la versión,
+// (quotes_enviar), el SOW y los destinatarios (sin devolverle montos, M4); los datos completos los lee la service role
+// con send_quote_data; el servidor genera el PDF de una página, lo guarda con la versión,
 // confirma el envío (enlace, vencimiento, reemplazo de la versión anterior) y manda el correo a cada destinatario
 // desde quotes@mail.cidclean.com con respuesta a info@cidclean.com (D-249), siempre en inglés y con el PDF adjunto
 // (D-247, D-250). El PDF sigue en el idioma del lead. { resend: true } reenvía el correo de una versión ya enviada
@@ -44,7 +45,13 @@ Deno.serve(async (req) => {
   const base = Deno.env.get('PORTAL_BASE_URL') ?? 'https://quote.cidclean.com';
 
   if (body.resend) {
-    const { data, error } = await quien.rpc('quote_mail_data', { p_version: body.version_id });
+    // Valida con el JWT de quien envía (quotes_enviar); los montos, el PDF y el enlace solo los lee la service role (M4).
+    const { error: e0 } = await quien.rpc('quote_mail_data', { p_version: body.version_id });
+    if (e0) {
+      const e = errorDeBase(e0.code);
+      return responder(e.status, { error: e.error });
+    }
+    const { data, error } = await servicio.rpc('quote_mail_data_full', { p_version: body.version_id });
     if (error) {
       const e = errorDeBase(error.code);
       return responder(e.status, { error: e.error });
@@ -59,7 +66,12 @@ Deno.serve(async (req) => {
     return responder(200, r);
   }
 
-  const { data: p, error } = await quien.rpc('prepare_send_quote', { p_version: body.version_id });
+  const { error: e0 } = await quien.rpc('prepare_send_quote', { p_version: body.version_id });
+  if (e0) {
+    const e = errorDeBase(e0.code);
+    return responder(e.status, { error: e.error });
+  }
+  const { data: p, error } = await servicio.rpc('send_quote_data', { p_version: body.version_id });
   if (error) {
     const e = errorDeBase(error.code);
     return responder(e.status, { error: e.error });

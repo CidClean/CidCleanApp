@@ -11,6 +11,15 @@ export type WorkerType = 'w2' | '1099';
 export type RoleKey = 'employee' | 'supervisor' | 'admin';
 export type DocumentKind = 'w9' | 'insurance_certificate';
 
+/**
+ * Roles que quien edita puede elegir (D-304): solo el Super Admin da o quita el rol admin. Si el empleado ya es admin
+ * y quien edita no es Super Admin, el rol queda fijo en admin (no puede quitarlo).
+ */
+export function assignableRoles(viewerIsSuperAdmin: boolean, current: RoleKey | null = null): RoleKey[] {
+  if (viewerIsSuperAdmin) return ['employee', 'supervisor', 'admin'];
+  return current === 'admin' ? ['admin'] : ['employee', 'supervisor'];
+}
+
 /** Dirección del empleado (D-264, D-301): la misma composición que el resto de la app; State es el código o ''. */
 export type Address = AddressParts;
 
