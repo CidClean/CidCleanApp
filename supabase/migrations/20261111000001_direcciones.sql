@@ -50,7 +50,7 @@ begin
   ok := false;
   if t = '' then return; end if;
   t := regexp_replace(t, ',?\s*(USA|U\.S\.A\.|US|United States)\.?$', '', 'i');
-  m := regexp_match(t, '^(.+),\s*([^,0-9][^,]*?)\s*,?\s+([A-Za-z]{2}|Florida)\.?\s*,?\s*([0-9]{5}(-[0-9]{4})?)$', 'i');
+  m := regexp_match(t, '^(.+),\s*([^,0-9][^,]*?)\s*,?\s+([A-Za-z]{2}|Florida)\.?(?:\s*,?\s*([0-9]{5}(-[0-9]{4})?))?$', 'i');
   if m is not null then
     state := case when lower(m[3]) = 'florida' then 'FL' else upper(m[3]) end;
     street := btrim(m[1]);
@@ -69,7 +69,8 @@ begin
         end if;
       end if;
       if line1 <> '' and length(line1) <= 120 and coalesce(length(line2), 0) <= 120 then
-        ok := true;
+        -- Sin ZIP: se separan calle, ciudad y estado, pero queda para revisar (solo falta el ZIP).
+        ok := zip is not null;
         return;
       end if;
     end if;

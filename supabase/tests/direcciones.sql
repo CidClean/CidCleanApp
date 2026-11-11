@@ -27,7 +27,7 @@ select pg_temp.es('completa sin coma entre ciudad y estado, ZIP+4 y USA', '10 Pa
                   pg_temp.p('10 Palm Ave,  Naples FL 34102-1234, USA'));
 select pg_temp.es('estado en minúsculas o escrito Florida', '9 Bay St|∅|Marco Island|FL|34145|true',
                   pg_temp.p('9 Bay St, Marco Island, Florida 34145'));
-select pg_temp.es('sin ZIP: todo en Dirección', '100 Main St, Naples, FL|∅|∅|∅|∅|false', pg_temp.p('100 Main St, Naples, FL'));
+select pg_temp.es('sin ZIP: calle, ciudad y estado separados, falta el ZIP', '100 Main St|∅|Naples|FL|∅|false', pg_temp.p('100 Main St, Naples, FL'));
 select pg_temp.es('sin ciudad: todo en Dirección', '20 Bay St FL 34102|∅|∅|∅|∅|false', pg_temp.p('20 Bay St FL 34102'));
 select pg_temp.es('estado que no existe: todo en Dirección', '1 Main St, Naples, XX 34102|∅|∅|∅|∅|false',
                   pg_temp.p('1 Main St, Naples, XX 34102'));
