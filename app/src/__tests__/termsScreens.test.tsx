@@ -61,9 +61,11 @@ describe('Menú → Ajustes (D-107, D-114, D-187)', () => {
     expect(screen.getByLabelText(es.common.back)).toBeTruthy();
     expect(screen.getByText(es.settings.termsRow)).toBeTruthy();
     await waitFor(() => expect(screen.getAllByText('v2').length).toBeGreaterThan(0));
-    // Siete filas: Términos del staff, Términos del portal (D-209), Política de Privacidad y Solicitudes de eliminación de
-    // cuenta (D-282), Categorías de gastos (D-254), Motivos de lead perdido (D-203) y Transferir rol (orden 12).
-    expect(screen.getAllByRole('button').filter((b) => b.props.accessibilityLabel !== es.common.back)).toHaveLength(7);
+    // Ocho filas: Términos del staff, Términos del portal (D-209), Política de Privacidad y Solicitudes de eliminación de
+    // cuenta (D-282), Categorías de gastos (D-254), Motivos de lead perdido (D-203), Estimador del sitio (orden 91) y
+    // Transferir rol (orden 12).
+    expect(screen.getAllByRole('button').filter((b) => b.props.accessibilityLabel !== es.common.back)).toHaveLength(8);
+    expect(screen.getByText('Estimador del sitio')).toBeTruthy();
     expect(screen.getByText('Categorías de gastos')).toBeTruthy();
     expect(screen.getByText(es.transfer.row)).toBeTruthy();
     expect(screen.getByText('Motivos de lead perdido')).toBeTruthy();
