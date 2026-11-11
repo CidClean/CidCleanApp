@@ -68,8 +68,31 @@ function fieldsIn(scope: Element): string[] {
     .map((el) => el.name);
 }
 
+// Token del formulario (orden 100): lo firma site-estimate con la hora de emisión y solo vale entre 3 s y 2 h después.
+// Se pide al cargar la página; si falta o va a vencer, se pide otra vez al enviar y se espera a que cumpla los 3 s.
+const MIN_WAIT_MS = 3200;
+const REFRESH_MS = 100 * 60 * 1000;
+const tokens = new Map<string, Promise<{ token: string; at: number } | null>>();
+
+function pedirToken(endpoint: string) {
+  const p = fetch(endpoint, { method: 'GET' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => (d && typeof d.token === 'string' ? { token: d.token as string, at: Date.now() } : null))
+    .catch(() => null);
+  tokens.set(endpoint, p);
+  return p;
+}
+
+async function tokenListo(endpoint: string): Promise<string> {
+  let t = await (tokens.get(endpoint) ?? pedirToken(endpoint));
+  if (!t || Date.now() - t.at > REFRESH_MS) t = await pedirToken(endpoint);
+  if (!t) throw new TypeError('token'); // se muestra como error de red
+  const falta = MIN_WAIT_MS - (Date.now() - t.at);
+  if (falta > 0) await new Promise((ok) => setTimeout(ok, falta));
+  return t.token;
+}
+
 export function initForms() {
-  const loadedAt = Date.now();
   document.querySelectorAll<HTMLFormElement>('form[data-site-form]').forEach((form) => {
     const kind = form.dataset.siteForm as 'estimate' | 'contact';
     const endpoint = form.dataset.endpoint ?? '';
@@ -77,6 +100,7 @@ export function initForms() {
     const step2 = form.querySelector<HTMLElement>('[data-step="2"]');
     const result = form.querySelector<HTMLElement>('[data-result]');
     const formError = form.querySelector<HTMLElement>('[data-form-error]');
+    if (endpoint && !tokens.has(endpoint)) void pedirToken(endpoint);
     const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
     const pills = form.querySelectorAll<HTMLElement>('.stepper span');
     form.querySelectorAll<HTMLElement>('[data-needs-js]').forEach((el) => { el.hidden = false; });
@@ -114,7 +138,6 @@ export function initForms() {
         city: val(form, 'city'),
         zip: val(form, 'zip'),
         website: val(form, 'website'),
-        elapsed_ms: Date.now() - loadedAt,
       };
       if (kind === 'estimate') {
         payload.type = val(form, 'type');
@@ -125,6 +148,7 @@ export function initForms() {
       }
       if (submit) { submit.disabled = true; submit.dataset.label ??= submit.textContent ?? ''; submit.textContent = 'Sending…'; }
       try {
+        payload.token = await tokenListo(endpoint);
         const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {

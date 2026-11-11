@@ -45,7 +45,7 @@ const p = (n: string) => `${id}-${n}`;
     <div class="fields">
       <div class="field">
         <label for={p('name')}>Your name</label>
-        <input id={p('name')} name="name" autocomplete="name" required maxlength="100" aria-describedby={p('name-err')} />
+        <input id={p('name')} name="name" autocomplete="name" required maxlength="60" aria-describedby={p('name-err')} />
         <span class="err" id={p('name-err')} data-err="name" hidden></span>
       </div>
       <div class="field">

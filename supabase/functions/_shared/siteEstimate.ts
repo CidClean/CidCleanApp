@@ -7,8 +7,11 @@ export const CITIES = ['Naples', 'Bonita Springs', 'Estero', 'Marco Island', 'Ot
 export const FROM_ESTIMATES = 'Cid Clean <estimates@mail.cidclean.com>'; // D-200
 export const INTERNAL_TO = 'info@cidclean.com';
 export const APP_URL = 'https://app.cidclean.com';
-export const MIN_FILL_MS = 3000; // D-200: menos de 3 s llenando el formulario se trata como robot.
-const ORIGINS = ['https://cidclean.com', 'https://www.cidclean.com', 'https://cidclean-site.pages.dev']; // D-200: vista previa en Cloudflare Pages
+export const MIN_FILL_MS = 3000; // D-311: menos de 3 s llenando el formulario se trata como robot.
+export const MAX_TOKEN_MS = 2 * 60 * 60 * 1000; // D-200: el token del formulario vale 2 h.
+export const NAME_MAX = 60; // D-200: el nombre se recorta a 60 caracteres.
+// Orden 100 (N3): sin la vista previa de Cloudflare Pages.
+const ORIGINS = ['https://cidclean.com', 'https://www.cidclean.com'];
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const ZIP = /^\d{5}(-\d{4})?$/;
 const KEY = /^[a-z0-9_]{1,40}$/;
@@ -38,18 +41,22 @@ export interface SubmitResult {
   range_low?: number;
   range_high?: number;
   walkthrough_recommended?: boolean;
+  /** Tope global de la base (D-200): false si este envío ya no lleva correo al cliente. */
+  send_customer_mail?: boolean;
 }
 export interface Deps {
   submit: (s: Submission, ipHash: string | null) => Promise<SubmitResult>;
   send: (m: { from: string; to: string; replyTo: string; subject: string; html: string; text: string }) => Promise<boolean>;
   pepper: string;
+  /** Reloj inyectable para las pruebas. */
+  now?: () => number;
 }
 
 export function cors(origin: string | null): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': origin && ORIGINS.includes(origin) ? origin : ORIGINS[0],
     'Access-Control-Allow-Headers': 'content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     Vary: 'Origin',
   };
 }
@@ -62,14 +69,13 @@ export function validar(b: Record<string, unknown>): { ok: true; data: Submissio
   const f: Record<string, string> = {};
   const kind = b.kind === 'estimate' || b.kind === 'contact' ? b.kind : null;
   if (!kind) return { ok: false, fields: { kind: 'Invalid request.' } };
-  const name = str(b.name, 100);
+  const name = typeof b.name === 'string' ? b.name.trim().slice(0, NAME_MAX).trim() : ''; // D-200: se recorta, no es error
   const company = str(b.company, 120);
   const email = str(b.email, 160).toLowerCase();
   const phone = str(b.phone, 20);
   const city = str(b.city, 40);
   const zip = str(b.zip, 10);
   if (!name) f.name = 'Please fill in this field.';
-  else if (name.length > 100) f.name = 'Please use 100 characters or fewer.';
   if (company.length > 120) f.company = 'Please use 120 characters or fewer.';
   if (!EMAIL.test(email) || email.length > 160) f.email = 'Please enter a valid email address.';
   const d = digits(phone);
@@ -97,18 +103,68 @@ export function validar(b: Record<string, unknown>): { ok: true; data: Submissio
   return { ok: true, data: { kind, name, company, email, phone, city, zip, type, sqft, frequency, message } };
 }
 
-/** Campo trampa lleno o formulario enviado demasiado rápido. */
-export function esSpam(b: Record<string, unknown>): boolean {
-  if (typeof b.website === 'string' && b.website.trim() !== '') return true;
-  const ms = typeof b.elapsed_ms === 'number' ? b.elapsed_ms : 0;
-  return !(ms >= MIN_FILL_MS);
+const hex = (buf: ArrayBuffer) => Array.from(new Uint8Array(buf)).map((x) => x.toString(16).padStart(2, '0')).join('');
+
+/** Firma HMAC-SHA-256 con una llave derivada de la pimienta (no se usa la pimienta tal cual). */
+async function firmar(pepper: string, msg: string): Promise<string> {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(`${pepper}:site-form-token:v1`),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return hex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(msg)));
 }
 
-/** Hash de la IP con pimienta (como los portales): la base nunca guarda la IP. */
-export async function hashIp(pepper: string, ip: string | null): Promise<string | null> {
+/** Token del formulario (orden 100): la hora de emisión firmada por el servidor. El cliente no puede fijarla. */
+export async function crearToken(pepper: string, nowMs: number): Promise<string> {
+  const t = String(Math.floor(nowMs));
+  return `v1.${t}.${await firmar(pepper, `site:${t}`)}`;
+}
+
+/** Vale si la firma es buena y tiene entre 3 s y 2 h. */
+export async function tokenValido(pepper: string, token: unknown, nowMs: number): Promise<boolean> {
+  if (!pepper || typeof token !== 'string' || token.length > 200) return false;
+  const m = /^v1\.(\d{1,15})\.([0-9a-f]{64})$/.exec(token);
+  if (!m) return false;
+  const edad = nowMs - Number(m[1]);
+  if (!(edad >= MIN_FILL_MS && edad <= MAX_TOKEN_MS)) return false;
+  const esperado = await firmar(pepper, `site:${m[1]}`);
+  let diff = 0;
+  for (let i = 0; i < 64; i++) diff |= esperado.charCodeAt(i) ^ m[2].charCodeAt(i);
+  return diff === 0;
+}
+
+/** Campo trampa lleno o sin un token válido (enviado en menos de 3 s, viejo o falso). */
+export async function esSpam(b: Record<string, unknown>, pepper: string, nowMs: number): Promise<boolean> {
+  if (typeof b.website === 'string' && b.website.trim() !== '') return true;
+  return !(await tokenValido(pepper, b.token, nowMs));
+}
+
+/** Lo que cuenta para el límite por IP: la IPv4 completa; en IPv6, su prefijo /64 (cada cliente tiene un /64). */
+export function claveIp(ip: string | null): string | null {
   if (!ip) return null;
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${pepper}:site:${ip}`));
-  return Array.from(new Uint8Array(buf)).map((x) => x.toString(16).padStart(2, '0')).join('');
+  const s = ip.trim().toLowerCase().replace(/%.*$/, '');
+  const v4 = /^(?:::ffff:)?(\d{1,3}(?:\.\d{1,3}){3})$/.exec(s);
+  if (v4) return v4[1];
+  if (!s.includes(':')) return null;
+  const [cabeza, cola = ''] = s.split('::');
+  const a = cabeza ? cabeza.split(':') : [];
+  const b = s.includes('::') ? (cola ? cola.split(':') : []) : [];
+  if (b.some((x) => x.includes('.')) || a.some((x) => x.includes('.'))) return null;
+  const grupos = s.includes('::') ? [...a, ...Array(Math.max(0, 8 - a.length - b.length)).fill('0'), ...b] : a;
+  if (grupos.length !== 8 || grupos.some((g) => !/^[0-9a-f]{1,4}$/.test(g))) return null;
+  return grupos.slice(0, 4).map((g) => g.replace(/^0+(?=.)/, '')).join(':') + '::/64';
+}
+
+/** Hash de la IP (o de su /64) con pimienta (como los portales): la base nunca guarda la IP. Sin IP: null (balde común). */
+export async function hashIp(pepper: string, ip: string | null): Promise<string | null> {
+  const k = claveIp(ip);
+  if (!k) return null;
+  return hex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${pepper}:site:${k}`)));
+}
+
+/** Saludo del correo (D-200): genérico si el nombre trae un enlace, "http", "www." o "@". */
+export function saludo(name: string): string {
+  const n = name.slice(0, NAME_MAX);
+  if (/https?|www\.|@|:\/\/|[a-z0-9-]\.[a-z]{2,}/i.test(n)) return 'Hi there';
+  return `Hi ${n.split(/\s+/)[0]}`;
 }
 
 export const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
@@ -117,7 +173,7 @@ const sq = (n: number) => n.toLocaleString('en-US');
 /** Correo al cliente "Your Cid Clean estimate" (D-250: marca de los correos actuales). */
 export function correoCliente(s: Submission, r: SubmitResult) {
   const range = `${money(r.range_low!)} – ${money(r.range_high!)}`;
-  const first = s.name.split(/\s+/)[0];
+  const hola = saludo(s.name);
   const items = [
     { title: 'Type of space', detail: r.type_name ?? '' },
     { title: 'Size', detail: `${sq(s.sqft!)} sq ft` },
@@ -125,7 +181,7 @@ export function correoCliente(s: Submission, r: SubmitResult) {
     { title: 'City', detail: s.zip ? `${s.city}, FL ${s.zip}` : s.city === 'Other' ? 'Other' : `${s.city}, FL` },
   ];
   const tarjeta = [
-    titulo(`Hi ${first}, here's your estimate`),
+    titulo(`${hola}, here's your estimate`),
     parrafo('Thanks for using the Cid Clean estimator. Here is what you chose and your estimated monthly range.'),
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0F766E;border-radius:18px;margin:0 0 18px"><tr><td style="padding:18px 20px;color:#FFFFFF"><div style="font-size:13px;font-weight:700;opacity:.85">Estimated monthly range</div><div style="font-size:30px;font-weight:800;letter-spacing:-0.3px">${esc(range)}</div><div style="font-size:13px;opacity:.85">About ${esc(money(r.per_visit!))} per visit</div></td></tr></table>`,
     filas(items),
@@ -137,7 +193,7 @@ export function correoCliente(s: Submission, r: SubmitResult) {
     firma('Thank you,'),
   ].join('');
   const text = [
-    `Hi ${first}, here's your estimate.`,
+    `${hola}, here's your estimate.`,
     '',
     `Estimated monthly range: ${range} (about ${money(r.per_visit!)} per visit)`,
     ...items.map((i) => `${i.title}: ${i.detail}`),
@@ -154,6 +210,8 @@ export function correoCliente(s: Submission, r: SubmitResult) {
   ].join('\n');
   return { subject: 'Your Cid Clean estimate', html: correoHtml({ preview: `Your estimated monthly range: ${range}`, tarjeta }), text };
 }
+
+export const SIN_CORREO = 'Estimate email to the customer not sent: hourly limit reached.'; // D-200
 
 /** Aviso interno a info@cidclean.com con los datos y el enlace al lead en la app. */
 export function correoInterno(s: Submission, r: SubmitResult) {
@@ -178,11 +236,13 @@ export function correoInterno(s: Submission, r: SubmitResult) {
   const tarjeta = [
     titulo(esEstimado ? 'New website estimate' : 'New website message', 22),
     parrafo(r.new_lead ? 'A new lead was created in Leads.' : 'This email already had an open lead, so the details were added to its notes.'),
+    r.send_customer_mail === false && esEstimado ? parrafo(SIN_CORREO) : '',
     filas(items),
     `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px 0 10px"><tr><td style="background:#0F766E;border-radius:14px"><a href="${esc(url)}" style="display:inline-block;padding:14px 26px;color:#FFFFFF;font-size:16px;font-weight:800;text-decoration:none">Open lead</a></td></tr></table>`,
     nota('Sent automatically by the cidclean.com estimator.'),
   ].join('');
-  const text = [subject, '', ...items.map((i) => `${i.title}: ${i.detail}`), '', `Open lead: ${url}`].join('\n');
+  const text = [subject, '', ...items.map((i) => `${i.title}: ${i.detail}`),
+    ...(r.send_customer_mail === false && esEstimado ? ['', SIN_CORREO] : []), '', `Open lead: ${url}`].join('\n');
   return { subject, html: correoHtml({ preview: subject, tarjeta }), text };
 }
 
@@ -193,7 +253,10 @@ function json(status: number, body: Record<string, unknown>, origin: string | nu
 /** Maneja una petición. `ip` viene de _shared/ip.ts. */
 export async function manejar(req: Request, ip: string | null, deps: Deps): Promise<Response> {
   const origin = req.headers.get('origin');
+  const ahora = (deps.now ?? Date.now)();
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors(origin) });
+  // Token del formulario (orden 100): la página lo pide al cargarse y lo devuelve al enviar.
+  if (req.method === 'GET') return json(200, { token: await crearToken(deps.pepper, ahora) }, origin);
   if (req.method !== 'POST') return json(405, { error: 'method_not_allowed' }, origin);
   let b: Record<string, unknown>;
   try {
@@ -204,8 +267,9 @@ export async function manejar(req: Request, ip: string | null, deps: Deps): Prom
   } catch {
     return json(400, { error: 'invalid' }, origin);
   }
+  if (b.kind === 'token') return json(200, { token: await crearToken(deps.pepper, ahora) }, origin);
   // Robots: misma respuesta que un envío correcto, sin crear nada ni mandar correos.
-  if (esSpam(b)) return json(200, { ok: true }, origin);
+  if (await esSpam(b, deps.pepper, ahora)) return json(200, { ok: true }, origin);
   const v = validar(b);
   if (!v.ok) return json(400, { error: 'invalid', fields: v.fields }, origin);
   let r: SubmitResult;
@@ -220,7 +284,8 @@ export async function manejar(req: Request, ip: string | null, deps: Deps): Prom
   // Correos: si fallan, el lead ya quedó creado; no se le muestra error al cliente.
   const interno = correoInterno(v.data, r);
   const tareas = [deps.send({ from: FROM_ESTIMATES, to: INTERNAL_TO, replyTo: v.data.email, ...interno })];
-  if (v.data.kind === 'estimate') {
+  // Tope global (D-200): la base dice si este envío todavía lleva correo al cliente.
+  if (v.data.kind === 'estimate' && r.send_customer_mail === true) {
     tareas.push(deps.send({ from: FROM_ESTIMATES, to: v.data.email, replyTo: INTERNAL_TO, ...correoCliente(v.data, r) }));
   }
   await Promise.allSettled(tareas);

@@ -3,14 +3,19 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { esSpam, hashIp, manejar, validar, correoCliente, cors } from '../functions/_shared/siteEstimate.ts';
+import {
+  esSpam, hashIp, manejar, validar, correoCliente, correoInterno, cors, crearToken, tokenValido, claveIp, saludo,
+} from '../functions/_shared/siteEstimate.ts';
+
+const NOW = 1_800_000_000_000;
+const TOKEN = await crearToken('pimienta', NOW - 9000);
 
 const base = {
   kind: 'estimate', name: 'Ana Prueba', company: '', email: 'Ana@Example.com', phone: '(239) 555-0101',
-  city: 'Naples', zip: '34102', type: 'office', sqft: 3000, frequency: 'weekly_3', website: '', elapsed_ms: 9000,
+  city: 'Naples', zip: '34102', type: 'office', sqft: 3000, frequency: 'weekly_3', website: '', token: TOKEN,
 };
 const OK = { status: 'ok', lead_id: '11111111-1111-1111-1111-111111111111', new_lead: true, type_name: 'Office',
-  frequency_name: '3x per week', per_visit: 102, monthly: 1326, range_low: 1130, range_high: 1520, walkthrough_recommended: false };
+  frequency_name: '3x per week', per_visit: 102, monthly: 1326, range_low: 1130, range_high: 1520, walkthrough_recommended: false, send_customer_mail: true };
 
 function deps(result = OK) {
   const sent = [];
@@ -18,6 +23,7 @@ function deps(result = OK) {
   return {
     sent, calls,
     pepper: 'pimienta',
+    now: () => NOW,
     submit: async (s, ip) => { calls.push({ s, ip }); return typeof result === 'function' ? result(s) : result; },
     send: async (m) => { sent.push(m); return true; }, // Resend simulado
   };
@@ -50,11 +56,92 @@ test('validar: contacto pide mensaje', () => {
   assert.equal(validar({ ...base, kind: 'contact', message: 'We need cleaning on Saturdays.' }).ok, true);
   assert.equal(validar({ ...base, kind: 'other' }).ok, false);
 });
-test('anti-spam: campo trampa y tiempo mínimo', () => {
-  assert.equal(esSpam(base), false);
-  assert.equal(esSpam({ ...base, website: 'http://spam' }), true);
-  assert.equal(esSpam({ ...base, elapsed_ms: 1200 }), true);
-  assert.equal(esSpam({ ...base, elapsed_ms: undefined }), true);
+test('anti-spam: campo trampa y token firmado por el servidor (orden 100, punto 3)', async () => {
+  assert.equal(await esSpam(base, 'pimienta', NOW), false);
+  assert.equal(await esSpam({ ...base, website: 'http://spam' }, 'pimienta', NOW), true);
+  assert.equal(await esSpam({ ...base, token: undefined }, 'pimienta', NOW), true);
+  // elapsed_ms del cliente ya no cuenta.
+  assert.equal(await esSpam({ ...base, token: undefined, elapsed_ms: 999999 }, 'pimienta', NOW), true);
+});
+test('token: entre 3 s y 2 h, firma con la pimienta y sin manipular', async () => {
+  const t = await crearToken('pimienta', NOW);
+  assert.match(t, /^v1\.\d+\.[0-9a-f]{64}$/);
+  assert.equal(await tokenValido('pimienta', t, NOW + 2999), false);
+  assert.equal(await tokenValido('pimienta', t, NOW + 3000), true);
+  assert.equal(await tokenValido('pimienta', t, NOW + 2 * 3600 * 1000), true);
+  assert.equal(await tokenValido('pimienta', t, NOW + 2 * 3600 * 1000 + 1), false);
+  assert.equal(await tokenValido('otra', t, NOW + 5000), false);
+  assert.equal(await tokenValido('', t, NOW + 5000), false);
+  const [, , sig] = t.split('.');
+  assert.equal(await tokenValido('pimienta', `v1.${NOW - 60000}.${sig}`, NOW), false); // hora cambiada
+  assert.equal(await tokenValido('pimienta', 'v1.1.zz', NOW), false);
+  assert.equal(await tokenValido('pimienta', 42, NOW), false);
+});
+test('token: GET y POST {kind:"token"} lo entregan; sirve después de 3 s', async () => {
+  const d = deps();
+  const g = await manejar(new Request('https://x/f', { method: 'GET', headers: { origin: 'https://www.cidclean.com' } }), null, d);
+  assert.equal(g.status, 200);
+  const { token } = await g.json();
+  assert.equal(await tokenValido('pimienta', token, NOW + 3000), true);
+  const p = await manejar(req({ kind: 'token' }), null, d);
+  assert.match((await p.json()).token, /^v1\./);
+  assert.equal(d.calls.length, 0);
+  // Recién emitido (menos de 3 s): respuesta silenciosa de spam.
+  const r = await manejar(req({ ...base, token }), null, d);
+  assert.deepEqual(await r.json(), { ok: true });
+  assert.equal(d.calls.length, 0);
+});
+test('IP: IPv4 completa, IPv6 por su /64 (orden 100, punto 1)', async () => {
+  assert.equal(claveIp('203.0.113.7'), '203.0.113.7');
+  assert.equal(claveIp('::ffff:203.0.113.7'), '203.0.113.7');
+  assert.equal(claveIp('2001:db8:1:2:aaaa::1'), '2001:db8:1:2::/64');
+  assert.equal(claveIp('2001:0db8:0001:0002:ffff:eeee:dddd:cccc'), '2001:db8:1:2::/64');
+  assert.equal(claveIp('2001:db8::1'), '2001:db8:0:0::/64');
+  assert.equal(claveIp('fe80::1%eth0'), 'fe80:0:0:0::/64');
+  assert.equal(claveIp('nada'), null);
+  assert.equal(claveIp(null), null);
+  assert.equal(await hashIp('p', '2001:db8:1:2::1'), await hashIp('p', '2001:db8:1:2:ffff:ffff:ffff:ffff'));
+  assert.notEqual(await hashIp('p', '2001:db8:1:2::1'), await hashIp('p', '2001:db8:1:3::1'));
+  assert.notEqual(await hashIp('p', '203.0.113.7'), await hashIp('p', '203.0.113.8'));
+});
+test('sin IP: null para que la base use el balde común "sin IP"', async () => {
+  const d = deps();
+  await manejar(req(base), null, d);
+  assert.equal(d.calls[0].ip, null);
+});
+test('nombre: se recorta a 60 y el saludo queda genérico con enlaces, http, www. o @ (orden 100, punto 5)', () => {
+  const v = validar({ ...base, name: 'A'.repeat(100) });
+  assert.equal(v.ok, true);
+  assert.equal(v.data.name.length, 60);
+  assert.equal(saludo('Ana Prueba'), 'Hi Ana');
+  for (const n of ['www.premio.com', 'http://x', 'ana@x.com', 'Visit evil.co/win', 'HTTPS://X', 'hxxp:// ok? httpx']) {
+    assert.equal(saludo(n), 'Hi there', n);
+  }
+  const m = correoCliente(validar({ ...base, name: 'www.premio-malo.com/gana Ana' }).data, OK);
+  assert.match(m.text, /^Hi there, here's your estimate/);
+  assert.doesNotMatch(m.html, /premio-malo/);
+  const x = correoCliente(validar({ ...base, name: '<b>Ana</b>' }).data, OK);
+  assert.match(x.html, /Hi &lt;b&gt;Ana&lt;\/b&gt;, here/);
+  assert.doesNotMatch(x.html, /<b>Ana/);
+});
+test('tope global: si la base dice que no, no hay correo al cliente pero sí aviso interno anotado (orden 100, punto 4)', async () => {
+  const d = deps({ ...OK, send_customer_mail: false });
+  const res = await manejar(req(base), '203.0.113.7', d);
+  assert.equal(res.status, 200);
+  assert.equal((await res.json()).range_low, 1130);
+  assert.equal(d.sent.length, 1);
+  assert.equal(d.sent[0].to, 'info@cidclean.com');
+  assert.match(d.sent[0].text, /not sent: hourly limit reached/);
+  // Sin el campo (respuesta vieja o rara): tampoco se manda.
+  const d2 = deps({ ...OK, send_customer_mail: undefined });
+  await manejar(req(base), '203.0.113.7', d2);
+  assert.equal(d2.sent.length, 1);
+  assert.doesNotMatch(correoInterno(validar(base).data, OK).text, /not sent/);
+});
+test('CORS: sin la vista previa de Pages (orden 100, punto 7)', () => {
+  assert.equal(cors('https://cidclean-site.pages.dev')['Access-Control-Allow-Origin'], 'https://cidclean.com');
+  assert.equal(cors('https://www.cidclean.com')['Access-Control-Allow-Origin'], 'https://www.cidclean.com');
+  assert.match(cors(null)['Access-Control-Allow-Methods'], /GET/);
 });
 test('hash de IP con pimienta, nunca la IP', async () => {
   const a = await hashIp('p1', '203.0.113.7');
@@ -90,7 +177,7 @@ test('contacto: solo el aviso interno', async () => {
   assert.match(d.sent[0].subject, /existing lead/);
 });
 test('robot: responde ok sin crear nada ni mandar correos', async () => {
-  for (const b of [{ ...base, website: 'x' }, { ...base, elapsed_ms: 500 }]) {
+  for (const b of [{ ...base, website: 'x' }, { ...base, token: 'v1.1.' + 'a'.repeat(64) }, { ...base, token: undefined }]) {
     const d = deps();
     const res = await manejar(req(b), '1.2.3.4', d);
     assert.equal(res.status, 200);
@@ -125,7 +212,7 @@ test('error de la base: 500; Resend caído no rompe la respuesta', async () => {
 test('JSON roto, cuerpo enorme, método y CORS', async () => {
   assert.equal((await manejar(new Request('https://x/f', { method: 'POST', body: '{nope' }), null, deps())).status, 400);
   assert.equal((await manejar(new Request('https://x/f', { method: 'POST', body: 'x'.repeat(20000) }), null, deps())).status, 413);
-  assert.equal((await manejar(new Request('https://x/f', { method: 'GET' }), null, deps())).status, 405);
+  assert.equal((await manejar(new Request('https://x/f', { method: 'PUT' }), null, deps())).status, 405);
   const pre = await manejar(new Request('https://x/f', { method: 'OPTIONS', headers: { origin: 'https://www.cidclean.com' } }), null, deps());
   assert.equal(pre.headers.get('access-control-allow-origin'), 'https://www.cidclean.com');
   assert.equal(cors('https://evil.example')['Access-Control-Allow-Origin'], 'https://cidclean.com');
