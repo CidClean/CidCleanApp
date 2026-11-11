@@ -37,9 +37,8 @@ Legal rev. 3 fases A a D, términos v3 y privacidad v1 publicados en la app, pro
 
 ## Por construir
 
-1. D-301: direcciones con la misma composición en toda la app (calle, dirección 2, ciudad, estado de lista y ZIP).
-2. D-302: ocultar la cuadrícula del Schedule en un jobsite sin contrato.
-3. Hito 8 (empieza al terminar 1 y 2): revisión de seguridad independiente (incluye: `visit_card` envía `pay_amount` a quien no ve pagos).
+1-2. D-301 y D-302: HECHO y publicado el 2026-11-11 (21 sitios de leads y 1 jobsite quedan con "Completa la dirección").
+3. Hito 8 (empezó el 2026-11-11): revisión de seguridad independiente (incluye: `visit_card` envía `pay_amount` a quien no ve pagos).
 4. Año que viene (D-300): Google Play, App Store (dudosa, $99 al año) y notificaciones en el teléfono.
 5. Hito final (D-300): fase E legal (D-278, D-281).
 
