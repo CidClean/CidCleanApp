@@ -40,6 +40,8 @@ Principio: una sola base de código, servicios administrados y nada de servidore
 
 Super Admin: `admin@cidclean.com` (D-144), con su usuario de Auth creado y enlazado al perfil (procedimiento en `supabase/scripts/bootstrap-super-admin.md`). Las tres migraciones de `supabase/migrations/` (perfiles, permisos e historial; Super Admin; endurecer funciones) están aplicadas en el proyecto "CidClean App" desde el 2026-10-21. La configuración de Auth quedó así: solo entra quien recibió invitación (registro abierto desactivado), código de 6 dígitos que vale 10 minutos (D-040, D-123, D-129). El correo de Supabase por defecto envía muy pocos mensajes por hora; para que lleguen los códigos del staff falta conectar Resend (pendiente).
 
+Segundo paso del Super Admin (D-306): si pierde el teléfono con la app de autenticación, su factor TOTP se borra desde el panel de Supabase (Authentication, el usuario, MFA) o con la API de administración (`auth.admin.mfa.deleteFactor`); al entrar de nuevo la app le pide inscribir uno nuevo. No hay pantalla de recuperación.
+
 Permisos: catálogo en `permisos.md` (D-145). Forma de trabajo (D-147): Claude ordena, Claude Code ejecuta, el dueño aprueba.
 
 Regla: ninguna llave, token ni contraseña se escribe en este repositorio.

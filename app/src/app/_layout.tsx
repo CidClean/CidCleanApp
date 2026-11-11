@@ -21,7 +21,8 @@ SplashScreen.preventAutoHideAsync();
 const PORTAL_ONLY = process.env.EXPO_PUBLIC_PORTAL_ONLY === '1';
 
 function Routes() {
-  const { status, termsPending, termsOffline } = useSession();
+  const { status, termsPending, termsOffline, mfaPending } = useSession();
+  const inside = status === 'in' && !mfaPending;
   const { scheme, colors } = useTheme();
 
   const [fontsLoaded, fontError] = useFonts({ Manrope_400Regular, Manrope_500Medium, Manrope_700Bold, Manrope_800ExtraBold });
@@ -80,14 +81,18 @@ function Routes() {
         </Stack.Protected>
         {/* D-168: con la aceptación pendiente no hay otra ruta que la pantalla de términos.
             D-179, D-197: sin conexión para revisarlos y sin haber aceptado antes, la misma ruta muestra "Necesitas conexión para continuar". */}
-        <Stack.Protected guard={!PORTAL_ONLY && status === 'in' && (termsPending || termsOffline)}>
+        {/* D-306: el Super Admin con solo el código por correo pasa por el segundo paso antes de cualquier otra ruta. */}
+        <Stack.Protected guard={!PORTAL_ONLY && status === 'in' && mfaPending}>
+          <Stack.Screen name="(mfa)" />
+        </Stack.Protected>
+        <Stack.Protected guard={!PORTAL_ONLY && inside && (termsPending || termsOffline)}>
           <Stack.Screen name="(terms)" />
         </Stack.Protected>
-        <Stack.Protected guard={!PORTAL_ONLY && status === 'in' && !termsPending && !termsOffline}>
+        <Stack.Protected guard={!PORTAL_ONLY && inside && !termsPending && !termsOffline}>
           <Stack.Screen name="(app)" />
         </Stack.Protected>
         {/* D-196: el visor de PDF se abre desde los términos (antes de entrar) y desde el perfil del empleado. */}
-        <Stack.Protected guard={!PORTAL_ONLY && status === 'in'}>
+        <Stack.Protected guard={!PORTAL_ONLY && inside}>
           <Stack.Screen name="viewer" />
         </Stack.Protected>
       </Stack>

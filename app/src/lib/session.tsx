@@ -5,6 +5,7 @@ import { AppState } from 'react-native';
 
 import { selectLocale, type Locale } from '@/i18n';
 import { readRememberedLanguage, rememberLanguage } from '@/i18n/languageStore';
+import { mfaStep, readAal } from './mfaFlow';
 import { checkSession, endSession, type OwnProfile } from './sessionStore';
 import { nextTermsGate, type TermsGate } from './terms';
 import { supabase } from './supabase';
@@ -27,6 +28,8 @@ type SessionState = {
   termsPending: boolean;
   /** No se pudieron revisar los términos y quien entra nunca aceptó o no se sabe (D-179, D-197): no entra hasta que haya conexión. */
   termsOffline: boolean;
+  /** D-306: el Super Admin entró solo con el código por correo; falta el código de la app de autenticación (aal2). */
+  mfaPending: boolean;
   /** Cambia el idioma del perfil (RPC set_my_language, D-087). Devuelve false si no se pudo guardar. */
   setLanguage: (locale: Locale) => Promise<boolean>;
   /** Cierra la sesión de este dispositivo a pedido de la persona (D-167): vuelve al correo sin el aviso. */
@@ -50,6 +53,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   /** La última comprobación no pudo consultar al servidor (sin conexión): se reintenta sola hasta que se pueda (D-197). */
   const [unverified, setUnverified] = useState(false);
   const [profileLanguage, setProfileLanguage] = useState<Locale | null>(null);
+  const [mfaPending, setMfaPending] = useState(false);
+  const superRef = useRef(false);
   const [remembered, setRemembered] = useState<Locale | null>(null);
   const running = useRef<Promise<void> | null>(null);
 
@@ -70,6 +75,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             }
             if (result.permissions) setPermissions(result.permissions);
           }
+          // D-306: el Super Admin necesita una sesión aal2 (se lee del JWT guardado, sin red).
+          if (result.profile) superRef.current = result.profile.isSuperAdmin;
+          setMfaPending(mfaStep(superRef.current, await readAal(supabase)) !== null);
           // Los términos se revisan al entrar (D-179, D-197): sin red entra quien el teléfono sabe que ya aceptó; ya dentro,
           // se conserva lo sabido. Una versión nueva se pide cuando vuelve la conexión.
           const gate = nextTermsGate(termsRef.current, result.terms);
@@ -84,6 +92,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           setTerms('enter');
           setUnverified(false);
           setProfileLanguage(null);
+          superRef.current = false;
+          setMfaPending(false);
           // Una comprobación "sin motivo" no borra un aviso que ya se está mostrando.
           setEnded((prev) => prev || result.ended);
         }
@@ -150,6 +160,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setTerms('enter');
     setUnverified(false);
     setProfileLanguage(null);
+    superRef.current = false;
+    setMfaPending(false);
     setStatus('out');
   }, []);
 
@@ -169,8 +181,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const termsPending = terms === 'accept';
   const termsOffline = terms === 'offline';
   const value = useMemo(
-    () => ({ status, ended, refresh, locale, profile, access, termsPending, termsOffline, setLanguage, signOut }),
-    [status, ended, refresh, locale, profile, access, termsPending, termsOffline, setLanguage, signOut],
+    () => ({ status, ended, refresh, locale, profile, access, termsPending, termsOffline, mfaPending, setLanguage, signOut }),
+    [status, ended, refresh, locale, profile, access, termsPending, termsOffline, mfaPending, setLanguage, signOut],
   );
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

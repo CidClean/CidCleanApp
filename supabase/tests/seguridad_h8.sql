@@ -278,7 +278,27 @@ select pg_temp.prueba('B6 enlace de descargar: action download y la ruta', 'down
 select pg_temp.prueba('B6 el enlace es de un solo uso', 'ERR', left(pg_temp.valor('w2a', 'select 1'), 0) ||
   (select case when exists (select 1 from w9_open_tokens where token_hash = pg_temp.th('abrir-h8') and used_at is null) then 'NO' else 'ERR' end));
 
--- @@ORDEN83@@
+-- ===== Orden 83 (D-306) =====
+select pg_temp.prueba('D-306 is_super_admin con aal1 (solo el código por correo): false', 'false',
+  pg_temp.valor_aal('super', 'aal1', 'select is_super_admin()::text'));
+select pg_temp.prueba('D-306 is_super_admin con aal2: true', 'true', pg_temp.valor_aal('super', 'aal2', 'select is_super_admin()::text'));
+select pg_temp.prueba('D-306 sin claim aal: false', 'false', pg_temp.valor_aal('super', null, 'select is_super_admin()::text'));
+select pg_temp.prueba('D-306 otro perfil con aal2 no es Super Admin', 'false', pg_temp.valor_aal('perm', 'aal2', 'select is_super_admin()::text'));
+select pg_temp.prueba('D-306 con aal1 el Super Admin no tiene todos los permisos', 'false|false',
+  pg_temp.valor_aal('super', 'aal1', $q$select has_permission('empleados_ver_pagos')::text || '|' || is_admin_role()::text$q$));
+select pg_temp.prueba('D-306 con aal2 sí', 'true|true',
+  pg_temp.valor_aal('super', 'aal2', $q$select has_permission('empleados_ver_pagos')::text || '|' || is_admin_role()::text$q$));
+select pg_temp.prueba('D-306 con aal1 no abre un W-9', 'ERR:42501',
+  left(pg_temp.valor_aal('super', 'aal1', format($q$select open_profile_document(%L)$q$,
+    (select id from profile_documents where file_path like '%/w9/w9-h8.pdf.enc'))), 9));
+select pg_temp.prueba('D-306 con aal2 sí abre el W-9', 'true',
+  pg_temp.valor_aal('super', 'aal2', format($q$select (open_profile_document(%L) like '%%w9-h8.pdf.enc')::text$q$,
+    (select id from profile_documents where file_path like '%/w9/w9-h8.pdf.enc'))));
+select pg_temp.prueba('D-306 con aal1 no ve a quién transferir el rol', 'ERR:42501',
+  left(pg_temp.valor_aal('super', 'aal1', 'select count(*)::text from super_admin_candidates()'), 9));
+select pg_temp.prueba('D-306 con aal1 no da el rol admin (D-304)', 'ERR:42501',
+  left(pg_temp.valor_aal('super', 'aal1', format($q$select 'ok' from save_employee_permissions(%L, '{}', '{}', 'admin')$q$, pg_temp.pid('w2b'))), 9));
+
 
 select n, prueba, ok, detalle from resultados order by n;
 rollback;

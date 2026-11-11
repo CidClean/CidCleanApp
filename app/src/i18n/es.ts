@@ -26,6 +26,24 @@ export const es = {
     errorRateLimit: 'Pediste demasiados códigos. Espera un momento e inténtalo otra vez.', // APROBADO (D-156)
   },
 
+  // D-306: segundo paso del Super Admin (app de autenticación). Textos delegados (D-200).
+  twoStep: {
+    barTitle: 'Dos pasos', // D-200
+    enrollTitle: 'Protege tu cuenta', // D-200
+    enrollNote: 'Como Super Admin entras con dos pasos. Escanea el código QR con Google Authenticator u otra app de autenticación y escribe el código de 6 dígitos que muestra.', // D-200
+    secretLabel: 'Si no puedes escanearlo, escribe esta clave en la app:', // D-200
+    copy: 'Copiar clave', // D-200
+    copied: 'Clave copiada', // D-200
+    verifyTitle: 'Código de tu app', // D-200
+    verifyNote: 'Escribe el código de 6 dígitos de tu app de autenticación.', // D-200
+    errorWrong: 'El código no es correcto. Mira tu app e inténtalo otra vez.', // D-200
+    errorNetwork: 'No pudimos verificar el código. Revisa tu conexión e inténtalo otra vez.', // D-200
+    errorRateLimit: 'Demasiados intentos. Espera un momento e inténtalo otra vez.', // D-200
+    errorStart: 'No pudimos preparar el segundo paso. Revisa tu conexión e inténtalo otra vez.', // D-200
+    retry: 'Reintentar', // D-200
+    signOut: 'Cerrar sesión', // D-200 (mismo texto que D-166)
+  },
+
   nav: {
     pipeline: 'Pipeline', // APROBADO (D-132): destino de la barra inferior (solo icono, sin texto) y título de su pantalla
     accounts: 'Cuentas', // APROBADO (D-132)

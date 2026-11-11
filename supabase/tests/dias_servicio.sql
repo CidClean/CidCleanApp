@@ -16,7 +16,7 @@ declare
   uid uuid;
 begin
   select auth_id into uid from actores where nombre = quien;
-  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   set local role authenticated;
   begin
     execute consulta into resultado;

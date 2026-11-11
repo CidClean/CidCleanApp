@@ -27,6 +27,24 @@ export const en: Strings = {
     errorRateLimit: "You've requested too many codes. Wait a moment and try again.", // code screen: sending limit
   },
 
+  // D-306: Super Admin second step (authenticator app). Delegated copy (D-200).
+  twoStep: {
+    barTitle: 'Two-step', // D-200
+    enrollTitle: 'Protect your account', // D-200
+    enrollNote: 'As Super Admin you sign in with two steps. Scan the QR code with Google Authenticator or another authenticator app and enter the 6-digit code it shows.', // D-200
+    secretLabel: "If you can't scan it, enter this key in the app:", // D-200
+    copy: 'Copy key', // D-200
+    copied: 'Key copied', // D-200
+    verifyTitle: 'Code from your app', // D-200
+    verifyNote: 'Enter the 6-digit code from your authenticator app.', // D-200
+    errorWrong: "The code isn't correct. Check your app and try again.", // D-200
+    errorNetwork: "We couldn't verify the code. Check your connection and try again.", // D-200
+    errorRateLimit: 'Too many attempts. Wait a moment and try again.', // D-200
+    errorStart: "We couldn't set up the second step. Check your connection and try again.", // D-200
+    retry: 'Try again', // D-200
+    signOut: 'Sign out', // D-200 (same as D-166)
+  },
+
   nav: {
     pipeline: 'Pipeline', // bottom bar destination (icon only) and title of its screen
     accounts: 'Accounts',
