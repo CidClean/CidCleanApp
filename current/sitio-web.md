@@ -11,3 +11,4 @@ Sitio nuevo de cidclean.com (D-307, D-308, D-309). Copia visual aprobada: `../su
 - Cada estimado: lead nuevo en Leads de la app, aviso a info@cidclean.com y correo al cliente con su estimado.
 
 - Publicado el 2026-11-11 en el proyecto de Vercel `cidclean-portal` (dominio principal `www.cidclean.com`; `cidclean.com` redirige a www, así que las URL canónicas usan www). Se publica construido (`vercel build` + `vercel deploy --prebuilt --prod`) desde una carpeta sin historial de git, porque el plan gratis de Vercel rechaza despliegues cuyo autor de commit no es del equipo. Vista previa sin indexar: cidclean-site.pages.dev.
+- Google Search Console: propiedad `https://www.cidclean.com/` verificada con etiqueta HTML (en `site/src/layouts/Base.astro`; no se borra) y sitemap enviado el 2026-11-11.
