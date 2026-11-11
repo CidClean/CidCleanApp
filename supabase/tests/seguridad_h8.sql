@@ -164,7 +164,40 @@ select pg_temp.prueba('B9 no asignado: no', 'ERR:42501',
 select pg_temp.prueba('B9 con work_revisar_gps: mide', 'ok',
   pg_temp.valor('sup', format($q$select visit_distance(%L, 26.1421, -81.7948)->>'status'$q$, pg_temp.id('v'))));
 
--- @@ORDEN81@@
+-- ===== Orden 81 =====
+-- M2 / B7 / D-126: desactivar corta las sesiones en el servidor
+-- Como en Supabase (la base local de pruebas no siempre lo trae): RLS en storage.objects y lectura para authenticated.
+alter table storage.objects enable row level security;
+grant select, insert on storage.objects to authenticated;
+do $$
+declare
+  s uuid;
+begin
+  insert into auth.sessions (user_id) values ((select auth_id from actores where nombre = 'w2b')) returning id into s;
+  insert into auth.refresh_tokens (token, user_id, session_id, revoked)
+  values ('rt-h8', (select auth_id from actores where nombre = 'w2b')::text, s, false);
+  insert into auth.sessions (user_id) values ((select auth_id from actores where nombre = 'w2a'));
+  insert into storage.objects (bucket_id, name, owner) values ('walkthrough-photos', 'h8/foto.jpg', (select auth_id from actores where nombre = 'w2b'));
+end $$;
+select pg_temp.prueba('B7 activo: ve su foto de hace menos de 24 h', '1',
+  pg_temp.valor('w2b', $q$select count(*)::text from storage.objects where bucket_id = 'walkthrough-photos' and name = 'h8/foto.jpg'$q$));
+select pg_temp.prueba('M2 desactivar: ok', 'ok',
+  pg_temp.valor('desact', format($q$select 'ok' from set_employee_active(%L, false)$q$, pg_temp.pid('w2b'))));
+select pg_temp.prueba('M2 se borraron sus sesiones y refresh tokens', '0|0',
+  (select count(*)::text from auth.sessions where user_id = (select auth_id from actores where nombre = 'w2b')) || '|' ||
+  (select count(*)::text from auth.refresh_tokens where user_id = (select auth_id from actores where nombre = 'w2b')::text));
+select pg_temp.prueba('M2 las sesiones de otros siguen', '1',
+  (select count(*)::text from auth.sessions where user_id = (select auth_id from actores where nombre = 'w2a')));
+select pg_temp.prueba('B7 desactivado: ya no ve su foto', '0',
+  pg_temp.valor('w2b', $q$select count(*)::text from storage.objects where bucket_id = 'walkthrough-photos' and name = 'h8/foto.jpg'$q$));
+select pg_temp.prueba('M2 authenticated no ejecuta revoke_auth_sessions', 'false',
+  has_function_privilege('authenticated', 'revoke_auth_sessions(uuid)', 'execute')::text);
+select pg_temp.prueba('M2 revoke_auth_sessions es SECURITY DEFINER con search_path fijo', 'true|true',
+  (select prosecdef::text || '|' || (proconfig::text like '%search_path%')::text from pg_proc where proname = 'revoke_auth_sessions'));
+select pg_temp.prueba('M2 reactivar no falla', 'ok',
+  pg_temp.valor('desact', format($q$select 'ok' from set_employee_active(%L, true)$q$, pg_temp.pid('w2b'))));
+
+-- @@ORDEN82@@
 
 select n, prueba, ok, detalle from resultados order by n;
 rollback;
