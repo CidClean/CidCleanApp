@@ -5,10 +5,10 @@ interface Props { exclude?: string; headingLevel?: 'h2' | 'h3' }
 const { exclude } = Astro.props;
 const list = SERVICES.filter((s) => s.slug !== exclude);
 ---
-<div class="grid">
+<div class={`svc-row n${list.length}`}>
   {list.map((s) => (
     <a class="card svc tilt reveal" href={`/services/${s.slug}`}>
-      <div class="img"><Picture src={s.image} formats={['avif', 'webp']} widths={[400, 640, 900]} sizes="(max-width: 640px) 92vw, (max-width: 1100px) 45vw, 280px" alt={s.imageAlt} width={900} height={675} loading="lazy" decoding="async" /></div>
+      <div class="img"><Picture src={s.image} formats={['avif', 'webp']} widths={[400, 640, 900]} sizes="(max-width: 599px) 92vw, (max-width: 1099px) 46vw, 230px" alt={s.imageAlt} width={900} height={675} loading="lazy" decoding="async" /></div>
       <div class="body">
         <h3>{s.name}</h3>
         <p class="muted">{s.card}</p>
