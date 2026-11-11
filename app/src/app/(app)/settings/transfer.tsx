@@ -33,7 +33,7 @@ export default function TransferScreen() {
   const [selected, setSelected] = useState<string>('');
   const [understood, setUnderstood] = useState(false);
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState<'load' | 'transfer' | 'needsTotp' | null>(null);
+  const [error, setError] = useState<'load' | 'transfer' | null>(null);
   // undefined: aún no se sabe; null: no tiene tipo y debe elegirlo (D-206).
   const [ownType, setOwnType] = useState<WorkerType | null | undefined>(undefined);
   const [chosenType, setChosenType] = useState<WorkerType | null>(null);
@@ -60,11 +60,7 @@ export default function TransferScreen() {
   if (!isSuperAdmin) return <Redirect href="/" />;
 
   const needsType = ownType === null;
-  // Orden 102 (N6, D-306): solo a quien ya tiene la app de autenticación; si no, el botón queda apagado y se explica.
-  const chosen = (candidates ?? []).find((c) => c.id === selected);
-  const lacksTotp = chosen !== undefined && !chosen.hasTotp;
-  const ready =
-    Boolean(selected) && !lacksTotp && understood && ownType !== undefined && (!needsType || chosenType !== null);
+  const ready = Boolean(selected) && understood && ownType !== undefined && (!needsType || chosenType !== null);
 
   async function transfer() {
     if (!ready || sending) return;
@@ -73,7 +69,7 @@ export default function TransferScreen() {
     const result = await transferSuperAdmin(selected, needsType ? chosenType : null);
     if (!result.ok) {
       setSending(false);
-      setError(result.reason === 'needs_totp' ? 'needsTotp' : 'transfer');
+      setError('transfer');
       return;
     }
     await refresh(); // ya no es Super Admin: Ajustes desaparece del Menú
@@ -82,13 +78,7 @@ export default function TransferScreen() {
 
   const options = (candidates ?? []).map((c) => ({ value: c.id, label: c.fullName }));
   const errorText =
-    error === 'load'
-      ? strings.transfer.errorLoad
-      : error === 'transfer'
-        ? strings.transfer.errorTransfer
-        : error === 'needsTotp'
-          ? strings.transfer.needsTotp
-          : null;
+    error === 'load' ? strings.transfer.errorLoad : error === 'transfer' ? strings.transfer.errorTransfer : null;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -111,11 +101,6 @@ export default function TransferScreen() {
           </View>
         ) : null}
         <SelectField label={strings.transfer.newSuperAdmin} options={options} value={selected} onChange={setSelected} />
-        {lacksTotp ? (
-          <AppText size={sample.noteSize} color={colors.secondary} style={{ marginBottom: 8 }}>
-            {strings.transfer.needsTotp}
-          </AppText>
-        ) : null}
         {candidates !== null && candidates.length === 0 ? (
           <AppText size={sample.noteSize} color={colors.secondary} style={{ marginBottom: 8 }}>
             {strings.transfer.noCandidates}

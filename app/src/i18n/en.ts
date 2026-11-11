@@ -380,7 +380,6 @@ export const en: Strings = {
     noCandidates: 'No one else can receive the role yet: they must be active and have signed in to the app.',
     errorLoad: "Couldn't load the list. Try again.",
     errorTransfer: "Couldn't transfer the role. Try again.",
-    needsTotp: 'This person must set up the authenticator app first', // order 102 (N6, D-306)
   },
 
   // Leaving the Permissions tab with unsaved changes.
