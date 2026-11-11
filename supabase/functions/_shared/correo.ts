@@ -16,8 +16,7 @@ export const EMPRESA = {
   correo: 'humbertovp@cidclean.com',
   redes: [
     ['Instagram', 'https://www.instagram.com/cidclean'],
-    ['Facebook', 'https://www.facebook.com/share/1DizxHgUY9/'],
-    ['TikTok', 'https://www.tiktok.com/@cid.clean'],
+    ['Facebook', 'https://www.facebook.com/share/1HYRBdqPmq/'],
     ['LinkedIn', 'https://www.linkedin.com/company/cidclean/'],
   ] as const,
 };
