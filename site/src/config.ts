@@ -1,7 +1,7 @@
 // Datos del negocio que se muestran en el sitio (D-249, D-309, D-310).
 // googleBusinessUrl y social se llenan cuando el dueño pase los enlaces; vacíos no se muestran.
 export const SITE = {
-  url: 'https://cidclean.com',
+  url: 'https://www.cidclean.com',
   name: 'Cid Clean',
   legalName: 'Cid Clean LLC',
   phone: '(786) 250-1324',

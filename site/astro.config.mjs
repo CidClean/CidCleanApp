@@ -2,7 +2,7 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://cidclean.com',
+  site: 'https://www.cidclean.com',
   output: 'static',
   trailingSlash: 'never',
   build: { format: 'file', inlineStylesheets: 'always' },
