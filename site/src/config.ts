@@ -13,10 +13,10 @@ export const SITE = {
   estimateEndpoint: 'https://noammaqhtdfgbheeiugo.supabase.co/functions/v1/site-estimate',
   googleBusinessUrl: '',
   social: {
-    instagram: '',
-    facebook: '',
+    instagram: 'https://www.instagram.com/cidclean',
+    facebook: 'https://www.facebook.com/share/1HYRBdqPmq/',
     tiktok: '',
-    linkedin: '',
+    linkedin: 'https://www.linkedin.com/company/cidclean/',
   } as Record<string, string>,
 };
 
