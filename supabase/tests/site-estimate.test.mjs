@@ -175,6 +175,11 @@ test('contacto: solo el aviso interno', async () => {
   assert.deepEqual(await res.json(), { ok: true });
   assert.equal(d.sent.length, 1);
   assert.match(d.sent[0].subject, /existing lead/);
+  // Orden 101 (N2): el aviso no dice que se escribió en las notas y marca la solicitud como sin verificar.
+  assert.match(d.sent[0].text, /notes were not changed/);
+  assert.match(d.sent[0].text, /unverified/);
+  assert.match(d.sent[0].html, /Website requests/);
+  assert.doesNotMatch(d.sent[0].text, /added to its notes/);
 });
 test('robot: responde ok sin crear nada ni mandar correos', async () => {
   for (const b of [{ ...base, website: 'x' }, { ...base, token: 'v1.1.' + 'a'.repeat(64) }, { ...base, token: undefined }]) {

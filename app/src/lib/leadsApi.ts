@@ -382,3 +382,64 @@ export async function removeLostReason(id: string): Promise<LeadsResult<'deleted
     return { ok: false, reason: 'network' };
   }
 }
+
+/** Solicitud del sitio enlazada a un lead que ya estaba abierto (orden 101, N2). Sin verificar: no entra en las notas. */
+export type SiteRequest = {
+  id: number;
+  createdAt: Date;
+  kind: 'estimate' | 'contact';
+  typeName: string | null;
+  sqft: number | null;
+  frequencyName: string | null;
+  city: string | null;
+  zip: string | null;
+  rangeLow: number | null;
+  rangeHigh: number | null;
+  message: string | null;
+  customerMail: boolean;
+};
+
+type SiteRequestRow = {
+  id: number;
+  created_at: string;
+  kind: string;
+  type_name: string | null;
+  sqft: number | null;
+  frequency_name: string | null;
+  city: string | null;
+  zip: string | null;
+  range_low: number | string | null;
+  range_high: number | string | null;
+  message: string | null;
+  customer_mail: boolean;
+};
+
+const num = (v: number | string | null): number | null => (v === null || v === undefined ? null : Number(v));
+
+export function siteRequestFromRow(r: SiteRequestRow): SiteRequest {
+  return {
+    id: r.id,
+    createdAt: new Date(r.created_at),
+    kind: r.kind === 'contact' ? 'contact' : 'estimate',
+    typeName: r.type_name,
+    sqft: r.sqft,
+    frequencyName: r.frequency_name,
+    city: r.city,
+    zip: r.zip,
+    rangeLow: num(r.range_low),
+    rangeHigh: num(r.range_high),
+    message: r.message,
+    customerMail: r.customer_mail === true,
+  };
+}
+
+/** Solicitudes del sitio de un lead (RPC lead_site_submissions, con leads_ver). */
+export async function fetchSiteRequests(leadId: string): Promise<LeadsResult<SiteRequest[]>> {
+  try {
+    const { data, error } = await supabase.rpc('lead_site_submissions', { p_lead: leadId });
+    if (error) return { ok: false, reason: failureFrom(error.code) };
+    return { ok: true, data: ((data ?? []) as SiteRequestRow[]).map(siteRequestFromRow) };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}

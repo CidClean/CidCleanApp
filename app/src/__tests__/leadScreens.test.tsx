@@ -114,6 +114,7 @@ jest.mock('@/lib/leadsApi', () => ({
   createLostReason: (...a: unknown[]) => mockCreateReason(...a),
   updateLostReason: (...a: unknown[]) => mockUpdateReason(...a),
   removeLostReason: (...a: unknown[]) => mockRemoveReason(...a),
+  fetchSiteRequests: async () => ({ ok: true, data: [] }), // orden 101
 }));
 
 import HomeScreen from '@/app/(app)/(tabs)/index';

@@ -131,11 +131,15 @@ select pg_temp.prueba('nota con tipo, sq ft, frecuencia, ciudad, ZIP y rango', '
    from leads where email = 'ana@prueba-est.local'));
 select pg_temp.prueba('lead_site con la ciudad, FL y ZIP, para completar', 'Naples, FL 34102|true',
   (select s.address || '|' || s.address_needs_review from lead_sites s join leads l on l.id = s.lead_id where l.email = 'ana@prueba-est.local'));
-select pg_temp.prueba('mismo correo con lead abierto: agrega nota, no duplica', 'ok|false|1',
+-- Orden 101 (N2): ya no se escribe en las notas del lead abierto; la solicitud queda en site_submissions (attached).
+select pg_temp.prueba('mismo correo con lead abierto: no duplica el lead', 'ok|false|1',
   (select r->>'status' || '|' || (r->>'new_lead') || '|' || (select count(*) from leads where email = 'ana@prueba-est.local')
    from pg_temp.envio('contact', 'ana@prueba-est.local', 'ip2', mensaje => 'Necesito limpieza los sábados') r));
-select pg_temp.prueba('la nota del mensaje quedó en el mismo lead', 'true',
-  (select (notes like '%Website estimate%' and notes like '%Necesito limpieza los sábados%')::text from leads where email = 'ana@prueba-est.local'));
+select pg_temp.prueba('el mensaje NO entra en las notas del lead abierto (orden 101)', 'true',
+  (select (notes like '%Website estimate%' and notes not like '%Necesito limpieza los sábados%')::text from leads where email = 'ana@prueba-est.local'));
+select pg_temp.prueba('el mensaje queda enlazado al lead en site_submissions (orden 101)', 'true',
+  (select (s.attached and s.message = 'Necesito limpieza los sábados')::text from site_submissions s join leads l on l.id = s.lead_id
+    where l.email = 'ana@prueba-est.local' and s.kind = 'contact'));
 select pg_temp.envio('estimate', 'luis@prueba-est.local', 'ip3', 'medical', 2000, empresa => 'Clínica Sol');
 select pg_temp.prueba('empresa dada va en company', 'Clínica Sol|Ana Prueba',
   (select company || '|' || contact_name from leads where email = 'luis@prueba-est.local'));

@@ -90,5 +90,50 @@ select pg_temp.prueba('anon no ejecuta site_email_key', 'false', has_function_pr
 select pg_temp.prueba('authenticated no ejecuta site_email_key', 'false',
   has_function_privilege('authenticated', 'site_email_key(text)', 'execute')::text);
 
+-- Orden 101 (N2): solicitudes enlazadas a un lead abierto, sin tocar sus notas ----------------------------------------
+do $$
+declare
+  pid uuid;
+  aid uuid;
+begin
+  aid := gen_random_uuid();
+  insert into profiles (full_name, worker_type, role, email, has_app_access)
+  values ('Prueba ventas', 'w2', 'supervisor', 'ventas@prueba-s2.local', true) returning id into pid;
+  insert into auth.users (id, aud, role, email) values (aid, 'authenticated', 'authenticated', 'ventas@prueba-s2.local');
+  update profiles set auth_user_id = aid where id = pid;
+  insert into actores values ('ventas', aid, pid);
+  insert into profile_permissions (profile_id, permission_key) values (pid, 'leads_ver');
+  aid := gen_random_uuid();
+  insert into profiles (full_name, worker_type, role, email, has_app_access)
+  values ('Prueba sin leads', 'w2', 'supervisor', 'nada@prueba-s2.local', true) returning id into pid;
+  insert into auth.users (id, aud, role, email) values (aid, 'authenticated', 'authenticated', 'nada@prueba-s2.local');
+  update profiles set auth_user_id = aid where id = pid;
+  insert into actores values ('nada', aid, pid);
+end $$;
+delete from site_submissions;
+select pg_temp.prueba('primer envío crea el lead', 'true', pg_temp.envio('abierto@ex.com', 'L1')->>'new_lead');
+update leads set notes = 'Nota original del vendedor' where email = 'abierto@ex.com';
+select pg_temp.prueba('segundo envío (contacto) no crea lead', 'false',
+  pg_temp.envio('abierto@ex.com', 'L2', 'Atacante', 'contact', 'El cliente pide pagar a otra cuenta')->>'new_lead');
+select pg_temp.prueba('tercer envío (estimado) no crea lead', 'false', pg_temp.envio('Abierto@EX.com', 'L3')->>'new_lead');
+select pg_temp.prueba('las notas del lead abierto no cambian', 'Nota original del vendedor',
+  (select notes from leads where email = 'abierto@ex.com'));
+select pg_temp.prueba('el primero no es "attached"; los otros dos sí', 'false,true,true',
+  (select string_agg(attached::text, ',' order by id) from site_submissions where lead_id = (select id from leads where email = 'abierto@ex.com')));
+select pg_temp.prueba('leads_ver lee las solicitudes enlazadas (2, la más reciente primero)', '2|estimate|Office|3000|3x per week|Naples|1130|1520',
+  pg_temp.valor('ventas', format($q$select count(*) over () || '|' || kind || '|' || type_name || '|' || sqft || '|' || frequency_name
+    || '|' || city || '|' || range_low || '|' || range_high from lead_site_submissions(%L) limit 1$q$,
+    (select id from leads where email = 'abierto@ex.com'))));
+select pg_temp.prueba('el mensaje del contacto se lee como texto', 'El cliente pide pagar a otra cuenta',
+  pg_temp.valor('ventas', format($q$select message from lead_site_submissions(%L) where kind = 'contact'$q$,
+    (select id from leads where email = 'abierto@ex.com'))));
+select pg_temp.prueba('sin leads_ver: 42501', 'ERR:42501',
+  pg_temp.valor('nada', format($q$select count(*)::text from lead_site_submissions(%L)$q$, (select id from leads where email = 'abierto@ex.com'))));
+select pg_temp.prueba('anon no ejecuta lead_site_submissions', 'false',
+  has_function_privilege('anon', 'lead_site_submissions(uuid)', 'execute')::text);
+select pg_temp.envio('cerrado@ex.com', 'L4');
+update leads set status = 'won' where email = 'cerrado@ex.com';
+select pg_temp.prueba('lead ganado: un envío nuevo crea otro lead', 'true', pg_temp.envio('cerrado@ex.com', 'L5')->>'new_lead');
+
 select n, prueba, ok, detalle from resultados order by n;
 rollback;

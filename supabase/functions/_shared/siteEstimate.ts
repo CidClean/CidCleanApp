@@ -211,6 +211,9 @@ export function correoCliente(s: Submission, r: SubmitResult) {
   return { subject: 'Your Cid Clean estimate', html: correoHtml({ preview: `Your estimated monthly range: ${range}`, tarjeta }), text };
 }
 
+// Orden 101 (N2), D-200: la solicitud no entra en las notas del lead abierto; se enlaza y se marca sin verificar.
+export const YA_ABIERTO =
+  'This email already had an open lead. The lead\'s notes were not changed: this request was attached to it under "Website requests" as unverified (anyone can type any email on the website).';
 export const SIN_CORREO = 'Estimate email to the customer not sent: hourly limit reached.'; // D-200
 
 /** Aviso interno a info@cidclean.com con los datos y el enlace al lead en la app. */
@@ -235,13 +238,13 @@ export function correoInterno(s: Submission, r: SubmitResult) {
   ];
   const tarjeta = [
     titulo(esEstimado ? 'New website estimate' : 'New website message', 22),
-    parrafo(r.new_lead ? 'A new lead was created in Leads.' : 'This email already had an open lead, so the details were added to its notes.'),
+    parrafo(r.new_lead ? 'A new lead was created in Leads.' : esc(YA_ABIERTO)),
     r.send_customer_mail === false && esEstimado ? parrafo(SIN_CORREO) : '',
     filas(items),
     `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px 0 10px"><tr><td style="background:#0F766E;border-radius:14px"><a href="${esc(url)}" style="display:inline-block;padding:14px 26px;color:#FFFFFF;font-size:16px;font-weight:800;text-decoration:none">Open lead</a></td></tr></table>`,
     nota('Sent automatically by the cidclean.com estimator.'),
   ].join('');
-  const text = [subject, '', ...items.map((i) => `${i.title}: ${i.detail}`),
+  const text = [subject, '', ...(r.new_lead ? [] : [YA_ABIERTO, '']), ...items.map((i) => `${i.title}: ${i.detail}`),
     ...(r.send_customer_mail === false && esEstimado ? ['', SIN_CORREO] : []), '', `Open lead: ${url}`].join('\n');
   return { subject, html: correoHtml({ preview: subject, tarjeta }), text };
 }

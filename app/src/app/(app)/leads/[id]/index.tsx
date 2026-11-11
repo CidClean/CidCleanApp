@@ -15,6 +15,7 @@ import { AppButton } from '@/components/AppButton';
 import { AppText } from '@/components/AppText';
 import { ListRow } from '@/components/ListRow';
 import { LeadFormFields } from '@/components/sales/LeadFormFields';
+import { SiteRequests } from '@/components/sales/SiteRequests';
 import { Icon } from '@/components/Icon';
 import { SelectField } from '@/components/SelectField';
 import { Sheet } from '@/components/Sheet';
@@ -284,9 +285,13 @@ export default function LeadDetailScreen() {
         {lead && section === 'quote' ? <LeadQuotes leadId={lead.id} sites={lead.sites} /> : null}
 
         {lead && section === 'notes' && !editing ? (
-          <CardBlock style={{ paddingVertical: 14 }}>
-            <AppText color={lead.notes ? colors.text : colors.secondary}>{lead.notes ?? s.detail.noNotes}</AppText>
-          </CardBlock>
+          <>
+            <CardBlock style={{ paddingVertical: 14 }}>
+              <AppText color={lead.notes ? colors.text : colors.secondary}>{lead.notes ?? s.detail.noNotes}</AppText>
+            </CardBlock>
+            {/* Orden 101 (N2): envíos del sitio con el correo de este lead abierto, sin verificar. */}
+            <SiteRequests leadId={lead.id} s={s} />
+          </>
         ) : null}
 
         {editing && form ? (

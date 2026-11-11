@@ -92,6 +92,19 @@ export const salesEs = {
     noQuote: 'Sin quote todavía', // APROBADO (D-226)
   },
 
+  // Orden 101 (N2): envíos del sitio con el correo de un lead abierto. Textos D-200.
+  siteRequests: {
+    title: 'Solicitudes del sitio', // D-200
+    unverified: 'Sin verificar', // D-200
+    unverifiedNote: 'Cualquiera puede escribir este correo en el sitio. Confirma con el cliente antes de actuar.', // D-200
+    estimate: 'Estimado', // D-200
+    contact: 'Mensaje', // D-200
+    size: (sqft: string) => `${sqft} sq ft`, // D-200
+    range: (low: string, high: string) => `${low} – ${high} al mes`, // D-200
+    noCustomerMail: 'No se le mandó el correo al cliente (tope por hora).', // D-200
+    errorLoad: 'No se pudieron cargar las solicitudes del sitio. Inténtalo otra vez.', // D-200 (mismo estilo de D-195)
+  },
+
   sites: {
     add: 'Agregar sitio', // D-200
     schedule: 'Agendar walkthrough', // APROBADO (muestra ronda 1)
@@ -261,6 +274,18 @@ export const salesEn: SalesStrings = {
     statusButton: (status: string) => `Status: ${status}`,
     sitesCount: (n: number) => (n === 1 ? '1 site' : `${n} sites`),
     noQuote: 'No quote yet',
+  },
+
+  siteRequests: {
+    title: 'Website requests', // Notes: block with website submissions for an open lead
+    unverified: 'Unverified',
+    unverifiedNote: 'Anyone can type this email on the website. Check with the customer before acting on it.',
+    estimate: 'Estimate',
+    contact: 'Message',
+    size: (sqft: string) => `${sqft} sq ft`,
+    range: (low: string, high: string) => `${low} – ${high} per month`,
+    noCustomerMail: 'The customer email was not sent (hourly limit).',
+    errorLoad: "Couldn't load the website requests. Try again.",
   },
 
   sites: {
