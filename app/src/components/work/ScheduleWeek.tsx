@@ -114,7 +114,8 @@ export function ScheduleWeek({
       setNotice({ tone: "error", text: t.errorLoad });
       return;
     }
-    const c = copyWeek(plan.jobsites, r.data.jobsites, drafts);
+    // D-302: los jobsites sin contrato firmado por ambas partes no se programan, tampoco al copiar.
+    const c = copyWeek(plan.jobsites.filter((j) => !unsigned.has(j.id)), r.data.jobsites, drafts);
     setDrafts((cur) => ({ ...cur, ...c.cells }));
     setExtra((cur) => {
       const next = { ...cur };
@@ -277,10 +278,10 @@ export function ScheduleWeek({
               {time ? `${time} · ${t.weekHint}` : t.noTimeSite}
             </AppText>
             {/* D-289: sin contrato firmado por ambas partes no se programa (el servidor también lo rechaza). */}
+            {/* D-302: sin contrato firmado por ambas partes solo queda el aviso, sin hora ni cuadrícula. */}
             {unsigned.has(j.id) ? (
               <AmberNote title={k.noContractTitle} text={k.noContract} />
-            ) : null}
-            {time ? (
+            ) : time ? (
               <Pressable
                 accessibilityRole="button"
                 onPress={() => openTime(j)}
@@ -298,7 +299,7 @@ export function ScheduleWeek({
                 onPress={() => openTime(j)}
               />
             )}
-            {time ? (
+            {time && !unsigned.has(j.id) ? (
               <>
                 {rows.length === 0 ? (
                   <AppText size={12} color={colors.secondary}>
