@@ -33,7 +33,9 @@ import { W9ProfileSection } from '@/components/w9/W9ProfileSection';
 import { IcaSection } from '@/components/ica/IcaSection';
 import { OffersSection } from '@/components/ica/OffersSection';
 import { WarningsSection } from '@/components/ica/WarningsSection';
-import { AddressFields } from '@/components/employees/AddressFields';
+import { AddressFields } from '@/components/AddressFields';
+import { useAddressStrings } from '@/i18n/useAddressStrings';
+import { formatAddressLine } from '@/lib/address';
 import { useStrings } from '@/i18n/useStrings';
 import type { Strings } from '@/i18n/es';
 import { chooseFile, fetchDocuments, takePhoto, uploadDocument, type PickResult } from '@/lib/documents';
@@ -99,6 +101,7 @@ export default function EmployeeProfileScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const strings = useStrings();
+  const addressT = useAddressStrings();
   const { locale, profile } = useSession();
   const { access, can } = usePermissions();
 
@@ -561,7 +564,7 @@ export default function EmployeeProfileScreen() {
                   error={phoneError ? strings.common.phoneError : null}
                 />
                 <DataRow label={strings.newEmployee.email} value={employee.email ?? '—'} />
-                <AddressFields form={form} onChange={setForm} strings={strings} zipError={zipError} />
+                <AddressFields form={form} onChange={setForm} t={addressT} errors={zipError ? { zip: true } : {}} optional />
                 {employee.workerType !== null ? (
                   <View style={{ paddingTop: 8 }}>
                     <AppText size={sample.labelSize} color={colors.secondary} style={{ marginBottom: 2 }}>
@@ -879,7 +882,7 @@ function DataSection({
         <DataRow label={strings.employee.phone} value={employee.phone ? formatPhone(employee.phone) : '—'} />
         <DataRow label={strings.newEmployee.email} value={employee.email ?? '—'} />
         {/* D-264 (D-200: la dirección se lee en una sola fila). */}
-        <DataRow label={strings.employee.address} value={[w9AddressLine(employee), w9CityLine(employee)].filter(Boolean).join(', ') || '—'} />
+        <DataRow label={strings.employee.address} value={formatAddressLine(employee) || '—'} />
         {employee.workerType !== null ? (
           <DataRow label={strings.newEmployee.type} value={typeLabel(strings, employee.workerType)} />
         ) : null}

@@ -1,3 +1,6 @@
+import { AddressReviewNote } from '@/components/AddressFields';
+import { useAddressStrings } from '@/i18n/useAddressStrings';
+import { emptyAddress, hasAddressErrors, type AddressErrors } from '@/lib/address';
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -9,7 +12,7 @@ import { AppButton } from '@/components/AppButton';
 import { AppText } from '@/components/AppText';
 import { Checkbox } from '@/components/Checkbox';
 import { Chip } from '@/components/Chip';
-import { ClientFields, clientPayload, clientPhoneOk, type ClientForm } from '@/components/clients/ClientFields';
+import { ClientFields, clientPayload, clientPhoneOk, clientAddressErrors, type ClientForm } from '@/components/clients/ClientFields';
 import { formatPhone } from '@/lib/phone';
 import { ListRow } from '@/components/ListRow';
 import { BackHeader } from '@/components/bento/Header';
@@ -45,6 +48,8 @@ export default function ClientScreen() {
   const [phoneError, setPhoneError] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const addressT = useAddressStrings();
+  const [addressErrors, setAddressErrors] = useState<AddressErrors>({});
   const [providerError, setProviderError] = useState(false);
 
   const load = useCallback(async () => {
@@ -72,7 +77,9 @@ export default function ClientScreen() {
     const badPhone = !clientPhoneOk(form);
     setNameError(missing);
     setPhoneError(badPhone);
-    if (missing || badPhone) return;
+    const addrErrors = clientAddressErrors(form);
+    setAddressErrors(addrErrors);
+    if (missing || badPhone || hasAddressErrors(addrErrors)) return;
     setSaving(true);
     setSaveError(false);
     const result = await updateClient(id, clientPayload(form));
@@ -106,7 +113,7 @@ export default function ClientScreen() {
             label: strings.common.edit,
             accessibilityLabel: strings.common.edit,
             onPress: () =>
-              setForm({ name: client.name, phone: formatPhone(client.phone), email: client.email ?? '', address: client.address ?? '', notes: client.notes ?? '' }),
+              setForm({ name: client.name, phone: formatPhone(client.phone), email: client.email ?? '', ...(client.addressParts ?? emptyAddress()), notes: client.notes ?? '' }),
           }
       : undefined;
 
@@ -128,7 +135,7 @@ export default function ClientScreen() {
             />
             {form ? (
               <>
-                <ClientFields form={form} onChange={setForm} c={c} nameError={nameError} phoneError={phoneError} />
+                <ClientFields form={form} onChange={setForm} c={c} nameError={nameError} phoneError={phoneError} addressErrors={addressErrors} />
                 {saveError ? <AppAlert tone="error" text={c.client.errorSave} /> : null}
                 <AppButton label={strings.common.save} onPress={() => void save()} disabled={saving} />
               </>
@@ -140,6 +147,8 @@ export default function ClientScreen() {
                 <ListRow title={c.client.address} detail={value(client.address)} />
                 <ListRow title={c.client.notes} detail={value(client.notes)} last />
                 </CardBlock>
+                {/* D-301: dirección vieja sin separar. */}
+                {client.addressNeedsReview ? <AddressReviewNote t={addressT} onEdit={editAction?.onPress} /> : null}
                 {canEditClientData(access) ? (
                   <View style={{ marginTop: 10 }}>
                     <Checkbox label={c.accountProvider} checked={!!client.accountProvider} onChange={(v) => void toggleProvider(v)} />

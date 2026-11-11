@@ -99,7 +99,7 @@ describe('Jobsite: Plus Code, contactos y fechas (D-210, D-211, D-216)', () => {
     expect(isValidPlusCode('nada')).toBe(false);
   });
   it('teléfonos de 10 dígitos y se guardan formateados', () => {
-    const f = { ...emptyJobsiteForm, name: 'Sede', address: '1 Main St, Naples, FL 34102' };
+    const f = { ...emptyJobsiteForm, name: 'Sede', addressLine1: '1 Main St', city: 'Naples', state: 'FL', zip: '34102' };
     expect(validateJobsite({ ...f, contactPhone: '239555', emergencyPhone: '(239) 555-0142' }, { withRate: false, plusCodeOk: isValidPlusCode })).toEqual({ contactPhone: true });
     const d = jobsiteData({ ...f, contactPhone: '2395550142', emergencyName: 'Ana', emergencyRelation: 'Gerente', emergencyPhone: '239.555.0100', startDate: '11/01/2026' });
     expect(d.contact_phone).toBe('(239) 555-0142');

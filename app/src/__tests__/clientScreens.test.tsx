@@ -106,6 +106,19 @@ describe('Jobsite (D-055, D-060, D-210)', () => {
     expect(screen.getByText('Lun, Mié y Vie')).toBeTruthy();
   });
 
+  it('dirección vieja sin separar: aviso ámbar "Completa la dirección." con Editar (D-301)', async () => {
+    Object.assign(jobsite, { addressNeedsReview: true });
+    try {
+      await render(<JobsiteScreen />);
+      expect(await screen.findByText(/Completa la dirección\./)).toBeTruthy();
+      const edits = screen.getAllByText('Editar');
+      await fireEvent.press(edits[edits.length - 1]);
+      expect(mockPush).toHaveBeenCalledWith({ pathname: '/jobsites/[id]/edit', params: { id: 'j1' } });
+    } finally {
+      Object.assign(jobsite, { addressNeedsReview: false });
+    }
+  });
+
   it('pausar pide confirmación', async () => {
     mockSetStatus.mockResolvedValue({ ok: true, data: null });
     await render(<JobsiteScreen />);

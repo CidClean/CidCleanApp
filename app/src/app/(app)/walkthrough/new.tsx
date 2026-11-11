@@ -45,7 +45,7 @@ export default function StartWalkthroughScreen() {
         router.replace({ pathname: '/walkthrough/[id]', params: { id: local.id } });
         return;
       }
-      const prefill = { address: site.address, contactName: l.contactName ?? '', phone: formatPhone(l.phone), email: l.email ?? '' };
+      const prefill = { address: site.address, ...(site.addressParts ?? {}), contactName: l.contactName ?? '', phone: formatPhone(l.phone), email: l.email ?? '' };
       const base = {
         siteId: site.id,
         leadId: l.id,

@@ -3,6 +3,7 @@
  * frecuencia y cola de sincronización. Sin red ni almacenamiento: se prueban solas.
  * Fuente: current/flujo.md ("Ventas 2: Walkthrough"), D-004, D-037, D-038, D-073 a D-075, D-080, D-091, D-105, D-106, D-119.
  */
+import { formatAddressLine, parseAddress, type AddressParts } from './address';
 import { can, type Access } from './visibility';
 import { bySunday } from './weekOrder';
 
@@ -62,7 +63,11 @@ export type Area = {
 export type Frequency = { kind: 'daily' | 'weekly' | 'other'; days: number[]; other: string };
 
 export type WalkthroughData = {
-  contact: { address: string; contactName: string; phone: string; email: string; general: string };
+  /**
+   * `address` es la línea única "calle, dirección 2, City, ST ZIP" que leen el quote, el PDF y el jobsite; las partes
+   * (D-301) se guardan al lado. Un walkthrough anterior solo tiene `address` y se separa al abrirlo.
+   */
+  contact: { address: string; contactName: string; phone: string; email: string; general: string } & Partial<AddressParts>;
   areas: Area[];
   frequency: Frequency;
   internal: { staff: string; time: string; supplies: string };
@@ -337,4 +342,23 @@ export function dataFromServer(raw: unknown, fallback: WalkthroughData): Walkthr
         }))
       : [],
   };
+}
+
+/** Partes de la dirección del walkthrough (D-301): las guardadas o, en uno anterior, separadas del texto. */
+export function contactAddressParts(c: WalkthroughData['contact']): AddressParts {
+  if (c.addressLine1 !== undefined) {
+    return {
+      addressLine1: c.addressLine1 ?? '',
+      addressLine2: c.addressLine2 ?? '',
+      city: c.city ?? '',
+      state: c.state ?? '',
+      zip: c.zip ?? '',
+    };
+  }
+  return parseAddress(c.address).parts;
+}
+
+/** Contacto con las partes nuevas y la línea única al día. */
+export function withContactAddress(c: WalkthroughData['contact'], a: AddressParts): WalkthroughData['contact'] {
+  return { ...c, ...a, address: formatAddressLine(a) };
 }

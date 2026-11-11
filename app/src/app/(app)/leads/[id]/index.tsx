@@ -1,3 +1,5 @@
+import { AddressReviewNote } from '@/components/AddressFields';
+import { useAddressStrings } from '@/i18n/useAddressStrings';
 import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { CleaningTypeField } from '@/components/contract/CleaningTypeField';
 import { useCallback, useState } from 'react';
@@ -390,6 +392,7 @@ function SitesSection({
   onDelete: (site: LeadSite) => void;
 }) {
   const { colors } = useTheme();
+  const addressT = useAddressStrings();
   const hasSites = lead.sites.length > 0;
   return (
     <View>
@@ -423,6 +426,12 @@ function SitesSection({
       ))}
       </CardBlock>
       ) : null}
+      {/* D-301: dirección vieja sin separar. */}
+      {lead.sites.filter((x) => x.addressNeedsReview).map((x) => (
+        <View key={x.id} style={{ marginTop: 8 }}>
+          <AddressReviewNote t={addressT} label={siteLabel(x)} onEdit={canEdit ? () => onEdit(x.id) : undefined} />
+        </View>
+      ))}
       {canEdit ? (
         <View style={{ marginTop: hasSites ? 12 : 0 }}>
           <AppButton label={s.sites.add} variant="outline" icon="plus" onPress={onAdd} />

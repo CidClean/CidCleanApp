@@ -162,3 +162,13 @@ npx supabase@latest functions deploy quote-portal --project-ref <ref> --use-api 
 npx supabase@latest functions deploy contract-admin --project-ref <ref> --use-api
 npx supabase@latest functions deploy contract-portal --project-ref <ref> --use-api --no-verify-jwt
 ```
+
+## Orden 76: direcciones con la misma composición (D-301) y Schedule sin contrato (D-302)
+
+Migración (sin aplicar): `20261111000001_direcciones.sql`. Agrega Dirección, Dirección 2, City, State y ZIP code (con `address_needs_review`) a `lead_sites`, `clients` y `jobsites`, separa los textos que ya existen (si no reconoce ciudad, estado y ZIP, el texto queda en Dirección y la fila se marca para revisar) y deja `address` como línea única de compatibilidad, mantenida por un disparador. `create_legacy_client` y `update_client` tienen una versión de 10 parámetros con la dirección separada (la de 5 sigue para las apps sin actualizar); `create_legacy_jobsite` y `update_jobsite` aceptan `address_line1…zip` en `p_data`; `ica_default_fields` usa `format_address`. Aplicar la migración **antes** de publicar la app (la app nueva lee y escribe las columnas nuevas). Pruebas: `supabase/tests/direcciones.sql` (psql, termina en rollback; al final cuenta cuántos formatos de muestra quedan para revisar).
+
+Función a desplegar (usa `_shared/address.ts` para la línea de la dirección del walkthrough):
+
+```
+npx supabase@latest functions deploy walkthrough-pdf --project-ref <ref> --use-api
+```

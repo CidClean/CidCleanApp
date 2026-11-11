@@ -1,9 +1,11 @@
+import { useAddressStrings } from '@/i18n/useAddressStrings';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppAlert } from '../AppAlert';
 import { AppButton } from '../AppButton';
+import { AddressTextFields } from '../AddressFields';
 import { AppField } from '../AppField';
 import { AppText } from '../AppText';
 import { Dialog } from '../Dialog';
@@ -50,6 +52,7 @@ export function ContractCard({ jobsiteId, siteId }: { jobsiteId?: string; siteId
   const router = useRouter();
   const { colors } = useTheme();
   const k = useContractStrings();
+  const addressT = useAddressStrings();
   const { locale } = useSession();
   const l = locale === 'es' ? 'es' : 'en';
   const [info, setInfo] = useState<ContractInfo | null>(null);
@@ -224,7 +227,18 @@ export function ContractCard({ jobsiteId, siteId }: { jobsiteId?: string; siteId
         <AppText weight="bold" size={sample.headingSize} style={{ marginBottom: 8 }}>
           {k.prepare}
         </AppText>
-        {Object.keys(values).map((f) => (
+        {Object.keys(values).map((f) =>
+          // D-301: las direcciones del contrato con los campos comunes, guardadas en una línea.
+          f === 'client_address' || f === 'site_address' ? (
+            <AddressTextFields
+              key={f}
+              label={k.fields[f] ?? f}
+              value={values[f] ?? ''}
+              onChange={(v) => setValues((x) => ({ ...x, [f]: v }))}
+              t={addressT}
+              missing={showMissing && !values[f]?.trim() ? k.missing : null}
+            />
+          ) : (
           <AppField
             key={f}
             label={k.fields[f] ?? f}
@@ -233,7 +247,8 @@ export function ContractCard({ jobsiteId, siteId }: { jobsiteId?: string; siteId
             error={showMissing && !values[f]?.trim() ? k.missing : null}
             maxLength={2000}
           />
-        ))}
+          ),
+        )}
         <AppText size={12} color={colors.secondary} style={{ marginBottom: 10 }}>
           {k.prepareNote}
         </AppText>

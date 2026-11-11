@@ -323,7 +323,32 @@ describe('Nuevo sitio', () => {
     expect(screen.getByText('Escribe la dirección.')).toBeTruthy();
     await fireEvent.changeText(screen.getByLabelText('Dirección'), '500 Main St');
     await fireEvent.press(screen.getByText('Agregar sitio'));
-    await waitFor(() => expect(mockAddSite).toHaveBeenCalledWith('l1', '', '500 Main St'));
+    // D-301: la dirección va completa (City, State y ZIP code); State parte en FL.
+    expect(screen.getByText('Escribe la ciudad.')).toBeTruthy();
+    expect(mockAddSite).not.toHaveBeenCalled();
+    await fireEvent.changeText(screen.getByLabelText('City'), 'Naples');
+    await fireEvent.changeText(screen.getByLabelText('ZIP code'), '3410');
+    await fireEvent.press(screen.getByText('Agregar sitio'));
+    expect(screen.getByText('Escribe un ZIP code de 5 dígitos, por ejemplo 34105.')).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText('ZIP code'), '34102');
+    await fireEvent.press(screen.getByText('Agregar sitio'));
+    await waitFor(() =>
+      expect(mockAddSite).toHaveBeenCalledWith('l1', '', { addressLine1: '500 Main St', addressLine2: '', city: 'Naples', state: 'FL', zip: '34102' }),
+    );
+  });
+
+  it('un sitio con la dirección vieja sin separar muestra "Completa la dirección." con Editar (D-301)', async () => {
+    mockFetchLead.mockResolvedValue({
+      ok: true,
+      data: { ...lead, sites: [{ ...lead.sites[0], addressNeedsReview: true }] },
+    });
+    await render(<LeadDetailScreen />);
+    await screen.findByText('Gulf Coast Dental');
+    await fireEvent.press(screen.getByText('Sitios'));
+    expect(screen.getByText(/Completa la dirección\./)).toBeTruthy();
+    const edits = screen.getAllByText('Editar');
+    await fireEvent.press(edits[edits.length - 1]);
+    expect(mockPush).toHaveBeenCalledWith(expect.objectContaining({ params: expect.objectContaining({ site: 's1' }) }));
   });
 });
 
@@ -453,9 +478,16 @@ describe('Sitios: lápiz y papelera (D-202)', () => {
     await render(<NewSiteScreen />);
     expect(await screen.findByDisplayValue('123 5th Ave S, Naples')).toBeTruthy();
     expect(screen.getByText('Editar sitio')).toBeTruthy();
+    // D-301: el texto viejo sin separar queda en Dirección; se completa con City y ZIP code.
     await fireEvent.changeText(screen.getByLabelText('Dirección'), '125 5th Ave S');
+    await fireEvent.changeText(screen.getByLabelText('City'), 'Naples');
+    await fireEvent.changeText(screen.getByLabelText('ZIP code'), '34102');
     await fireEvent.press(screen.getByText('Guardar'));
-    await waitFor(() => expect(mockUpdateSite).toHaveBeenCalledWith('s1', '5th Ave S', '125 5th Ave S'));
+    await waitFor(() =>
+      expect(mockUpdateSite).toHaveBeenCalledWith('s1', '5th Ave S', {
+        addressLine1: '125 5th Ave S', addressLine2: '', city: 'Naples', state: 'FL', zip: '34102',
+      }),
+    );
     expect(mockBack).toHaveBeenCalled();
   });
 });

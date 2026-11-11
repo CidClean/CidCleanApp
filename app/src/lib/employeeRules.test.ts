@@ -67,10 +67,17 @@ describe('iniciales y orden de la lista (D-083)', () => {
 
 describe('Nuevo empleado (D-171, D-264)', () => {
   const addr = { addressLine1: '', addressLine2: '', state: '', city: '', zip: '' };
-  test('valores de partida: W-2, Empleado, con acceso, English, sin dirección', () => {
+  test('valores de partida: W-2, Empleado, con acceso, English, sin dirección y State FL (D-301)', () => {
     expect(emptyNewEmployee()).toEqual({
       firstName: '', lastName: '', phone: '', workerType: 'w2', role: 'employee', hasAppAccess: true, email: '', language: 'en', ...addr,
+      state: 'FL',
     });
+  });
+
+  test('State FL por defecto no se guarda sin ningún otro dato de dirección (D-301)', () => {
+    const body = createEmployeeBody({ ...emptyNewEmployee(), firstName: 'Ana', lastName: 'Ruiz' });
+    expect(body.state).toBe('');
+    expect(createEmployeeBody({ ...emptyNewEmployee(), firstName: 'Ana', lastName: 'Ruiz', city: 'Naples' }).state).toBe('FL');
   });
 
   test('Nombre y Apellidos son obligatorios (D-267 (3))', () => {

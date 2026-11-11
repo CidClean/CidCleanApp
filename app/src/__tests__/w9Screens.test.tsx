@@ -71,8 +71,11 @@ describe('Perfil 1099 → Documentos: W-9 por llenar (D-256)', () => {
     mockApi.status.mockResolvedValue({ ok: true, data: null });
     await render(section({ address: '1520 Golden Gate Pkwy, Apt 4', cityLine: 'Naples, FL 34105' }));
     await fireEvent.press(await screen.findByText(a.sendToFill));
-    expect(screen.getByLabelText(a.line5).props.value).toBe('1520 Golden Gate Pkwy, Apt 4');
-    expect(screen.getByLabelText(a.line6).props.value).toBe('Naples, FL 34105');
+    // D-301: las líneas 5 y 6 se muestran con los campos comunes de dirección.
+    expect(screen.getByLabelText('Dirección').props.value).toBe('1520 Golden Gate Pkwy');
+    expect(screen.getByLabelText('Dirección 2').props.value).toBe('Apt 4');
+    expect(screen.getByLabelText('City').props.value).toBe('Naples');
+    expect(screen.getByLabelText('ZIP code').props.value).toBe('34105');
   });
 
   test('sin dirección no se envía; con los datos llama a send-w9 y dice a quién se envió', async () => {
@@ -81,11 +84,12 @@ describe('Perfil 1099 → Documentos: W-9 por llenar (D-256)', () => {
     await render(section());
     await fireEvent.press(await screen.findByText(a.sendToFill));
     await fireEvent.press(screen.getByText(a.send));
-    expect(screen.getByText(a.needAddress)).toBeTruthy();
-    expect(screen.getByText(a.needCity)).toBeTruthy();
+    expect(screen.getByText(a.addr.errorAddress1)).toBeTruthy();
+    expect(screen.getByText(a.addr.errorCity)).toBeTruthy();
     expect(mockApi.send).not.toHaveBeenCalled();
-    await fireEvent.changeText(screen.getByLabelText(a.line5), '1520 Golden Gate Pkwy');
-    await fireEvent.changeText(screen.getByLabelText(a.line6), 'Naples, FL 34105');
+    await fireEvent.changeText(screen.getByLabelText('Dirección'), '1520 Golden Gate Pkwy');
+    await fireEvent.changeText(screen.getByLabelText('City'), 'Naples');
+    await fireEvent.changeText(screen.getByLabelText('ZIP code'), '34105');
     await fireEvent.press(screen.getByText(a.send));
     await waitFor(() => expect(mockApi.send).toHaveBeenCalled());
     expect(mockApi.send).toHaveBeenCalledWith(

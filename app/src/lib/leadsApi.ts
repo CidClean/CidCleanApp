@@ -1,3 +1,4 @@
+import { addressBody, addressFromRow, type AddressParts, type AddressRow } from './address';
 import {
   dayKey,
   isLeadSource,
@@ -33,7 +34,7 @@ export function failureFrom(code: string | undefined): LeadsFailure {
 
 type AppointmentRow = { id: string; starts_at: string; status: Appointment['status'] };
 type FollowUpRow = { due_on: string; done_at: string | null };
-type SiteRow = {
+type SiteRow = AddressRow & {
   id: string;
   name: string | null;
   address: string;
@@ -118,7 +119,16 @@ export function rowToLead(r: LeadRow): Lead {
     .map((s) => {
       const scheduled = (s.walkthrough_appointments ?? []).map(toAppointment).find((a) => a.status === 'scheduled') ?? null;
       const wt = Array.isArray(s.walkthroughs) ? s.walkthroughs[0] : s.walkthroughs;
-      return { id: s.id, name: s.name, address: s.address, scheduled, walkthroughDone: (wt?.current_version ?? 0) > 0 };
+      const a = addressFromRow(s);
+      return {
+        id: s.id,
+        name: s.name,
+        address: a.line,
+        addressParts: a.parts,
+        addressNeedsReview: a.needsReview,
+        scheduled,
+        walkthroughDone: (wt?.current_version ?? 0) > 0,
+      };
     });
   return {
     id: r.id,
@@ -145,7 +155,7 @@ export async function fetchLead(id: string): Promise<LeadsResult<Lead>> {
       .select(
         'id, company, contact_name, phone, email, source, notes, status, lost_note, language, created_at, ' +
           'lost_reasons(id, label_es, label_en, sort, active), lead_followups(due_on, done_at), ' +
-          'lead_sites(id, name, address, created_at, walkthrough_appointments(id, starts_at, status), walkthroughs(current_version))',
+          'lead_sites(id, name, address, address_line1, address_line2, city, state, zip, address_needs_review, created_at, walkthrough_appointments(id, starts_at, status), walkthroughs(current_version))',
       )
       .eq('id', id)
       .maybeSingle();
@@ -233,11 +243,11 @@ export async function fetchLostReasons(): Promise<LeadsResult<LostReason[]>> {
   }
 }
 
-export async function addSite(leadId: string, name: string, address: string): Promise<LeadsResult<string>> {
+export async function addSite(leadId: string, name: string, address: AddressParts): Promise<LeadsResult<string>> {
   try {
     const { data, error } = await supabase
       .from('lead_sites')
-      .insert({ lead_id: leadId, name: name.trim() === '' ? null : name.trim(), address: address.trim() })
+      .insert({ lead_id: leadId, name: name.trim() === '' ? null : name.trim(), ...addressBody(address) })
       .select('id')
       .single();
     if (error || !data) return { ok: false, reason: failureFrom(error?.code) };
@@ -305,11 +315,11 @@ export async function deleteLead(id: string): Promise<LeadsResult<null>> {
 }
 
 /** Edita el nombre y la dirección de un sitio (D-202). */
-export async function updateSite(siteId: string, name: string, address: string): Promise<LeadsResult<null>> {
+export async function updateSite(siteId: string, name: string, address: AddressParts): Promise<LeadsResult<null>> {
   try {
     const { data, error } = await supabase
       .from('lead_sites')
-      .update({ name: name.trim() === '' ? null : name.trim(), address: address.trim() })
+      .update({ name: name.trim() === '' ? null : name.trim(), ...addressBody(address) })
       .eq('id', siteId)
       .select('id');
     if (error) return { ok: false, reason: failureFrom(error.code) };

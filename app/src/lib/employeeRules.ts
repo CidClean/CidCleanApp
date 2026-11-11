@@ -1,6 +1,7 @@
 import type { Locale } from '@/i18n';
 import { isValidEmail } from './email';
 import { formatPhone, isValidPhone, normalizePhone } from './phone';
+import { DEFAULT_STATE, isAddressEmpty, type AddressParts, cityStateZipLine, streetLine } from './address';
 import { isUsState, isValidZip } from './usStates';
 import { can, type Access } from './visibility';
 
@@ -10,8 +11,8 @@ export type WorkerType = 'w2' | '1099';
 export type RoleKey = 'employee' | 'supervisor' | 'admin';
 export type DocumentKind = 'w9' | 'insurance_certificate';
 
-/** Dirección del empleado (D-264): State es el código de 2 letras o ''. */
-export type Address = { addressLine1: string; addressLine2: string; state: string; city: string; zip: string };
+/** Dirección del empleado (D-264, D-301): la misma composición que el resto de la app; State es el código o ''. */
+export type Address = AddressParts;
 
 export type Employee = {
   id: string;
@@ -71,8 +72,9 @@ export type NewEmployeeForm = Address & {
   language: Locale;
 };
 
+/** D-301: State parte en FL; sin ningún otro dato no se guarda. */
 export function emptyAddress(): Address {
-  return { addressLine1: '', addressLine2: '', state: '', city: '', zip: '' };
+  return { addressLine1: '', addressLine2: '', state: DEFAULT_STATE, city: '', zip: '' };
 }
 
 /** Valores de partida: W-2, rol Empleado, con acceso a la app (como la muestra aprobada) e inglés (D-171). */
@@ -112,7 +114,7 @@ function addressBody(a: Address) {
   return {
     address_line1: a.addressLine1.trim(),
     address_line2: a.addressLine2.trim(),
-    state: a.state,
+    state: isAddressEmpty(a) ? '' : a.state,
     city: a.city.trim(),
     zip: a.zip.trim(),
   };
@@ -199,13 +201,12 @@ export function missingNameParts(e: Pick<Employee, 'firstName' | 'lastName'>): b
 
 /** Línea 5 del W-9 (D-267 (1)): Dirección y, si hay, Dirección 2. */
 export function w9AddressLine(e: Pick<Employee, 'addressLine1' | 'addressLine2'>): string {
-  return [e.addressLine1?.trim(), e.addressLine2?.trim()].filter(Boolean).join(', '); // D-200: separadas por coma
+  return streetLine({ addressLine1: e.addressLine1 ?? '', addressLine2: e.addressLine2 ?? '' }); // D-200: separadas por coma
 }
 
 /** Línea 6 del W-9 (D-267 (1)): "City, ST ZIP" con lo que haya. */
 export function w9CityLine(e: Pick<Employee, 'city' | 'state' | 'zip'>): string {
-  const stateZip = [e.state?.trim(), e.zip?.trim()].filter(Boolean).join(' ');
-  return [e.city?.trim(), stateZip].filter(Boolean).join(', ');
+  return cityStateZipLine({ city: e.city ?? '', state: e.state ?? '', zip: e.zip ?? '' });
 }
 
 // ---------------------------------------------------------------------------------------------

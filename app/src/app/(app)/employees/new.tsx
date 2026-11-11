@@ -6,7 +6,8 @@ import { FormScroll } from '@/components/FormScroll';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { AppField } from '@/components/AppField';
-import { AddressFields } from '@/components/employees/AddressFields';
+import { AddressFields } from '@/components/AddressFields';
+import { useAddressStrings } from '@/i18n/useAddressStrings';
 import { PhoneField } from '@/components/PhoneField';
 import { AppText } from '@/components/AppText';
 import { Checkbox } from '@/components/Checkbox';
@@ -34,6 +35,7 @@ export default function NewEmployeeScreen() {
   const goBack = useGoBack();
   const { colors } = useTheme();
   const strings = useStrings();
+  const addressT = useAddressStrings();
   const { access } = usePermissions();
   const [form, setForm] = useState<NewEmployeeForm>(emptyNewEmployee);
   const [errors, setErrors] = useState<NewEmployeeErrors>({});
@@ -118,7 +120,7 @@ export default function NewEmployeeScreen() {
             }
           />
         ) : null}
-        <AddressFields form={form} onChange={setForm} strings={strings} zipError={Boolean(errors.zip)} />
+        <AddressFields form={form} onChange={setForm} t={addressT} errors={errors.zip ? { zip: true } : {}} optional />
         <AppText size={sample.labelSize} color={colors.secondary} style={{ marginBottom: 2 }}>
           {strings.newEmployee.type}
         </AppText>

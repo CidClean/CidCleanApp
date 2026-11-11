@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { AddressFields } from '@/components/AddressFields';
 import { AppField } from '@/components/AppField';
 import { AppText } from '@/components/AppText';
 import { Checkbox } from '@/components/Checkbox';
 import { Icon } from '@/components/Icon';
 import { SelectField } from '@/components/SelectField';
 import type { W9AdminStrings } from '@/i18n/w9';
+import { addressErrors, cityStateZipLine, partsFromTwoLines, streetLine, type AddressErrors, type AddressParts } from '@/lib/address';
 import { CLASSIFICATIONS, CLASSIFICATION_LABELS, type Classification, type LlcLetter, type W9Data, type W9Error } from '@/lib/w9Rules';
 import { iconStrokeWidth, sample, useTheme } from '@/theme';
 
@@ -54,16 +56,32 @@ export function W9ClassificationFields({ value, onChange, t, errors }: Props) {
   );
 }
 
-/** Líneas 5 y 6. */
+/**
+ * Líneas 5 y 6 con los campos comunes de dirección (D-301): Dirección, Dirección 2, State, City y ZIP code. Se guardan
+ * como pide el formulario del IRS: línea 5 "calle, dirección 2" y línea 6 "City, ST ZIP".
+ */
 export function W9AddressFields({ value, onChange, t, errors }: Props) {
-  const set = (p: Partial<W9Data>) => onChange({ ...value, ...p });
+  const [parts, setParts] = useState<AddressParts>(() => partsFromTwoLines(value.address, value.city));
+  // Si el valor cambia desde fuera (se abre la ventana con lo prellenado), se vuelve a separar.
+  if (streetLine(parts) !== value.address.trim() || cityStateZipLine(parts) !== value.city.trim()) {
+    setParts(partsFromTwoLines(value.address, value.city));
+  }
+  const own = value.address.trim() || value.city.trim() ? addressErrors(parts, 'required') : {};
+  const shown: AddressErrors = {
+    ...own,
+    ...(errors?.includes('address') ? { addressLine1: true } : {}),
+    ...(errors?.includes('city') && !parts.city.trim() ? { city: true } : {}),
+  };
   return (
-    <View>
-      <AppField label={t.line5} value={value.address} onChangeText={(v) => set({ address: v })} maxLength={120}
-        autoComplete="street-address" error={w9ErrorText(t, errors, 'address')} />
-      <AppField label={t.line6} value={value.city} onChangeText={(v) => set({ city: v })} maxLength={120}
-        error={w9ErrorText(t, errors, 'city')} />
-    </View>
+    <AddressFields
+      form={parts}
+      onChange={(next) => {
+        setParts(next);
+        onChange({ ...value, address: streetLine(next), city: cityStateZipLine(next) });
+      }}
+      t={t.addr}
+      errors={shown}
+    />
   );
 }
 

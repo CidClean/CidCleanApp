@@ -4,6 +4,7 @@
 // página. Las notas internas NO salen (flujo: no salen al cliente).
 import { PDFDocument, type PDFFont, type PDFPage, type RGB } from 'npm:pdf-lib@1.17.1';
 
+import { direccionDe, type PartesDireccion } from '../_shared/address.ts';
 import { ALTO_PIE, C, encabezado, fuentesDoc, hoja, LADO, logoDoc, partir as partirDoc, pies, titulo as tituloDoc } from '../_shared/docPdf.ts';
 
 export type Fuente = {
@@ -14,7 +15,7 @@ export type Fuente = {
   closed_at: string;
   pdf_path: string | null;
   data: {
-    contact?: { address?: string; contactName?: string; phone?: string; email?: string; general?: string };
+    contact?: { address?: string; contactName?: string; phone?: string; email?: string; general?: string } & PartesDireccion;
     areas?: {
       name?: string;
       type?: string;
@@ -152,7 +153,7 @@ export async function armarPdf(
   const c = f.data.contact ?? {};
   titulo(t.site);
   const filas: [string, string | undefined][] = [
-    [t.address, c.address || f.site_address],
+    [t.address, direccionDe(c) || f.site_address], // D-301
     [t.contact, c.contactName],
     [t.phone, c.phone],
     [t.email, c.email],

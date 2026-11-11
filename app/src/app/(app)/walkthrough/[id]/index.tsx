@@ -1,3 +1,6 @@
+import { AddressFields } from '@/components/AddressFields';
+import { useAddressStrings } from '@/i18n/useAddressStrings';
+import { addressErrors } from '@/lib/address';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -42,6 +45,8 @@ import {
   type StepKey,
   type WalkthroughData,
   type WalkthroughDoc,
+  contactAddressParts,
+  withContactAddress,
 } from '@/lib/walkthroughRules';
 import { iconStrokeWidth, radius, sample, useTheme } from '@/theme';
 
@@ -58,6 +63,7 @@ export default function WalkthroughScreen() {
   const { colors } = useTheme();
   const strings = useStrings();
   const w = useWalkthroughStrings();
+  const addressT = useAddressStrings();
   const { access } = usePermissions();
   const { locale } = useSession();
   const { doc, missing, update, updateLocal } = useWalkthrough(id);
@@ -115,7 +121,13 @@ export default function WalkthroughScreen() {
 
             {stepKey === 'site' ? (
               <>
-                <AppField label={w.site.address} value={form.contact.address} onChangeText={(v) => setSection('contact', { ...form.contact, address: v })} />
+                <AddressFields
+                  form={contactAddressParts(form.contact)}
+                  onChange={(a) => setSection('contact', withContactAddress(form.contact, a))}
+                  t={addressT}
+                  errors={addressErrors(contactAddressParts(form.contact), 'partial')}
+                  optional
+                />
                 <AppField
                   label={w.site.contact}
                   value={form.contact.contactName}

@@ -1,3 +1,4 @@
+import { addressEn, addressEs } from './address';
 import type { Locale } from './index';
 
 /**
@@ -41,6 +42,7 @@ export const w9AdminEs = {
   needOther: 'Escribe la clasificación (hasta 60 letras).', // D-200
   needAddress: 'Escribe la dirección.', // D-200
   needCity: 'Escribe ciudad, estado y ZIP.', // D-200
+  addr: addressEs, // D-301: campos comunes de dirección (líneas 5 y 6)
   badExempt: 'El exempt payee code va del 1 al 13.', // D-200 (instrucciones del IRS)
   badFatca: 'El código FATCA es una letra de la A a la M.', // D-200 (instrucciones del IRS)
   tooLong: 'Algún dato es muy largo.', // D-200
@@ -84,6 +86,7 @@ export const w9AdminEn: W9AdminStrings = {
   needOther: 'Enter the classification (up to 60 characters).',
   needAddress: 'Enter the address.',
   needCity: 'Enter city, state, and ZIP code.',
+  addr: addressEn,
   badExempt: 'The exempt payee code goes from 1 to 13.',
   badFatca: 'The FATCA code is one letter from A to M.',
   tooLong: 'Something is too long.',

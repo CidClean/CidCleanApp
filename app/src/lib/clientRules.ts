@@ -3,6 +3,7 @@
  * Fuente: current/flujo.md ("Operaciones 1" y "Operaciones 2"), current/permisos.md, D-009, D-010, D-016, D-056,
  * D-059 a D-061, D-082, D-096, D-097, D-100, D-125, D-194, D-210, D-211.
  */
+import { addressBody, addressErrors, emptyAddress, hasAddressErrors, parseAddress, type AddressErrors, type AddressParts } from './address';
 import { dayKey, parseUsDate } from './leadRules';
 import { formatPhone, isValidPhone, normalizePhone } from './phone';
 import { can, type Access } from './visibility';
@@ -23,7 +24,10 @@ export type Client = {
   accountProvider?: boolean;
   phone: string | null;
   email: string | null;
+  /** Una línea "calle, dirección 2, City, ST ZIP" (D-301). */
   address: string | null;
+  addressParts?: AddressParts;
+  addressNeedsReview?: boolean;
   notes: string | null;
 };
 
@@ -34,7 +38,10 @@ export type Jobsite = {
   clientLegacy: boolean;
   clientAccountProvider?: boolean;
   name: string;
+  /** Una línea "calle, dirección 2, City, ST ZIP" (D-301). */
   address: string;
+  addressParts?: AddressParts;
+  addressNeedsReview?: boolean;
   plusCode: string | null;
   contactName: string | null;
   contactPhone: string | null;
@@ -162,6 +169,13 @@ export function parseHours(text: string): number | null {
   if (!/^\d+(\.\d{1,2})?$/.test(t)) return null;
   const n = Number(t);
   return n > 0 && n <= 24 ? n : null;
+}
+
+/** "City, ST" del encabezado del jobsite (D-055) desde las partes de la dirección (D-301), o leída del texto. */
+export function cityStateOf(j: Pick<Jobsite, 'address' | 'addressParts'>): string {
+  const p = j.addressParts;
+  if (p && p.city.trim()) return [p.city.trim(), p.state.trim()].filter(Boolean).join(', ');
+  return cityFrom(j.address);
 }
 
 /** "Ciudad" del encabezado del jobsite (D-055): la parte de la dirección antes del estado, si se puede leer. */
@@ -315,9 +329,8 @@ export function paySummary(
 
 // --- Formulario del jobsite -------------------------------------------------------------------------------
 
-export type JobsiteForm = {
+export type JobsiteForm = AddressParts & {
   name: string;
-  address: string;
   plusCode: string;
   contactName: string;
   contactPhone: string;
@@ -335,7 +348,8 @@ export type JobsiteForm = {
 
 export type JobsiteErrors = {
   name?: true;
-  address?: true;
+  /** D-301: dirección obligatoria y completa. */
+  address?: AddressErrors;
   plusCode?: true;
   contactEmail?: true;
   emergencyEmail?: true;
@@ -352,7 +366,8 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function validateJobsite(f: JobsiteForm, opts: { withRate: boolean; plusCodeOk: (code: string) => boolean }): JobsiteErrors {
   const e: JobsiteErrors = {};
   if (f.name.trim() === '') e.name = true;
-  if (f.address.trim() === '') e.address = true;
+  const a = addressErrors(f, 'required');
+  if (hasAddressErrors(a)) e.address = a;
   if (f.plusCode.trim() !== '' && !opts.plusCodeOk(f.plusCode)) e.plusCode = true;
   if (f.contactEmail.trim() !== '' && !EMAIL.test(f.contactEmail.trim())) e.contactEmail = true;
   if (f.emergencyEmail.trim() !== '' && !EMAIL.test(f.emergencyEmail.trim())) e.emergencyEmail = true;
@@ -374,7 +389,7 @@ export function jobsiteData(f: JobsiteForm) {
   const start = parseUsDate(f.startDate);
   return {
     name: f.name.trim(),
-    address: f.address.trim(),
+    ...addressBody(f),
     plus_code: f.plusCode.trim(),
     contact_name: f.contactName,
     contact_phone: normalizePhone(f.contactPhone),
@@ -408,7 +423,7 @@ export function frequencyLabel(
 
 export const emptyJobsiteForm: JobsiteForm = {
   name: '',
-  address: '',
+  ...emptyAddress(),
   plusCode: '',
   contactName: '',
   contactPhone: '',
@@ -428,7 +443,7 @@ export const emptyJobsiteForm: JobsiteForm = {
 export function jobsiteFormFrom(j: Jobsite, us: (key: string | null) => string): JobsiteForm {
   return {
     name: j.name,
-    address: j.address,
+    ...(j.addressParts ?? parseAddress(j.address).parts),
     plusCode: j.plusCode ?? '',
     contactName: j.contactName ?? '',
     contactPhone: formatPhone(j.contactPhone),

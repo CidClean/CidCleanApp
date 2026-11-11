@@ -2,6 +2,7 @@
  * Reglas puras de Ventas A (hito 2): quién ve y edita leads, estados, formularios, fechas y horas,
  * calendario del mes (D-104) y pendientes del Inicio (D-111). Sin red: se prueban solas.
  */
+import type { AddressParts } from './address';
 import { formatPhone, isValidPhone, normalizePhone } from './phone';
 import type { SalesStrings } from '@/i18n/sales';
 import { can, type Access } from './visibility';
@@ -30,7 +31,12 @@ export type Appointment = { id: string; startsAt: Date; status: 'scheduled' | 'd
 export type LeadSite = {
   id: string;
   name: string | null;
+  /** Una línea "calle, dirección 2, City, ST ZIP" (D-301). */
   address: string;
+  /** Las partes de la dirección (D-301); opcionales para los datos de prueba anteriores. */
+  addressParts?: AddressParts;
+  /** Dirección vieja sin separar: aviso "Completa la dirección" (D-301). */
+  addressNeedsReview?: boolean;
   /** La cita agendada (una a la vez por sitio), si hay. */
   scheduled: Appointment | null;
   /** El walkthrough del sitio ya se cerró (hito 3). */

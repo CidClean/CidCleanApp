@@ -1,3 +1,5 @@
+import { AddressReviewNote } from '@/components/AddressFields';
+import { useAddressStrings } from '@/i18n/useAddressStrings';
 import {
   Redirect,
   useFocusEffect,
@@ -49,7 +51,7 @@ import {
   canSeePay,
   canSeeRate,
   canSetPay,
-  cityFrom,
+  cityStateOf,
   frequencyLabel,
   money,
   parseMoney,
@@ -144,7 +146,7 @@ export default function JobsiteScreen() {
   if (!canSeeAccounts(access)) return <Redirect href="/" />;
 
   const atRisk = jobsite?.status === "active" && margin?.atRisk;
-  const city = jobsite ? cityFrom(jobsite.address) : "";
+  const city = jobsite ? cityStateOf(jobsite) : "";
   const day = (key: string) =>
     formatDate(dateFromKey(key).toISOString(), locale);
   const tabLabel = (t: Tab) =>
@@ -333,6 +335,8 @@ function Summary({
   const { colors, status: statusColors } = useTheme();
   const strings = useStrings();
   const { access } = usePermissions();
+  const addressT = useAddressStrings();
+  const router = useRouter();
   const [confirm, setConfirm] = useState<JobsiteStatus | null>(null);
   const [statusError, setStatusError] = useState(false);
   const [rateOpen, setRateOpen] = useState(false);
@@ -486,6 +490,17 @@ function Summary({
             setRateError(false);
             setRateOpen(true);
           }}
+        />
+      ) : null}
+      {/* D-301: dirección vieja sin separar. */}
+      {jobsite.addressNeedsReview ? (
+        <AddressReviewNote
+          t={addressT}
+          onEdit={
+            canEditClientData(access) && jobsite.status !== "terminated"
+              ? () => router.push({ pathname: "/jobsites/[id]/edit", params: { id: jobsite.id } })
+              : undefined
+          }
         />
       ) : null}
       <CardBlock>

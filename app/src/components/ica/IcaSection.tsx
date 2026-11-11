@@ -1,9 +1,11 @@
+import { useAddressStrings } from '@/i18n/useAddressStrings';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppAlert } from '../AppAlert';
 import { AppButton } from '../AppButton';
+import { AddressTextFields } from '../AddressFields';
 import { AppField } from '../AppField';
 import { AppText } from '../AppText';
 import { Dialog } from '../Dialog';
@@ -35,6 +37,7 @@ export function IcaSection({ profileId }: { profileId: string }) {
   const router = useRouter();
   const { colors } = useTheme();
   const t = useIcaStrings();
+  const addressT = useAddressStrings();
   const { locale } = useSession();
   const l = locale === 'es' ? 'es' : 'en';
   const [info, setInfo] = useState<IcaInfo | null>(null);
@@ -200,7 +203,18 @@ export function IcaSection({ profileId }: { profileId: string }) {
         <AppText weight="bold" size={sample.headingSize} style={{ marginBottom: 8 }}>
           {t.prepare}
         </AppText>
-        {ICA_FIELDS.map((f) => (
+        {ICA_FIELDS.map((f) =>
+          // D-301: la dirección del contratista con los campos comunes, guardada en una línea.
+          f === 'contractor_address' ? (
+            <AddressTextFields
+              key={f}
+              label={t.fields[f] ?? f}
+              value={values[f] ?? ''}
+              onChange={(v) => setValues((x) => ({ ...x, [f]: v }))}
+              t={addressT}
+              missing={showMissing && draft?.missing.includes(f) && !values[f]?.trim() ? t.missing : null}
+            />
+          ) : (
           <AppField
             key={f}
             label={t.fields[f] ?? f}
@@ -209,7 +223,8 @@ export function IcaSection({ profileId }: { profileId: string }) {
             error={showMissing && draft?.missing.includes(f) && !values[f]?.trim() ? t.missing : null}
             maxLength={500}
           />
-        ))}
+          ),
+        )}
         <AppText size={12} color={colors.secondary} style={{ marginBottom: 10 }}>
           {t.prepareNote}
         </AppText>

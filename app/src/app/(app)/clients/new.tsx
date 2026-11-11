@@ -1,3 +1,4 @@
+import { hasAddressErrors, type AddressErrors } from '@/lib/address';
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -5,7 +6,7 @@ import { View } from 'react-native';
 import { FormScroll } from '@/components/FormScroll';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
-import { ClientFields, clientPayload, clientPhoneOk, emptyClientForm, type ClientForm } from '@/components/clients/ClientFields';
+import { ClientFields, clientPayload, clientPhoneOk, clientAddressErrors, emptyClientForm, type ClientForm } from '@/components/clients/ClientFields';
 import { TopBar } from '@/components/TopBar';
 import { useClientsStrings } from '@/i18n/useClientsStrings';
 import { useStrings } from '@/i18n/useStrings';
@@ -28,6 +29,7 @@ export default function NewClientScreen() {
   const [phoneError, setPhoneError] = useState(false);
   const [failed, setFailed] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [addressErrors, setAddressErrors] = useState<AddressErrors>({});
 
   if (!canCreateLegacy(access)) return <Redirect href="/" />;
 
@@ -37,8 +39,10 @@ export default function NewClientScreen() {
     const badPhone = !clientPhoneOk(form);
     setNameError(missing);
     setPhoneError(badPhone);
+    const addrErrors = clientAddressErrors(form);
+    setAddressErrors(addrErrors);
     setFailed(false);
-    if (missing || badPhone) return;
+    if (missing || badPhone || hasAddressErrors(addrErrors)) return;
     setSaving(true);
     const result = await createLegacyClient(clientPayload(form));
     setSaving(false);
@@ -53,7 +57,7 @@ export default function NewClientScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar title={c.list.newClient} onBack={goBack} backLabel={strings.common.back} />
       <FormScroll contentContainerStyle={{ padding: 12 }} keyboardShouldPersistTaps="handled">
-        <ClientFields form={form} onChange={setForm} c={c} nameError={nameError} phoneError={phoneError} />
+        <ClientFields form={form} onChange={setForm} c={c} nameError={nameError} phoneError={phoneError} addressErrors={addressErrors} />
         <View style={{ height: 4 }} />
         {failed ? <AppAlert tone="error" text={c.client.errorSave} /> : null}
         <AppButton label={c.client.create} onPress={() => void submit()} disabled={saving} />

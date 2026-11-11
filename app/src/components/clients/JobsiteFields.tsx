@@ -1,10 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 
+import { AddressFields } from '../AddressFields';
 import { AppField } from '../AppField';
 import { AppText } from '../AppText';
 import { PhoneField } from '../PhoneField';
 import { SelectField } from '../SelectField';
 import { UsDateField } from '../UsDateField';
+import { useAddressStrings } from '@/i18n/useAddressStrings';
 import { useStrings } from '@/i18n/useStrings';
 import { DayButtons } from '../walkthrough/DayButtons';
 import type { ClientsStrings } from '@/i18n/clients';
@@ -22,6 +24,7 @@ type Props = { form: JobsiteForm; errors: JobsiteErrors; onChange: (f: JobsiteFo
 export function JobsiteFields({ form, errors, onChange, c, withRate }: Props) {
   const { colors } = useTheme();
   const strings = useStrings();
+  const addressT = useAddressStrings();
   const set = <K extends keyof JobsiteForm>(k: K, v: JobsiteForm[K]) => onChange({ ...form, [k]: v });
   const coords = form.plusCode.trim() ? plusCodeToCoordinates(form.plusCode) : null;
   const section = (label: string) => (
@@ -33,7 +36,7 @@ export function JobsiteFields({ form, errors, onChange, c, withRate }: Props) {
   return (
     <>
       <AppField label={c.form.name} value={form.name} onChangeText={(v) => set('name', v)} error={errors.name ? c.form.errorName : null} />
-      <AppField label={c.jobsite.address} value={form.address} onChangeText={(v) => set('address', v)} error={errors.address ? c.form.errorAddress : null} />
+      <AddressFields form={form} onChange={onChange} t={addressT} errors={errors.address} />
       <AppField
         label={c.jobsite.plusCode}
         value={form.plusCode}

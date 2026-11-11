@@ -1,3 +1,4 @@
+import { addressBody, addressFromRow, type AddressParts, type AddressRow } from './address';
 import * as DocumentPicker from 'expo-document-picker';
 
 import type { Client, DocKind, Frequency, Jobsite, JobsiteStatus, Pay, PayForm, ProfileAssignment, StaffRow } from './clientRules';
@@ -29,8 +30,8 @@ async function run<T>(fn: () => Promise<ClientsResult<T>>): Promise<ClientsResul
   }
 }
 
-type ClientRow = { id: string; name: string; legacy: boolean; account_provider?: boolean; phone: string | null; email: string | null; address: string | null; notes: string | null };
-type JobsiteRow = {
+type ClientRow = AddressRow & { id: string; name: string; legacy: boolean; account_provider?: boolean; phone: string | null; email: string | null; address: string | null; notes: string | null };
+type JobsiteRow = AddressRow & {
   id: string;
   client_id: string;
   name: string;
@@ -53,14 +54,23 @@ type JobsiteRow = {
 };
 
 const JOBSITE_COLUMNS =
-  'id, client_id, name, address, plus_code, contact_name, contact_phone, contact_email, emergency_name, emergency_phone, ' +
+  'id, client_id, name, address, address_line1, address_line2, city, state, zip, address_needs_review, plus_code, contact_name, contact_phone, contact_email, emergency_name, emergency_phone, ' +
   'emergency_relation, emergency_email, frequency, est_hours_per_visit, visits_per_month, start_date, status, walkthrough_version, ' +
   'clients(name, legacy, account_provider)';
 
 const num = (v: number | string | null) => (v === null ? null : Number(v));
 
 export function rowToClient(r: ClientRow): Client {
-  return { id: r.id, name: r.name, legacy: r.legacy, accountProvider: r.account_provider ?? false, phone: r.phone, email: r.email, address: r.address, notes: r.notes };
+  const a = addressFromRow(r);
+  return {
+    id: r.id, name: r.name, legacy: r.legacy, accountProvider: r.account_provider ?? false, phone: r.phone, email: r.email,
+    address: a.line || null, addressParts: a.parts, addressNeedsReview: a.needsReview, notes: r.notes,
+  };
+}
+
+function jobsiteAddress(r: AddressRow) {
+  const a = addressFromRow(r);
+  return { address: a.line, addressParts: a.parts, addressNeedsReview: a.needsReview };
 }
 
 export function rowToJobsite(r: JobsiteRow): Jobsite {
@@ -71,7 +81,7 @@ export function rowToJobsite(r: JobsiteRow): Jobsite {
     clientLegacy: r.clients?.legacy ?? false,
     clientAccountProvider: r.clients?.account_provider ?? false,
     name: r.name,
-    address: r.address,
+    ...jobsiteAddress(r),
     plusCode: r.plus_code,
     contactName: r.contact_name,
     contactPhone: r.contact_phone,
@@ -91,14 +101,14 @@ export function rowToJobsite(r: JobsiteRow): Jobsite {
 
 export const fetchClients = () =>
   run<Client[]>(async () => {
-    const { data, error } = await supabase.from('clients').select('id, name, legacy, account_provider, phone, email, address, notes').order('name');
+    const { data, error } = await supabase.from('clients').select('id, name, legacy, account_provider, phone, email, address, address_line1, address_line2, city, state, zip, address_needs_review, notes').order('name');
     if (error) return { ok: false, reason: failureFrom(error.code, error.message) };
     return { ok: true, data: (data as ClientRow[]).map(rowToClient) };
   });
 
 export const fetchClient = (id: string) =>
   run<Client>(async () => {
-    const { data, error } = await supabase.from('clients').select('id, name, legacy, account_provider, phone, email, address, notes').eq('id', id).maybeSingle();
+    const { data, error } = await supabase.from('clients').select('id, name, legacy, account_provider, phone, email, address, address_line1, address_line2, city, state, zip, address_needs_review, notes').eq('id', id).maybeSingle();
     if (error) return { ok: false, reason: failureFrom(error.code, error.message) };
     if (!data) return { ok: false, reason: 'not_found' };
     return { ok: true, data: rowToClient(data as ClientRow) };
@@ -152,11 +162,20 @@ export const fetchMargin = (jobsiteId: string) =>
     return { atRisk: m.at_risk, cost: m.cost === undefined ? null : Number(m.cost), rate: m.rate === undefined || m.rate === null ? null : Number(m.rate), incomplete: m.incomplete } as Margin;
   });
 
-export const createLegacyClient = (c: { name: string; phone: string; email: string; address: string; notes: string }) =>
-  rpc('create_legacy_client', { p_name: c.name, p_phone: c.phone, p_email: c.email, p_address: c.address, p_notes: c.notes }, (d) => d as string);
+type ClientInput = AddressParts & { name: string; phone: string; email: string; notes: string };
 
-export const updateClient = (id: string, c: { name: string; phone: string; email: string; address: string; notes: string }) =>
-  rpc('update_client', { p_client: id, p_name: c.name, p_phone: c.phone, p_email: c.email, p_address: c.address, p_notes: c.notes }, () => null);
+/** D-301: la dirección va separada (versión de 10 parámetros); `p_address` lleva la línea única. */
+function clientArgs(c: ClientInput) {
+  const a = addressBody(c);
+  return {
+    p_name: c.name, p_phone: c.phone, p_email: c.email, p_address: a.address, p_notes: c.notes,
+    p_address_line1: a.address_line1, p_address_line2: a.address_line2, p_city: a.city, p_state: a.state, p_zip: a.zip,
+  };
+}
+
+export const createLegacyClient = (c: ClientInput) => rpc('create_legacy_client', clientArgs(c), (d) => d as string);
+
+export const updateClient = (id: string, c: ClientInput) => rpc('update_client', { p_client: id, ...clientArgs(c) }, () => null);
 
 /** D-291: marcar o desmarcar un cliente como proveedor de cuentas. */
 export const setClientAccountProvider = (id: string, value: boolean) =>
