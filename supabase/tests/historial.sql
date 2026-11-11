@@ -57,6 +57,13 @@ begin
   insert into profiles (full_name, worker_type, role, has_app_access) values ('Prueba sin acceso', 'w2', 'employee', false) returning id into pid;
   insert into actores values ('sin_acceso', null, pid);
   insert into profile_permissions (profile_id, permission_key) select profile_id, 'historial_ver' from actores where nombre = 'hist';
+  -- En una base sin el arranque real, el Super Admin puede no tener usuario de Auth: se le crea uno (solo en esta transacción).
+  if (select auth_user_id from profiles where is_super_admin) is null then
+    insert into auth.users (id, aud, role, email) values (gen_random_uuid(), 'authenticated', 'authenticated', 'super@prueba.local')
+    returning id into pid;
+    update profiles set auth_user_id = pid where is_super_admin;
+  end if;
+  update profiles set first_login_at = coalesce(first_login_at, now()) where is_super_admin;
   insert into actores select 'super', auth_user_id, id from profiles where is_super_admin;
 end $$;
 
@@ -147,6 +154,29 @@ begin
     (select (select is_super_admin from profiles where id = sa)::text || '|' || (select is_super_admin from profiles where id = cand)::text
        || '|' || (select count(*) from profile_permissions where profile_id = sa)::text
        || '|' || (select count(*) from change_log where action = 'super_admin_transferido')::text));
+
+  -- Orden 102 (N6): solo a quien ya tiene un factor TOTP verificado.
+  perform pg_temp.prueba('candidatos: has_totp = false sin app de autenticación', 'false',
+    pg_temp.valor('super', format('select has_totp::text from super_admin_candidates() where id = %L', cand)));
+  perform pg_temp.prueba('sin TOTP: no se transfiere (P0010)', 'ERR:P0010',
+    pg_temp.valor('super', format('select transfer_super_admin(%L, ''1099'')', cand)));
+  insert into auth.mfa_factors (user_id, factor_type, status)
+  values ((select auth_id from actores where nombre = 'candidato'), 'totp', 'unverified');
+  perform pg_temp.prueba('con un TOTP sin verificar: tampoco (P0010)', 'ERR:P0010',
+    pg_temp.valor('super', format('select transfer_super_admin(%L, ''1099'')', cand)));
+  insert into auth.mfa_factors (user_id, factor_type, status)
+  values ((select auth_id from actores where nombre = 'candidato'), 'phone', 'verified');
+  perform pg_temp.prueba('con otro tipo de factor verificado: tampoco (P0010)', 'ERR:P0010',
+    pg_temp.valor('super', format('select transfer_super_admin(%L, ''1099'')', cand)));
+  perform pg_temp.prueba('atomicidad: tras el rechazo por TOTP nada cambió', 'true|false',
+    (select is_super_admin::text from profiles where id = sa) || '|' || (select is_super_admin::text from profiles where id = cand));
+  insert into auth.mfa_factors (user_id, factor_type, status)
+  values ((select auth_id from actores where nombre = 'candidato'), 'totp', 'verified'),
+         ((select auth_id from actores where nombre = 'super'), 'totp', 'verified');
+  perform pg_temp.prueba('candidatos: has_totp = true con TOTP verificado', 'true',
+    pg_temp.valor('super', format('select has_totp::text from super_admin_candidates() where id = %L', cand)));
+  perform pg_temp.prueba('profile_has_totp no la ejecuta authenticated', 'false',
+    has_function_privilege('authenticated', 'profile_has_totp(uuid)', 'execute')::text);
 
   select max(id) into antes from change_log;
   perform pg_temp.prueba('el Super Admin sin tipo transfiere eligiendo 1099 (D-206)', 'ok',

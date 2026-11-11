@@ -44,7 +44,7 @@ const row = (id: number, over: Record<string, unknown> = {}) => ({
 beforeEach(() => {
   jest.clearAllMocks();
   mockAccess = { isSuperAdmin: true, permissions: new Set() };
-  mockCandidates.mockResolvedValue({ ok: true, data: [{ id: 'c1', fullName: 'Carla M.' }, { id: 'c2', fullName: 'Laura Gil' }] });
+  mockCandidates.mockResolvedValue({ ok: true, data: [{ id: 'c1', fullName: 'Carla M.', hasTotp: true }, { id: 'c2', fullName: 'Laura Gil', hasTotp: false }] });
   mockTransfer.mockResolvedValue({ ok: true, data: null });
   mockOwnType.mockResolvedValue({ ok: true, data: 'w2' });
   mockRefresh.mockResolvedValue(undefined);
@@ -111,6 +111,28 @@ describe('Transferir Super Admin (D-090, D-116, D-199)', () => {
     expect(mockReplace).toHaveBeenCalledWith('/');
   });
 
+  test('orden 102 (N6): a quien no tiene la app de autenticación, el botón queda apagado y lo explica', async () => {
+    await render(<TransferScreen />);
+    const button = () => screen.getByRole('button', { name: es.transfer.submit });
+    await fireEvent.press(screen.getByLabelText(es.transfer.newSuperAdmin));
+    await fireEvent.press(await screen.findByText('Laura Gil'));
+    await fireEvent.press(screen.getByText(es.transfer.understand));
+    expect(screen.getByText('La persona debe activar primero la app de autenticación')).toBeTruthy();
+    expect(button().props.accessibilityState.disabled).toBe(true);
+    expect(mockTransfer).not.toHaveBeenCalled();
+  });
+
+  test('orden 102 (N6): si la base responde que falta la app de autenticación, se muestra ese error', async () => {
+    mockTransfer.mockResolvedValue({ ok: false, reason: 'needs_totp' });
+    await render(<TransferScreen />);
+    await fireEvent.press(screen.getByLabelText(es.transfer.newSuperAdmin));
+    await fireEvent.press(await screen.findByText('Carla M.'));
+    await fireEvent.press(screen.getByText(es.transfer.understand));
+    await fireEvent.press(screen.getByRole('button', { name: es.transfer.submit }));
+    expect(await screen.findByText(es.transfer.needsTotp)).toBeTruthy();
+    expect(mockReplace).not.toHaveBeenCalled();
+  });
+
   test('con tipo de trabajador propio no aparece el control W-2 / 1099', async () => {
     await render(<TransferScreen />);
     await waitFor(() => expect(mockOwnType).toHaveBeenCalledWith('yo'));
@@ -147,7 +169,7 @@ describe('Transferir Super Admin (D-090, D-116, D-199)', () => {
     mockTransfer.mockResolvedValue({ ok: false, reason: 'server' });
     await render(<TransferScreen />);
     await fireEvent.press(screen.getByLabelText(es.transfer.newSuperAdmin));
-    await fireEvent.press(await screen.findByText('Laura Gil'));
+    await fireEvent.press(await screen.findByText('Carla M.'));
     await fireEvent.press(screen.getByText(es.transfer.understand));
     await fireEvent.press(screen.getByRole('button', { name: es.transfer.submit }));
     expect(await screen.findByText(es.transfer.errorTransfer)).toBeTruthy();

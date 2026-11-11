@@ -382,6 +382,7 @@ export const es = {
     noCandidates: 'Nadie más puede recibir el rol todavía: tiene que estar activo y haber entrado a la app.', // SIN APROBAR
     errorLoad: 'No se pudo cargar la lista. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
     errorTransfer: 'No se pudo transferir el rol. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
+    needsTotp: 'La persona debe activar primero la app de autenticación', // orden 102 (N6, D-306)
   },
 
   // Salir de la pestaña Permisos con cambios sin guardar (decisión del arquitecto bajo D-200, orden 12).
