@@ -11,7 +11,7 @@ La app cubre todo el ciclo de una cuenta de Cid Clean, del lead al profit, en do
 
 Cuando se acepta el quote de un sitio nace el Cliente con su Jobsite. Desde ahí, horario, horas trabajadas y dinero cuelgan del Jobsite.
 
-**Fuera de la app:** redacción del SOW y del contrato (la app los guarda), facturación y cobro (Accounting solo registra el ingreso), pago a empleados (la app solo calcula lo que se debe) y todo portal de cliente después de la aceptación del quote.
+**Fuera de la app:** (el SOW y el contrato se generan en la app con el texto del abogado, D-283 y D-317), facturación y cobro (Accounting solo registra el ingreso), pago a empleados (la app solo calcula lo que se debe) y todo portal de cliente después de la aceptación del quote.
 
 ## Ventas 1: Lead
 
@@ -36,7 +36,8 @@ El walkthrough recoge la información específica de un sitio mientras se camina
     - Diaria.
     - Semanal: se marcan los días (L M X J V S D). Dos días marcados significan dos veces por semana.
     - Más abierta, por ejemplo dos veces al mes: selector de días preferidos, como los días 1 y 15 de cada mes o viernes alternos.
-4. **Notas internas (no salen al cliente):** personal necesario, tiempo estimado y suministros.
+4. **Notas internas (no salen al cliente):** personal necesario, horas estimadas por visita (número, llena el jobsite) y suministros.
+5. **Datos del sitio (D-318):** tipo de lugar, pies cuadrados aprox. y horario de servicio, precargados si vienen del sitio web.
 5. **Resumen:** revisión y corrección antes de cerrar. Al cerrar se genera el resumen descargable en PDF.
 
 **Sin internet:** el walkthrough se llena completo en el sitio, fotos incluidas, y se sincroniza cuando haya señal.
@@ -47,7 +48,7 @@ El quote se arma desde el walkthrough y se envía por email a un portal seguro d
 
 - **Contenido:** services, add-ons, descuentos y tax (tasa predeterminada de 6%, editable). Cada servicio y add-on lleva una casilla "gravable" que decide el dueño.
 - **Envío:** por email, con acceso al portal mediante OTP.
-- **SOW:** se crea fuera de la app, y la app lo guarda y lo adjunta al portal. El cliente está obligado a leerlo antes de poder decidir.
+- **SOW:** se genera en la app con la Parte A del abogado, llenado desde el walkthrough y el quote, editable antes de enviar y con aclaraciones propias del sitio; es el mismo SOW del contrato (D-317, D-318). El cliente está obligado a leerlo antes de poder decidir.
 - **Descargas:** el cliente puede descargar el quote y el SOW.
 - **Acepta:** se registran nombre y cargo de quien acepta.
 - **Rechaza:** se pide el motivo, de la misma lista que los motivos de lead perdido, y una nota opcional.
@@ -197,7 +198,6 @@ El inicio muestra solo los pendientes de las áreas donde la persona tiene permi
 
 **Fuera de esta versión**
 
-- Redacción del SOW y del contrato.
 - Facturación y cobro al cliente.
 - Registro del pago a empleados.
 - Datos de acceso físico al jobsite (llaves, códigos, parking).
@@ -210,3 +210,9 @@ El inicio muestra solo los pendientes de las áreas donde la persona tiene permi
 1. **Survey visual:** varias opciones por cada detalle de la app, hasta los más pequeños (esquinas de botones, colores, tipografía).
 2. **Survey de seguridad.**
 3. **Arquitectura:** se escoge al final, con todo lo anterior definido.
+
+## Datos una sola vez y Documentos (D-317 a D-320)
+
+- Un dato capturado en un paso anterior (sitio web → lead → walkthrough → quote → cliente, jobsite y contactos → contrato) no se vuelve a pedir: llega llenado y editable. Cada dato va en su campo.
+- Todo documento que la app genera o guarda se puede descargar, en Android y en la web, con su nombre legible (D-296); lo descarga quien puede verlo.
+- Menú → Documentos: biblioteca central con búsqueda y filtros (Todos, Quotes, SOW, Contratos, Walkthroughs, Personal, Reportes). Cada persona ve solo lo que ya puede ver según sus permisos. Copia visual: `../surveys/sow-documentos-aprobado.html`.

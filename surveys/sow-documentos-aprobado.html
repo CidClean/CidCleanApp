@@ -1,0 +1,122 @@
+<title>SOW y Documentos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap">
+<!-- Propuesta para D-317, D-318, D-319. Colores C1 (D-226). Datos de ejemplo. -->
+<style>
+/* Layout: cuatro pantallas de teléfono lado a lado, en el orden del recorrido; las maquetas usan siempre los colores de la app. */
+:root{--bg:#EDE6DA;--ink:#1E2A28;--muted:#6B5F52;--brand:#0F766E;--f:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141A19;--ink:#ECE6DC;--muted:#A99E90;--brand:#2BB3A6;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141A19;--ink:#ECE6DC;--muted:#A99E90;--brand:#2BB3A6;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.5}
+.wrap{max-width:1320px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px;display:flex;flex-direction:column;gap:24px}
+h1{font-size:clamp(24px,3.6vw,32px);font-weight:800;margin:0;text-wrap:balance}
+.lead{color:var(--muted);max-width:70ch;margin:6px 0 0}
+.w{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:18px;align-items:start}
+.col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.step{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin:0}
+.cap{font-size:13px;color:var(--muted);margin:0}
+/* Maqueta de la app: mundo visual fijo (C1) */
+.ph{background:#FBF6EF;color:#1E2A28;border-radius:30px;padding:16px 14px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.top{font-weight:800;font-size:20px}
+.sub{font-size:12px;color:#6B5F52}
+.c{background:#fff;border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.c b{font-size:14px}
+.fl{display:flex;flex-direction:column;gap:3px}
+.fl span{font-size:12px;color:#6B5F52;font-weight:700}
+.in{background:#F6EFE6;border-radius:12px;padding:10px 12px;font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.in.new{outline:2px solid #0F766E;outline-offset:-2px}
+.in em{font-style:normal;color:#9A8F82}
+.tag{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#DDEFEC;color:#0F766E;white-space:nowrap}
+.tag.a{background:#FBE3C7;color:#8A4B0F}
+.tag.n{background:#F1EBE2;color:#6B5F52}
+.r{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0}
+.r small{display:block;color:#6B5F52;font-size:12px}
+.line{border-top:1px solid #E8DCC9}
+.btn{background:#0F766E;color:#fff;border-radius:16px;padding:12px;text-align:center;font-weight:800}
+.btn2{border:1px solid #0F766E;color:#0F766E;border-radius:16px;padding:11px;text-align:center;font-weight:800}
+.seg{display:flex;gap:6px;flex-wrap:wrap}.seg span{font-size:12px;font-weight:700;padding:7px 11px;border-radius:12px;background:#F6EFE6}.seg .on{background:#0F766E;color:#fff}
+.dl{color:#0F766E;font-weight:800;font-size:13px;white-space:nowrap}
+.note{font-size:12px;color:#6B5F52;line-height:1.45}
+.amber{background:#FBE3C7;color:#8A4B0F;border-radius:14px;padding:10px 12px;font-size:13px}
+</style>
+<div class="wrap">
+<header>
+  <h1>SOW desde el walkthrough, datos una sola vez y Documentos</h1>
+  <p class="lead">Cuatro pantallas que cambian. Lo marcado con borde verde es nuevo. Todo lo que ya se capturó llega llenado y se puede corregir; nada se vuelve a pedir en blanco.</p>
+</header>
+<div class="w">
+
+<div class="col"><p class="step">1 · Walkthrough, paso 1</p>
+<div class="ph">
+  <div class="top">Walkthrough</div><div class="sub">Superior Pool Products · paso 1 de 4</div>
+  <div class="c"><b>Sitio</b>
+    <div class="fl"><span>Dirección</span><div class="in">280 Commercial Blvd</div></div>
+    <div class="fl"><span>City · State · ZIP</span><div class="in">Naples · FL · 34104 <span class="tag">Del sitio web</span></div></div>
+    <div class="fl"><span>Tipo de lugar</span><div class="in new">Retail / showroom <span>▾</span></div></div>
+    <div class="fl"><span>Pies cuadrados aprox.</span><div class="in new">3,000 <span class="tag">Del sitio web</span></div></div>
+  </div>
+  <div class="c"><b>Servicio</b>
+    <div class="fl"><span>Frecuencia</span><div class="in">3 veces por semana · L, M, V <span class="tag">Del sitio web</span></div></div>
+    <div class="fl"><span>Horario de servicio</span><div class="in new">After 5:00 PM</div></div>
+    <div class="fl"><span>Horas estimadas por visita</span><div class="in new">2.5</div></div>
+  </div>
+  <div class="btn">Continuar</div>
+</div>
+<p class="cap">Tres campos nuevos y el tiempo estimado pasa a ser un número. Al cerrar el walkthrough, la dirección completa pasa al lead y luego al cliente y al jobsite.</p></div>
+
+<div class="col"><p class="step">2 · Quote → SOW</p>
+<div class="ph">
+  <div class="top">Scope of Work</div><div class="sub">Se arma solo con el walkthrough. Revisa y corrige.</div>
+  <div class="c"><b>A1 · Partes y sitio</b>
+    <div class="r"><div>Superior Pool Products LLC<small>280 Commercial Blvd, Naples, FL 34104 · 3,000 sq ft · Retail / showroom</small></div><span class="dl">Editar</span></div></div>
+  <div class="c"><b>A2 · Horario</b>
+    <div class="r"><div>3 veces por semana: L, M, V<small>After 5:00 PM · Inicio: por definir</small></div><span class="dl">Editar</span></div></div>
+  <div class="c"><b>A3 · Tareas por área</b>
+    <div class="r"><div>11 áreas del walkthrough<small>3 baños · 1 cocina · 4 oficinas · 1 showroom…</small></div><span class="dl">Editar</span></div></div>
+  <div class="c"><b>A4 · Exclusiones</b>
+    <div class="note">Texto del abogado (fijo).</div>
+    <div class="fl"><span>Aclaraciones de este sitio</span><div class="in new">No windows or glass. Dishes are not washed.</div></div></div>
+  <div class="c"><b>A6 · Acceso y seguridad</b>
+    <div class="fl"><span>Acceso · Llaves · Áreas restringidas</span><div class="in new"><em>Opcional. Vacío = "None"</em></div></div></div>
+  <div class="btn2">Ver PDF del SOW</div>
+  <div class="btn">Enviar quote</div>
+</div>
+<p class="cap">Ya no se sube un PDF hecho fuera. El SOW usa el texto del abogado y es el mismo que va dentro del contrato. El precio no aparece en el SOW: va en el quote.</p></div>
+
+<div class="col"><p class="step">3 · Preparar contrato</p>
+<div class="ph">
+  <div class="top">Preparar contrato</div><div class="sub">Superior Pool Products</div>
+  <div class="amber">Falta 1 dato: nombre legal del cliente.</div>
+  <div class="c"><b>Falta completar</b>
+    <div class="fl"><span>Nombre legal del cliente</span><div class="in"><em>Superior Pool Products LLC</em></div></div></div>
+  <div class="c"><b>Revisar datos <span class="tag n">Ya llenados</span></b>
+    <div class="fl"><span>Contacto</span><div class="in new">Armando Zerquera · Branch Manager</div></div>
+    <div class="fl"><span>Correo · Teléfono</span><div class="in new">armando@… · (239) 825-6841</div></div>
+    <div class="fl"><span>Dirección del cliente</span><div class="in new">280 Commercial Blvd, Naples, FL 34104</div></div>
+    <div class="fl"><span>Fecha de vigencia</span><div class="in new">Fecha de inicio del servicio</div></div>
+    <div class="fl"><span>Precio mensual</span><div class="in new">$1,300.00 + 6% sales tax</div></div>
+  </div>
+  <div class="btn">Enviar para firma</div>
+</div>
+<p class="cap">Hoy solo se ven los campos vacíos. Ahora se ve también lo que ya está llenado, para revisarlo antes de enviar. En el portal, el nombre y el cargo de quien firma llegan llenados con los de quien aceptó el quote.</p></div>
+
+<div class="col"><p class="step">4 · Menú → Documentos</p>
+<div class="ph">
+  <div class="top">Documentos</div>
+  <div class="in"><em>Buscar por cliente, persona o nombre</em></div>
+  <div class="seg"><span class="on">Todos</span><span>Quotes</span><span>SOW</span><span>Contratos</span><span>Walkthroughs</span><span>Personal</span><span>Reportes</span></div>
+  <div class="c">
+    <div class="r"><div><b>Contrato firmado</b><small>Superior Pool Products · Nov 16, 2026</small></div><span class="dl">Descargar</span></div><div class="line"></div>
+    <div class="r"><div><b>SOW v1</b><small>Superior Pool Products · Nov 12, 2026</small></div><span class="dl">Descargar</span></div><div class="line"></div>
+    <div class="r"><div><b>Quote Q-0007 v1</b><small>Superior Pool Products · Nov 12, 2026</small></div><span class="dl">Descargar</span></div><div class="line"></div>
+    <div class="r"><div><b>Walkthrough</b><small>Superior Pool Products · Nov 9, 2026</small></div><span class="dl">Descargar</span></div><div class="line"></div>
+    <div class="r"><div><b>W-9</b><small>Estela Medina · Oct 30, 2026 <span class="tag a">Solo Super Admin</span></small></div><span class="dl">Descargar</span></div><div class="line"></div>
+    <div class="r"><div><b>Estado de cuenta · Octubre</b><small>Estela Medina · Nov 1, 2026</small></div><span class="dl">Descargar</span></div>
+  </div>
+  <div class="note">Cada persona ve aquí solo lo que ya puede ver hoy. Tocar una fila abre el documento; "Descargar" lo guarda con su nombre legible.</div>
+</div>
+<p class="cap">Una sola biblioteca con todo lo que la app genera o guarda: quotes, SOW, contratos, walkthroughs, documentos del personal y de jobsites, y reportes guardados. También funciona en la web y en el iPhone.</p></div>
+
+</div>
+</div>
