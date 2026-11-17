@@ -71,16 +71,17 @@ describe('barra inferior (D-132, D-169)', () => {
 describe('Menú (D-134, D-169)', () => {
   test('Super Admin: todo, incluido Ajustes', () => {
     expect(visibleMenuItems(superAdmin)).toEqual([
-      'employees', 'scheduleWork', 'accounting', 'statistics', 'settings', 'history', 'notifications', 'profile',
+      'employees', 'scheduleWork', 'accounting', 'statistics', 'documents', 'settings', 'history', 'notifications', 'profile',
     ]);
   });
   test('Admin de partida: todo menos Ajustes', () => {
     expect(visibleMenuItems(admin)).toEqual([
-      'employees', 'scheduleWork', 'accounting', 'statistics', 'history', 'notifications', 'profile',
+      'employees', 'scheduleWork', 'accounting', 'statistics', 'documents', 'history', 'notifications', 'profile',
     ]);
   });
   test('Supervisor: Empleados, Schedule y Work, Notificaciones y Mi perfil', () => {
-    expect(visibleMenuItems(supervisor)).toEqual(['employees', 'scheduleWork', 'notifications', 'profile']);
+    // Orden 115: Documentos aparece con un permiso que da documentos (el supervisor de partida tiene uno).
+    expect(visibleMenuItems(supervisor)).toEqual(['employees', 'scheduleWork', 'documents', 'notifications', 'profile']);
   });
   test('Empleado: solo Notificaciones y Mi perfil', () => {
     expect(visibleMenuItems(employee)).toEqual(['notifications', 'profile']);

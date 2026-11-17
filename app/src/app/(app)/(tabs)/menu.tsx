@@ -89,6 +89,7 @@ export default function MenuScreen() {
     else if (key === 'scheduleWork') router.push('/schedule');
     else if (key === 'accounting') router.push('/accounting');
     else if (key === 'statistics') router.push('/statistics');
+    else if (key === 'documents') router.push('/documents');
     else if (key === 'notifications') router.push('/notifications');
   }
 
@@ -144,6 +145,8 @@ export default function MenuScreen() {
           {items.includes('accounting') ? tile('accounting', 'dark', <ChartIcon />, profit === null ? null : `${a.profitMonth} · ${money(profit)}`) : null}
           {/* D-252, D-253: Estadísticas, solo con estadisticas_ver; mismo icono de gráfica que Accounting (D-200). */}
           {items.includes('statistics') ? tile('statistics', 'plain', <ChartIcon />, null) : null}
+          {/* Orden 115 (D-317 4, D-320): Documentos, solo con algún permiso que dé documentos. */}
+          {items.includes('documents') ? tile('documents', 'plain', <Icon name="file-text" size={28} strokeWidth={iconStrokeWidth} color={colors.text} />, null) : null}
           {tile('notifications', 'attention', <BellIcon />, unread ? nt.unread(unread) : null)}
           {items.includes('history') ? tile('history', 'plain', <ClockIcon />, strings.menu.historyLine) : null}
           {items.includes('settings') ? (

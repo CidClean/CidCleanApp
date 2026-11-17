@@ -43,7 +43,8 @@ export type MenuKey =
   | 'settings'
   | 'history'
   | 'notifications'
-  | 'profile';
+  | 'profile'
+  | 'documents';
 
 export function can(access: Access, key: string): boolean {
   return access.isSuperAdmin || access.permissions.has(key);
@@ -62,6 +63,20 @@ export function visibleTabs(access: Access): TabKey[] {
   return tabs;
 }
 
+/**
+ * Menú → Documentos (orden 115, D-317 4): solo con al menos un permiso que dé documentos (las mismas reglas de
+ * documents_library: quotes con precios, SOW, clientes, walkthroughs, documentos del personal o pagos).
+ */
+export function canSeeDocuments(access: Access): boolean {
+  if (access.isSuperAdmin) return true;
+  const p = access.permissions;
+  return (
+    (p.has('quotes_ver') && p.has('quotes_ver_precios')) ||
+    ['sow_contratos_subir_ver', 'clientes_ver', 'walkthroughs_hacer', 'leads_ver', 'clientes_editar_walkthrough_sow',
+      'empleados_gestionar_documentos', 'empleados_ver_pagos'].some((k) => p.has(k))
+  );
+}
+
 /** Filas del Menú, en el orden de D-134. Ajustes solo para el Super Admin (D-114). */
 export function visibleMenuItems(access: Access): MenuKey[] {
   const items: MenuKey[] = [];
@@ -71,6 +86,7 @@ export function visibleMenuItems(access: Access): MenuKey[] {
   if (canAny(access, ACCOUNTING_KEYS)) items.push('accounting');
   // D-252: Estadísticas, con su propio permiso (no abre Accounting).
   if (can(access, 'estadisticas_ver')) items.push('statistics');
+  if (canSeeDocuments(access)) items.push('documents');
   if (access.isSuperAdmin) items.push('settings');
   if (can(access, 'historial_ver')) items.push('history');
   items.push('notifications', 'profile');

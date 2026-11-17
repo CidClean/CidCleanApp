@@ -54,6 +54,7 @@ export const en: Strings = {
     scheduleWork: 'Schedule and Work',
     accounting: 'Accounting',
     statistics: 'Statistics',
+    documents: 'Documents',
     settings: 'Settings',
     history: 'Change history',
     notifications: 'Notifications',

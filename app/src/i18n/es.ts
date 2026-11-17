@@ -53,6 +53,7 @@ export const es = {
     scheduleWork: 'Schedule y Work', // APROBADO (D-134)
     accounting: 'Accounting', // APROBADO (D-134)
     statistics: 'Estadísticas', // APROBADO (D-253)
+    documents: 'Documentos', // APROBADO (D-320)
     settings: 'Ajustes', // APROBADO (D-134)
     history: 'Historial de cambios', // APROBADO (D-134)
     notifications: 'Notificaciones', // APROBADO (D-134)
