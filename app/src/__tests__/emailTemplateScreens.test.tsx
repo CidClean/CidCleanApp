@@ -97,7 +97,11 @@ describe('Enviar correo (lead)', () => {
     const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
     await render(<SendEmailScreen />);
     await fireEvent.press(await screen.findByText('Continuar'));
-    expect(screen.getByText('Faltan datos para este correo. Complétalos antes de abrirlo.')).toBeTruthy();
+    expect(screen.getByText('Puedes completar estos datos. Si los dejas vacíos, el correo usa un texto genérico.')).toBeTruthy();
+    // El campo que falta sigue visible después de escribir la primera letra (bug del 2026-11-17).
+    const fields = screen.getAllByDisplayValue('');
+    await fireEvent.changeText(fields[fields.length - 1], '2');
+    expect(screen.getByDisplayValue('2')).toBeTruthy();
     await fireEvent.press(screen.getByText('Abrir en mi correo'));
     expect(screen.getByText('Falta el correo del contacto. Escríbelo para continuar.')).toBeTruthy();
     expect(open).not.toHaveBeenCalled();

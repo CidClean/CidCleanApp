@@ -63,6 +63,8 @@ export default function SendEmailScreen() {
   const [values, setValues] = useState<FillValues | null>(null);
   const [showErrors, setShowErrors] = useState(false);
   const [notice, setNotice] = useState<'tooLong' | 'openFailed' | 'copied' | 'log' | null>(null);
+  // D-200: los campos que faltaban al abrir la vista previa quedan fijos mientras se escribe (antes desaparecían con la primera letra).
+  const [asked, setAsked] = useState<(keyof FillValues)[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -88,7 +90,6 @@ export default function SendEmailScreen() {
 
   const template = templates?.find((x) => x.id === chosen) ?? null;
   const used = useMemo(() => (template ? usedPlaceholders(template.subject, template.body) : []), [template]);
-  const missing = values ? missingFields(used, values) : [];
   const email = values && template ? buildEmail(template, values) : null;
   const emailOk = validEmail(to);
 
@@ -98,13 +99,15 @@ export default function SendEmailScreen() {
     const contact = c.contacts[i] ?? null;
     setContactIndex(i);
     setTo(contact?.email ?? '');
-    setValues(initialValues(c, contact));
+    const v = initialValues(c, contact);
+    setValues(v);
+    setAsked(missingFields(used, v));
   }
 
   function ready(): boolean {
     setShowErrors(true);
     setNotice(null);
-    return emailOk && missing.length === 0;
+    return emailOk;
   }
 
   async function log(via: 'open' | 'copy') {
@@ -115,13 +118,17 @@ export default function SendEmailScreen() {
 
   async function open() {
     if (!email || !ready()) return;
-    const url = buildMailto(to, email.subject, email.body);
+    let url = buildMailto(to, email.subject, email.body);
     if (Platform.OS === 'web') {
-      // iPhone Safari y navegadores: un mailto muy largo se corta o no abre (orden 120).
-      if (url.length > MAILTO_WEB_LIMIT) {
-        setNotice('tooLong');
-        return;
+      // D-200: correos como Zoho no toman el texto del mailto; se copia antes para pegarlo.
+      try {
+        await navigator.clipboard.writeText(copyText(email.subject, email.body));
+        setNotice('copied');
+      } catch {
+        /* sin permiso de portapapeles: sigue con el mailto */
       }
+      // iPhone Safari y navegadores: un mailto muy largo se corta; entonces va sin el texto (ya copiado).
+      if (url.length > MAILTO_WEB_LIMIT) url = buildMailto(to, email.subject, '');
       window.location.href = url;
     } else {
       try {
@@ -212,7 +219,12 @@ export default function SendEmailScreen() {
               </CardBlock>
             )}
             <View style={{ height: 12 }} />
-            <AppButton label={t.continue} onPress={() => setStep('preview')} disabled={!template || !ctx} />
+            <AppButton label={t.continue} onPress={() => {
+                if (values) setAsked(missingFields(used, values));
+                setStep('preview');
+              }}
+              disabled={!template || !ctx}
+            />
           </>
         ) : null}
 
@@ -261,17 +273,16 @@ export default function SendEmailScreen() {
               autoCorrect={false}
               error={showErrors && !emailOk ? (to.trim() ? t.badEmail : t.missingEmail) : null}
             />
-            {missing.length > 0 ? (
+            {asked.length > 0 ? (
               <>
                 <AppAlert text={t.missingTitle} />
-                {missing.map((k) => (
+                {asked.map((k) => (
                   <AppField
                     key={k}
                     label={t.missing[k]}
                     value={values[k]}
                     onChangeText={(v) => setValues({ ...values, [k]: v })}
                     keyboardType={k === 'telefono' ? 'phone-pad' : 'default'}
-                    error={showErrors ? t.missing[k] : null}
                   />
                 ))}
               </>

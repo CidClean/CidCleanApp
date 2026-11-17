@@ -78,7 +78,9 @@ export function initialValues(ctx: TemplateContext, contact: TemplateContact | n
 
 /** {firma} = nombre de quien envía, "Cid Clean LLC" y su teléfono de Mi perfil (D-323 (2); muestra del survey). */
 export function signature(v: Pick<FillValues, 'remitente' | 'telefono'>): string {
-  return `${v.remitente.trim()}\nCid Clean LLC · ${v.telefono.trim()}`;
+  // D-200: sin teléfono, la firma queda sin él (los datos que faltan no bloquean el envío).
+  const tel = v.telefono.trim();
+  return `${v.remitente.trim()}\nCid Clean LLC${tel ? ` · ${tel}` : ''}`;
 }
 
 /** Datos que faltan para los placeholders usados (D-323 (1): la vista previa los marca). */
@@ -92,11 +94,12 @@ export function missingFields(used: Placeholder[], v: FillValues): (keyof FillVa
   return out;
 }
 
+/** D-200: si un dato queda vacío, el texto usa un genérico ("Hi there", "your business", "your location"). */
 export function fill(text: string, v: FillValues): string {
   return text
-    .split('{nombre}').join(v.nombre.trim())
-    .split('{empresa}').join(v.empresa.trim())
-    .split('{dirección}').join(v.dirección.trim())
+    .split('{nombre}').join(v.nombre.trim() || 'there')
+    .split('{empresa}').join(v.empresa.trim() || 'your business')
+    .split('{dirección}').join(v.dirección.trim() || 'your location')
     .split('{firma}').join(signature(v));
 }
 
