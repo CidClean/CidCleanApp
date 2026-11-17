@@ -120,15 +120,15 @@ export default function SendEmailScreen() {
     if (!email || !ready()) return;
     let url = buildMailto(to, email.subject, email.body);
     if (Platform.OS === 'web') {
-      // D-200: correos como Zoho no toman el texto del mailto; se copia antes para pegarlo.
+      // D-327: en la web se copia el texto completo y el correo se abre solo con destinatario y asunto, para pegar.
       try {
         await navigator.clipboard.writeText(copyText(email.subject, email.body));
         setNotice('copied');
+        url = buildMailto(to, email.subject, '');
       } catch {
-        /* sin permiso de portapapeles: sigue con el mailto */
+        /* sin permiso de portapapeles: el enlace lleva el texto, como antes */
+        if (url.length > MAILTO_WEB_LIMIT) url = buildMailto(to, email.subject, '');
       }
-      // iPhone Safari y navegadores: un mailto muy largo se corta; entonces va sin el texto (ya copiado).
-      if (url.length > MAILTO_WEB_LIMIT) url = buildMailto(to, email.subject, '');
       window.location.href = url;
     } else {
       try {

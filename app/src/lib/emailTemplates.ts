@@ -114,7 +114,8 @@ export const validEmail = (e: string) => EMAIL.test(e.trim());
 /** `mailto:` con to, subject y body codificados (saltos de línea como %0D%0A). */
 export function buildMailto(to: string, subject: string, body: string): string {
   const enc = (s: string) => encodeURIComponent(s.replace(/\r?\n/g, '\r\n'));
-  return `mailto:${encodeURIComponent(to.trim()).replace(/%40/g, '@')}?subject=${enc(subject)}&body=${enc(body)}`;
+  const b = body ? `&body=${enc(body)}` : '';
+  return `mailto:${encodeURIComponent(to.trim()).replace(/%40/g, '@')}?subject=${enc(subject)}${b}`;
 }
 
 /** Texto que se copia: solo el cuerpo; el asunto ya va en el enlace (D-326). */
