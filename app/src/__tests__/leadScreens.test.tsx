@@ -96,6 +96,7 @@ jest.mock('@/lib/quotesApi', () => ({
   fetchLeadQuotes: jest.fn().mockResolvedValue({ ok: true, data: [] }),
   fetchQuotePending: jest.fn().mockResolvedValue([]),
 }));
+jest.mock('@/lib/emailTemplatesApi', () => ({ fetchEmailLog: jest.fn().mockResolvedValue({ ok: true, data: [] }) }));
 jest.mock('@/lib/leadsApi', () => ({
   fetchLeads: (...a: unknown[]) => mockFetchLeads(...a),
   fetchLead: (...a: unknown[]) => mockFetchLead(...a),

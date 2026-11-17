@@ -17,6 +17,7 @@ import { formatPhone } from '@/lib/phone';
 import { ListRow } from '@/components/ListRow';
 import { BackHeader } from '@/components/bento/Header';
 import { MainCard } from '@/components/bento/MainCard';
+import { SendEmailBlock } from '@/components/sales/SendEmailBlock';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useClientsStrings } from '@/i18n/useClientsStrings';
 import { useStrings } from '@/i18n/useStrings';
@@ -154,6 +155,8 @@ export default function ClientScreen() {
                 </CardBlock>
                 {/* D-301: dirección vieja sin separar. */}
                 {client.addressNeedsReview ? <AddressReviewNote t={addressT} onEdit={editAction?.onPress} /> : null}
+                {/* Orden 120 (D-321, D-323): Enviar correo con plantilla de clientes y su línea de tiempo. */}
+                <SendEmailBlock kind="client" id={client.id} />
                 {canEditClientData(access) ? (
                   <View style={{ marginTop: 10 }}>
                     <Checkbox label={c.accountProvider} checked={!!client.accountProvider} onChange={(v) => void toggleProvider(v)} />

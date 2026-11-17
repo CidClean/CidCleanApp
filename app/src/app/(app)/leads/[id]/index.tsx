@@ -16,6 +16,7 @@ import { AppText } from '@/components/AppText';
 import { ListRow } from '@/components/ListRow';
 import { LeadFormFields } from '@/components/sales/LeadFormFields';
 import { SiteRequests } from '@/components/sales/SiteRequests';
+import { SendEmailBlock } from '@/components/sales/SendEmailBlock';
 import { Icon } from '@/components/Icon';
 import { SelectField } from '@/components/SelectField';
 import { Sheet } from '@/components/Sheet';
@@ -230,6 +231,8 @@ export default function LeadDetailScreen() {
             </Card>
             <View style={{ width: '100%' }}>
               <DataSection lead={lead} s={s} locale={locale} />
+              {/* Orden 120 (D-321, D-323): Enviar correo con plantilla de prospectos y su línea de tiempo. */}
+              <SendEmailBlock kind="lead" id={lead.id} />
               {canDeleteLeads(access) ? (
                 <View>
                   {deleteError === 'lead' ? <AppAlert tone="error" text={s.detail.errorDelete} /> : null}

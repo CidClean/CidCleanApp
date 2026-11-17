@@ -20,6 +20,7 @@ export type HistoryEntry = {
     permiso?: string;
     kind?: string;
     version?: number | string;
+    plantilla?: string;
     label_es?: string;
     label_en?: string;
     antes?: ProfileState;
@@ -133,6 +134,16 @@ export function historyTitle(strings: Strings, e: HistoryEntry): string {
       return h.siteEdited;
     case 'sitio_eliminado':
       return h.siteDeleted;
+    case 'plantilla_creada':
+      return h.templateCreated(e.info.plantilla ?? '');
+    case 'plantilla_editada':
+      return h.templateEdited(e.info.plantilla ?? '');
+    case 'plantilla_eliminada':
+      return h.templateDeleted(e.info.plantilla ?? '');
+    case 'correo_plantilla':
+      return h.templateEmail(e.info.plantilla ?? '');
+    case 'quote_recordatorio':
+      return h.quoteReminder(version);
     case 'motivo_creado':
       return h.reasonCreated;
     case 'motivo_editado':

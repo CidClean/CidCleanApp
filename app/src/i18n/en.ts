@@ -364,6 +364,11 @@ export const en: Strings = {
     quoteAccepted: (v: string) => `Quote accepted: version ${v}`,
     quoteRejected: (v: string) => `Quote rejected: version ${v}`,
     quoteChanges: (v: string) => `Changes requested: version ${v}`,
+    templateCreated: (n: string) => `Template created: ${n}`,
+    templateEdited: (n: string) => `Template edited: ${n}`,
+    templateDeleted: (n: string) => `Template deleted: ${n}`,
+    templateEmail: (n: string) => `Email with template: ${n}`,
+    quoteReminder: (v: string) => `Quote reminder: version ${v}`,
     clientCreated: 'Client created',
     jobsiteCreated: 'Jobsite created',
     unknown: 'Change recorded', // an action the app does not know yet

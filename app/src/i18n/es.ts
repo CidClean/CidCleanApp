@@ -366,6 +366,11 @@ export const es = {
     quoteAccepted: (v: string) => `Quote aceptado: versión ${v}`, // D-200 (hito 4)
     quoteRejected: (v: string) => `Quote rechazado: versión ${v}`, // D-200 (hito 4)
     quoteChanges: (v: string) => `Cambios pedidos: versión ${v}`, // D-200 (hito 4)
+    templateCreated: (n: string) => `Plantilla creada: ${n}`, // D-200 (orden 120)
+    templateEdited: (n: string) => `Plantilla editada: ${n}`, // D-200 (orden 120)
+    templateDeleted: (n: string) => `Plantilla eliminada: ${n}`, // D-200 (orden 120)
+    templateEmail: (n: string) => `Correo con plantilla: ${n}`, // D-200 (orden 120)
+    quoteReminder: (v: string) => `Recordatorio del quote: versión ${v}`, // D-200 (orden 121)
     clientCreated: 'Cliente creado', // D-200 (hito 4)
     jobsiteCreated: 'Jobsite creado', // D-200 (hito 4)
     unknown: 'Cambio registrado', // SIN APROBAR: acción que la app aún no conoce
