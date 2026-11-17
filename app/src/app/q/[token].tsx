@@ -170,7 +170,8 @@ export default function PortalScreen() {
 
   async function openFile(kind: "sow" | "pdf" | "terms") {
     if (!session) return;
-    const r = await portalFileUrl(session, kind);
+    // D-319 (7): "Descargar cotización" baja el PDF con su nombre legible; el SOW y los términos se abren para leerlos.
+    const r = await portalFileUrl(session, kind, kind === "pdf");
     if (!r.ok) {
       setNotice(r.reason === "session" ? null : t.error);
       if (r.reason === "session") setStep({ kind: "email" });

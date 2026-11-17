@@ -363,8 +363,8 @@ export default function EmployeeProfileScreen() {
         source: 'document',
         documentId,
         title: kind === 'w9' ? strings.employee.w9 : strings.employee.insuranceCertificate,
-        // D-260: el W-9 lo descarga el Super Admin.
-        ...(kind === 'w9' ? { download: '1' } : {}),
+        // D-260: el W-9 lo descarga el Super Admin (solo él lo abre). D-319 (7): todo documento se descarga.
+        download: '1',
       },
     });
   }

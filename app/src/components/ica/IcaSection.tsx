@@ -98,7 +98,7 @@ export function IcaSection({ profileId }: { profileId: string }) {
     setBusy(false);
     if (draft && !d) return setNotice({ tone: 'error', text: t.error });
     setDraft(null);
-    router.push({ pathname: '/viewer', params: { source: 'ica', documentId: profileId, title: d?.ica ?? a?.ica ?? '' } });
+    router.push({ pathname: '/viewer', params: { source: 'ica', documentId: profileId, title: d?.ica ?? a?.ica ?? '', download: '1' } }); // D-319 (7)
   }
 
   async function send() {
@@ -186,7 +186,7 @@ export function IcaSection({ profileId }: { profileId: string }) {
           <AppButton
             label={t.viewSigned}
             variant="outline"
-            onPress={() => router.push({ pathname: '/viewer', params: { source: 'ica-signed', documentId: a.id, title: a.ica } })}
+            onPress={() => router.push({ pathname: '/viewer', params: { source: 'ica-signed', documentId: a.id, title: a.ica, download: '1' } })}
           />
         ) : null}
         {manage && status !== 'signed' ? (

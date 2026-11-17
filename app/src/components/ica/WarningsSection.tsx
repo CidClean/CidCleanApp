@@ -104,7 +104,7 @@ export function WarningsSection({ profileId, fullName }: { profileId: string; fu
             key={w.id}
             accessibilityRole={w.hasDocument ? 'button' : undefined}
             disabled={!w.hasDocument}
-            onPress={() => router.push({ pathname: '/viewer', params: { source: 'warning', documentId: w.id, title: t.warningsTitle } })}
+            onPress={() => router.push({ pathname: '/viewer', params: { source: 'warning', documentId: w.id, title: t.warningsTitle, download: '1' } })}
             style={styles.row}
           >
             <View style={{ flexShrink: 1 }}>

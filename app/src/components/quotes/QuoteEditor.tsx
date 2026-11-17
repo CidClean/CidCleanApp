@@ -386,7 +386,7 @@ export function QuoteEditor({ source }: { source: QuoteSource }) {
     router.push({
       pathname: "/viewer",
       // D-296: el archivo se guarda como "Cid Clean - {SOW o Quote vX} - {empresa}.pdf".
-      params: { source: "quote-file", path, title, fileName: readableFileName([document, ctx?.company], "pdf") },
+      params: { source: "quote-file", path, title, fileName: readableFileName([document, ctx?.company], "pdf"), download: "1" }, // D-319 (7)
     });
   }
 

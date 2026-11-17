@@ -74,7 +74,9 @@ export async function portalState(token: string): Promise<PortalResult<{ state: 
 export const requestCode = (token: string, email: string) => call<{ ok: true }>({ action: 'request', token, email });
 export const verifyCode = (token: string, email: string, code: string) => call<{ session: string }>({ action: 'verify', token, email, code });
 export const fetchPortalQuote = (session: string) => call<PortalQuote>({ action: 'quote', session });
-export const portalFileUrl = (session: string, kind: 'sow' | 'pdf' | 'terms') => call<{ url: string }>({ action: 'file', session, kind });
+/** URL de 60 s de un archivo del portal; `download` (D-319 7) la pide con el nombre legible para guardarla. */
+export const portalFileUrl = (session: string, kind: 'sow' | 'pdf' | 'terms', download = false) =>
+  call<{ url: string }>(download ? { action: 'file', session, kind, download: true } : { action: 'file', session, kind });
 export const decide = (
   session: string,
   d: { kind: 'accepted' | 'rejected' | 'changes_requested'; name?: string; title?: string; reason_id?: string | null; note?: string; read_confirmed?: boolean },

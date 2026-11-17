@@ -109,7 +109,7 @@ export const accountingEs = {
   reportIncome: 'Ingresos recibidos y pendientes', // APROBADO (D-215)
   shareCsv: 'Compartir CSV', // D-200
   sharePdf: 'PDF del dashboard', // APROBADO (D-215)
-  shareUnavailable: 'Compartir llega con la versión 1.3.0 de la app.', // D-200 (como D-233)
+  shareUnavailable: 'No se puede compartir en este dispositivo.', // D-200 (D-319 7: sin el aviso de la 1.3.0)
   shareError: 'No se pudo compartir. Inténtalo otra vez.', // D-200
   csv: {
     month: 'Mes',
@@ -256,7 +256,7 @@ export const accountingEn: AccountingStrings = {
   reportIncome: 'Income received and pending',
   shareCsv: 'Share CSV',
   sharePdf: 'Dashboard PDF',
-  shareUnavailable: 'Sharing arrives with version 1.3.0 of the app.',
+  shareUnavailable: "Sharing isn't available on this device.",
   shareError: "Couldn't share. Try again.",
   csv: {
     month: 'Month',

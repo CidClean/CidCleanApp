@@ -127,7 +127,7 @@ export const workEs = {
   employee: 'Empleado', // D-200: encabezado de la primera columna
   unstaffed: 'Sin personal', // D-200: fila de visitas sin personal en la tabla
   share: 'Compartir', // APROBADO (D-231)
-  shareSoon: 'Compartir llega con la versión 1.3.0 de la app.', // D-200 (en el APK 1.2.0 no está el módulo)
+  shareSoon: 'No se puede compartir en este dispositivo.', // D-200 (D-319 7: sin el aviso de la 1.3.0)
   shareError: 'No se pudo compartir. Inténtalo otra vez.', // D-200
   pdfTitle: 'Horario semanal', // D-200: título del PDF
   pdfTitleMonth: 'Horario del mes', // D-200 (D-236)
@@ -283,7 +283,7 @@ export const workEn: WorkStrings = {
   employee: 'Employee',
   unstaffed: 'No staff',
   share: 'Share',
-  shareSoon: 'Sharing comes with version 1.3.0 of the app.',
+  shareSoon: "Sharing isn't available on this device.",
   shareError: "Couldn't share. Try again.",
   pdfTitle: 'Weekly schedule',
   pdfTitleMonth: 'Monthly schedule',

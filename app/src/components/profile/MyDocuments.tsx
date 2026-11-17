@@ -45,8 +45,9 @@ export function MyDocuments({ profileId, strings, locale }: { profileId: string;
         source: 'document',
         documentId: card.documentId,
         title: card.title,
-        // D-263, D-271: su propio W-9 lo descarga él, con la nota de quién lo ve.
-        ...(card.kind === 'w9' ? { download: '1', note: 'own-w9' } : {}),
+        // D-263, D-271: su propio W-9 lo descarga él, con la nota de quién lo ve. D-319 (7): todo documento se descarga.
+        download: '1',
+        ...(card.kind === 'w9' ? { note: 'own-w9' } : {}),
       },
     });
   }

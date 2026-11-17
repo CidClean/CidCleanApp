@@ -137,7 +137,7 @@ describe('Jobsite (D-055, D-060, D-210)', () => {
     expect(await screen.findByText('Contrato')).toBeTruthy();
     expect(screen.getByText('Sin archivo')).toBeTruthy();
     await fireEvent.press(screen.getByText('Contrato'));
-    expect(mockPush).toHaveBeenCalledWith({ pathname: '/viewer', params: { source: 'jobsite', documentId: 'd1', title: 'Contrato' } });
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/viewer', params: { source: 'jobsite', documentId: 'd1', title: 'Contrato', download: '1' } });
     // D-226: cada tarjeta del mosaico abre su sección y Volver regresa al resumen.
     await fireEvent.press(screen.getByLabelText('Volver'));
     await fireEvent.press(screen.getByLabelText('Personal'));

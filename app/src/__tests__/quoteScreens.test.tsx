@@ -160,7 +160,7 @@ describe('Quote en la app (D-077, D-208, D-209)', () => {
     expect(screen.getByText(q.note('Menos días'))).toBeTruthy();
     expect(screen.queryByText(q.send)).toBeNull();
     await fireEvent.press(screen.getByText(q.viewPdf));
-    expect(mockPush).toHaveBeenCalledWith({ pathname: '/viewer', params: { source: 'quote-file', path: 'q1/v1/quote-1.0.pdf', title: q.version('1.0'), fileName: expect.stringMatching(/^Cid Clean - Quote v1\.0.*\.pdf$/) } });
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/viewer', params: { source: 'quote-file', path: 'q1/v1/quote-1.0.pdf', title: q.version('1.0'), fileName: expect.stringMatching(/^Cid Clean - Quote v1\.0.*\.pdf$/), download: '1' } });
     mockNewVersion.mockResolvedValue({ ok: true, data: 'v2' });
     await fireEvent.press(screen.getByText(q.newVersion));
     await waitFor(() => expect(mockNewVersion).toHaveBeenCalledWith('q1'));
@@ -255,7 +255,7 @@ describe('Portal del cliente (D-041 a D-047, D-094, D-095, D-209)', () => {
     expect(screen.queryByText(p.negotiateHint)).toBeNull();
     mockPortal.quote.mockResolvedValue({ ok: true, data: portalQuote({ sow_opened: true }) });
     await fireEvent.press(screen.getByText(p.readSow));
-    await waitFor(() => expect(mockPortal.file).toHaveBeenCalledWith('ses', 'sow'));
+    await waitFor(() => expect(mockPortal.file).toHaveBeenCalledWith('ses', 'sow', false));
     await waitFor(() => expect(screen.queryByText(p.sowLocked)).toBeNull());
   });
 

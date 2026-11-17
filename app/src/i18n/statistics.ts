@@ -57,7 +57,7 @@ export const statisticsEs = {
   // Exportar (D-253)
   exportCsv: 'Compartir CSV', // D-200 (como Accounting)
   exportPdf: 'PDF de estadísticas', // D-200
-  shareUnavailable: 'Compartir llega con la versión 1.3.0 de la app.', // D-200 (como Accounting)
+  shareUnavailable: 'No se puede compartir en este dispositivo.', // D-200 (D-319 7)
   shareError: 'No se pudo compartir. Inténtalo otra vez.', // D-200
   pdfTitle: (period: string) => `Estadísticas · ${period}`, // D-200
   csv: {
@@ -166,7 +166,7 @@ export const statisticsEn: StatisticsStrings = {
   profit: 'Profit',
   exportCsv: 'Share CSV',
   exportPdf: 'Statistics PDF',
-  shareUnavailable: 'Sharing arrives with version 1.3.0 of the app.',
+  shareUnavailable: "Sharing isn't available on this device.",
   shareError: "Couldn't share. Try again.",
   pdfTitle: (period: string) => `Statistics · ${period}`,
   csv: {

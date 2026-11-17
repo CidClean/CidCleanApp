@@ -672,7 +672,7 @@ function Documents({
   const openDoc = (d: JobsiteDocument) =>
     router.push({
       pathname: "/viewer",
-      params: { source: "jobsite", documentId: d.id, title: label(d) },
+      params: { source: "jobsite", documentId: d.id, title: label(d), download: "1" }, // D-319 (7)
     });
   const detail = (d: JobsiteDocument) =>
     c.docs.detail(d.version, day(dayKey(new Date(d.uploadedAt))));

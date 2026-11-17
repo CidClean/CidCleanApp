@@ -270,7 +270,7 @@ describe('Schedule: Detallado (D-231, D-235)', () => {
     await fireEvent.press(screen.getByText('Compartir'));
     await waitFor(() => expect(mockShare).toHaveBeenCalled());
     expect(String(mockShare.mock.calls[0][0])).toContain('Rosemary');
-    expect(await screen.findByText('Compartir llega con la versión 1.3.0 de la app.')).toBeTruthy();
+    expect(await screen.findByText('No se puede compartir en este dispositivo.')).toBeTruthy();
     await fireEvent.press(screen.getByText('Mes'));
     // El mes va del 1 al último día.
     // D-200: según la fecha puede haber más de un texto que termina en " 1" (prueba dependiente de la fecha).
