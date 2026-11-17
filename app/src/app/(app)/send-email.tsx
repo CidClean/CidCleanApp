@@ -1,6 +1,7 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Linking, Platform, Pressable, Share, StyleSheet, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
+import { Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
@@ -131,6 +132,14 @@ export default function SendEmailScreen() {
       }
       window.location.href = url;
     } else {
+      // D-328: con el APK 1.5.0 Android también copia el texto y abre el correo sin texto.
+      try {
+        await Clipboard.setStringAsync(copyText(email.subject, email.body));
+        setNotice('copied');
+        url = buildMailto(to, email.subject, '');
+      } catch {
+        /* sin portapapeles: el enlace lleva el texto */
+      }
       try {
         await Linking.openURL(url);
       } catch {
@@ -149,8 +158,8 @@ export default function SendEmailScreen() {
         await navigator.clipboard.writeText(text);
         setNotice('copied');
       } else {
-        // D-200: sin portapapeles nativo en el APK actual; la hoja de compartir de Android trae "Copiar".
-        await Share.share({ message: text, title: email.subject });
+        await Clipboard.setStringAsync(text);
+        setNotice('copied');
       }
     } catch {
       return;

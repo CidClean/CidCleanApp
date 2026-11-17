@@ -1,3 +1,4 @@
+jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn().mockResolvedValue(true) }));
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { Linking } from 'react-native';
 
@@ -88,7 +89,9 @@ describe('Enviar correo (lead)', () => {
     expect(screen.getByText(/Commercial cleaning for Superior Pool Products/)).toBeTruthy();
     await fireEvent.press(screen.getByText('Abrir en mi correo'));
     await waitFor(() => expect(mockLog).toHaveBeenCalledWith('t1', 'lead', 'L1', 'open'));
-    expect(open.mock.calls[0][0]).toMatch(/^mailto:armando\.zerquera@poolcorp\.com\?subject=Commercial%20cleaning%20for%20Superior%20Pool%20Products&body=Hi%20Armando%2C/);
+    // D-328: copia el texto completo y abre el correo solo con destinatario y asunto.
+    expect(open.mock.calls[0][0]).toBe('mailto:armando.zerquera@poolcorp.com?subject=Commercial%20cleaning%20for%20Superior%20Pool%20Products');
+    expect(require('expo-clipboard').setStringAsync).toHaveBeenCalledWith(expect.stringMatching(/^Hi Armando,/));
   });
 
   it('sin correo ni teléfono los marca y no abre', async () => {
