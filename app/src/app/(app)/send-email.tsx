@@ -1,6 +1,6 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import * as Clipboard from 'expo-clipboard';
+import * as ClipboardModule from 'expo-clipboard';
 import { Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppAlert } from '@/components/AppAlert';
@@ -18,8 +18,8 @@ import { canSeeAccounts } from '@/lib/clientRules';
 import {
   audienceFor,
   buildEmail,
+  buildEmailHtml,
   buildMailto,
-  copyText,
   initialValues,
   missingFields,
   sortTemplates,
@@ -42,6 +42,34 @@ import { sample, useTheme } from '@/theme';
  * "Abrir en mi correo" (`mailto:`) o "Copiar texto". Lo que falta se marca y se escribe antes. Cada apertura o copia
  * queda en el historial (log_template_email). La app no manda el correo: lo manda quien envía desde su correo.
  */
+/** Copia el correo con formato (HTML) y en texto plano a la vez; el programa de correo usa el que acepte. D-330 */
+async function copyRich(plain: string, html: string): Promise<boolean> {
+  try {
+    if (Platform.OS === 'web') {
+      const nav = navigator as Navigator & { clipboard: Clipboard & { write?: (i: unknown[]) => Promise<void> } };
+      const Item = (globalThis as { ClipboardItem?: new (d: Record<string, Blob>) => unknown }).ClipboardItem;
+      if (Item && nav.clipboard.write) {
+        await nav.clipboard.write([
+          new Item({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([plain], { type: 'text/plain' }) }),
+        ]);
+      } else {
+        await nav.clipboard.writeText(plain);
+      }
+    } else {
+      await ClipboardModule.setStringAsync(html, { inputFormat: ClipboardModule.StringFormat.HTML });
+    }
+    return true;
+  } catch {
+    try {
+      if (Platform.OS === 'web') await navigator.clipboard.writeText(plain);
+      else await ClipboardModule.setStringAsync(plain);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
 export default function SendEmailScreen() {
   const params = useLocalSearchParams<{ kind: string; id: string }>();
   const kind: TemplateEntity = params.kind === 'client' ? 'client' : 'lead';
@@ -91,6 +119,7 @@ export default function SendEmailScreen() {
   const template = templates?.find((x) => x.id === chosen) ?? null;
   const used = useMemo(() => (template ? usedPlaceholders(template.subject, template.body) : []), [template]);
   const email = values && template ? buildEmail(template, values) : null;
+  const html = values && template ? buildEmailHtml(template, values) : '';
   const emailOk = validEmail(to);
 
   if (kind === 'lead' ? !canSeeLeads(access) : !canSeeAccounts(access)) return <Redirect href="/" />;
@@ -122,10 +151,7 @@ export default function SendEmailScreen() {
     const url = buildMailto(to, email.subject, '');
     let copied = false;
     try {
-      const text = copyText(email.subject, email.body);
-      if (Platform.OS === 'web') await navigator.clipboard.writeText(text);
-      else await Clipboard.setStringAsync(text);
-      copied = true;
+      copied = await copyRich(email.body, html);
     } catch {
       copied = false;
     }
@@ -145,20 +171,11 @@ export default function SendEmailScreen() {
 
   async function copy() {
     if (!email || !ready()) return;
-    const text = copyText(email.subject, email.body);
-    try {
-      if (Platform.OS === 'web') {
-        await navigator.clipboard.writeText(text);
-        setNotice('copied');
-      } else {
-        await Clipboard.setStringAsync(text);
-        setNotice('copied');
-      }
-    } catch {
-      return;
-    }
-    await log('copy');
+    const ok = await copyRich(email.body, html);
+    setNotice(ok ? 'copied' : 'copyFailed');
+    if (ok) await log('copy');
   }
+
 
   const header = [ctx?.company, ctx?.contacts[contactIndex]?.name].filter(Boolean).join(' · ');
 

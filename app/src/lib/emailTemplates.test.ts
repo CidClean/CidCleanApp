@@ -1,5 +1,6 @@
 import {
   buildEmail,
+  buildEmailHtml,
   buildMailto,
   FOOTER_CLIENT,
   FOOTER_PROSPECT,
@@ -27,8 +28,11 @@ describe('plantillas de correo (orden 120)', () => {
     expect(e.subject).toBe('Commercial cleaning for Superior Pool Products');
     expect(e.body.startsWith('Hi Armando,\n\n')).toBe(true);
     expect(e.body).toContain('I can visit 280 Commercial Blvd for a free 30-minute walkthrough');
-    expect(e.body).toContain('Would that be useful?\n\nHumberto Villiva\nCid Clean LLC · (786) 250-1324\n\n--\n');
-    expect(e.body.endsWith(FOOTER_PROSPECT)).toBe(true);
+    expect(e.body).toContain('Would that be useful?\n\nHumberto Villiva\nCid Clean LLC | Commercial Cleaning\n(786) 250-1324 | cidclean.com\n\n______________________________\n\n');
+    expect(e.body.endsWith('Privacy Policy: cidclean.com/privacy')).toBe(true);
+    const html = buildEmailHtml({ subject: 'S', body, audience: 'prospect' }, v);
+    expect(html).toContain('font-size:11px');
+    expect(html).toContain('This message is an advertisement from Cid Clean LLC.');
   });
 
   it('pie A con los textos del abogado (D-323 (3))', () => {
@@ -46,7 +50,7 @@ describe('plantillas de correo (orden 120)', () => {
 
   it('pie C a clientes: mensaje de servicio de la cuenta', () => {
     const e = buildEmail({ subject: 'S', body: 'B', audience: 'client' }, initialValues(ctx, null));
-    expect(e.body.endsWith(FOOTER_CLIENT)).toBe(true);
+    expect(e.body.endsWith(FOOTER_CLIENT.split('\n')[1])).toBe(true);
     expect(FOOTER_CLIENT).toContain('This is a service message about your account with Cid Clean LLC.');
     expect(FOOTER_CLIENT).not.toContain('advertisement');
   });
