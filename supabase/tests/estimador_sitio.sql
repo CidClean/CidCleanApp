@@ -123,8 +123,9 @@ update estimator_settings set min_per_visit = 85, place_types = jsonb_set(place_
 select pg_temp.prueba('estimado crea lead', 'ok|true|1130|1520|false',
   (select r->>'status' || '|' || (r->>'new_lead') || '|' || (r->>'range_low') || '|' || (r->>'range_high') || '|' || (r->>'walkthrough_recommended')
    from pg_temp.envio('estimate', 'Ana@Prueba-Est.local', 'ip1') r));
-select pg_temp.prueba('lead web, nuevo, no residencial, company = nombre', 'web|new|non_residential|Ana Prueba|ana@prueba-est.local',
-  (select source || '|' || status || '|' || cleaning_type || '|' || company || '|' || email from leads where email = 'ana@prueba-est.local'));
+select pg_temp.prueba('lead web, nuevo, no residencial, sin empresa (D-319)', 'web|new|non_residential|∅|Ana Prueba|ana@prueba-est.local',
+  (select source || '|' || status || '|' || cleaning_type || '|' || coalesce(company, '∅') || '|' || contact_name || '|' || email
+     from leads where email = 'ana@prueba-est.local'));
 select pg_temp.prueba('nota con tipo, sq ft, frecuencia, ciudad, ZIP y rango', 'true',
   (select (notes like '%Type: Office%' and notes like '%Size: 3,000 sq ft%' and notes like '%Frequency: 3x per week%'
            and notes like '%City: Naples%' and notes like '%ZIP: 34102%' and notes like '%$1,130 – $1,520%')::text
@@ -150,8 +151,9 @@ update leads set status = 'lost', lost_reason_id = (select id from lost_reasons 
 select pg_temp.prueba('lead perdido: crea uno nuevo', 'true', (select r->>'new_lead' from pg_temp.envio('estimate', 'luis@prueba-est.local', 'ip6') r));
 select pg_temp.prueba('ahora hay dos leads con ese correo', '2', (select count(*)::text from leads where email = 'luis@prueba-est.local'));
 select pg_temp.envio('contact', 'otro@prueba-est.local', 'ip7', ciudad => 'Other', zip => '', mensaje => 'Hello, we are in Fort Myers.');
-select pg_temp.prueba('ciudad Other sin ZIP: sitio "FL"', 'FL',
-  (select s.address from lead_sites s join leads l on l.id = s.lead_id where l.email = 'otro@prueba-est.local'));
+select pg_temp.prueba('ciudad Other sin ZIP: sitio sin dirección, para completar (D-319)', '∅|∅|true',
+  (select coalesce(s.address, '∅') || '|' || coalesce(s.state, '∅') || '|' || s.address_needs_review
+     from lead_sites s join leads l on l.id = s.lead_id where l.email = 'otro@prueba-est.local'));
 -- Validación
 select pg_temp.prueba('sq ft fuera de rango', 'invalid', (select r->>'status' from pg_temp.envio('estimate', 'v1@prueba-est.local', 'ipv', sqft => 100) r));
 select pg_temp.prueba('tipo desconocido', 'invalid', (select r->>'status' from pg_temp.envio('estimate', 'v2@prueba-est.local', 'ipv', tipo => 'castle') r));

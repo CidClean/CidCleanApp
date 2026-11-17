@@ -4,6 +4,7 @@ import {
   isLeadSource,
   isLeadStatus,
   leadColumns,
+  leadDisplayName,
   nextScheduled,
   parseUsDate,
   sortLeads,
@@ -37,7 +38,10 @@ type FollowUpRow = { due_on: string; done_at: string | null };
 type SiteRow = AddressRow & {
   id: string;
   name: string | null;
-  address: string;
+  address: string | null;
+  facility_type?: string | null;
+  sqft?: number | null;
+  web_frequency?: string | null;
   created_at: string;
   walkthrough_appointments: AppointmentRow[] | null;
   walkthroughs?: { current_version: number }[] | { current_version: number } | null;
@@ -58,7 +62,7 @@ function toReason(r: ReasonRow): LostReason {
 
 type SummaryRow = {
   id: string;
-  company: string;
+  company: string | null;
   contact_name: string | null;
   status: string;
   source?: string;
@@ -71,7 +75,8 @@ export function rowToSummary(r: SummaryRow, now: Date): LeadSummary {
   const appointments = (r.lead_sites ?? []).flatMap((s) => (s.walkthrough_appointments ?? []).map(toAppointment));
   return {
     id: r.id,
-    company: r.company,
+    company: leadDisplayName(r.company, r.contact_name),
+    companyMissing: !(r.company ?? '').trim(),
     contactName: r.contact_name,
     status: isLeadStatus(r.status) ? r.status : 'new',
     createdAt: new Date(r.created_at),
@@ -98,7 +103,7 @@ export async function fetchLeads(now = new Date()): Promise<LeadsResult<LeadSumm
 
 type LeadRow = {
   id: string;
-  company: string;
+  company: string | null;
   contact_name: string | null;
   phone: string | null;
   email: string | null;
@@ -126,13 +131,17 @@ export function rowToLead(r: LeadRow): Lead {
         address: a.line,
         addressParts: a.parts,
         addressNeedsReview: a.needsReview,
+        facilityType: s.facility_type ?? null,
+        sqft: s.sqft ?? null,
+        webFrequency: s.web_frequency ?? null,
         scheduled,
         walkthroughDone: (wt?.current_version ?? 0) > 0,
       };
     });
   return {
     id: r.id,
-    company: r.company,
+    company: leadDisplayName(r.company, r.contact_name),
+    companyMissing: !(r.company ?? '').trim(),
     contactName: r.contact_name,
     phone: r.phone,
     email: r.email,
@@ -155,7 +164,7 @@ export async function fetchLead(id: string): Promise<LeadsResult<Lead>> {
       .select(
         'id, company, contact_name, phone, email, source, notes, status, lost_note, language, created_at, ' +
           'lost_reasons(id, label_es, label_en, sort, active), lead_followups(due_on, done_at), ' +
-          'lead_sites(id, name, address, address_line1, address_line2, city, state, zip, address_needs_review, created_at, walkthrough_appointments(id, starts_at, status), walkthroughs(current_version))',
+          'lead_sites(id, name, address, address_line1, address_line2, city, state, zip, address_needs_review, facility_type, sqft, web_frequency, created_at, walkthrough_appointments(id, starts_at, status), walkthroughs(current_version))',
       )
       .eq('id', id)
       .maybeSingle();

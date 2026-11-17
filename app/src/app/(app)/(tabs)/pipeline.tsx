@@ -27,7 +27,7 @@ import {
 import { fetchLeads } from '@/lib/leadsApi';
 import { usePermissions } from '@/lib/session';
 import { visibleTabs } from '@/lib/visibility';
-import { radius, sample, useTheme } from '@/theme';
+import { radius, sample, status, useTheme } from '@/theme';
 
 /**
  * Pipeline (D-132, D-226; muestra surveys/estilo-c1-pantallas/Pipeline.html): "Ventas" y el título, + de marca para
@@ -182,6 +182,11 @@ function LeadCard({ lead, s, onPress }: { lead: LeadSummary; s: SalesStrings; on
             <AppText weight="heavy" size={16} color={won ? '#FFFFFF' : colors.text} numberOfLines={1}>
               {lead.company}
             </AppText>
+            {lead.companyMissing ? (
+              <AppText size={12} weight="bold" color={won ? '#FFFFFF' : status.warning} numberOfLines={1}>
+                {s.detail.companyMissing}
+              </AppText>
+            ) : null}
             {sub ? (
               <AppText size={12} color={won ? '#FFFFFF' : colors.secondary} style={won ? { opacity: 0.85 } : undefined} numberOfLines={1}>
                 {sub}

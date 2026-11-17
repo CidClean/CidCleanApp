@@ -69,3 +69,12 @@ describe('Direcciones (D-301)', () => {
     expect(cityStateZipLine(emptyAddress())).toBe('');
   });
 });
+
+describe('D-319: City, State y ZIP sin calle', () => {
+  it('una fila con solo City, State y ZIP usa las partes y queda para completar', () => {
+    const a = addressFromRow({ address: 'Naples, FL 34114', address_line1: null, city: 'Naples', state: 'FL', zip: '34114', address_needs_review: true });
+    expect(a.parts).toEqual({ addressLine1: '', addressLine2: '', city: 'Naples', state: 'FL', zip: '34114' });
+    expect(a.line).toBe('Naples, FL 34114');
+    expect(a.needsReview).toBe(true);
+  });
+});

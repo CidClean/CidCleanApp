@@ -87,8 +87,9 @@ export type AddressRow = {
 };
 
 export function addressFromRow(r: AddressRow): { parts: AddressParts; line: string; needsReview: boolean } {
-  if (r.address_line1 == null) {
-    // Base sin la migración de D-301 o fila sin dirección: se separa aquí con las mismas reglas.
+  if (r.address_line1 == null && r.city == null && r.zip == null) {
+    // Base sin la migración de D-301 o fila sin dirección: se separa aquí con las mismas reglas. (Sin calle pero con
+    // City o ZIP, D-319: lead web, se usan las partes.)
     const p = parseAddress(r.address);
     return { parts: p.parts, line: (r.address ?? '').trim(), needsReview: p.needsReview };
   }
@@ -102,7 +103,7 @@ export function addressFromRow(r: AddressRow): { parts: AddressParts; line: stri
   return {
     parts,
     line: formatAddressLine(parts) || (r.address ?? '').trim(),
-    needsReview: r.address_needs_review ?? (!parts.city || !parts.state || !parts.zip),
+    needsReview: r.address_needs_review ?? (!parts.addressLine1 || !parts.city || !parts.state || !parts.zip),
   };
 }
 

@@ -25,6 +25,7 @@ import {
   shiftMonth,
   showsSalesPending,
   siteLabel,
+  leadDisplayName,
   sortLeads,
   sortPending,
   statusChangeAction,
@@ -332,5 +333,18 @@ describe('Pipeline en mosaico (D-226)', () => {
     expect(leadTone('won')).toBe('won');
     expect(leadTone('new')).toBe('neutral');
     expect(initialsOf('Gulf Coast Dental')).toBe('GC');
+  });
+});
+
+describe('D-319: lead web sin empresa y sitio sin nombre', () => {
+  it('el lead sin empresa se muestra con el contacto', () => {
+    expect(leadDisplayName(null, 'Ana Web')).toBe('Ana Web');
+    expect(leadDisplayName('  ', 'Ana Web')).toBe('Ana Web');
+    expect(leadDisplayName('Clínica Sol', 'Ana')).toBe('Clínica Sol');
+  });
+  it('el sitio sin nombre cae en su dirección o en "Naples, FL"', () => {
+    expect(siteLabel({ name: null, address: 'Bonita Springs, FL 34135' })).toBe('Bonita Springs, FL 34135');
+    expect(siteLabel({ name: null, address: '' })).toBe('Naples, FL');
+    expect(siteLabel({ name: 'Oficina', address: '' })).toBe('Oficina');
   });
 });

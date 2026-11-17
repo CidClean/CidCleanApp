@@ -63,6 +63,7 @@ export const salesEs = {
   detail: {
     barTitle: 'Lead', // APROBADO (muestra ronda 8)
     sourceLine: (source: string) => `Lead · Fuente: ${source.toLowerCase()}`, // APROBADO (muestra ronda 8: "Lead · Fuente: web")
+    companyMissing: 'Completa la empresa', // D-200 (D-319: el sitio web no trajo empresa)
     tabData: 'Datos', // APROBADO (D-070)
     tabSites: 'Sitios', // APROBADO (D-070, D-220)
     tabWalkthrough: 'Walkthrough', // APROBADO (D-220)
@@ -248,6 +249,7 @@ export const salesEn: SalesStrings = {
   detail: {
     barTitle: 'Lead', // lead detail: top bar title
     sourceLine: (source: string) => `Lead · Source: ${source.toLowerCase()}`, // lead detail header
+    companyMissing: 'Complete the company', // D-200 (D-319)
     tabData: 'Details',
     tabSites: 'Sites',
     tabWalkthrough: 'Walkthrough',

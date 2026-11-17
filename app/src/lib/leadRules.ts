@@ -31,8 +31,12 @@ export type Appointment = { id: string; startsAt: Date; status: 'scheduled' | 'd
 export type LeadSite = {
   id: string;
   name: string | null;
-  /** Una línea "calle, dirección 2, City, ST ZIP" (D-301). */
+  /** Una línea "calle, dirección 2, City, ST ZIP" (D-301); vacía si el sitio web no trajo ciudad ni ZIP. */
   address: string;
+  /** Datos del estimador del sitio web (D-319): clave del tipo de lugar, sq ft y clave de la frecuencia. */
+  facilityType?: string | null;
+  sqft?: number | null;
+  webFrequency?: string | null;
   /** Las partes de la dirección (D-301); opcionales para los datos de prueba anteriores. */
   addressParts?: AddressParts;
   /** Dirección vieja sin separar: aviso "Completa la dirección" (D-301). */
@@ -47,7 +51,10 @@ export type LostReason = { id: string; labelEs: string; labelEn: string; sort: n
 
 export type Lead = {
   id: string;
+  /** Empresa, o el contacto si el lead web llegó sin empresa (D-319); ver `companyMissing`. */
   company: string;
+  /** El sitio web no trajo empresa: "Completa la empresa" (D-319). */
+  companyMissing?: boolean;
   contactName: string | null;
   phone: string | null;
   email: string | null;
@@ -68,6 +75,7 @@ export type Lead = {
 export type LeadSummary = {
   id: string;
   company: string;
+  companyMissing?: boolean;
   contactName: string | null;
   status: LeadStatus;
   createdAt: Date;
@@ -296,7 +304,7 @@ export function hasLeadErrors(e: LeadFormErrors): boolean {
 
 export function leadFormFrom(lead: Lead): LeadForm {
   return {
-    company: lead.company,
+    company: lead.companyMissing ? '' : lead.company,
     contactName: lead.contactName ?? '',
     phone: formatPhone(lead.phone),
     email: lead.email ?? '',
@@ -348,9 +356,20 @@ export function nextScheduled(appointments: readonly Appointment[], now: Date): 
   return upcoming[0] ?? null;
 }
 
-/** Nombre visible de un sitio: su nombre o, si no tiene, la dirección. */
+/** Nombre visible de un sitio: su nombre, su dirección o "Naples, FL" (D-319: el sitio del lead web no tiene nombre). */
 export function siteLabel(site: Pick<LeadSite, 'name' | 'address'>): string {
-  return site.name && site.name.trim() !== '' ? site.name : site.address;
+  if (site.name && site.name.trim() !== '') return site.name;
+  return site.address && site.address.trim() !== '' ? site.address : DEFAULT_SITE_LABEL;
+}
+
+/** D-319: un sitio sin nombre ni dirección se muestra así. */
+export const DEFAULT_SITE_LABEL = 'Naples, FL';
+
+/** Nombre visible de un lead: la empresa o, si el sitio web no la trajo, el contacto (D-319). */
+export function leadDisplayName(company: string | null | undefined, contactName: string | null | undefined): string {
+  const c = (company ?? '').trim();
+  if (c) return c;
+  return (contactName ?? '').trim() || 'Lead';
 }
 
 // --- Calendario del mes (D-104) -----------------------------------------------------------------------

@@ -504,6 +504,11 @@ function LeadMainCard({ lead, s }: { lead: Lead; s: SalesStrings }) {
           <AppText weight="heavy" size={24} color="#FFFFFF" accessibilityRole="header">
             {lead.company}
           </AppText>
+          {lead.companyMissing ? (
+            <AppText size={13} weight="bold" color="#FFFFFF">
+              {s.detail.companyMissing}
+            </AppText>
+          ) : null}
           <AppText size={13} color="#FFFFFF" style={{ opacity: 0.85 }}>
             {s.detail.sourceLine(s.source[lead.source])}
           </AppText>
