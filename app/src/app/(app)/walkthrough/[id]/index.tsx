@@ -47,6 +47,10 @@ import {
   type WalkthroughDoc,
   contactAddressParts,
   withContactAddress,
+  FACILITY_TYPES,
+  parseHours,
+  parseSqft,
+  type FacilityType,
 } from '@/lib/walkthroughRules';
 import { iconStrokeWidth, radius, sample, useTheme } from '@/theme';
 
@@ -71,14 +75,14 @@ export default function WalkthroughScreen() {
   const [phoneTouched, setPhoneTouched] = useState(false);
 
   // Los campos escriben en una copia local (sin saltos del cursor) y se guardan en el teléfono al momento.
-  const [form, setForm] = useState<Pick<WalkthroughData, 'contact' | 'frequency' | 'internal'> | null>(null);
+  const [form, setForm] = useState<Pick<WalkthroughData, 'contact' | 'frequency' | 'internal' | 'site'> | null>(null);
   useEffect(() => {
-    if (doc && !form) setForm({ contact: doc.data.contact, frequency: doc.data.frequency, internal: doc.data.internal });
+    if (doc && !form) setForm({ contact: doc.data.contact, frequency: doc.data.frequency, internal: doc.data.internal, site: doc.data.site });
   }, [doc, form]);
 
   if (!canDoWalkthroughs(access)) return <Redirect href="/" />;
 
-  function setSection<K extends 'contact' | 'frequency' | 'internal'>(key: K, value: WalkthroughData[K]) {
+  function setSection<K extends 'contact' | 'frequency' | 'internal' | 'site'>(key: K, value: WalkthroughData[K]) {
     setForm((f) => (f ? { ...f, [key]: value } : f));
     void update((d) => ({ ...d, data: { ...d.data, [key]: value } }));
   }
@@ -121,13 +125,19 @@ export default function WalkthroughScreen() {
 
             {stepKey === 'site' ? (
               <>
+                <SectionTitle text={w.site.siteSection} />
                 <AddressFields
                   form={contactAddressParts(form.contact)}
-                  onChange={(a) => setSection('contact', withContactAddress(form.contact, a))}
+                  onChange={(a) => {
+                    setSection('contact', withContactAddress(form.contact, a));
+                    if (form.site.fromWeb?.address) setSection('site', { ...form.site, fromWeb: { ...form.site.fromWeb, address: false } });
+                  }}
                   t={addressT}
                   errors={addressErrors(contactAddressParts(form.contact), 'partial')}
                   optional
                 />
+                {form.site.fromWeb?.address ? <FromWeb text={w.site.fromWeb} /> : null}
+                <SiteFields w={w} value={form.site} onChange={(s) => setSection('site', s)} />
                 <AppField
                   label={w.site.contact}
                   value={form.contact.contactName}
@@ -197,7 +207,22 @@ export default function WalkthroughScreen() {
             ) : null}
 
             {stepKey === 'frequency' ? (
-              <FrequencyStep w={w} value={form.frequency} onChange={(f) => setSection('frequency', f)} />
+              <>
+                <FrequencyStep
+                  w={w}
+                  value={form.frequency}
+                  onChange={(f) => {
+                    setSection('frequency', f);
+                    if (form.site.fromWeb?.frequency) setSection('site', { ...form.site, fromWeb: { ...form.site.fromWeb, frequency: false } });
+                  }}
+                />
+                {form.site.fromWeb?.frequency ? <FromWeb text={w.site.fromWeb} /> : null}
+                {form.site.webDays && form.frequency.kind === 'weekly' && form.frequency.days.length !== form.site.webDays ? (
+                  <AppText size={sample.noteSize} color={colors.secondary} style={{ marginTop: 6 }}>
+                    {w.site.webDays(form.site.webDays)}
+                  </AppText>
+                ) : null}
+              </>
             ) : null}
 
             {stepKey === 'internal' ? (
@@ -206,7 +231,10 @@ export default function WalkthroughScreen() {
                   {w.internal.note}
                 </AppText>
                 <AppField label={w.internal.staff} value={form.internal.staff} onChangeText={(v) => setSection('internal', { ...form.internal, staff: v })} />
-                <AppField label={w.internal.time} value={form.internal.time} onChangeText={(v) => setSection('internal', { ...form.internal, time: v })} />
+                {/* D-319 (4): las horas por visita son un número en el paso 1; el texto viejo, si no era claro, se ve aquí. */}
+                {form.internal.time.trim() !== '' ? (
+                  <AppField label={w.internal.time} value={form.internal.time} onChangeText={(v) => setSection('internal', { ...form.internal, time: v })} />
+                ) : null}
                 <AppField
                   label={w.internal.supplies}
                   value={form.internal.supplies}
@@ -327,6 +355,10 @@ function SummaryStep({
         [w.site.phone, formatPhone(c.phone)],
         [w.site.email, c.email],
         [w.site.general, c.general],
+        [w.site.facilityType, doc.data.site.facilityType ? w.facilityTypes[doc.data.site.facilityType] : ''],
+        [w.site.sqft, doc.data.site.sqft ? doc.data.site.sqft.toLocaleString('en-US') : ''],
+        [w.site.schedule, doc.data.site.schedule],
+        [w.site.estHours, doc.data.site.estHours === null ? '' : String(doc.data.site.estHours)],
       ])}
       {section('areas', 2)}
       {doc.data.areas.length === 0 ? (
@@ -344,7 +376,7 @@ function SummaryStep({
       {section('internal', 4)}
       {rows([
         [w.internal.staff, doc.data.internal.staff],
-        [w.internal.time, doc.data.internal.time],
+        ...(doc.data.internal.time.trim() ? ([[w.internal.time, doc.data.internal.time]] as [string, string][]) : []),
         [w.internal.supplies, doc.data.internal.supplies],
       ])}
       <View style={{ height: 12 }} />
@@ -370,6 +402,76 @@ function SummaryStep({
         </>
       )}
     </View>
+  );
+}
+
+function SectionTitle({ text }: { text: string }) {
+  const { colors } = useTheme();
+  return (
+    <AppText size={sample.labelSize} weight="bold" color={colors.secondary} style={{ marginTop: 6, marginBottom: 6 }}>
+      {text}
+    </AppText>
+  );
+}
+
+/** Etiqueta "Del sitio web" (D-320) bajo lo que llegó precargado del estimador. */
+function FromWeb({ text }: { text: string }) {
+  const { colors } = useTheme();
+  return (
+    <AppText size={sample.noteSize} weight="bold" color={colors.brandText} style={{ marginTop: -6, marginBottom: 10 }}>
+      {text}
+    </AppText>
+  );
+}
+
+/**
+ * Datos del sitio del paso 1 (D-318, D-320): Tipo de lugar, Pies cuadrados aprox. y, en "Servicio", Horario de servicio
+ * y Horas estimadas por visita. Los números se escriben como texto y se guardan como número cuando son válidos.
+ */
+function SiteFields({ w, value, onChange }: { w: WalkthroughStrings; value: WalkthroughData['site']; onChange: (s: WalkthroughData['site']) => void }) {
+  const [sqftText, setSqftText] = useState(value.sqft ? value.sqft.toLocaleString('en-US') : '');
+  const [hoursText, setHoursText] = useState(value.estHours === null ? '' : String(value.estHours));
+  const sqft = parseSqft(sqftText);
+  const hours = parseHours(hoursText);
+  const options: { value: FacilityType | ''; label: string }[] = [
+    { value: '', label: w.site.facilityNone },
+    ...FACILITY_TYPES.map((k) => ({ value: k, label: w.facilityTypes[k] })),
+  ];
+  return (
+    <>
+      <SelectField
+        label={w.site.facilityType}
+        options={options}
+        value={value.facilityType ?? ''}
+        onChange={(k) => onChange({ ...value, facilityType: k === '' ? null : k, fromWeb: { ...value.fromWeb, facilityType: false } })}
+      />
+      {value.fromWeb?.facilityType ? <FromWeb text={w.site.fromWeb} /> : null}
+      <AppField
+        label={w.site.sqft}
+        value={sqftText}
+        keyboardType="number-pad"
+        error={sqft === 'invalid' ? w.site.sqftError : null}
+        onChangeText={(v) => {
+          setSqftText(v);
+          const n = parseSqft(v);
+          if (n !== 'invalid') onChange({ ...value, sqft: n, fromWeb: { ...value.fromWeb, sqft: false } });
+        }}
+      />
+      {value.fromWeb?.sqft ? <FromWeb text={w.site.fromWeb} /> : null}
+      <SectionTitle text={w.site.serviceSection} />
+      <AppField label={w.site.schedule} value={value.schedule} onChangeText={(v) => onChange({ ...value, schedule: v.slice(0, 200) })} />
+      <AppField
+        label={w.site.estHours}
+        value={hoursText}
+        keyboardType="decimal-pad"
+        error={hours === 'invalid' ? w.site.hoursError : null}
+        onChangeText={(v) => {
+          setHoursText(v);
+          const n = parseHours(v);
+          if (n !== 'invalid') onChange({ ...value, estHours: n });
+        }}
+      />
+    </>
   );
 }
 

@@ -14,7 +14,7 @@ import { formatPhone } from '@/lib/phone';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions } from '@/lib/session';
 import { fetchServerWalkthrough } from '@/lib/walkthroughApi';
-import { canDoWalkthroughs, dataFromServer, emptyData, newDoc } from '@/lib/walkthroughRules';
+import { canDoWalkthroughs, dataFromServer, emptyData, newDoc, webPrefill } from '@/lib/walkthroughRules';
 import { findWalkthroughForSite, saveWalkthrough } from '@/lib/walkthroughStore';
 import { useTheme } from '@/theme';
 
@@ -46,6 +46,12 @@ export default function StartWalkthroughScreen() {
         return;
       }
       const prefill = { address: site.address, ...(site.addressParts ?? {}), contactName: l.contactName ?? '', phone: formatPhone(l.phone), email: l.email ?? '' };
+      // D-319: tipo, sq ft y frecuencia del sitio web llegan precargados ("Del sitio web").
+      const web = webPrefill(site, { biweekly: w.frequency.biweekly, monthly: w.frequency.monthly });
+      const webSite = { ...web.site, ...(web.webDays ? { webDays: web.webDays } : {}) };
+      if (l.source === 'web' && (site.addressParts?.city || site.addressParts?.zip)) {
+        webSite.fromWeb = { ...(webSite.fromWeb ?? {}), address: true };
+      }
       const base = {
         siteId: site.id,
         leadId: l.id,
@@ -53,6 +59,8 @@ export default function StartWalkthroughScreen() {
         company: l.company,
         siteLabel: siteLabel(site),
         contact: prefill,
+        site: webSite,
+        frequency: web.frequency,
       };
       const server = await fetchServerWalkthrough(site.id);
       // Del servidor (otro teléfono o ya cerrado): se retoma tal cual, sin nada pendiente; cerrado abre su Resumen (D-212).
@@ -60,7 +68,7 @@ export default function StartWalkthroughScreen() {
         server.ok && server.data
           ? {
               ...newDoc({ ...base, id: server.data.id }),
-              data: dataFromServer(server.data.draft, emptyData(prefill)),
+              data: dataFromServer(server.data.draft, emptyData(prefill, { site: webSite, frequency: web.frequency })),
               rev: 0,
               everSynced: true,
               status: server.data.status,

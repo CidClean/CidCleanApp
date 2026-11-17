@@ -62,6 +62,116 @@ export type Area = {
 /** Frecuencia (D-075, D-080, D-105): días 0 = lunes ... 6 = domingo. */
 export type Frequency = { kind: 'daily' | 'weekly' | 'other'; days: number[]; other: string };
 
+/** Tipos de lugar (D-318), con las claves del estimador del sitio web (D-309). Etiquetas en i18n/walkthrough.ts. */
+export const FACILITY_TYPES = ['office', 'medical', 'retail', 'warehouse', 'light_industrial', 'gym', 'other'] as const;
+export type FacilityType = (typeof FACILITY_TYPES)[number];
+
+export function isFacilityType(v: unknown): v is FacilityType {
+  return typeof v === 'string' && (FACILITY_TYPES as readonly string[]).includes(v);
+}
+
+/**
+ * Datos del sitio del paso 1 (D-318, D-320): tipo de lugar, pies cuadrados aprox., horario de servicio y horas
+ * estimadas por visita (número, reemplaza el "Tiempo estimado" de texto, D-319 4). `fromWeb` marca lo que llegó del
+ * sitio web ("Del sitio web").
+ */
+export type WalkthroughSite = {
+  facilityType: FacilityType | null;
+  sqft: number | null;
+  schedule: string;
+  estHours: number | null;
+  fromWeb?: { facilityType?: boolean; sqft?: boolean; frequency?: boolean; address?: boolean };
+};
+
+export function emptySite(): WalkthroughSite {
+  return { facilityType: null, sqft: null, schedule: '', estHours: null };
+}
+
+/** Pies cuadrados escritos: solo dígitos (se aceptan comas), 1 a 10,000,000; vacío = null. */
+export function parseSqft(text: string): number | null | 'invalid' {
+  const t = text.replace(/[,\s]/g, '');
+  if (t === '') return null;
+  if (!/^\d{1,8}$/.test(t)) return 'invalid';
+  const n = Number(t);
+  return n >= 1 && n <= 10_000_000 ? n : 'invalid';
+}
+
+/** Horas por visita: 0 a 24, hasta dos decimales (coma o punto); vacío = null. */
+export function parseHours(text: string): number | null | 'invalid' {
+  const t = text.trim().replace(',', '.');
+  if (t === '') return null;
+  if (!/^\d{1,2}(\.\d{1,2})?$/.test(t)) return 'invalid';
+  const n = Number(t);
+  return n >= 0 && n <= 24 ? n : 'invalid';
+}
+
+/** "Tiempo estimado" viejo (texto): solo si es un número claro de horas ("2", "2.5", "2,5 h", "3 hours"). */
+export function legacyHours(text: string | null | undefined): number | null {
+  const m = /^\s*(\d{1,2}(?:[.,]\d{1,2})?)\s*(?:h|hr|hrs|hour|hours|hora|horas)?\.?\s*$/i.exec(text ?? '');
+  if (!m) return null;
+  const n = Number(m[1].replace(',', '.'));
+  return n >= 0 && n <= 24 ? n : null;
+}
+
+/**
+ * Lo que trae el sitio del lead desde el estimador del sitio web (D-319): tipo, sq ft y la frecuencia preseleccionada
+ * ("1x/2x/3x/5x per week" → Semanal con esos días por marcar; "Every 2 weeks" → Quincenal; "Monthly" → Mensual, como
+ * Otra con ese texto, D-200).
+ */
+export function webPrefill(
+  site: { facilityType?: string | null; sqft?: number | null; webFrequency?: string | null },
+  labels: { biweekly: string; monthly: string },
+): { site: WalkthroughSite; frequency: Frequency | null; webDays: number | null } {
+  const s = emptySite();
+  const fromWeb: NonNullable<WalkthroughSite['fromWeb']> = {};
+  if (isFacilityType(site.facilityType)) {
+    s.facilityType = site.facilityType;
+    fromWeb.facilityType = true;
+  }
+  if (typeof site.sqft === 'number' && site.sqft > 0) {
+    s.sqft = site.sqft;
+    fromWeb.sqft = true;
+  }
+  let frequency: Frequency | null = null;
+  let webDays: number | null = null;
+  const m = /^weekly_(\d)$/.exec(site.webFrequency ?? '');
+  if (m) {
+    frequency = { kind: 'weekly', days: [], other: '' };
+    webDays = Number(m[1]);
+  } else if (site.webFrequency === 'biweekly') {
+    frequency = { kind: 'other', days: [], other: labels.biweekly };
+  } else if (site.webFrequency === 'monthly') {
+    frequency = { kind: 'other', days: [], other: labels.monthly };
+  }
+  if (frequency) fromWeb.frequency = true;
+  if (Object.keys(fromWeb).length > 0) s.fromWeb = fromWeb;
+  return { site: s, frequency, webDays };
+}
+
+/** Sitio leído del teléfono o del servidor; un walkthrough anterior pasa su "Tiempo estimado" a horas si es claro. */
+export function normalizeSite(raw: unknown, internal?: { time?: string }): WalkthroughSite {
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Partial<WalkthroughSite> & { webDays?: unknown };
+  const sqft = typeof r.sqft === 'number' && r.sqft > 0 ? Math.round(r.sqft) : null;
+  const hours = typeof r.estHours === 'number' && r.estHours >= 0 && r.estHours <= 24 ? r.estHours : null;
+  const out: WalkthroughSite = {
+    facilityType: isFacilityType(r.facilityType) ? r.facilityType : null,
+    sqft,
+    schedule: typeof r.schedule === 'string' ? r.schedule : '',
+    estHours: hours ?? legacyHours(internal?.time),
+  };
+  if (r.fromWeb && typeof r.fromWeb === 'object') out.fromWeb = r.fromWeb;
+  if (typeof r.webDays === 'number') (out as WalkthroughSite & { webDays?: number }).webDays = r.webDays;
+  return out;
+}
+
+/** Notas internas: si el "Tiempo estimado" viejo pasó a horas, el texto se vacía; si no era claro, se queda. */
+export function normalizeInternal(internal: WalkthroughData['internal'], site: WalkthroughSite): WalkthroughData['internal'] {
+  if (internal.time && legacyHours(internal.time) !== null && site.estHours === legacyHours(internal.time)) {
+    return { ...internal, time: '' };
+  }
+  return internal;
+}
+
 export type WalkthroughData = {
   /**
    * `address` es la línea única "calle, dirección 2, City, ST ZIP" que leen el quote, el PDF y el jobsite; las partes
@@ -70,6 +180,9 @@ export type WalkthroughData = {
   contact: { address: string; contactName: string; phone: string; email: string; general: string } & Partial<AddressParts>;
   areas: Area[];
   frequency: Frequency;
+  /** Datos del sitio del paso 1 (D-318). */
+  site: WalkthroughSite & { webDays?: number };
+  /** `time` es el "Tiempo estimado" viejo (texto): queda solo si no era un número claro (D-319 4). */
   internal: { staff: string; time: string; supplies: string };
 };
 
@@ -130,12 +243,16 @@ export function newId(random: () => number = Math.random): string {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
-export function emptyData(prefill: Partial<WalkthroughData['contact']> = {}): WalkthroughData {
+export function emptyData(
+  prefill: Partial<WalkthroughData['contact']> = {},
+  extra: { site?: WalkthroughData['site']; frequency?: Frequency | null } = {},
+): WalkthroughData {
   return {
     contact: { address: '', contactName: '', phone: '', email: '', general: '', ...prefill },
     areas: [],
-    // D-200: parte en Semanal sin días marcados.
-    frequency: { kind: 'weekly', days: [], other: '' },
+    // D-200: parte en Semanal sin días marcados (o con la frecuencia del sitio web, D-319).
+    frequency: extra.frequency ?? { kind: 'weekly', days: [], other: '' },
+    site: extra.site ?? emptySite(),
     internal: { staff: '', time: '', supplies: '' },
   };
 }
@@ -148,6 +265,8 @@ export function newDoc(input: {
   company: string;
   siteLabel: string;
   contact: Partial<WalkthroughData['contact']>;
+  site?: WalkthroughData['site'];
+  frequency?: Frequency | null;
   now?: Date;
 }): WalkthroughDoc {
   return {
@@ -158,7 +277,7 @@ export function newDoc(input: {
     company: input.company,
     siteLabel: input.siteLabel,
     step: 1,
-    data: emptyData(input.contact),
+    data: emptyData(input.contact, { site: input.site, frequency: input.frequency }),
     rev: 1, // un walkthrough nuevo ya tiene algo que mandar
     syncedRev: 0,
     everSynced: false,
@@ -220,7 +339,11 @@ export function normalizeArea(a: Area): Area {
 
 /** Documento guardado en el teléfono antes de D-217: se lee con el tamaño nuevo. */
 export function normalizeDoc(doc: WalkthroughDoc): WalkthroughDoc {
-  return { ...doc, data: { ...doc.data, areas: (doc.data.areas ?? []).map(normalizeArea) } };
+  const site = normalizeSite(doc.data.site, doc.data.internal);
+  return {
+    ...doc,
+    data: { ...doc.data, site, internal: normalizeInternal(doc.data.internal, site), areas: (doc.data.areas ?? []).map(normalizeArea) },
+  };
 }
 
 export function upsertArea(areas: readonly Area[], area: Area): Area[] {
@@ -330,10 +453,13 @@ export function serverData(data: WalkthroughData): unknown {
 export function dataFromServer(raw: unknown, fallback: WalkthroughData): WalkthroughData {
   if (!raw || typeof raw !== 'object') return fallback;
   const r = raw as Partial<WalkthroughData>;
+  const internal = { ...fallback.internal, ...(r.internal ?? {}) };
+  const site = r.site ? normalizeSite(r.site, internal) : normalizeSite(fallback.site, internal);
   return {
     contact: { ...fallback.contact, ...(r.contact ?? {}) },
     frequency: { ...fallback.frequency, ...(r.frequency ?? {}) },
-    internal: { ...fallback.internal, ...(r.internal ?? {}) },
+    site,
+    internal: normalizeInternal(internal, site),
     areas: Array.isArray(r.areas)
       ? r.areas.map((a) => ({
           ...a,

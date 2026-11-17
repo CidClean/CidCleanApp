@@ -26,6 +26,8 @@ export type Fuente = {
       photos?: { path: string; note?: string }[];
     }[];
     frequency?: { kind?: string; days?: number[]; other?: string };
+    // Paso 1 (D-318, orden 111).
+    site?: { facilityType?: string | null; sqft?: number | null; schedule?: string; estHours?: number | null };
   };
 };
 
@@ -48,6 +50,14 @@ const T = {
     phone: 'Teléfono',
     email: 'Email',
     general: 'Datos generales del lugar',
+    facilityType: 'Tipo de lugar',
+    sqft: 'Pies cuadrados aprox.',
+    schedule: 'Horario de servicio',
+    estHours: 'Horas estimadas por visita',
+    facilityTypes: {
+      office: 'Office', medical: 'Medical / dental office', retail: 'Retail / showroom', warehouse: 'Warehouse',
+      light_industrial: 'Light industrial', gym: 'Gym / fitness', other: 'Other commercial',
+    } as Record<string, string>, // D-318
     areas: 'Áreas',
     noAreas: 'Sin áreas.',
     cols: ['Área', 'Tamaño', 'Condición', 'Pedido especial', 'Notas', 'Fotos'],
@@ -78,6 +88,14 @@ const T = {
     phone: 'Phone',
     email: 'Email',
     general: 'General site details',
+    facilityType: 'Type of facility',
+    sqft: 'Approx. square feet',
+    schedule: 'Service schedule',
+    estHours: 'Estimated hours per visit',
+    facilityTypes: {
+      office: 'Office', medical: 'Medical / dental office', retail: 'Retail / showroom', warehouse: 'Warehouse',
+      light_industrial: 'Light industrial', gym: 'Gym / fitness', other: 'Other commercial',
+    } as Record<string, string>, // D-318
     areas: 'Areas',
     noAreas: 'No areas.',
     cols: ['Area', 'Size', 'Condition', 'Special request', 'Notes', 'Photos'],
@@ -151,6 +169,7 @@ export async function armarPdf(
 
   // Sitio y contacto: filas de etiqueta gris y valor.
   const c = f.data.contact ?? {};
+  const sitio = f.data.site ?? {};
   titulo(t.site);
   const filas: [string, string | undefined][] = [
     [t.address, direccionDe(c) || f.site_address], // D-301
@@ -158,6 +177,10 @@ export async function armarPdf(
     [t.phone, c.phone],
     [t.email, c.email],
     [t.general, c.general],
+    [t.facilityType, sitio.facilityType ? (t.facilityTypes[sitio.facilityType] ?? sitio.facilityType) : undefined],
+    [t.sqft, typeof sitio.sqft === 'number' ? sitio.sqft.toLocaleString('en-US') : undefined],
+    [t.schedule, sitio.schedule],
+    [t.estHours, typeof sitio.estHours === 'number' ? String(sitio.estHours) : undefined],
   ];
   for (const [etiqueta, valor] of filas) {
     const lineas = partir(valor && valor.trim() ? valor : '—', fReg, 10.5, UTIL);

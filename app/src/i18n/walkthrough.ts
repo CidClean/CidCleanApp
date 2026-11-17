@@ -1,5 +1,5 @@
 import type { Locale } from './index';
-import type { AreaSize, AreaType, Condition } from '@/lib/walkthroughRules';
+import type { AreaSize, AreaType, Condition, FacilityType } from '@/lib/walkthroughRules';
 
 /**
  * Textos del walkthrough (hito 3). APROBADO = de una decisión o muestra aprobada; D-200 = detalle menor del ejecutor.
@@ -36,7 +36,28 @@ export const walkthroughEs = {
     phone: 'Teléfono', // D-200
     email: 'Email', // D-200
     general: 'Datos generales del lugar', // APROBADO (flujo: datos generales del lugar)
+    siteSection: 'Sitio', // APROBADO (D-320, muestra 1)
+    serviceSection: 'Servicio', // APROBADO (D-320, muestra 1)
+    facilityType: 'Tipo de lugar', // APROBADO (D-318, D-320)
+    facilityNone: 'Sin elegir', // D-200
+    sqft: 'Pies cuadrados aprox.', // APROBADO (D-318, D-320)
+    sqftError: 'Escribe solo números, sin decimales.', // D-200
+    schedule: 'Horario de servicio', // APROBADO (D-318, D-320)
+    estHours: 'Horas estimadas por visita', // APROBADO (D-319, D-320)
+    hoursError: 'Escribe un número de horas entre 0 y 24.', // D-200
+    fromWeb: 'Del sitio web', // APROBADO (D-320)
+    webDays: (n: number) => (n === 1 ? 'Sitio web: 1 vez por semana. Marca el día.' : `Sitio web: ${n} veces por semana. Marca los días.`), // D-200
   },
+  facilityTypes: {
+    office: 'Office',
+    medical: 'Medical / dental office',
+    retail: 'Retail / showroom',
+    warehouse: 'Warehouse',
+    light_industrial: 'Light industrial',
+    gym: 'Gym / fitness',
+    other: 'Other commercial',
+  } satisfies Record<FacilityType, string>, // APROBADO (D-318: lista del sitio web)
+
 
   areas: {
     add: 'Agregar área', // D-200: botón de contorno bajo la lista
@@ -74,13 +95,15 @@ export const walkthroughEs = {
     describe: 'Describe la frecuencia', // APROBADO (D-080)
     times: (n: number) => (n === 1 ? '1 vez por semana' : `${n} veces por semana`), // APROBADO (D-075, D-105: "3 veces por semana")
     noDays: 'Marca los días del servicio.', // D-200
+    biweekly: 'Quincenal', // APROBADO (orden 111: "Every 2 weeks" → Quincenal)
+    monthly: 'Mensual', // APROBADO (orden 111: "Monthly" → Mensual)
     days: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'], // APROBADO (D-038)
   },
 
   internal: {
     note: 'No salen al cliente.', // APROBADO (flujo: "notas internas (no salen al cliente)")
     staff: 'Personal necesario', // APROBADO (flujo)
-    time: 'Tiempo estimado', // APROBADO (flujo)
+    time: 'Tiempo estimado (anterior)', // D-200: solo se ve si el texto viejo no era un número claro (D-319 4)
     supplies: 'Suministros', // APROBADO (flujo)
   },
 
@@ -146,7 +169,34 @@ export const walkthroughEn: WalkthroughStrings = {
   next: 'Next',
   pending: (n: number) => `${n} pending`, // header: items waiting to sync
   synced: 'Synced',
-  site: { address: 'Address', contact: 'Contact person', phone: 'Phone', email: 'Email', general: 'General site details' },
+  site: {
+    address: 'Address',
+    contact: 'Contact person',
+    phone: 'Phone',
+    email: 'Email',
+    general: 'General site details',
+    siteSection: 'Site',
+    serviceSection: 'Service',
+    facilityType: 'Type of facility',
+    facilityNone: 'Not chosen',
+    sqft: 'Approx. square feet',
+    sqftError: 'Use numbers only, no decimals.',
+    schedule: 'Service schedule',
+    estHours: 'Estimated hours per visit',
+    hoursError: 'Enter hours between 0 and 24.',
+    fromWeb: 'From the website',
+    webDays: (n: number) => (n === 1 ? 'Website: once a week. Mark the day.' : `Website: ${n} times a week. Mark the days.`),
+  },
+  facilityTypes: {
+    office: 'Office',
+    medical: 'Medical / dental office',
+    retail: 'Retail / showroom',
+    warehouse: 'Warehouse',
+    light_industrial: 'Light industrial',
+    gym: 'Gym / fitness',
+    other: 'Other commercial',
+  } satisfies Record<FacilityType, string>,
+
   areas: {
     add: 'Add area',
     empty: 'No areas yet.',
@@ -181,9 +231,11 @@ export const walkthroughEn: WalkthroughStrings = {
     describe: 'Describe the frequency',
     times: (n: number) => (n === 1 ? 'Once a week' : `${n} times a week`),
     noDays: 'Mark the service days.',
+    biweekly: 'Every 2 weeks',
+    monthly: 'Monthly',
     days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
   },
-  internal: { note: "Not shared with the client.", staff: 'Staff needed', time: 'Estimated time', supplies: 'Supplies' },
+  internal: { note: "Not shared with the client.", staff: 'Staff needed', time: 'Estimated time (previous)', supplies: 'Supplies' },
   summary: {
     close: 'Close walkthrough',
     closePending: 'It will close when there is a connection.',

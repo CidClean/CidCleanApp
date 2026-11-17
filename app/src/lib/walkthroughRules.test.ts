@@ -23,6 +23,12 @@ import {
   withAreaType,
   withFrequencyKind,
   type Area,
+  webPrefill,
+  parseSqft,
+  parseHours,
+  legacyHours,
+  normalizeSite,
+  normalizeInternal,
 } from './walkthroughRules';
 import type { Access } from './visibility';
 
@@ -199,5 +205,45 @@ describe('documento y cola (D-004, D-091, D-119)', () => {
     expect(photoPath('w1', 'f1', 'image/jpeg')).toBe('w1/f1.jpg');
     expect(photoPath('w1', 'f1', 'image/png')).toBe('w1/f1.png');
     expect(photoPath('w1', 'f1', null)).toBe('w1/f1.jpg');
+  });
+});
+
+describe('Orden 111: datos del sitio en el paso 1 (D-318, D-319, D-320)', () => {
+  const labels = { biweekly: 'Quincenal', monthly: 'Mensual' };
+  it('precarga tipo, sq ft y la frecuencia del sitio web', () => {
+    const r = webPrefill({ facilityType: 'retail', sqft: 3000, webFrequency: 'weekly_3' }, labels);
+    expect(r.site.facilityType).toBe('retail');
+    expect(r.site.sqft).toBe(3000);
+    expect(r.frequency).toEqual({ kind: 'weekly', days: [], other: '' });
+    expect(r.webDays).toBe(3);
+    expect(r.site.fromWeb).toEqual({ facilityType: true, sqft: true, frequency: true });
+  });
+  it('"Every 2 weeks" → Quincenal y "Monthly" → Mensual', () => {
+    expect(webPrefill({ webFrequency: 'biweekly' }, labels).frequency).toEqual({ kind: 'other', days: [], other: 'Quincenal' });
+    expect(webPrefill({ webFrequency: 'monthly' }, labels).frequency).toEqual({ kind: 'other', days: [], other: 'Mensual' });
+  });
+  it('sin datos del sitio web no marca nada', () => {
+    const r = webPrefill({}, labels);
+    expect(r.frequency).toBeNull();
+    expect(r.site.fromWeb).toBeUndefined();
+    expect(webPrefill({ facilityType: 'castle' }, labels).site.facilityType).toBeNull();
+  });
+  it('sq ft y horas: números válidos, vacío = null', () => {
+    expect(parseSqft('3,000')).toBe(3000);
+    expect(parseSqft('')).toBeNull();
+    expect(parseSqft('3.5')).toBe('invalid');
+    expect(parseHours('2,5')).toBe(2.5);
+    expect(parseHours('25')).toBe('invalid');
+  });
+  it('el "Tiempo estimado" viejo pasa a horas solo si es un número claro', () => {
+    expect(legacyHours('2.5 h')).toBe(2.5);
+    expect(legacyHours('3 hours')).toBe(3);
+    expect(legacyHours('2 a 3 horas')).toBeNull();
+    const site = normalizeSite(undefined, { time: '2 h' });
+    expect(site.estHours).toBe(2);
+    expect(normalizeInternal({ staff: '', time: '2 h', supplies: '' }, site).time).toBe('');
+    const other = normalizeSite(undefined, { time: 'una mañana' });
+    expect(other.estHours).toBeNull();
+    expect(normalizeInternal({ staff: '', time: 'una mañana', supplies: '' }, other).time).toBe('una mañana');
   });
 });
