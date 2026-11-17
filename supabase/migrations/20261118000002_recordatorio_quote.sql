@@ -26,6 +26,7 @@ language sql stable security definer set search_path = public as $$
     from quote_versions v
    where v.status in ('sent', 'viewed')
      and v.sent_at is not null
+     and v.sent_at >= timestamptz '2026-11-17 00:00:00-05' -- D-200: solo quotes enviados desde que existe el recordatorio
      and v.sent_at <= p_now - interval '3 days'
      and nullif(btrim(coalesce(v.contact_email, '')), '') is not null
      and (v.expires_at is null or v.expires_at > p_now)
