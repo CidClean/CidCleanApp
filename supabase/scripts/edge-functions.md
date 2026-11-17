@@ -185,3 +185,14 @@ npx supabase@latest functions deploy walkthrough-pdf --project-ref <ref> --use-a
 ```
 npx supabase@latest functions deploy site-estimate --project-ref <ref> --use-api --no-verify-jwt
 ```
+
+## Órdenes 120 y 121: plantillas de correo y recordatorio del quote (D-321 a D-323)
+
+Migraciones (sin aplicar, en este orden): `20261118000001_plantillas_correo.sql` y `20261118000002_recordatorio_quote.sql`. Aplicarlas **antes** de publicar la app (la app nueva lee `email_templates` y llama a `template_email_context`, `log_template_email` y `entity_email_log`).
+
+- **Plantillas (orden 120):** no hay función nueva. La app arma el correo y abre la app de correo de quien envía con `mailto:`; no se manda nada desde el servidor. `email_templates` con RLS (leen las activas quienes ven leads o clientes, según la lista; solo el Super Admin crea, edita y borra); 3 plantillas de prospectos sembradas con los textos del survey; clientes vacía. Pruebas: `supabase/tests/plantillas.sql`.
+- **Recordatorio del quote (orden 121):** lo manda la `send-notifications` que ya existe (paso 3), en el cron que ya corre cada 5 minutos (`supabase/scripts/notificaciones-cron.sql`): **el cron no cambia**. `claim_quote_reminders` (solo service role) elige las versiones Enviadas o Vistas con 3 o 7 días desde el envío, sin vencer, las marca en `quote_reminders` (una sola vez, aunque el envío falle) y genera un enlace nuevo como el reenvío; el correo va solo al contacto del quote desde `Cid Clean <quotes@mail.cidclean.com>` (Reply-To `info@cidclean.com`) con `RESEND_QUOTES_KEY` y `PORTAL_BASE_URL` (secretos que ya existen) y el pie C; `mark_quote_reminder` lo deja en el historial del lead (o del cliente en un extra). Pruebas: `supabase/tests/recordatorio_quote.sql` y `node --test supabase/tests/quote-reminder.test.mjs` (Resend simulado).
+
+```
+npx supabase@latest functions deploy send-notifications --project-ref <ref> --use-api --no-verify-jwt
+```

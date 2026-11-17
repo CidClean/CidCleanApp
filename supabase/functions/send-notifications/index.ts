@@ -3,12 +3,15 @@
 // más puede: la función compara el encabezado con SUPABASE_SERVICE_ROLE_KEY. Cada llamada:
 //   1. inmediatos: claim_notification_emails(false) → un correo por aviso;
 //   2. resumen diario: claim_notification_emails(true) → desde las 8:00 AM de Naples, un correo por persona con lo
-//      acumulado (la base decide la hora).
+//      acumulado (la base decide la hora);
+//   3. orden 121 (D-322, D-323): recordatorios del quote sin respuesta a los 3 y a los 7 días (claim_quote_reminders),
+//      desde quotes@mail.cidclean.com con RESEND_QUOTES_KEY, solo al contacto del quote (_shared/quoteReminder.ts).
 // Correo desde no-reply@auth.cidclean.com con RESEND_API_KEY (la llave existente de las funciones, D-162). Los textos
 // vienen de la base (notification_text), siempre en inglés (D-247, migración 20261027000012), con el estilo de D-250
 // (_shared/correo.ts). Este archivo no contiene llaves.
 import { clienteDeServicio, responder } from '../_shared/comun.ts';
 import { correoHtml, esc, filas as filasHtml, nota, pieTexto, titulo } from '../_shared/correo.ts';
+import { enviarRecordatorios, type Recordatorio } from '../_shared/quoteReminder.ts';
 
 const filas_ = (f: Fila[]) => filasHtml(f.map((x) => ({ title: x.title, detail: x.detail })));
 
@@ -73,5 +76,31 @@ Deno.serve(async (req) => {
     else fallidos += filas.length;
   }
 
-  return responder(200, { sent: enviados, failed: fallidos });
+  // 3. Recordatorios del quote (orden 121). Un fallo aquí no deshace los avisos ya enviados.
+  let recordatorios = { sent: 0, failed: 0 };
+  try {
+    recordatorios = await enviarRecordatorios({
+      claim: async () => {
+        const { data, error } = await db.rpc('claim_quote_reminders');
+        if (error) throw error;
+        return (data ?? []) as Recordatorio[];
+      },
+      send: async (m) => {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${Deno.env.get('RESEND_QUOTES_KEY')}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(m),
+        });
+        return res.ok;
+      },
+      mark: async (version, step, ok) => {
+        await db.rpc('mark_quote_reminder', { p_version: version, p_step: step, p_ok: ok });
+      },
+      base: Deno.env.get('PORTAL_BASE_URL') ?? 'https://quote.cidclean.com',
+    });
+  } catch (_e) {
+    return responder(500, { error: 'server_error', sent: enviados, failed: fallidos });
+  }
+
+  return responder(200, { sent: enviados, failed: fallidos, reminders: recordatorios });
 });
