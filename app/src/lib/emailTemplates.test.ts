@@ -58,7 +58,7 @@ describe('plantillas de correo (orden 120)', () => {
   it('marca lo que falta solo si la plantilla lo usa', () => {
     const v = initialValues({ ...ctx, address: null, sender: { name: 'Humberto', phone: null } }, { name: null, email: null, address: null });
     expect(missingFields(usedPlaceholders('Closing the loop', 'Hi {nombre},\n{firma}'), v)).toEqual(['nombre', 'telefono']);
-    expect(missingFields(usedPlaceholders('x {empresa}', 'visit {dirección}'), v)).toEqual(['dirección']);
+    expect(missingFields(usedPlaceholders('x {empresa}', 'visit {dirección}'), v)).toEqual([]); // D-331: la dirección no se pide
   });
 
   it('mailto con to, subject y body codificados', () => {

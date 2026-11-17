@@ -100,7 +100,7 @@ export function missingFields(used: Placeholder[], v: FillValues): (keyof FillVa
   const out: (keyof FillValues)[] = [];
   if (used.includes('nombre') && !v.nombre.trim()) out.push('nombre');
   if (used.includes('empresa') && !v.empresa.trim()) out.push('empresa');
-  if (used.includes('dirección') && !v.dirección.trim()) out.push('dirección');
+  // D-331: la dirección no se pide; sin calle, el texto dice "your office".
   if (used.includes('firma') && !v.remitente.trim()) out.push('remitente');
   if (used.includes('firma') && !v.telefono.trim()) out.push('telefono');
   return out;
