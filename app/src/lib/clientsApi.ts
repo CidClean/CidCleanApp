@@ -279,6 +279,28 @@ export const setAssignmentPay = (assignmentId: string, form: PayForm) =>
 
 export type JobsiteDocument = { id: string; kind: DocKind; title: string | null; version: number; uploadedAt: string };
 
+/** Contratos vigentes de los jobsites de un cliente (D-319 7: se descargan también desde el cliente). */
+export type ClientContractDoc = { id: string; jobsiteId: string; jobsite: string; version: number; uploadedAt: string };
+export const fetchClientContracts = (jobsiteNames: Record<string, string>) =>
+  run<ClientContractDoc[]>(async () => {
+    const ids = Object.keys(jobsiteNames);
+    if (ids.length === 0) return { ok: true, data: [] };
+    const { data, error } = await supabase
+      .from('jobsite_documents')
+      .select('id, jobsite_id, version, uploaded_at')
+      .in('jobsite_id', ids)
+      .eq('kind', 'contract')
+      .is('replaced_at', null)
+      .order('uploaded_at', { ascending: false });
+    if (error) return { ok: false, reason: failureFrom(error.code, error.message) };
+    return {
+      ok: true,
+      data: (data as { id: string; jobsite_id: string; version: number; uploaded_at: string }[]).map((d) => ({
+        id: d.id, jobsiteId: d.jobsite_id, jobsite: jobsiteNames[d.jobsite_id] ?? '', version: d.version, uploadedAt: d.uploaded_at,
+      })),
+    };
+  });
+
 export const fetchDocuments = (jobsiteId: string) =>
   run<JobsiteDocument[]>(async () => {
     const { data, error } = await supabase

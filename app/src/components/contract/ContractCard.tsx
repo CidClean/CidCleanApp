@@ -10,13 +10,13 @@ import { AppField } from '../AppField';
 import { AppText } from '../AppText';
 import { Dialog } from '../Dialog';
 import { DialogButtons } from '../work/SimpleParts';
-import { Pill, Steps } from './ContractParts';
+import { AmberNote, Pill, Steps } from './ContractParts';
 import { useContractStrings } from '@/i18n/contract';
 import {
   contractStep,
   countersignContract,
   fetchContractInfo,
-  fieldsToShow,
+  prepareSections,
   prepareContract,
   saveContractFields,
   sendContract,
@@ -94,7 +94,8 @@ export function ContractCard({ jobsiteId, siteId }: { jobsiteId?: string; siteId
     if (!r.ok) return setNotice({ tone: 'error', text: k.error });
     setDraft(r.data);
     setShowMissing(false);
-    setValues(Object.fromEntries(fieldsToShow(r.data).map((f) => [f, r.data.fields[f] ?? ''])));
+    const s = prepareSections(r.data);
+    setValues(Object.fromEntries([...s.missing, ...s.review].map((f) => [f, r.data.fields[f] ?? ''])));
   }
 
   async function saveDraft(): Promise<ContractDraft | null> {
@@ -112,7 +113,8 @@ export function ContractCard({ jobsiteId, siteId }: { jobsiteId?: string; siteId
     setBusy(false);
     if (!d) return setNotice({ tone: 'error', text: k.error });
     setDraft(null);
-    router.push({ pathname: '/viewer', params: { source: 'contract', documentId: info.jobsiteId, title: d.csa } });
+    // D-319 (7): el borrador también se descarga.
+    router.push({ pathname: '/viewer', params: { source: 'contract', documentId: info.jobsiteId, title: d.csa, download: '1' } });
   }
 
   async function send() {
@@ -150,6 +152,28 @@ export function ContractCard({ jobsiteId, siteId }: { jobsiteId?: string; siteId
     await load();
   }
 
+  // Un campo de "Preparar contrato": las direcciones con los campos comunes (D-301), lo demás en un campo de texto.
+  const fieldInput = (f: string) =>
+    f === 'client_address' || f === 'site_address' ? (
+      <AddressTextFields
+        key={f}
+        label={k.fields[f] ?? f}
+        value={values[f] ?? ''}
+        onChange={(v) => setValues((x) => ({ ...x, [f]: v }))}
+        t={addressT}
+        missing={showMissing && !values[f]?.trim() ? k.missing : null}
+      />
+    ) : (
+      <AppField
+        key={f}
+        label={k.fields[f] ?? f}
+        value={values[f] ?? ''}
+        onChangeText={(v) => setValues((x) => ({ ...x, [f]: v }))}
+        error={showMissing && !values[f]?.trim() ? k.missing : null}
+        maxLength={2000}
+      />
+    );
+
   const card = (children: React.ReactNode) => (
     <View style={[styles.card, { backgroundColor: colors.card }]}>{children}</View>
   );
@@ -178,7 +202,7 @@ export function ContractCard({ jobsiteId, siteId }: { jobsiteId?: string; siteId
                 <AppButton
                   label={k.viewContract}
                   variant="outline"
-                  onPress={() => router.push({ pathname: '/viewer', params: { source: 'jobsite', documentId: c.documentId as string, title: c.csa } })}
+                  onPress={() => router.push({ pathname: '/viewer', params: { source: 'jobsite', documentId: c.documentId as string, title: c.csa, download: '1' } })}
                 />
               ) : null}
             </>,
@@ -197,7 +221,7 @@ export function ContractCard({ jobsiteId, siteId }: { jobsiteId?: string; siteId
                     <AppButton
                       label={k.viewSignedPdf}
                       variant="outline"
-                      onPress={() => router.push({ pathname: '/viewer', params: { source: 'contract', documentId: info.jobsiteId, title: c?.csa ?? '' } })}
+                      onPress={() => router.push({ pathname: '/viewer', params: { source: 'contract', documentId: info.jobsiteId, title: c?.csa ?? '', download: '1' } })}
                     />
                     <AppButton label={k.countersign} onPress={() => setConfirm(true)} disabled={busy} />
                   </>
@@ -227,28 +251,29 @@ export function ContractCard({ jobsiteId, siteId }: { jobsiteId?: string; siteId
         <AppText weight="bold" size={sample.headingSize} style={{ marginBottom: 8 }}>
           {k.prepare}
         </AppText>
-        {Object.keys(values).map((f) =>
-          // D-301: las direcciones del contrato con los campos comunes, guardadas en una línea.
-          f === 'client_address' || f === 'site_address' ? (
-            <AddressTextFields
-              key={f}
-              label={k.fields[f] ?? f}
-              value={values[f] ?? ''}
-              onChange={(v) => setValues((x) => ({ ...x, [f]: v }))}
-              t={addressT}
-              missing={showMissing && !values[f]?.trim() ? k.missing : null}
-            />
-          ) : (
-          <AppField
-            key={f}
-            label={k.fields[f] ?? f}
-            value={values[f]}
-            onChangeText={(v) => setValues((x) => ({ ...x, [f]: v }))}
-            error={showMissing && !values[f]?.trim() ? k.missing : null}
-            maxLength={2000}
+        {draft && prepareSections(draft).missing.length > 0 ? (
+          <AmberNote
+            title={k.missingCount(prepareSections(draft).missing.length)}
+            text={prepareSections(draft).missing.map((f) => k.fields[f] ?? f).join(', ')}
           />
-          ),
-        )}
+        ) : null}
+        {draft
+          ? ([['missing', k.toComplete], ['review', k.reviewData]] as const).map(([part, heading]) => {
+              const keys = prepareSections(draft)[part];
+              if (keys.length === 0) return null;
+              return (
+                <View key={part} style={{ marginTop: 10 }}>
+                  <AppText weight="bold" style={{ marginBottom: 6 }}>
+                    {heading}
+                    {part === 'review' ? (
+                      <AppText size={12} color={colors.secondary}>{`  ${k.alreadyFilled}`}</AppText>
+                    ) : null}
+                  </AppText>
+                  {keys.map((f) => fieldInput(f))}
+                </View>
+              );
+            })
+          : null}
         <AppText size={12} color={colors.secondary} style={{ marginBottom: 10 }}>
           {k.prepareNote}
         </AppText>

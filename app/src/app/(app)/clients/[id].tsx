@@ -21,7 +21,7 @@ import { useSalesStrings } from '@/i18n/useSalesStrings';
 import { useClientsStrings } from '@/i18n/useClientsStrings';
 import { useStrings } from '@/i18n/useStrings';
 import { canCreateLegacy, canEditClientData, canSeeAccounts, statusTone, type Client, type Jobsite } from '@/lib/clientRules';
-import { fetchClient, fetchJobsites, setClientAccountProvider, updateClient } from '@/lib/clientsApi';
+import { fetchClient, fetchClientContracts, fetchJobsites, setClientAccountProvider, updateClient, type ClientContractDoc } from '@/lib/clientsApi';
 import { useGoBack } from '@/lib/navigation';
 import { usePermissions } from '@/lib/session';
 import { sample, useTheme } from '@/theme';
@@ -42,6 +42,7 @@ export default function ClientScreen() {
   const { access } = usePermissions();
   const [client, setClient] = useState<Client | null>(null);
   const [jobsites, setJobsites] = useState<Jobsite[]>([]);
+  const [contracts, setContracts] = useState<ClientContractDoc[]>([]);
   const [failed, setFailed] = useState(false);
   const [form, setForm] = useState<ClientForm | null>(null);
   const [nameError, setNameError] = useState(false);
@@ -60,7 +61,11 @@ export default function ClientScreen() {
     }
     setFailed(false);
     setClient(cl.data);
-    if (js.ok) setJobsites(js.data);
+    if (js.ok) {
+      setJobsites(js.data);
+      const docs = await fetchClientContracts(Object.fromEntries(js.data.map((j) => [j.id, j.name])));
+      setContracts(docs.ok ? docs.data : []);
+    }
   }, [id]);
 
   useFocusEffect(
@@ -179,6 +184,28 @@ export default function ClientScreen() {
                   />
                 ))}
                 </CardBlock>
+                ) : null}
+                {/* D-319 (7): el contrato firmado se abre y se descarga también desde el cliente. */}
+                {contracts.length > 0 ? (
+                  <>
+                    <AppText size={sample.labelSize} color={colors.secondary} style={styles.section}>
+                      {c.client.contracts}
+                    </AppText>
+                    <CardBlock>
+                      {contracts.map((d, i) => (
+                        <ListRow
+                          key={d.id}
+                          title={c.client.contractRow(d.jobsite)}
+                          detail={`v${d.version}`}
+                          chevron
+                          last={i === contracts.length - 1}
+                          onPress={() =>
+                            router.push({ pathname: '/viewer', params: { source: 'jobsite', documentId: d.id, title: c.client.contractRow(d.jobsite), download: '1' } })
+                          }
+                        />
+                      ))}
+                    </CardBlock>
+                  </>
                 ) : null}
                 {(client.legacy || client.accountProvider) && canCreateLegacy(access) ? (
                   <View style={{ marginTop: 12 }}>

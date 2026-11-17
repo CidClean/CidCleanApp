@@ -32,6 +32,8 @@ export const clientsEs = {
     email: 'Email', // APROBADO (muestras)
     address: 'Dirección', // APROBADO (flujo)
     notes: 'Notas', // D-200
+    contracts: 'Contratos', // D-200 (D-319 7)
+    contractRow: (jobsite: string) => `Contrato · ${jobsite}`, // D-200
     jobsites: 'Jobsites', // APROBADO (flujo)
     addJobsite: 'Agregar jobsite', // D-200
     create: 'Crear cliente', // D-200 (mismo patrón de "Crear empleado", D-171)
@@ -219,6 +221,8 @@ export const clientsEn: ClientsStrings = {
     email: 'Email',
     address: 'Address',
     notes: 'Notes',
+    contracts: 'Contracts',
+    contractRow: (jobsite: string) => `Contract · ${jobsite}`,
     jobsites: 'Jobsites',
     addJobsite: 'Add jobsite',
     create: 'Create client',

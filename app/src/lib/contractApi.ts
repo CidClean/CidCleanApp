@@ -155,6 +155,23 @@ export function fieldsToShow(d: Pick<ContractDraft, 'missing'>): string[] {
   return [...ALWAYS_SHOWN, ...d.missing.filter((k) => !(ALWAYS_SHOWN as readonly string[]).includes(k))];
 }
 
+/**
+ * "Preparar contrato" como el survey (D-319 5, D-320 3): "Falta completar" con lo vacío obligatorio y "Revisar datos"
+ * con todo lo ya llenado, editable; primero contacto, correo, dirección del cliente, vigencia y precio. El nombre legal
+ * es una sola llave (client_company se guarda igual), y los datos de la aceptación (A9) y la fecha del SOW no se editan.
+ */
+export const REVIEW_FIRST = ['client_contact', 'client_email', 'client_address', 'effective_date', 'price', 'client_legal_name', 'start_date'] as const;
+export const NOT_SHOWN = ['client_company', 'a9_name', 'a9_title', 'a9_datetime', 'date'] as const;
+export function prepareSections(d: Pick<ContractDraft, 'missing' | 'fields'>): { missing: string[]; review: string[] } {
+  const hidden = new Set<string>(NOT_SHOWN);
+  const missing = d.missing.filter((k) => !hidden.has(k));
+  const isMissing = new Set(missing);
+  const filled = (k: string) => (d.fields[k] ?? '').trim() !== '';
+  const first = REVIEW_FIRST.filter((k) => !isMissing.has(k) && filled(k));
+  const rest = Object.keys(d.fields).filter((k) => !hidden.has(k) && !isMissing.has(k) && filled(k) && !(first as string[]).includes(k));
+  return { missing, review: [...first, ...rest] };
+}
+
 // Tipo de limpieza ---------------------------------------------------------------------------------------------------
 
 export async function fetchCleaningType(kind: 'lead' | 'jobsite', id: string): Promise<CleaningType | null> {
@@ -203,6 +220,9 @@ export type ContractPortalData = {
   email: string;
   expires_at: string;
   consent_text: string;
+  /** D-319 (6): nombre y cargo de quien aceptó el quote, para precargar (editables). */
+  prefill_name?: string;
+  prefill_title?: string;
   signed: { name: string; title: string; at: string } | null;
 };
 

@@ -71,6 +71,9 @@ export default function ContractPortalScreen() {
     }
     setSession(s);
     setData(r.data);
+    // D-319 (6): Full name y Title llegan con los de quien aceptó el quote; se pueden cambiar.
+    setName((v) => v || (r.data.prefill_name ?? ''));
+    setTitle((v) => v || (r.data.prefill_title ?? ''));
     if (r.data.status !== 'sent') setStep({ kind: 'closed', state: 'signed' });
     else setStep({ kind: 'sign' });
     return true;

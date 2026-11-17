@@ -1,5 +1,5 @@
 import { getContractStrings, CONTRACT_PORTAL } from '@/i18n/contract';
-import { contractStep, fieldsToShow, infoFromRow } from './contractApi';
+import { contractStep, fieldsToShow, infoFromRow, prepareSections } from './contractApi';
 
 jest.mock('./supabase', () => ({ supabase: {} }));
 
@@ -19,6 +19,16 @@ describe('contrato del cliente (D-289)', () => {
   it('Preparar contrato: fecha de inicio, área y franja primero, luego los demás vacíos', () => {
     expect(fieldsToShow({ missing: ['effective_date', 'area_sqft', 'client_entity'] })).toEqual(
       ['start_date', 'area_sqft', 'service_window', 'effective_date', 'client_entity']);
+  });
+  it('orden 113 (D-320 3): "Falta completar" y "Revisar datos" con lo ya llenado; nombre legal una sola vez', () => {
+    const s = prepareSections({
+      missing: ['client_entity', 'client_legal_name'],
+      fields: { client_contact: 'Ana Ruiz, Manager, ana@x.com', client_email: 'ana@x.com', client_address: '1 Main St, Naples, FL 34102',
+        effective_date: '12/01/2026', price: '$1,300.00 per month', client_company: '', client_legal_name: '', client_entity: '',
+        storage: 'Closet', a9_name: 'Ana Ruiz', date: '11/16/2026', keys_count: '' },
+    });
+    expect(s.missing).toEqual(['client_entity', 'client_legal_name']);
+    expect(s.review).toEqual(['client_contact', 'client_email', 'client_address', 'effective_date', 'price', 'storage']);
   });
   it('mapea la ficha', () => {
     const i = row('pending', { id: 'c', csa: 'CSA-0007', status: 'sent', email: 'ana@x.com', sent_at: '2026-10-31T10:00:00Z' });

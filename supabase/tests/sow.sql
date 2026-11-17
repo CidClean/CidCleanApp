@@ -151,6 +151,28 @@ begin
     concat_ws('|', c->>'storage', c->>'a4_clarifications', c->>'area_sqft', c->>'facility_type', c->>'floors_rooms'));
   perform pg_temp.prueba('acceso, llaves, áreas restringidas e inspecciones no faltan (opcionales)', 'false',
     (select (contract_missing_fields(c) && array['access_method', 'keys_count', 'restricted_areas', 'inspections', 'a4_clarifications'])::text));
+  -- Orden 113 (D-318 4, D-319 5): contacto de una sola persona, dirección del cliente, vigencia = inicio, nombre legal único.
+  perform pg_temp.prueba('contacto = quien aceptó: nombre, cargo, correo y su teléfono', 'Armando Z, Branch Manager, armando@prueba-sow.local, (239) 825-6841',
+    c->>'client_contact');
+  perform pg_temp.prueba('dirección del cliente precargada', '280 Commercial Blvd, Naples, FL 34104', c->>'client_address');
+  perform pg_temp.prueba('nombre legal y empresa iguales', 'Superior Pool LLC|Superior Pool LLC', (c->>'client_company') || '|' || (c->>'client_legal_name'));
+  perform pg_temp.prueba('sin fecha de inicio, la vigencia queda por llenar', '', c->>'effective_date');
+  update jobsites set start_date = '2026-12-01' where id = j;
+  c := contract_default_fields(j, v);
+  perform pg_temp.prueba('vigencia = fecha de inicio del servicio', '12/01/2026|12/01/2026', (c->>'effective_date') || '|' || (c->>'start_date'));
+  insert into fx values ('j', j);
+end $$;
+
+-- Portal del contrato: precarga nombre y cargo de quien aceptó (D-319 6) y el número del SOW del quote.
+do $$
+declare v uuid := (select id from fx where k = 'v'); j uuid := (select id from fx where k = 'j'); cid uuid; r jsonb;
+begin
+  insert into client_contracts (jobsite_id, quote_version_id, fields, status, retain_until)
+  values (j, v, contract_default_fields(j, v), 'sent', current_date + 1825) returning id into cid;
+  insert into contract_portal_sessions (token_hash, contract_id, email, expires_at) values ('ses-c113', cid, 'armando@prueba-sow.local', now() + interval '1 hour');
+  r := contract_portal_data('ses-c113');
+  perform pg_temp.prueba('portal: Full name y Title precargados', 'Armando Z|Branch Manager', (r->>'prefill_name') || '|' || (r->>'prefill_title'));
+  perform pg_temp.prueba('portal: el SOW es el del quote', 'true', ((r->>'sow') like 'SOW-%' and (r->>'sow') = (select sow_label(q.number) from quotes q join quote_versions x on x.quote_id = q.id where x.id = v))::text);
 end $$;
 
 select n, prueba, ok, detalle from resultados order by n;

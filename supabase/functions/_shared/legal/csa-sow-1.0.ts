@@ -2,7 +2,9 @@
 // transcrito de legal/rev3/4_SOW_and_Service_Agreement_EN.pdf (legal rev. 3, D-283) para no extraer el PDF en tiempo de
 // ejecución. Sin la marca "Draft rev. 3 – final review". Los `{…}` de la plantilla son `{{llave}}`; las llaves son las
 // de contract_editable_keys() (migración 20261030000013) más las automáticas (sow_no, csa_no, quote_no, quote_version,
-// sow_version). Si cambia el texto legal, se agrega una plantilla nueva con otra versión: esta no se edita.
+// sow_version). Si cambia el texto legal, se agrega una plantilla nueva con otra versión. Excepciones aprobadas por el
+// dueño: D-318 (3) quitó "Template" del título y la frase "Fields in {curly braces}…"; D-318 (1) agregó la línea de
+// aclaraciones del sitio en A4 (solo si tiene texto). El resto del texto del abogado no cambia.
 // Este archivo no contiene llaves de servicios.
 
 export const TEMPLATE_VERSION = '1.0';
@@ -23,10 +25,10 @@ export type Bloque =
 
 /** Encabezado del documento completo (contrato). */
 export const ENCABEZADO: Bloque[] = [
-  { t: 'title', text: 'Scope of Work (SOW) Template & Commercial Service Agreement Template' },
+  { t: 'title', text: 'Scope of Work & Commercial Service Agreement' }, // D-318 (3): sin "Template"
   { t: 'meta', text: 'Cid Clean LLC · 3727 Milano Lakes Cir, Naples, FL 34114 · info@cidclean.com · (786) 250-1324' },
   { t: 'meta', text: 'SOW template version: 1.0 · Agreement template version: 1.0 · Effective date: {{effective_date}}' },
-  { t: 'p', text: 'Part A (Scope of Work) is attached to each quote. Part B (Commercial Service Agreement) is signed separately by both parties; accepting a quote is not a contract. Fields in {curly braces} are completed for each client.' },
+  { t: 'p', text: 'Part A (Scope of Work) is attached to each quote. Part B (Commercial Service Agreement) is signed separately by both parties; accepting a quote is not a contract.' }, // D-318 (3): sin la frase de las llaves
 
 ];
 

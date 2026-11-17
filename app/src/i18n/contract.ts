@@ -26,6 +26,10 @@ const es = {
   sent: (email: string) => `Contrato enviado a ${email}.`, // D-200
   mailFailed: 'El contrato quedó listo, pero el correo no salió. Toca Reenviar para firma.', // D-200
   missing: 'Completa los campos vacíos antes de enviar.', // D-200
+  missingCount: (n: number) => (n === 1 ? 'Falta 1 dato:' : `Faltan ${n} datos:`), // APROBADO (D-320 muestra 3: "Falta 1 dato: …")
+  toComplete: 'Falta completar', // APROBADO (D-320)
+  reviewData: 'Revisar datos', // APROBADO (D-320)
+  alreadyFilled: 'Ya llenados', // APROBADO (D-320)
   signedBy: (name: string, date: string, time: string) => `${name} firmó el ${date} a las ${time}.`, // APROBADO (D-289)
   viewSignedPdf: 'Ver PDF firmado', // APROBADO (D-289)
   countersign: 'Contrafirmar', // APROBADO (D-289)
@@ -46,12 +50,12 @@ const es = {
     area_sqft: 'Área aproximada (sq ft)', // APROBADO (D-289)
     service_window: 'Franja de acceso del cliente', // APROBADO (D-289)
     date: 'Fecha del SOW',
-    effective_date: 'Fecha de vigencia del contrato',
+    effective_date: 'Fecha de vigencia (fecha de inicio del servicio)', // D-318 (4), D-320
     client_company: 'Cliente (nombre legal) en el SOW',
     client_legal_name: 'Nombre legal del cliente',
     client_entity: 'Tipo de entidad y estado',
-    client_address: 'Dirección legal del cliente',
-    client_contact: 'Contacto del cliente (nombre, cargo, correo, teléfono)',
+    client_address: 'Dirección del cliente', // APROBADO (D-320)
+    client_contact: 'Contacto (nombre, cargo, correo, teléfono)', // D-319 (5): una sola persona
     client_email: 'Correo del cliente para avisos',
     site_address: 'Dirección del sitio',
     floors_rooms: 'Pisos / áreas',
@@ -73,7 +77,8 @@ const es = {
     keys_count: 'Llaves o fobs entregados',
     restricted_areas: 'Áreas restringidas',
     inspections: 'Inspecciones de calidad',
-    price: 'Precio',
+    price: 'Precio mensual', // APROBADO (D-320)
+    a4_clarifications: 'Aclaraciones de este sitio (A4)', // D-200 (D-318 1)
     a9_name: 'A9 · Nombre', a9_title: 'A9 · Cargo', a9_datetime: 'A9 · Fecha y hora',
     cc_title: 'Cargo de quien firma por Cid Clean',
   } as Record<string, string>,
@@ -97,6 +102,10 @@ const en: ContractStrings = {
   sent: (email) => `Contract sent to ${email}.`,
   mailFailed: "The contract is ready, but the email didn't go out. Tap Resend for signature.",
   missing: 'Fill in the empty fields before sending.',
+  missingCount: (n) => (n === 1 ? '1 item missing:' : `${n} items missing:`),
+  toComplete: 'Still to complete',
+  reviewData: 'Review details',
+  alreadyFilled: 'Already filled',
   signedBy: (name, date, time) => `${name} signed on ${date} at ${time}.`,
   viewSignedPdf: 'View signed PDF',
   countersign: 'Countersign',
@@ -114,9 +123,9 @@ const en: ContractStrings = {
   noContract: "Visits for this jobsite can't be scheduled until the contract is signed by both parties.",
   fields: {
     start_date: 'Service start date', area_sqft: 'Approx. area (sq ft)', service_window: 'Client access window',
-    date: 'SOW date', effective_date: 'Agreement effective date', client_company: 'Client (legal name) on the SOW',
-    client_legal_name: 'Client legal name', client_entity: 'Entity type and state', client_address: 'Client legal address',
-    client_contact: 'Client contact (name, title, email, phone)', client_email: 'Client email for notices',
+    date: 'SOW date', effective_date: 'Effective date (service start date)', client_company: 'Client (legal name) on the SOW',
+    client_legal_name: 'Client legal name', client_entity: 'Entity type and state', client_address: 'Client address',
+    client_contact: 'Contact (name, title, email, phone)', client_email: 'Client email for notices',
     site_address: 'Site address', floors_rooms: 'Floors / rooms', facility_type: 'Facility type',
     walkthrough_date: 'Walkthrough date', frequency: 'Frequency', holidays: 'Holidays not serviced',
     a3_offices_area: 'A3 · Area: offices', a3_offices_freq: 'A3 · Frequency: offices',
@@ -128,7 +137,7 @@ const en: ContractStrings = {
     a3_addons_area: 'A3 · Area: add-ons', a3_addons_task: 'A3 · Add-ons', a3_addons_freq: 'A3 · Frequency: add-ons',
     supplies_cc: 'Cid Clean provides', supplies_client: 'Client provides', storage: 'On-site storage',
     access_method: 'Access method (keys, fob, code, alarm)', keys_count: 'Keys or fobs issued', restricted_areas: 'Restricted areas',
-    inspections: 'Quality inspections', price: 'Price', a9_name: 'A9 · Name', a9_title: 'A9 · Title', a9_datetime: 'A9 · Date/time',
+    inspections: 'Quality inspections', price: 'Monthly price', a4_clarifications: 'Site clarifications (A4)', a9_name: 'A9 · Name', a9_title: 'A9 · Title', a9_datetime: 'A9 · Date/time',
     cc_title: 'Title of the Cid Clean signer',
   },
 };
