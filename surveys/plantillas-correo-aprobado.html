@@ -1,0 +1,137 @@
+<title>Plantillas de correo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap">
+<!-- Propuesta para D-321. Colores C1 (D-226). Datos de ejemplo. -->
+<style>
+/* Layout: cuatro pantallas de teléfono en el orden del recorrido, luego las plantillas iniciales propuestas. */
+:root{--bg:#EDE6DA;--ink:#1E2A28;--muted:#6B5F52;--brand:#0F766E;--card:#FFFFFF;--line:#E8DCC9;--f:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141A19;--ink:#ECE6DC;--muted:#A99E90;--brand:#2BB3A6;--card:#1D2523;--line:#2E3836;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141A19;--ink:#ECE6DC;--muted:#A99E90;--brand:#2BB3A6;--card:#1D2523;--line:#2E3836;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.5}
+.wrap{max-width:1320px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px;display:flex;flex-direction:column;gap:26px}
+h1{font-size:clamp(24px,3.6vw,32px);font-weight:800;margin:0;text-wrap:balance}
+h2{font-size:20px;font-weight:800;margin:0}
+.lead{color:var(--muted);max-width:72ch;margin:6px 0 0}
+.w{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:18px;align-items:start}
+.col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.step{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin:0}
+.cap{font-size:13px;color:var(--muted);margin:0}
+.ph{background:#FBF6EF;color:#1E2A28;border-radius:30px;padding:16px 14px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.top{font-weight:800;font-size:20px}
+.sub{font-size:12px;color:#6B5F52}
+.c{background:#fff;border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.r{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0}
+.r small{display:block;color:#6B5F52;font-size:12px}
+.line{border-top:1px solid #E8DCC9}
+.btn{background:#0F766E;color:#fff;border-radius:16px;padding:12px;text-align:center;font-weight:800}
+.btn2{border:1px solid #0F766E;color:#0F766E;border-radius:16px;padding:11px;text-align:center;font-weight:800}
+.tag{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;background:#DDEFEC;color:#0F766E;white-space:nowrap}
+.tag.n{background:#F1EBE2;color:#6B5F52}
+.radio{width:18px;height:18px;border-radius:50%;border:2px solid #C9BBA6;flex:none}
+.radio.on{border:6px solid #0F766E}
+.fl{display:flex;flex-direction:column;gap:3px}
+.fl span{font-size:12px;color:#6B5F52;font-weight:700}
+.in{background:#F6EFE6;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.45}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chips span{font-size:12px;font-weight:700;padding:5px 9px;border-radius:10px;background:#DDEFEC;color:#0F766E}
+.seg{display:flex;gap:6px}.seg span{flex:1;text-align:center;font-size:13px;font-weight:700;padding:9px;border-radius:12px;background:#F6EFE6}.seg .on{background:#0F766E;color:#fff}
+.mail{background:#fff;border-radius:16px;padding:12px;font-size:13px;line-height:1.5;color:#222;border:1px solid #E8DCC9}
+.mail .h{color:#666;font-size:12px;border-bottom:1px solid #eee;padding-bottom:6px;margin-bottom:8px}
+.foot{color:#777;font-size:11px;border-top:1px dashed #ccc;margin-top:8px;padding-top:6px}
+.amber{background:#FBE3C7;color:#8A4B0F;border-radius:14px;padding:10px 12px;font-size:13px}
+.tpls{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+.tpl{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.tpl h3{margin:0;font-size:15px}
+.tpl .s{font-size:13px;color:var(--muted)}
+.tpl p{margin:0;font-size:13px;white-space:pre-line}
+.k{font-size:12px;font-weight:800;color:var(--brand);text-transform:uppercase;letter-spacing:.06em}
+</style>
+<div class="wrap">
+<header>
+  <h1>Plantillas de correo</h1>
+  <p class="lead">Para mensajes en frío a prospectos y para avisos a clientes. En un lead o un cliente: "Enviar correo", eliges la plantilla, la ves ya llenada y "Abrir en mi correo" te lleva a tu Gmail, Outlook o Mail con todo puesto. Las de prospectos y las de clientes son listas distintas.</p>
+</header>
+
+<div class="w">
+<div class="col"><p class="step">1 · Lead → Enviar correo</p>
+<div class="ph">
+  <div class="top">Enviar correo</div><div class="sub">Superior Pool Products · Armando Zerquera</div>
+  <div class="c"><div class="r"><b>Plantillas para prospectos</b><span class="tag">Prospecto</span></div>
+    <div class="r"><div>Primer contacto<small>Mensaje en frío, día 1</small></div><span class="radio on"></span></div><div class="line"></div>
+    <div class="r"><div>Seguimiento<small>A la semana</small></div><span class="radio"></span></div><div class="line"></div>
+    <div class="r"><div>Seguimiento final<small>Último mensaje</small></div><span class="radio"></span></div>
+  </div>
+  <div class="btn">Continuar</div>
+</div>
+<p class="cap">En un cliente salen solo las plantillas de clientes que escribas. Si el lead no tiene correo, el botón lo pide primero.</p></div>
+
+<div class="col"><p class="step">2 · Vista previa</p>
+<div class="ph">
+  <div class="top">Vista previa</div>
+  <div class="mail">
+    <div class="h">Para: armando.zerquera@poolcorp.com<br>Asunto: Commercial cleaning for Superior Pool Products</div>
+    Hi Armando,<br><br>I'm reaching out from Cid Clean, a commercial cleaning company here in Naples. We clean offices, medical offices, showrooms and warehouses on the schedule that suits each business, usually after hours.<br><br>If you'd like, I can visit 280 Commercial Blvd for a free 30-minute walkthrough and send you an exact quote. Would that be useful?<br><br>Best regards,<br>Humberto Villiva<br>Cid Clean LLC · (786) 250-1324
+    <div class="foot">You are receiving this email because your business is located in our service area. This message is an advertisement from Cid Clean LLC. Cid Clean LLC · 3727 Milano Lakes Cir, Naples, FL 34114 · (786) 250-1324 · info@cidclean.com. Don't want these emails? Reply with "UNSUBSCRIBE". Privacy Policy: cidclean.com/privacy</div>
+  </div>
+  <div class="btn">Abrir en mi correo</div>
+  <div class="btn2">Copiar texto</div>
+</div>
+<p class="cap">El pie lo pone solo la app: el de anuncios (abogado, Footer A) en prospectos y el de servicio (Footer C) en clientes. "Copiar texto" sirve si la app de correo no se abre.</p></div>
+
+<div class="col"><p class="step">3 · Ajustes → Plantillas de correo</p>
+<div class="ph">
+  <div class="top">Plantillas de correo</div>
+  <div class="seg"><span class="on">Prospectos</span><span>Clientes</span></div>
+  <div class="c">
+    <div class="r"><div><b>Primer contacto</b><small>Commercial cleaning for {empresa}</small></div><span class="tag">Activa</span></div><div class="line"></div>
+    <div class="r"><div><b>Seguimiento</b><small>Re: Commercial cleaning for {empresa}</small></div><span class="tag">Activa</span></div><div class="line"></div>
+    <div class="r"><div><b>Seguimiento final</b><small>Closing the loop</small></div><span class="tag">Activa</span></div>
+  </div>
+  <div class="btn2">Nueva plantilla</div>
+</div>
+<p class="cap">Solo el Super Admin. Una plantilla inactiva no sale en la lista.</p></div>
+
+<div class="col"><p class="step">4 · Editar plantilla</p>
+<div class="ph">
+  <div class="top">Editar plantilla</div>
+  <div class="fl"><span>Nombre</span><div class="in">Primer contacto</div></div>
+  <div class="fl"><span>Para</span><div class="seg"><span class="on">Prospectos</span><span>Clientes</span></div></div>
+  <div class="fl"><span>Asunto</span><div class="in">Commercial cleaning for {empresa}</div></div>
+  <div class="fl"><span>Texto</span><div class="in">Hi {nombre},<br><br>I'm reaching out from Cid Clean… I can visit {dirección} for a free walkthrough…<br><br>{firma}</div></div>
+  <div class="fl"><span>Insertar</span><div class="chips"><span>{nombre}</span><span>{empresa}</span><span>{dirección}</span><span>{firma}</span></div></div>
+  <div class="amber">El pie legal se agrega solo al enviar. No hace falta escribirlo.</div>
+  <div class="btn">Guardar</div>
+</div>
+<p class="cap">{firma} es tu nombre, "Cid Clean LLC" y tu teléfono, tomados de Mi perfil. Si falta un dato (por ejemplo, la dirección), la vista previa lo marca para que lo completes antes de abrir el correo.</p></div>
+</div>
+
+<section style="display:flex;flex-direction:column;gap:12px">
+  <h2>Plantillas iniciales: mensajes en frío</h2>
+  <p class="cap">Para prospectos que todavía no han tenido contacto con Cid Clean (por ejemplo, los leads importados). Las dejo cargadas y las puedes editar. La lista de Clientes empieza vacía para que escribas las tuyas. El pie legal dice "your business is located in our service area".</p>
+  <div class="tpls">
+    <div class="tpl"><span class="k">Prospecto · día 1</span><h3>Primer contacto</h3><span class="s">Asunto: Commercial cleaning for {empresa}</span><p>Hi {nombre},
+
+I'm reaching out from Cid Clean, a commercial cleaning company here in Naples. We clean offices, medical offices, showrooms and warehouses on the schedule that suits each business, usually after hours.
+
+If you'd like, I can visit {dirección} for a free 30-minute walkthrough and send you an exact quote. Would that be useful?
+
+{firma}</p></div>
+    <div class="tpl"><span class="k">Prospecto · a la semana</span><h3>Seguimiento</h3><span class="s">Asunto: Re: Commercial cleaning for {empresa}</span><p>Hi {nombre},
+
+I'm following up on my note from last week. If cleaning at {empresa} is something you're reviewing, I'd be glad to stop by for a free walkthrough and give you a clear price, with no commitment.
+
+Is there a better person I should talk to about this?
+
+{firma}</p></div>
+    <div class="tpl"><span class="k">Prospecto · final</span><h3>Seguimiento final</h3><span class="s">Asunto: Closing the loop</span><p>Hi {nombre},
+
+I don't want to fill your inbox, so this is my last note. If you ever need a cleaning quote for {empresa}, just reply to this email and I'll take it from there.
+
+Thanks for your time,
+
+{firma}</p></div>
+  </div>
+  <h2>Automático: recordatorio del quote</h2>
+  <p class="cap">No es una plantilla: sale solo desde quotes@mail.cidclean.com a los 3 y a los 7 días de enviar el quote, con un enlace nuevo al portal, y se detiene en cuanto el cliente acepta, negocia o rechaza, o si el quote vence o se reemplaza. Queda en el historial del lead.</p>
+</section>
+</div>
