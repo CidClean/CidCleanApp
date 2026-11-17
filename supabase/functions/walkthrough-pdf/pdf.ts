@@ -140,7 +140,7 @@ export async function armarPdf(
   doc.setTitle(`${t.title} · ${f.company}`);
   doc.setAuthor('Cid Clean');
 
-  const sitio = f.site_name && f.site_name.trim() ? f.site_name : f.site_address;
+  const sitio = f.site_name && f.site_name.trim() ? f.site_name : (f.site_address || 'Naples, FL'); // D-319
   const fecha = new Date(f.closed_at);
   const fechaTexto = t.date(fecha.getUTCDate(), t.months[fecha.getUTCMonth()], fecha.getUTCFullYear());
 
@@ -169,7 +169,7 @@ export async function armarPdf(
 
   // Sitio y contacto: filas de etiqueta gris y valor.
   const c = f.data.contact ?? {};
-  const sitio = f.data.site ?? {};
+  const datosSitio = f.data.site ?? {};
   titulo(t.site);
   const filas: [string, string | undefined][] = [
     [t.address, direccionDe(c) || f.site_address], // D-301
@@ -177,10 +177,10 @@ export async function armarPdf(
     [t.phone, c.phone],
     [t.email, c.email],
     [t.general, c.general],
-    [t.facilityType, sitio.facilityType ? (t.facilityTypes[sitio.facilityType] ?? sitio.facilityType) : undefined],
-    [t.sqft, typeof sitio.sqft === 'number' ? sitio.sqft.toLocaleString('en-US') : undefined],
-    [t.schedule, sitio.schedule],
-    [t.estHours, typeof sitio.estHours === 'number' ? String(sitio.estHours) : undefined],
+    [t.facilityType, datosSitio.facilityType ? (t.facilityTypes[datosSitio.facilityType] ?? datosSitio.facilityType) : undefined],
+    [t.sqft, typeof datosSitio.sqft === 'number' ? datosSitio.sqft.toLocaleString('en-US') : undefined],
+    [t.schedule, datosSitio.schedule],
+    [t.estHours, typeof datosSitio.estHours === 'number' ? String(datosSitio.estHours) : undefined],
   ];
   for (const [etiqueta, valor] of filas) {
     const lineas = partir(valor && valor.trim() ? valor : '—', fReg, 10.5, UTIL);
