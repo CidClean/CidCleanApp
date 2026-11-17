@@ -21,7 +21,6 @@ import {
   buildMailto,
   copyText,
   initialValues,
-  MAILTO_WEB_LIMIT,
   missingFields,
   sortTemplates,
   usedPlaceholders,
@@ -63,7 +62,7 @@ export default function SendEmailScreen() {
   const [to, setTo] = useState('');
   const [values, setValues] = useState<FillValues | null>(null);
   const [showErrors, setShowErrors] = useState(false);
-  const [notice, setNotice] = useState<'tooLong' | 'openFailed' | 'copied' | 'log' | null>(null);
+  const [notice, setNotice] = useState<'tooLong' | 'openFailed' | 'copied' | 'copyFailed' | 'log' | null>(null);
   // D-200: los campos que faltaban al abrir la vista previa quedan fijos mientras se escribe (antes desaparecían con la primera letra).
   const [asked, setAsked] = useState<(keyof FillValues)[]>([]);
 
@@ -119,27 +118,21 @@ export default function SendEmailScreen() {
 
   async function open() {
     if (!email || !ready()) return;
-    let url = buildMailto(to, email.subject, email.body);
+    // D-329: el correo se abre SIEMPRE solo con destinatario y asunto; el texto completo va al portapapeles para pegarlo.
+    const url = buildMailto(to, email.subject, '');
+    let copied = false;
+    try {
+      const text = copyText(email.subject, email.body);
+      if (Platform.OS === 'web') await navigator.clipboard.writeText(text);
+      else await Clipboard.setStringAsync(text);
+      copied = true;
+    } catch {
+      copied = false;
+    }
+    setNotice(copied ? 'copied' : 'copyFailed');
     if (Platform.OS === 'web') {
-      // D-327: en la web se copia el texto completo y el correo se abre solo con destinatario y asunto, para pegar.
-      try {
-        await navigator.clipboard.writeText(copyText(email.subject, email.body));
-        setNotice('copied');
-        url = buildMailto(to, email.subject, '');
-      } catch {
-        /* sin permiso de portapapeles: el enlace lleva el texto, como antes */
-        if (url.length > MAILTO_WEB_LIMIT) url = buildMailto(to, email.subject, '');
-      }
       window.location.href = url;
     } else {
-      // D-328: con el APK 1.5.0 Android también copia el texto y abre el correo sin texto.
-      try {
-        await Clipboard.setStringAsync(copyText(email.subject, email.body));
-        setNotice('copied');
-        url = buildMailto(to, email.subject, '');
-      } catch {
-        /* sin portapapeles: el enlace lleva el texto */
-      }
       try {
         await Linking.openURL(url);
       } catch {
@@ -307,6 +300,7 @@ export default function SendEmailScreen() {
             </CardBlock>
             {notice === 'tooLong' ? <AppAlert text={t.tooLong} /> : null}
             {notice === 'openFailed' ? <AppAlert text={t.openFailed} /> : null}
+            {notice === 'copyFailed' ? <AppAlert tone="error" text={t.copyFailed} /> : null}
             {notice === 'log' ? <AppAlert tone="error" text={t.errorLog} /> : null}
             {notice === 'copied' ? (
               <AppText size={sample.noteSize} color={colors.secondary} style={{ marginBottom: 8 }}>

@@ -47,6 +47,7 @@ export const emailTemplatesEs = {
   open: 'Abrir en mi correo', // APROBADO (D-323)
   copy: 'Copiar texto', // APROBADO (D-323)
   copied: 'Texto copiado. Pégalo en el correo que se abrió.', // D-200
+  copyFailed: 'No se pudo copiar el texto. Toca "Copiar texto" y pégalo en el correo.', // D-200
   missingTitle: 'Puedes completar estos datos. Si los dejas vacíos, el correo usa un texto genérico.', // D-200
   missing: {
     nombre: 'Nombre del contacto', // D-200
@@ -111,6 +112,7 @@ export const emailTemplatesEn: EmailTemplatesStrings = {
   open: 'Open in my email',
   copy: 'Copy text',
   copied: 'Text copied. Paste it into the email that just opened.',
+  copyFailed: 'The text could not be copied. Tap "Copy text" and paste it into the email.',
   missingTitle: 'You can fill in these details. If you leave them blank, the email uses generic wording.',
   missing: {
     nombre: 'Contact name',
