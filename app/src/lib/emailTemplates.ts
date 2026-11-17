@@ -117,8 +117,8 @@ export function buildMailto(to: string, subject: string, body: string): string {
   return `mailto:${encodeURIComponent(to.trim()).replace(/%40/g, '@')}?subject=${enc(subject)}&body=${enc(body)}`;
 }
 
-/** Texto de "Copiar texto": asunto y cuerpo. */
-export const copyText = (subject: string, body: string) => `${subject}\n\n${body}`;
+/** Texto que se copia: solo el cuerpo; el asunto ya va en el enlace (D-326). */
+export const copyText = (_subject: string, body: string) => body;
 
 /** Inserta el placeholder en la posición del cursor (o al final). Devuelve el texto y el cursor nuevo. */
 export function insertAt(text: string, sel: { start: number; end: number } | null, p: Placeholder) {
