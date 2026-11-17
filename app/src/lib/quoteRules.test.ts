@@ -77,7 +77,7 @@ describe('acciones según estado y permisos (D-007, D-209)', () => {
     expect(quoteActions(v({ status: 'accepted' }), { edit: true, send: true }).newVersion).toBe(false);
   });
   test('qué falta para enviar', () => {
-    expect(sendBlockers(v({ contactEmail: null }))).toEqual(['service', 'sow', 'recipient']);
+    expect(sendBlockers(v({ contactEmail: null }))).toEqual(['service', 'recipient']);
     expect(sendBlockers(v({ hasSow: true, lines: L({ services: [{ label: 'A', amount: 1, taxable: true }] }) }))).toEqual([]);
   });
   test('fichas: abiertos en marca, Aceptado verde, Cambios pedidos ámbar y cerrados en gris', () => {

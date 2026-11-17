@@ -32,7 +32,32 @@ export function camposDe(c: ContratoDb): Campos {
   };
 }
 
+/** Datos del SOW de una versión del quote (quote_sow / send_quote_data, orden 112). */
+export type SowDb = { fields: Campos; sow_no: string; quote_no: string; quote_version: string; cleaning_type?: string | null };
+
+/** Campos del SOW suelto con sus automáticos (mismas llaves que el contrato). */
+export function camposSow(s: SowDb): Campos {
+  return {
+    ...s.fields,
+    sow_no: s.sow_no, quote_no: s.quote_no, quote_version: s.quote_version, sow_version: s.quote_version,
+    template_version: TEMPLATE_VERSION,
+    tax_clause: s.cleaning_type === 'residential'
+      ? 'with no Florida sales tax (residential cleaning)'
+      : 'plus 6% Florida sales tax (non-residential cleaning)',
+  };
+}
+
 const BLANCO = '____________';
+
+/** Opcionales del SOW (D-318 5): vacíos, el PDF pone "None"; el inicio sin fecha, "To be defined" (D-200). */
+export const OPCIONALES_NONE = ['access_method', 'keys_count', 'restricted_areas', 'inspections'];
+
+export function conOpcionales(campos: Campos): Campos {
+  const out: Campos = { ...campos };
+  for (const k of OPCIONALES_NONE) if (!(out[k] ?? '').trim()) out[k] = 'None';
+  if (!(out.start_date ?? '').trim()) out.start_date = 'To be defined';
+  return out;
+}
 
 /** Reemplaza `{{llave}}` por su valor; lo vacío queda como línea en blanco (no debería pasar: no se envía con faltantes). */
 export function rellenar(texto: string, campos: Campos): string {

@@ -37,6 +37,7 @@ jest.mock('@/lib/documents', () => ({ fetchDocumentUrl: (...a: unknown[]) => moc
 jest.mock('@/lib/termsApi', () => ({ fetchTermsUrl: (...a: unknown[]) => mockFetchTermsUrl(...a) }));
 const mockFetchQuoteFileUrl = jest.fn();
 jest.mock('@/lib/quotesApi', () => ({ fetchQuoteFileUrl: (...a: unknown[]) => mockFetchQuoteFileUrl(...a) }));
+jest.mock('@/lib/sowApi', () => ({ fetchSowPreviewUrl: async () => ({ ok: false, reason: 'server' }) })); // orden 112
 const mockFetchWalkthroughPdf = jest.fn();
 jest.mock('@/lib/walkthroughApi', () => ({ fetchWalkthroughPdfUrl: (...a: unknown[]) => mockFetchWalkthroughPdf(...a) }));
 

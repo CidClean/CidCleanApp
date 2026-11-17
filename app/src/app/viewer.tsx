@@ -16,6 +16,7 @@ import { fetchIcaPreviewUrl, fetchIcaSignedUrl, fetchWarningUrl } from '@/lib/ic
 import { fetchWalkthroughPdfUrl } from '@/lib/walkthroughApi';
 import { useGoBack } from '@/lib/navigation';
 import { fetchQuoteFileUrl } from '@/lib/quotesApi';
+import { fetchSowPreviewUrl } from '@/lib/sowApi';
 import { useSession } from '@/lib/session';
 import { fetchTermsUrl, type TermsKind } from '@/lib/termsApi';
 import { downloadOnWeb, downloadToCache, kindFromUrl, loadPdfView, removeCachedFile, viewerFileName, type ViewerKind } from '@/lib/viewerFile';
@@ -39,7 +40,7 @@ export default function ViewerScreen() {
     note?: string;
     /** D-260: '1' en el W-9 (solo lo abre el Super Admin) muestra "Descargar"; D-297: también el PDF del walkthrough. */
     download?: string;
-    source: 'terms' | 'document' | 'quote-file' | 'walkthrough' | 'jobsite' | 'contract' | 'ica' | 'ica-signed' | 'warning';
+    source: 'terms' | 'document' | 'quote-file' | 'sow-preview' | 'walkthrough' | 'jobsite' | 'contract' | 'ica' | 'ica-signed' | 'warning';
     documentId?: string;
     title?: string;
     /** source 'quote-file': ruta en el bucket quote-files (SOW o PDF del quote, hito 4). */
@@ -69,6 +70,8 @@ export default function ViewerScreen() {
           ? await fetchTermsUrl(termsKind)
           : source === 'quote-file'
             ? await fetchQuoteFileUrl(path ?? '')
+            : source === 'sow-preview'
+            ? await fetchSowPreviewUrl(documentId ?? '') // orden 112: documentId es la versión del quote
             : source === 'walkthrough'
               ? await fetchWalkthroughPdfUrl(documentId ?? '', Number(version), language === 'en' ? 'en' : 'es')
               : source === 'jobsite'

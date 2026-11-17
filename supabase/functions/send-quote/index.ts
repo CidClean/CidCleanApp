@@ -5,9 +5,14 @@
 // desde quotes@mail.cidclean.com con respuesta a info@cidclean.com (D-249), siempre en inglés y con el PDF adjunto
 // (D-247, D-250). El PDF sigue en el idioma del lead. { resend: true } reenvía el correo de una versión ya enviada
 // (por ejemplo si falló) con un enlace nuevo; el anterior sigue valiendo (la base guarda solo hashes, B5).
+// Orden 112 (D-318): el SOW se arma aquí con la Parte A de la plantilla del abogado y los datos guardados con la versión;
+// al enviar se guarda en quote-files como sow_path (el portal lo exige abrir, D-042). { sow_preview: true } devuelve
+// una URL firmada de 60 s del SOW tal como va, para "Ver PDF del SOW" antes de enviar.
 import { CORS, clienteDeQuienLlama, clienteDeServicio, errorDeBase, responder } from '../_shared/comun.ts';
 import { correoQuote, enviarCorreo, fecha, lang, pdfQuote, type QuoteMail } from '../_shared/quotes.ts';
-import { nombreDeQuote, numeroDeQuote } from '../_shared/fileName.ts';
+import { nombreDeQuote, nombreLegible, numeroDeQuote } from '../_shared/fileName.ts';
+import { camposSow, type SowDb } from '../_shared/contrato.ts';
+import { pdfSow } from '../_shared/contratoPdf.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -33,7 +38,7 @@ function datosCorreo(x: any, expires: string, link: string): QuoteMail {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return responder(405, { error: 'method_not_allowed' });
-  let body: { version_id?: string; resend?: boolean };
+  let body: { version_id?: string; resend?: boolean; sow_preview?: boolean };
   try {
     body = await req.json();
   } catch {
@@ -43,6 +48,28 @@ Deno.serve(async (req) => {
   const quien = clienteDeQuienLlama(req);
   const servicio = clienteDeServicio();
   const base = Deno.env.get('PORTAL_BASE_URL') ?? 'https://quote.cidclean.com';
+
+  if (body.sow_preview) {
+    // Con el JWT de quien mira: quote_sow comprueba el permiso (quotes_ver o SOW) y da los datos.
+    const { data: s, error: e0 } = await quien.rpc('quote_sow', { p_version: body.version_id });
+    if (e0 || !s) {
+      const e = errorDeBase(e0?.code);
+      return responder(e.status, { error: e.error });
+    }
+    try {
+      const sow = s as SowDb & { quote_id: string };
+      const empresa = sow.fields.client_company ?? '';
+      const pdf = await pdfSow({ campos: camposSow(sow), sow: sow.sow_no, company: empresa });
+      const ruta = `${sow.quote_id}/${body.version_id}/sow-preview.pdf`;
+      const up = await servicio.storage.from('quote-files').upload(ruta, pdf, { contentType: 'application/pdf', upsert: true });
+      if (up.error) return responder(500, { error: 'server_error' });
+      const { data, error } = await servicio.storage.from('quote-files').createSignedUrl(ruta, 60);
+      if (error || !data?.signedUrl) return responder(500, { error: 'server_error' });
+      return responder(200, { url: data.signedUrl, file_name: nombreDeSow(sow, empresa) });
+    } catch (_e) {
+      return responder(500, { error: 'server_error' });
+    }
+  }
 
   if (body.resend) {
     // Valida con el JWT de quien envía (quotes_enviar); los montos, el PDF y el enlace solo los lee la service role (M4).
@@ -84,6 +111,16 @@ Deno.serve(async (req) => {
     const ruta = `${p.quote_id}/${p.version_id}/quote-${p.version}.pdf`;
     const up = await servicio.storage.from('quote-files').upload(ruta, pdf, { contentType: 'application/pdf', upsert: true });
     if (up.error) return responder(500, { error: 'server_error' });
+    // D-318: el SOW generado con los datos de la versión; se guarda con ella (lo que se envió no cambia después).
+    if (p.extra !== true && p.sow) {
+      const sow = p.sow as SowDb;
+      const sowPdf = await pdfSow({ campos: camposSow(sow), sow: sow.sow_no, company: p.company });
+      const rutaSow = `${p.quote_id}/${p.version_id}/sow-v${String(p.version).replace(/[^0-9]+/g, '-')}.pdf`;
+      const upSow = await servicio.storage.from('quote-files').upload(rutaSow, sowPdf, { contentType: 'application/pdf', upsert: true });
+      if (upSow.error) return responder(500, { error: 'server_error' });
+      const { error: eSow } = await servicio.rpc('confirm_quote_sow', { p_version: p.version_id, p_fields: sow.fields, p_path: rutaSow });
+      if (eSow) return responder(500, { error: 'server_error' });
+    }
     const snapshot = {
       language: l, company: p.company, site: p.site, address: p.address, frequency: p.frequency,
       extra: p.extra === true, service_date: p.service_date ?? null,
@@ -102,3 +139,8 @@ Deno.serve(async (req) => {
     return responder(500, { error: 'server_error' });
   }
 });
+
+/** D-296: "Cid Clean - SOW-0007 v1.0 - Naples Yacht Club.pdf". */
+function nombreDeSow(s: SowDb, empresa: string): string {
+  return nombreLegible([`${s.sow_no} v${s.quote_version}`, empresa]);
+}

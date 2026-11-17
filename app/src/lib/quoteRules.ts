@@ -174,11 +174,13 @@ export function statusTone(s: QuoteStatus): 'brand' | 'success' | 'warning' | 'm
   return 'brand';
 }
 
-/** Lo que puede enviar: borrador con al menos un servicio, SOW y a quién enviarlo. */
-export function sendBlockers(v: QuoteVersion): ('service' | 'sow' | 'recipient')[] {
-  const out: ('service' | 'sow' | 'recipient')[] = [];
+/**
+ * Lo que puede enviar: borrador con al menos un servicio y a quién enviarlo. El SOW ya no se sube (orden 112, D-318):
+ * se arma en la app y sus faltantes se ven en la pantalla "Scope of Work".
+ */
+export function sendBlockers(v: QuoteVersion): ('service' | 'recipient')[] {
+  const out: ('service' | 'recipient')[] = [];
   if (v.lines.services.length === 0) out.push('service');
-  if (!v.hasSow) out.push('sow');
   if (!v.contactEmail && v.recipients.length === 0) out.push('recipient');
   return out;
 }

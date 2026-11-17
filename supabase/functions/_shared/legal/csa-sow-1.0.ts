@@ -10,7 +10,7 @@ export const TEMPLATE_VERSION = '1.0';
 export type Bloque =
   | { t: 'title'; text: string }
   | { t: 'meta'; text: string }
-  | { t: 'p'; text: string }
+  | { t: 'p'; text: string; /** Solo se imprime si esta llave tiene texto (orden 112). */ si?: string }
   | { t: 'small'; text: string }
   | { t: 'h1'; text: string }
   | { t: 'h2'; text: string }
@@ -21,12 +21,20 @@ export type Bloque =
   | { t: 'signatures' }
   | { t: 'break' };
 
-export const PLANTILLA: Bloque[] = [
+/** Encabezado del documento completo (contrato). */
+export const ENCABEZADO: Bloque[] = [
   { t: 'title', text: 'Scope of Work (SOW) Template & Commercial Service Agreement Template' },
   { t: 'meta', text: 'Cid Clean LLC · 3727 Milano Lakes Cir, Naples, FL 34114 · info@cidclean.com · (786) 250-1324' },
   { t: 'meta', text: 'SOW template version: 1.0 · Agreement template version: 1.0 · Effective date: {{effective_date}}' },
   { t: 'p', text: 'Part A (Scope of Work) is attached to each quote. Part B (Commercial Service Agreement) is signed separately by both parties; accepting a quote is not a contract. Fields in {curly braces} are completed for each client.' },
 
+];
+
+/**
+ * Parte A (A1 a A8). Es el SOW del quote (orden 112: generado en la app, sin A9 porque el SOW no se firma) y la Parte A
+ * del contrato: un solo texto para los dos.
+ */
+export const PARTE_A: Bloque[] = [
   { t: 'h1', text: 'Part A – Scope of Work' },
   { t: 'meta', text: 'SOW No.: {{sow_no}} · SOW version: {{sow_version}} · Related quote: {{quote_no}} version {{quote_version}} · Date: {{date}}' },
   { t: 'h2', text: 'A1. Parties and site' },
@@ -57,6 +65,8 @@ export const PLANTILLA: Bloque[] = [
   ] },
   { t: 'h2', text: 'A4. Exclusions' },
   { t: 'p', text: 'Unless listed above, the following are excluded: exterior window washing above ground level, biohazard or bodily-fluid remediation beyond routine restroom cleaning, mold remediation, hazardous materials, moving heavy furniture or equipment, cleaning inside client electronics or equipment, pest control, and any other work not listed in Section A3. Excluded work may be quoted separately.' },
+  // D-318 (1): aclaraciones y exclusiones propias del sitio, debajo del texto fijo del abogado (D-200: la etiqueta).
+  { t: 'p', text: 'Site-specific clarifications: {{a4_clarifications}}', si: 'a4_clarifications' },
   { t: 'h2', text: 'A5. Supplies and equipment' },
   { t: 'bullet', text: 'Cid Clean provides: cleaning chemicals, tools and equipment {{supplies_cc}}.' },
   { t: 'bullet', text: 'Client provides: {{supplies_client}}.' },
@@ -73,11 +83,17 @@ export const PLANTILLA: Bloque[] = [
   { t: 'bullet', text: 'Quality inspections: {{inspections}}. Report service issues within 24 hours to info@cidclean.com or (786) 250-1324; Cid Clean will correct qualifying issues at no charge at the next scheduled service or within 2 business days, whichever is sooner.' },
   { t: 'h2', text: 'A8. Pricing reference' },
   { t: 'p', text: 'Pricing is stated in the related quote {{quote_no}} version {{quote_version}}: {{price}}, {{tax_clause}}. Accepting the quote and this SOW does not create a contract; services begin only after both parties sign the Commercial Service Agreement. Changes to this SOW require a change order or new quote version accepted by both parties.' },
+];
+
+/** A9: confirmación de lectura del cliente; solo en el contrato. */
+export const A9: Bloque[] = [
   { t: 'h2', text: 'A9. Client confirmation' },
   { t: 'check', text: 'I have read this Scope of Work (SOW {{sow_no}}, version {{sow_version}}).' },
   { t: 'p', text: 'Name: {{a9_name}} Title: {{a9_title}} Date/time: {{a9_datetime}} (Recorded electronically via the client portal – confirmation of reading only, not a contract signature.)' },
 
-  { t: 'break' },
+];
+
+export const PARTE_B: Bloque[] = [
   { t: 'h1', text: 'Part B – Commercial Service Agreement' },
   { t: 'meta', text: 'Agreement No.: {{csa_no}} · Template version: 1.0 · Effective date of this Agreement: {{effective_date}}' },
   { t: 'p', text: 'This Commercial Service Agreement (the "Agreement") is entered into between Cid Clean LLC, a Florida limited liability company, 3727 Milano Lakes Cir, Naples, FL 34114 ("Cid Clean"), and {{client_legal_name}}, {{client_entity}}, {{client_address}} ("Client").' },
@@ -137,6 +153,24 @@ export const PLANTILLA: Bloque[] = [
   { t: 'signatures' },
   { t: 'small', text: 'When signed electronically, an e-signature certificate page (name, verified email, date and time, IP address, browser, and consent to sign electronically) is attached as the last page.' },
 ];
+
+/** El contrato completo: encabezado, Parte A (el SOW), A9 y Parte B. */
+export const PLANTILLA: Bloque[] = [...ENCABEZADO, ...PARTE_A, ...A9, { t: 'break' }, ...PARTE_B];
+
+/** Encabezado del SOW suelto que acompaña al quote (orden 112). */
+export const ENCABEZADO_SOW: Bloque[] = [
+  { t: 'title', text: 'Scope of Work' },
+  { t: 'meta', text: 'Cid Clean LLC · 3727 Milano Lakes Cir, Naples, FL 34114 · info@cidclean.com · (786) 250-1324' },
+  { t: 'meta', text: 'SOW template version: 1.0' },
+];
+
+/**
+ * El SOW suelto no lleva precio (D-320 2: el precio va en el quote): en A8 queda la referencia al quote con la cláusula
+ * del impuesto de D-290.
+ */
+export function sinPrecio(texto: string): string {
+  return texto.replace('{{quote_version}}: {{price}}, {{tax_clause}}.', '{{quote_version}}, {{tax_clause}}.');
+}
 
 /** Texto de la casilla de consentimiento del portal de firma, aprobado (D-289). */
 export const consentText = (client: string) =>

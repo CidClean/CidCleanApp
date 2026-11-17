@@ -5,9 +5,9 @@
 import { PDFDocument, StandardFonts, type PDFFont, type PDFPage } from 'npm:pdf-lib@1.17.1';
 
 import * as m from './docPdf.ts';
-import { rellenar, type Campos, type Firmas } from './contrato.ts';
+import { conOpcionales, rellenar, type Campos, type Firmas } from './contrato.ts';
 import { fechaCorta } from './contratoCorreos.ts';
-import { PLANTILLA } from './legal/csa-sow-1.0.ts';
+import { ENCABEZADO_SOW, PARTE_A, PLANTILLA, sinPrecio, type Bloque } from './legal/csa-sow-1.0.ts';
 
 /** Las fuentes estándar (WinAnsi) no dibujan todo: se quitan los caracteres que no pueden (como en w9.ts). */
 export function limpio(s: string): string {
@@ -73,11 +73,7 @@ function firmas(l: Lienzo, campos: Campos, f: Firmas) {
   l.y = top - 12 - 40 - 3 * 18 - 16;
 }
 
-/** Arma el contrato. `firmas` vacío = sin firmar. */
-export async function pdfContrato(o: { campos: Campos; csa: string; firmas?: Firmas; conCertificado?: boolean }): Promise<Uint8Array> {
-  const doc = await PDFDocument.create();
-  doc.setTitle(`Commercial Service Agreement ${o.csa} · ${o.campos.client_legal_name ?? ''}`);
-  doc.setAuthor('Cid Clean LLC');
+async function lienzo(doc: PDFDocument): Promise<Lienzo> {
   const f = await m.fuentesDoc(doc);
   const logo = await m.logoDoc(doc);
   const firma = await doc.embedFont(StandardFonts.TimesRomanItalic);
@@ -90,12 +86,45 @@ export async function pdfContrato(o: { campos: Campos; csa: string; firmas?: Fir
     },
   });
   l.nueva();
-  const c = o.campos;
-  for (const b of PLANTILLA) {
+  return l;
+}
+
+/** Arma el contrato. `firmas` vacío = sin firmar. */
+export async function pdfContrato(o: { campos: Campos; csa: string; firmas?: Firmas; conCertificado?: boolean }): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  doc.setTitle(`Commercial Service Agreement ${o.csa} · ${o.campos.client_legal_name ?? ''}`);
+  doc.setAuthor('Cid Clean LLC');
+  const l = await lienzo(doc);
+  pintar(l, PLANTILLA, conOpcionales(o.campos), o.firmas ?? {});
+  // El pie con "Page X of N" cuando ya se sabe cuántas hojas hay (la hoja del certificado se suma después).
+  m.pies(doc, l.f, { extra: o.conCertificado ? 1 : 0, ref: `Agreement ${o.csa}` }); // D-200: la referencia va en el pie
+  return await doc.save();
+}
+
+/**
+ * SOW suelto del quote (orden 112, D-318): la misma Parte A del contrato (A1 a A8), sin A9 (no se firma) y sin precio
+ * (D-320). Estilo de documento (D-293).
+ */
+export async function pdfSow(o: { campos: Campos; sow: string; company: string }): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  doc.setTitle(`Scope of Work ${o.sow} · ${o.company}`);
+  doc.setAuthor('Cid Clean LLC');
+  const l = await lienzo(doc);
+  const bloques = PARTE_A.map((b) => (b.t === 'p' ? { ...b, text: sinPrecio(b.text) } : b));
+  pintar(l, [...ENCABEZADO_SOW, ...bloques], conOpcionales(o.campos), {});
+  m.pies(doc, l.f, { extra: 0, ref: o.sow });
+  return await doc.save();
+}
+
+function pintar(l: Lienzo, bloques: Bloque[], c: Campos, fs: Firmas) {
+  const f = l.f;
+  for (const b of bloques) {
     switch (b.t) {
       case 'title': lineas(l, b.text, f.extra, 16, m.LADO, ANCHO_TXT); l.y -= 4; break;
       case 'meta': lineas(l, rellenar(b.text, c), f.regular, 8.5, m.LADO, ANCHO_TXT, m.C.gris); break;
-      case 'p': l.y -= 6; lineas(l, rellenar(b.text, c), f.regular, 9.5, m.LADO, ANCHO_TXT); break;
+      case 'p':
+        if (b.si && !(c[b.si] ?? '').trim()) break;
+        l.y -= 6; lineas(l, rellenar(b.text, c), f.regular, 9.5, m.LADO, ANCHO_TXT); break;
       case 'small': l.y -= 10; lineas(l, rellenar(b.text, c), f.regular, 8, m.LADO, ANCHO_TXT, m.C.gris); break;
       case 'h1':
         if (l.y - 60 < LIMITE) l.nueva();
@@ -118,7 +147,11 @@ export async function pdfContrato(o: { campos: Campos; csa: string; firmas?: Fir
         l.y -= 4;
         const w = [120, ANCHO_TXT - 210, 90];
         filaTabla(l, b.head.map((t, i) => ({ text: t, w: w[i], bold: true })));
-        for (const r of b.rows) filaTabla(l, r.map((t, i) => ({ text: rellenar(t, c), w: w[i] })));
+        // Orden 112: una fila cuya área quedó vacía (ese tipo no está en el sitio) no se imprime.
+        for (const r of b.rows) {
+          if (rellenar(r[0], c) === rellenar('{{x}}', {})) continue;
+          filaTabla(l, r.map((t, i) => ({ text: rellenar(t, c), w: w[i] })));
+        }
         break;
       }
       case 'check': {
@@ -133,13 +166,10 @@ export async function pdfContrato(o: { campos: Campos; csa: string; firmas?: Fir
         lineas(l, rellenar(b.text, c), f.regular, 9.5, m.LADO + 16, ANCHO_TXT - 16);
         break;
       }
-      case 'signatures': firmas(l, c, o.firmas ?? {}); break;
+      case 'signatures': firmas(l, c, fs); break;
       case 'break': l.nueva(); break;
     }
   }
-  // El pie con "Page X of N" cuando ya se sabe cuántas hojas hay (la hoja del certificado se suma después).
-  m.pies(doc, f, { extra: o.conCertificado ? 1 : 0, ref: `Agreement ${o.csa}` }); // D-200: la referencia va en el pie
-  return await doc.save();
 }
 
 /** Hoja de certificado como última página (D-283; como el W-9, D-268 (4)). El PDF se armó con `conCertificado`. */

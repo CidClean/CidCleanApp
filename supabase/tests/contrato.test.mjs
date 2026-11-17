@@ -4,13 +4,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
-import { AUTOMATICAS, camposDe, filasCertificadoContrato, llaves, rellenar, sha256Bytes } from '../functions/_shared/contrato.ts';
+import { AUTOMATICAS, camposDe, camposSow, conOpcionales, filasCertificadoContrato, llaves, rellenar, sha256Bytes } from '../functions/_shared/contrato.ts';
 import { correoContrato, correoContratoFirmado, correoCopiaAceptacion, REMITENTE_DOCUMENTOS } from '../functions/_shared/contratoCorreos.ts';
-import { consentText, PLANTILLA, TEMPLATE_VERSION } from '../functions/_shared/legal/csa-sow-1.0.ts';
+import { A9, consentText, ENCABEZADO_SOW, PARTE_A, PLANTILLA, sinPrecio, TEMPLATE_VERSION } from '../functions/_shared/legal/csa-sow-1.0.ts';
 
-const sql = readFileSync(new URL('../migrations/20261030000013_contratos.sql', import.meta.url), 'utf8');
-const editables = [...sql.slice(sql.indexOf('create function contract_editable_keys'), sql.indexOf('create function contract_mmddyyyy'))
-  .matchAll(/'([a-z0-9_]+)'/g)].map((m) => m[1]);
+// Las llaves editables vigentes: la última definición de contract_editable_keys (orden 112 agregó a4_clarifications).
+const sql = readFileSync(new URL('../migrations/20261117000002_sow_en_la_app.sql', import.meta.url), 'utf8');
+const desde = sql.indexOf('create or replace function contract_editable_keys');
+const editables = [...sql.slice(desde, sql.indexOf('$$;', sql.indexOf('$$', desde) + 2)).matchAll(/'([a-z0-9_]+)'/g)].map((m) => m[1]);
 const textos = PLANTILLA.flatMap((b) => ('text' in b ? [b.text] : 'rows' in b ? b.rows.flat() : []));
 
 test('la plantilla usa solo llaves que existen en la base o son automáticas', () => {
@@ -79,4 +80,28 @@ test('correos en inglés: copia de la aceptación, link de firma y contrato firm
 
 test('sha256 en hex', async () => {
   assert.equal(await sha256Bytes(new TextEncoder().encode('abc')), 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+});
+
+test('orden 112: el SOW es la misma Parte A del contrato, sin A9 y sin precio', () => {
+  const contrato = PLANTILLA.map((b) => JSON.stringify(b)).join('\n');
+  for (const b of PARTE_A) assert.ok(contrato.includes(JSON.stringify(b)), 'la Parte A está en el contrato tal cual');
+  assert.ok(!PARTE_A.some((b) => 'text' in b && /A9\./.test(b.text)));
+  assert.ok(A9.some((b) => 'text' in b && /A9\./.test(b.text)));
+  const a8 = PARTE_A.find((b) => b.t === 'p' && b.text.startsWith('Pricing is stated'));
+  const c = camposSow({ fields: { price: '$1,000.00 per month' }, sow_no: 'SOW-0007', quote_no: 'Q-0007', quote_version: '1.0', cleaning_type: 'non_residential' });
+  const texto = rellenar(sinPrecio(a8.text), c);
+  assert.ok(texto.startsWith('Pricing is stated in the related quote Q-0007 version 1.0, plus 6% Florida sales tax (non-residential cleaning).'));
+  assert.ok(!texto.includes('$1,000'));
+  assert.equal(ENCABEZADO_SOW[0].text, 'Scope of Work');
+});
+
+test('orden 112: opcionales vacíos = "None" e inicio "To be defined" (D-318 5)', () => {
+  const c = conOpcionales({ access_method: '', keys_count: ' ', restricted_areas: 'Server room', start_date: '' });
+  assert.equal(c.access_method, 'None');
+  assert.equal(c.keys_count, 'None');
+  assert.equal(c.inspections, 'None');
+  assert.equal(c.restricted_areas, 'Server room');
+  assert.equal(c.start_date, 'To be defined');
+  assert.equal(camposSow({ fields: {}, sow_no: 'SOW-1', quote_no: 'Q-1', quote_version: '1.0', cleaning_type: 'residential' }).tax_clause,
+    'with no Florida sales tax (residential cleaning)');
 });

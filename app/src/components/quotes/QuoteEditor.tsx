@@ -1,4 +1,4 @@
-import { Redirect, useRouter } from "expo-router";
+import { Redirect, useFocusEffect, useRouter } from "expo-router";
 import { readableFileName } from "@/lib/fileName";
 import { ContractCard } from "../contract/ContractCard";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -19,6 +19,7 @@ import { Switch } from "@/components/Switch";
 import { TopBar } from "@/components/TopBar";
 import { QuoteView } from "@/components/quotes/QuoteView";
 import { getPortalStrings } from "@/i18n/quotes";
+import { useSowStrings } from "@/i18n/useSowStrings";
 import { useQuoteStrings } from "@/i18n/useQuoteStrings";
 import { useStrings } from "@/i18n/useStrings";
 import { fetchLead } from "@/lib/leadsApi";
@@ -51,11 +52,9 @@ import {
   saveQuoteDraft,
   sendQuote,
   setQuoteServiceDate,
-  uploadQuoteSow,
   type Suggestions,
 } from "@/lib/quotesApi";
 import { usePermissions, useSession } from "@/lib/session";
-import { choosePdf } from "@/lib/termsApi";
 import { iconStrokeWidth, radius, sample, useTheme } from "@/theme";
 
 type Draft = {
@@ -113,6 +112,7 @@ export function QuoteEditor({ source }: { source: QuoteSource }) {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const q = useQuoteStrings();
+  const sw = useSowStrings();
   const strings = useStrings();
   const { locale } = useSession();
   const { can } = usePermissions();
@@ -120,7 +120,6 @@ export function QuoteEditor({ source }: { source: QuoteSource }) {
     can("quotes_ver") || can("quotes_editar") || can("quotes_enviar");
   const canEdit = can("quotes_editar") && can("quotes_ver_precios");
   const canSend = can("quotes_enviar");
-  const canSow = can("sow_contratos_subir_ver");
 
   const [ctx, setCtx] = useState<Context | null>(null);
   const [data, setData] = useState<SiteQuote | null>(null);
@@ -197,9 +196,14 @@ export function QuoteEditor({ source }: { source: QuoteSource }) {
   }, [sourceKey, canEdit]);
 
   useEffect(() => {
-    void load();
     if (canEdit) void fetchSuggestions().then(setSuggest);
-  }, [load, canEdit]);
+  }, [canEdit]);
+  // Al volver de "Scope of Work" (orden 112) el quote puede haberse enviado: se recarga al enfocar.
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
 
   const latest = data?.versions[0] ?? null;
   const extra = source.kind === "extra";
@@ -314,10 +318,14 @@ export function QuoteEditor({ source }: { source: QuoteSource }) {
     if (
       errors?.noService ||
       errors?.lines.size ||
-      (!extra && !latest.hasSow) ||
       (!latest.contactEmail && draft.recipients.length === 0)
     )
       return;
+    // Orden 112 (D-320): el quote de un sitio se envía desde "Scope of Work", después de revisar el SOW.
+    if (!extra) {
+      await openSow();
+      return;
+    }
     setBusy(true);
     setNotice(null);
     if (!(await save())) {
@@ -362,18 +370,16 @@ export function QuoteEditor({ source }: { source: QuoteSource }) {
     setBusy(false);
   }
 
-  async function onUploadSow() {
-    if (busy || !latest || !data?.quoteId) return;
-    const picked = await choosePdf();
-    if (picked.kind !== "picked") return;
-    setBusy(true);
-    setNotice(null);
-    // Antes de subir se guarda lo escrito, para no perderlo al recargar.
-    if (draft) await save();
-    const r = await uploadQuoteSow(data.quoteId, latest.id, picked.file);
-    if (!r.ok) setNotice({ tone: "error", text: q.errorUpload });
-    await load();
-    setBusy(false);
+  /** Orden 112: guarda lo escrito y abre "Scope of Work" (allí se revisa el SOW y se envía el quote). */
+  async function openSow() {
+    if (busy || !latest) return;
+    if (draft) {
+      setBusy(true);
+      const ok = await save();
+      setBusy(false);
+      if (!ok) return;
+    }
+    router.push({ pathname: "/sow/[versionId]", params: { versionId: latest.id, company: ctx?.company ?? "" } });
   }
 
   function openFile(path: string, title: string, document: string = title) {
@@ -652,7 +658,7 @@ export function QuoteEditor({ source }: { source: QuoteSource }) {
               <AppAlert tone="error" text={q.noContactEmail} />
             ) : null}
 
-            {/* D-239: el quote de un extra va sin SOW. */}
+            {/* D-239: el quote de un extra va sin SOW. Orden 112 (D-318): el SOW se arma en la app (pantalla "Scope of Work"). */}
             {extra ? null : (
               <>
                 <AppText
@@ -660,35 +666,14 @@ export function QuoteEditor({ source }: { source: QuoteSource }) {
                   color={colors.secondary}
                   style={styles.sectionLabel}
                 >
-                  {q.sow}
+                  {sw.title}
                 </AppText>
-                {latest.hasSow && latest.sowPath ? (
-                  <ListRow
-                    title={q.readSow}
-                    chevron
-                    last
-                    onPress={() => openFile(latest.sowPath as string, q.sow, 'SOW')}
-                  />
-                ) : (
-                  <AppText
-                    size={sample.noteSize}
-                    color={showErrors ? colors.text : colors.secondary}
-                    style={{ marginBottom: 8 }}
-                  >
-                    {q.sowRequired}
-                  </AppText>
-                )}
-                {canSow ? (
-                  <View style={{ marginTop: 8 }}>
-                    <AppButton
-                      label={latest.hasSow ? q.replaceSow : q.uploadSow}
-                      variant="outline"
-                      icon="upload"
-                      onPress={() => void onUploadSow()}
-                      disabled={busy}
-                    />
-                  </View>
-                ) : null}
+                <ListRow
+                  title={sw.open}
+                  chevron
+                  last
+                  onPress={() => void openSow()}
+                />
               </>
             )}
             <View style={{ marginTop: 12 }}>

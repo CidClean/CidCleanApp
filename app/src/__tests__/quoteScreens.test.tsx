@@ -126,23 +126,16 @@ describe('Quote en la app (D-077, D-208, D-209)', () => {
     expect(screen.getByDisplayValue('Pisos, baños y cocina')).toBeTruthy();
   });
 
-  test('Enviar sin SOW no llama al servidor y lo dice', async () => {
-    mockFetchSiteQuote.mockResolvedValue(siteQuote([version({ lines: { services: [{ label: 'A', amount: 10, taxable: true }], addons: [], discounts: [] } })]));
-    await render(<SiteQuoteScreen />);
-    await fireEvent.press(await screen.findByText(q.send));
-    expect(screen.getByText(q.sowRequired)).toBeTruthy();
-    expect(mockSend).not.toHaveBeenCalled();
-  });
-
-  test('Enviar guarda el borrador y lo envía; avisa a cuántos correos', async () => {
+  test('orden 112: Enviar guarda el borrador y abre "Scope of Work" (allí se envía), sin pedir subir un SOW', async () => {
     mockFetchSiteQuote.mockResolvedValue(
-      siteQuote([version({ hasSow: true, sowPath: 'q1/v1/sow-a.pdf', recipients: ['b@x.com'], lines: { services: [{ label: 'A', amount: 10, taxable: true }], addons: [], discounts: [] } })]),
+      siteQuote([version({ recipients: ['b@x.com'], lines: { services: [{ label: 'A', amount: 10, taxable: true }], addons: [], discounts: [] } })]),
     );
     await render(<SiteQuoteScreen />);
+    expect(screen.queryByText(q.uploadSow)).toBeNull();
     await fireEvent.press(await screen.findByText(q.send));
-    await waitFor(() => expect(mockSend).toHaveBeenCalledWith('v1'));
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/sow/[versionId]', params: expect.objectContaining({ versionId: 'v1' }) })));
     expect(mockSave).toHaveBeenCalledWith('v1', expect.objectContaining({ taxRate: 6, validDays: 30, recipients: ['b@x.com'] }));
-    expect(await screen.findByText(q.sentOk(2))).toBeTruthy();
+    expect(mockSend).not.toHaveBeenCalled();
   });
 
   test('un correo opcional inválido no se agrega', async () => {
