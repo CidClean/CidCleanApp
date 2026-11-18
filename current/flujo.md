@@ -19,9 +19,9 @@ Un lead es una empresa con datos justos para hacer contacto, y su meta es conseg
 
 - **Fuentes:** web, campañas de marketing y registro manual.
 - **Datos:** empresa, persona de contacto, teléfono, email, fuente y notas. Nada más específico en esta etapa.
-- **Estados:** Nuevo → Contactado → Walkthrough agendado → Walkthrough hecho → Quote enviado → Negociación → Ganado o Perdido (con motivo de la lista de partida, ver "Listas de partida").
+- **Estados (automáticos, D-332 y D-333):** en frío, Nuevo → Esperando respuesta (al abrir el correo) → Follow up (7 días sin respuesta: toca escribir) → Esperando respuesta → 2nd follow up (30 días desde el primer contacto: toca escribir) → Esperando respuesta → Sin respuesta (14 días después: la app avisa y el dueño decide). El botón "Respondió" pasa el lead a Interesado en cualquier momento; un lead del sitio web entra directo a Interesado. Después, automáticos: Walkthrough agendado → Walkthrough hecho → Quote enviado → Negociación → Ganado o Perdido (con motivo de la lista de partida). "Cambiar estado" queda en el menú del lead solo para corregir. Copia visual: `../surveys/flujo-leads-aprobado.html`.
 - **Walkthrough agendado:** se registra como cita, no solo como estado.
-- **Seguimiento:** el lead genera recordatorios de seguimiento.
+- **Seguimiento:** Inicio muestra cuántos leads toca escribir hoy; la lista de Leads va en pestañas Hoy, Por contactar, Esperando, En venta y Cerrados, y cada fila trae "Escribir" (vista previa con la plantilla del paso) y "Respondió".
 - **Varios sitios:** un lead puede tener varios sitios, cada uno con su propio walkthrough y su propio quote.
 - **Cliente existente con sitio nuevo:** el walkthrough se crea directo desde el cliente, sin pasar por lead, y entra al mismo flujo de walkthrough y quote.
 - **Asignación:** por ahora solo el dueño hace los walkthroughs, así que los leads no se asignan.
