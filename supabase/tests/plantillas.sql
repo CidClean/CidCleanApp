@@ -78,11 +78,15 @@ select pg_temp.prueba('tres plantillas de prospectos, en orden', 'Primer contact
 select pg_temp.prueba('clientes sin plantillas', '0', (select count(*)::text from email_templates where audience = 'client'));
 select pg_temp.prueba('asuntos exactos', 'Commercial cleaning for {empresa}|Re: Commercial cleaning for {empresa}|Closing the loop',
   (select string_agg(subject, '|' order by sort) from email_templates where audience = 'prospect'));
-select pg_temp.prueba('texto exacto de Primer contacto', 'Hi {nombre},' || chr(10) || chr(10) || 'I''m reaching out from Cid Clean, a commercial cleaning company here in Naples. We clean offices, medical offices, showrooms and warehouses on the schedule that suits each business, usually after hours.' || chr(10) || chr(10) || 'If you''d like, I can visit {dirección} for a free 30-minute walkthrough and send you an exact quote. Would that be useful?' || chr(10) || chr(10) || '{firma}',
+select pg_temp.prueba('texto exacto de Primer contacto (con Best regards, D-330)', 'Hi {nombre},' || chr(10) || chr(10) || 'I''m reaching out from Cid Clean, a commercial cleaning company here in Naples. We clean offices, medical offices, showrooms and warehouses on the schedule that suits each business, usually after hours.' || chr(10) || chr(10) || 'If you''d like, I can visit {dirección} for a free 30-minute walkthrough and send you an exact quote. Would that be useful?' || chr(10) || chr(10) || 'Best regards,' || chr(10) || chr(10) || '{firma}',
   (select body from email_templates where name = 'Primer contacto'));
 select pg_temp.prueba('Seguimiento final termina con Thanks y {firma}', '1',
   (select (body like '%Thanks for your time,' || chr(10) || chr(10) || '{firma}')::int::text from email_templates where name = 'Seguimiento final'));
-select pg_temp.prueba('la siembra no deja historial', '0', (select count(*)::text from change_log where entity = 'email_templates'));
+select pg_temp.prueba('Seguimiento lleva Best regards antes de la firma (D-330)', '1',
+  (select (body like '%Best regards,' || chr(10) || chr(10) || '{firma}')::int::text from email_templates where name = 'Seguimiento'));
+-- La siembra no deja historial; la migración de D-330 deja las 2 ediciones (Primer contacto y Seguimiento) sin autor.
+select pg_temp.prueba('la siembra no deja historial; D-330 deja 2 ediciones sin autor', 'plantilla_editada|plantilla_editada',
+  (select string_agg(action, '|' order by id) from change_log where entity = 'email_templates' and actor_id is null));
 
 -- 2. RLS ----------------------------------------------------------------------------------------------------------
 select pg_temp.prueba('ventas lee las de prospectos', '3', pg_temp.valor('ventas', 'select count(*) from email_templates'));
@@ -104,9 +108,9 @@ select pg_temp.prueba('audiencia no válida', 'ERR:23514', pg_temp.valor('super'
 select pg_temp.prueba('asunto vacío no', 'ERR:23514', pg_temp.valor('super', $q$insert into email_templates (name, audience, subject, body) values ('X', 'client', ' ', 'B') returning id$q$));
 select pg_temp.prueba('el Super Admin borra', 'Aviso', pg_temp.valor('super', $q$delete from email_templates where name = 'Aviso' returning name$q$));
 select pg_temp.prueba('historial: creada, editada y eliminada', 'plantilla_creada|plantilla_editada|plantilla_eliminada',
-  (select string_agg(action, '|' order by id) from change_log where entity = 'email_templates'));
+  (select string_agg(action, '|' order by id) from change_log where entity = 'email_templates' and actor_id is not null));
 select pg_temp.prueba('el historial general lleva el nombre', 'Aviso',
-  (select change_log_safe_detail(detail)->>'plantilla' from change_log where entity = 'email_templates' order by id limit 1));
+  (select change_log_safe_detail(detail)->>'plantilla' from change_log where entity = 'email_templates' and actor_id is not null order by id limit 1));
 
 -- 3. Contexto y registro del envío ------------------------------------------------------------------------------
 do $$
