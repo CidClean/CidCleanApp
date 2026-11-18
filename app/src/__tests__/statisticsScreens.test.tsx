@@ -40,7 +40,7 @@ jest.mock('@/lib/scheduleApi', () => ({
 }));
 jest.mock('@/lib/workQueue', () => ({ syncWorkQueue: jest.fn(async () => 'synced'), loadShift: jest.fn(async () => null), saveShift: jest.fn(), enqueue: jest.fn() }));
 jest.mock('@/lib/quotesApi', () => ({ fetchQuotePending: jest.fn().mockResolvedValue([]) }));
-jest.mock('@/lib/leadsApi', () => ({ fetchSalesPending: jest.fn(async () => ({ ok: false, reason: 'network' })) }));
+jest.mock('@/lib/leadsApi', () => ({ fetchSalesPending: jest.fn(async () => ({ ok: false, reason: 'network' })), fetchLeadsFollowup: jest.fn(async () => ({ ok: false, reason: 'network' })) }));
 const mockStats = { report: jest.fn(), home: jest.fn() };
 jest.mock('@/lib/statisticsApi', () => ({
   fetchStatistics: (...a: unknown[]) => mockStats.report(...a),

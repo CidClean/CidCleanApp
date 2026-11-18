@@ -166,6 +166,7 @@ beforeEach(() => {
   mockAccess = { isSuperAdmin: true, permissions: new Set() };
   mockParams = { id: 'l1' };
   mockFetchLeads.mockResolvedValue({ ok: true, data: [] });
+  mockFollowup.mockResolvedValue({ ok: false, reason: 'network' });
   mockFetchLead.mockResolvedValue({ ok: true, data: lead });
   mockReasons.mockResolvedValue({ ok: true, data: reasons });
   mockDays.mockResolvedValue({ ok: true, data: new Set() });
@@ -292,23 +293,53 @@ describe('Detalle del lead (D-070, D-071)', () => {
     expect(screen.getByText('ana@gulfcoastdental.com')).toBeTruthy();
   });
 
-  it('tarjeta principal (D-226): Llamar abre tel: y Correo abre mailto:', async () => {
+  it('tarjeta principal (D-226, D-333): Llamar abre tel:, Correo abre las plantillas y no hay "Enviar correo"', async () => {
     const { Linking } = require('react-native');
     const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    mockFetchLead.mockResolvedValue({ ok: true, data: { ...lead, status: 'follow_up' } });
     await render(<LeadDetailScreen />);
     await screen.findByText('Gulf Coast Dental');
     await fireEvent.press(screen.getByText('Llamar'));
     expect(open).toHaveBeenCalledWith('tel:2395550142');
     await fireEvent.press(screen.getByText('Correo'));
-    expect(open).toHaveBeenCalledWith('mailto:ana@gulfcoastdental.com');
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/send-email', params: { kind: 'lead', id: 'l1', step: 'follow_up' } });
+    expect(screen.queryByText('Enviar correo')).toBeNull();
     open.mockRestore();
+  });
+
+  it('Seguimiento: línea de tiempo con el siguiente paso; Respondió confirma en la pantalla', async () => {
+    mockResponded.mockResolvedValue({ ok: true, data: 'interested' });
+    mockFetchLead.mockResolvedValue({
+      ok: true,
+      data: { ...lead, status: 'waiting', followupsSent: 1, firstContactAt: new Date(2026, 10, 10, 9), followupSentAt: new Date(2026, 10, 18, 9), nextStepOn: '2026-12-10' },
+    });
+    await render(<LeadDetailScreen />);
+    expect((await screen.findAllByText('Seguimiento')).length).toBeGreaterThan(0);
+    expect(screen.getByText('10 nov · Primer contacto (correo)')).toBeTruthy();
+    expect(screen.getByText('18 nov · Follow up (correo)')).toBeTruthy();
+    expect(screen.getByText('10 dic · Toca 2nd follow up')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Respondió'));
+    await fireEvent.press(screen.getByText('Sí, respondió'));
+    await waitFor(() => expect(mockResponded).toHaveBeenCalledWith('l1'));
+  });
+
+  it('Sin respuesta: Reintentar o Marcar perdido desde el detalle', async () => {
+    mockDecide.mockResolvedValue({ ok: true, data: 'lost' });
+    mockFetchLead.mockResolvedValue({ ok: true, data: { ...lead, status: 'no_response', nextStepOn: '2026-12-02' } });
+    await render(<LeadDetailScreen />);
+    await screen.findAllByText('Seguimiento');
+    expect(screen.getByText('Reintentar')).toBeTruthy();
+    await fireEvent.press(screen.getAllByText('Marcar perdido (Sin respuesta)')[0]);
+    await fireEvent.press(screen.getAllByText('Marcar perdido (Sin respuesta)').slice(-1)[0]);
+    await waitFor(() => expect(mockDecide).toHaveBeenCalledWith('l1', 'lost'));
   });
 
   it('elegir Perdido abre Marcar como perdido sin guardar', async () => {
     await render(<LeadDetailScreen />);
     await screen.findByText('Gulf Coast Dental');
-    // D-226: el estado va en el botón fijo de abajo.
-    await fireEvent.press(screen.getByLabelText(/^Estado: /));
+    // D-333 (3): "Cambiar estado" queda en el menú del lead, solo para corregir.
+    await fireEvent.press(screen.getByText('Cambiar estado'));
     await fireEvent.press(screen.getByText('Perdido'));
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/leads/[id]/lost', params: { id: 'l1' } });
     expect(mockSetStatus).not.toHaveBeenCalled();
@@ -318,7 +349,7 @@ describe('Detalle del lead (D-070, D-071)', () => {
     mockSetStatus.mockResolvedValue({ ok: true, data: null });
     await render(<LeadDetailScreen />);
     await screen.findByText('Gulf Coast Dental');
-    await fireEvent.press(screen.getByLabelText(/^Estado: /));
+    await fireEvent.press(screen.getByText('Cambiar estado'));
     await fireEvent.press(screen.getByText('Negociación'));
     await waitFor(() => expect(mockSetStatus).toHaveBeenCalledWith('l1', 'negotiation'));
   });
@@ -327,7 +358,8 @@ describe('Detalle del lead (D-070, D-071)', () => {
     mockAccess = { isSuperAdmin: false, permissions: new Set(['leads_ver']) };
     await render(<LeadDetailScreen />);
     await screen.findByText('Gulf Coast Dental');
-    expect(screen.queryByLabelText(/^Estado: /)).toBeNull();
+    expect(screen.queryByText('Cambiar estado')).toBeNull();
+    expect(screen.queryByText('Respondió')).toBeNull();
     expect(screen.queryByText('Editar')).toBeNull();
     await fireEvent.press(screen.getByText('Sitios'));
     expect(screen.getByText('5th Ave S')).toBeTruthy();
@@ -469,6 +501,20 @@ describe('Inicio del admin: pendientes de Ventas (D-111)', () => {
     expect(screen.queryByText('Todo al día')).toBeNull();
     await fireEvent.press(screen.getByText('Seguimientos'));
     expect(mockNavigate).toHaveBeenCalledWith('/pipeline');
+  });
+
+  it('Hoy te toca escribir con Ver (Leads en Hoy), Esperando respuesta y Sin respuesta · decide (D-333 (4))', async () => {
+    mockFollowup.mockResolvedValue({ ok: true, data: { toWrite: 6, waiting: 12, noResponse: 2 } });
+    await render(<HomeScreen />);
+    expect(await screen.findByText('Hoy te toca escribir')).toBeTruthy();
+    expect(screen.getByText('6 leads')).toBeTruthy();
+    expect(screen.getByText('Esperando respuesta')).toBeTruthy();
+    expect(screen.getByText('12')).toBeTruthy();
+    expect(screen.getByText('Sin respuesta · decide')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Ver'));
+    expect(mockNavigate).toHaveBeenCalledWith({ pathname: '/pipeline', params: { tab: 'today' } });
+    await fireEvent.press(screen.getByText('Esperando respuesta'));
+    expect(mockNavigate).toHaveBeenCalledWith({ pathname: '/pipeline', params: { tab: 'waiting' } });
   });
 
   it('sin pendientes: Todo al día', async () => {

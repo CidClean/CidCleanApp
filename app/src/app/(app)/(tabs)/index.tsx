@@ -10,9 +10,10 @@ import { ApproveIcon, CalendarIcon, QuoteDueIcon, WalkthroughIcon } from '@/comp
 import { SlideToMark } from '@/components/SlideToMark';
 import { WeekStrip } from '@/components/WeekStrip';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
+import type { SalesStrings } from '@/i18n/sales';
 import { useStrings } from '@/i18n/useStrings';
 import { salesPendingRows, showsSalesPending, sortPending, type SalesPendingCounts } from '@/lib/leadRules';
-import { fetchSalesPending } from '@/lib/leadsApi';
+import { fetchLeadsFollowup, fetchSalesPending, type LeadsFollowupCounts } from '@/lib/leadsApi';
 import { fetchQuotePending, type QuotePending } from '@/lib/quotesApi';
 import { useQuoteStrings } from '@/i18n/useQuoteStrings';
 import { useWalkthroughStrings } from '@/i18n/useWalkthroughStrings';
@@ -62,6 +63,8 @@ function AdminHome() {
   const router = useRouter();
   const { access } = usePermissions();
   const [sales, setSales] = useState<SalesPendingCounts | null>(null);
+  // D-333 (4): Hoy te toca escribir, Esperando respuesta y Sin respuesta · decide (con leads_ver).
+  const [flow, setFlow] = useState<LeadsFollowupCounts | null>(null);
   const salesVisible = showsSalesPending(access);
   // Hito 4 (D-209, D-131): decisiones del cliente sin ver y quotes por vencer (Urgente).
   const q = useQuoteStrings();
@@ -76,6 +79,9 @@ function AdminHome() {
       if (salesVisible) {
         void fetchSalesPending().then((result) => {
           if (!cancelled && result.ok) setSales(result.data);
+        });
+        void fetchLeadsFollowup().then((result) => {
+          if (!cancelled && result.ok) setFlow(result.data);
         });
       }
       return () => {
@@ -161,6 +167,13 @@ function AdminHome() {
         <Greeting name={profile?.fullName ?? ''} avatar />
         {/* D-223 (estilo C): mosaico de 2 columnas; D-111 y D-131: pendientes por urgencia, solo de las áreas con permiso. */}
         <Bento>
+          {salesVisible && flow ? (
+            <LeadsFollowupCards
+              counts={flow}
+              s={s}
+              onOpen={(tab) => router.navigate({ pathname: '/pipeline', params: { tab } })}
+            />
+          ) : null}
           {cards.profit && home?.month ? <ProfitCard m={home.month} /> : null}
           {cards.receivable && home?.receivable ? <ReceivableCard r={home.receivable} /> : null}
           {cards.toApprove && home?.toApprove ? (
@@ -273,6 +286,52 @@ function AdminHome() {
         </Bento>
       </ScrollView>
     </View>
+  );
+}
+
+/**
+ * Inicio (D-333 (4), survey flujo-leads-aprobado, pantalla 1): "Hoy te toca escribir: N" con "Ver" (abre Leads en Hoy)
+ * y las filas "Esperando respuesta" y "Sin respuesta · decide" con su número.
+ */
+function LeadsFollowupCards({ counts, s, onOpen }: { counts: LeadsFollowupCounts; s: SalesStrings; onOpen: (tab: 'today' | 'waiting') => void }) {
+  const { colors, status } = useTheme();
+  return (
+    <>
+      <Card tone="brand" wide accessibilityLabel={`${s.flow.homeToWrite}: ${counts.toWrite}`} onPress={() => onOpen('today')} style={styles.flowHero}>
+        <View style={{ flex: 1, gap: 2 }}>
+          <AppText size={13} color="#FFFFFF" style={{ opacity: 0.85 }}>
+            {s.flow.homeToWrite}
+          </AppText>
+          <AppText weight="heavy" size={26} color="#FFFFFF">
+            {s.flow.homeToWriteCount(counts.toWrite)}
+          </AppText>
+        </View>
+        <View style={styles.flowSee}>
+          <AppText weight="heavy" size={13} color={colors.brandText}>
+            {s.flow.homeSee}
+          </AppText>
+        </View>
+      </Card>
+      <CardBlock style={{ width: '100%' }}>
+        <ListRow
+          title={s.flow.homeWaiting}
+          detail={s.flow.homeWaitingDetail}
+          right={<AppText weight="heavy">{String(counts.waiting)}</AppText>}
+          onPress={() => onOpen('waiting')}
+        />
+        <ListRow
+          title={s.flow.homeNoResponse}
+          detail={s.flow.homeNoResponseDetail}
+          right={
+            <AppText weight="heavy" color={counts.noResponse > 0 ? status.error : colors.text}>
+              {String(counts.noResponse)}
+            </AppText>
+          }
+          onPress={() => onOpen('today')}
+          last
+        />
+      </CardBlock>
+    </>
   );
 }
 
@@ -624,6 +683,8 @@ function StaffCards({ visits, onChanged, weekCard = true, contractor = false }: 
 }
 
 const styles = StyleSheet.create({
+  flowHero: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 },
+  flowSee: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 8, paddingHorizontal: 14 },
   page: { paddingHorizontal: 16, paddingBottom: 16 },
   greeting: { paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   avatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },

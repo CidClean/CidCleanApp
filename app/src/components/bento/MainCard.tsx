@@ -15,7 +15,7 @@ type Props = {
   /** Cifra o línea extra en 800 (tarifa mensual del jobsite). */
   figure?: string;
   /** Llamar (tel:) y Correo (mailto:), como el detalle del lead (D-226). */
-  contact?: { phone: string | null; email: string | null; callLabel: string; mailLabel: string };
+  contact?: { phone: string | null; email: string | null; callLabel: string; mailLabel: string; onMail?: () => void };
   children?: ReactNode;
 };
 
@@ -24,6 +24,8 @@ export function MainCard({ title, subtitle, chip, figure, contact, children }: P
   const { brand } = useTheme();
   const phone = contact?.phone ? phoneDigits(contact.phone) : '';
   const email = contact?.email ?? '';
+  // D-332 (5) y orden 132: con onMail, Correo abre las plantillas (la vista previa pide el correo si falta).
+  const onMail = contact?.onMail ?? (email ? () => void Linking.openURL(`mailto:${email}`) : undefined);
   return (
     <Card tone="brand" wide style={{ padding: 18, gap: 12, marginBottom: 12 }}>
       <View style={styles.head}>
@@ -50,7 +52,7 @@ export function MainCard({ title, subtitle, chip, figure, contact, children }: P
           </View>
         ) : null}
       </View>
-      {contact && (phone || email) ? (
+      {contact && (phone || email || contact.onMail) ? (
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <Pressable
             accessibilityRole="link"
@@ -65,9 +67,9 @@ export function MainCard({ title, subtitle, chip, figure, contact, children }: P
           </Pressable>
           <Pressable
             accessibilityRole="link"
-            accessibilityState={{ disabled: !email }}
-            onPress={email ? () => void Linking.openURL(`mailto:${email}`) : undefined}
-            style={[styles.button, { backgroundColor: 'rgba(255,255,255,0.18)', opacity: email ? 1 : 0.5 }]}
+            accessibilityState={{ disabled: !onMail }}
+            onPress={onMail}
+            style={[styles.button, { backgroundColor: 'rgba(255,255,255,0.18)', opacity: onMail ? 1 : 0.5 }]}
           >
             <Icon name="mail" size={18} strokeWidth={1.8} color="#FFFFFF" />
             <AppText weight="bold" size={14} color="#FFFFFF">

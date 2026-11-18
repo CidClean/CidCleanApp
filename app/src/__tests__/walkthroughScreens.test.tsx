@@ -83,6 +83,7 @@ const mockFetchLead = jest.fn();
 jest.mock('@/lib/leadsApi', () => ({
   fetchLead: (...a: unknown[]) => mockFetchLead(...a),
   fetchSalesPending: async () => ({ ok: false, reason: 'network' }),
+  fetchLeadsFollowup: async () => ({ ok: false, reason: 'network' }),
 }));
 // El Inicio también pide los pendientes de los quotes (hito 4).
 jest.mock('@/lib/quotesApi', () => ({ fetchQuotePending: async () => [] }));

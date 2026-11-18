@@ -4,7 +4,6 @@ import { Redirect, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-
 import { CleaningTypeField } from '@/components/contract/CleaningTypeField';
 import { useCallback, useState } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FormScroll } from '@/components/FormScroll';
 import { Bento, Card, CardBlock, useCardText, type CardTone } from '@/components/bento/Card';
@@ -17,6 +16,7 @@ import { ListRow } from '@/components/ListRow';
 import { LeadFormFields } from '@/components/sales/LeadFormFields';
 import { SiteRequests } from '@/components/sales/SiteRequests';
 import { SendEmailBlock } from '@/components/sales/SendEmailBlock';
+import { LeadFlowButtons, LeadFlowDialog, useWriteToLead, type FlowAsk } from '@/components/sales/LeadFlow';
 import { Icon } from '@/components/Icon';
 import { SelectField } from '@/components/SelectField';
 import { Sheet } from '@/components/Sheet';
@@ -32,7 +32,10 @@ import {
   dateFromKey,
   formatDateTime,
   formatShortDate,
+  dayMonth,
+  followupTimeline,
   hasLeadErrors,
+  isColdStatus,
   leadFormFrom,
   reasonLabel,
   siteLabel,
@@ -76,7 +79,6 @@ export default function LeadDetailScreen() {
   const { access } = usePermissions();
   const w = useWalkthroughStrings();
   const q = useQuoteStrings();
-  const insets = useSafeAreaInsets();
 
   const [lead, setLead] = useState<Lead | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -92,6 +94,8 @@ export default function LeadDetailScreen() {
   const [confirm, setConfirm] = useState<{ kind: 'lead' } | { kind: 'site'; site: LeadSite } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<'lead' | 'site' | 'siteDone' | null>(null);
+  const [ask, setAsk] = useState<FlowAsk | null>(null);
+  const write = useWriteToLead();
 
   const seesQuotes = canAny(access, ['quotes_ver', 'quotes_editar', 'quotes_enviar']);
   const load = useCallback(async () => {
@@ -210,7 +214,15 @@ export default function LeadDetailScreen() {
         {loadFailed && !lead ? <AppAlert tone="error" text={s.detail.errorLoad} /> : null}
         {lead && section === null && !editing ? (
           <Bento>
-            <LeadMainCard lead={lead} s={s} />
+            <LeadMainCard
+              lead={lead}
+              s={s}
+              onMail={() => write(lead.id, lead.status)}
+              onResponded={canEdit && isColdStatus(lead.status) ? () => setAsk({ kind: 'responded', id: lead.id, company: lead.company }) : undefined}
+            />
+            {isColdStatus(lead.status) || lead.firstContactAt ? (
+              <FollowupCard lead={lead} s={s} canEdit={canEdit} onAsk={setAsk} />
+            ) : null}
             <Card tone="attention" onPress={() => openSection('walkthrough')} accessibilityLabel={s.detail.tabWalkthrough} style={styles.tile}>
               <LeadCalendarIcon />
               <TileText title={s.detail.tabWalkthrough} line={walkthroughLine(lead, s, w)} tone="attention" />
@@ -233,6 +245,25 @@ export default function LeadDetailScreen() {
               <DataSection lead={lead} s={s} locale={locale} />
               {/* Orden 120 (D-321, D-323): Enviar correo con plantilla de prospectos y su línea de tiempo. */}
               <SendEmailBlock kind="lead" id={lead.id} />
+              {/* D-333 (3): "Cambiar estado" solo para corregir, en el menú del lead (ya no en un botón fijo). */}
+              {canEdit ? (
+                <View style={{ marginTop: 8 }}>
+                  {statusError ? <AppAlert tone="error" text={s.detail.errorStatus} /> : null}
+                  <SelectField
+                    label={s.flow.changeStatus}
+                    options={LEAD_STATUSES.map((v) => ({ value: v, label: s.status[v] }))}
+                    value={lead.status}
+                    onChange={(v) => void changeStatus(v)}
+                    renderTrigger={(_label, open) => (
+                      <Pressable accessibilityRole="button" onPress={open} style={styles.dangerText}>
+                        <AppText weight="medium" size={sample.buttonSize} color={colors.text}>
+                          {s.flow.changeStatus}
+                        </AppText>
+                      </Pressable>
+                    )}
+                  />
+                </View>
+              ) : null}
               {canDeleteLeads(access) ? (
                 <View>
                   {deleteError === 'lead' ? <AppAlert tone="error" text={s.detail.errorDelete} /> : null}
@@ -307,26 +338,15 @@ export default function LeadDetailScreen() {
         ) : null}
       </FormScroll>
 
-      {/* D-226: el estado en un botón fijo abajo; abre la hoja de estados (D-071). */}
-      {lead && canEdit && section === null && !editing ? (
-        <View style={[styles.bottom, { paddingBottom: 20 + insets.bottom }]}>
-          {statusError ? <AppAlert tone="error" text={s.detail.errorStatus} /> : null}
-          <SelectField
-            label={s.detail.status}
-            options={LEAD_STATUSES.map((v) => ({ value: v, label: s.status[v] }))}
-            value={lead.status}
-            onChange={(v) => void changeStatus(v)}
-            renderTrigger={(label, open) => (
-              <Pressable accessibilityRole="button" accessibilityLabel={s.detail.statusButton(label)} onPress={open} style={[styles.statusButton, { backgroundColor: colors.darkCard }]}>
-                <AppText weight="bold" size={15} color={colors.darkCardText}>
-                  {s.detail.statusButton(label)}
-                </AppText>
-                <Icon name="chevron-down" size={20} strokeWidth={1.6} color={colors.darkCardText} />
-              </Pressable>
-            )}
-          />
-        </View>
-      ) : null}
+      <LeadFlowDialog
+        ask={ask}
+        s={s}
+        onClose={() => setAsk(null)}
+        onDone={() => {
+          setAsk(null);
+          void load();
+        }}
+      />
 
       <Sheet visible={confirm !== null} onClose={() => setConfirm(null)}>
         <AppText weight="medium" size={sample.headingSize} center>
@@ -496,8 +516,11 @@ function WalkthroughSection({
 }
 
 
-/** Tarjeta principal del lead (D-226): empresa en 24px/800, "Lead · Fuente", estado, Llamar (tel:) y Correo (mailto:). */
-function LeadMainCard({ lead, s }: { lead: Lead; s: SalesStrings }) {
+/**
+ * Tarjeta principal del lead (D-226, D-333 (7)): empresa, "Lead · Fuente", estado, Llamar (tel:), Correo (el único
+ * botón de correo: abre las plantillas con la del paso, D-332 (5)) y Respondió (en frío, con `leads_editar`).
+ */
+function LeadMainCard({ lead, s, onMail, onResponded }: { lead: Lead; s: SalesStrings; onMail: () => void; onResponded?: () => void }) {
   const { brand } = useTheme();
   const phone = lead.phone ? phoneDigits(lead.phone) : '';
   return (
@@ -534,18 +557,55 @@ function LeadMainCard({ lead, s }: { lead: Lead; s: SalesStrings }) {
             {s.detail.call}
           </AppText>
         </Pressable>
-        <Pressable
-          accessibilityRole="link"
-          accessibilityState={{ disabled: !lead.email }}
-          onPress={lead.email ? () => void Linking.openURL(`mailto:${lead.email}`) : undefined}
-          style={[styles.mainButton, { backgroundColor: 'rgba(255,255,255,0.18)', opacity: lead.email ? 1 : 0.5 }]}
-        >
+        <Pressable accessibilityRole="button" onPress={onMail} style={[styles.mainButton, { backgroundColor: 'rgba(255,255,255,0.18)' }]}>
           <Icon name="mail" size={18} strokeWidth={1.8} color="#FFFFFF" />
           <AppText weight="bold" size={14} color="#FFFFFF">
             {s.detail.mail}
           </AppText>
         </Pressable>
+        {onResponded ? (
+          <Pressable accessibilityRole="button" onPress={onResponded} style={[styles.mainButton, { borderWidth: 1, borderColor: '#FFFFFF' }]}>
+            <AppText weight="bold" size={14} color="#FFFFFF">
+              {s.flow.responded}
+            </AppText>
+          </Pressable>
+        ) : null}
       </View>
+    </Card>
+  );
+}
+
+/** Tarjeta "Seguimiento" (D-333 (7)): la línea de tiempo con fechas y el siguiente paso en gris; en Sin respuesta, decidir. */
+function FollowupCard({ lead, s, canEdit, onAsk }: { lead: Lead; s: SalesStrings; canEdit: boolean; onAsk: (a: FlowAsk) => void }) {
+  const { colors, brand } = useTheme();
+  const items = followupTimeline(lead, s);
+  return (
+    <Card wide style={{ gap: 8 }}>
+      <AppText weight="heavy" size={15}>
+        {s.flow.timeline}
+      </AppText>
+      {items.length === 0 ? (
+        <AppText size={13} color={colors.secondary}>
+          {s.flow.tlEmpty}
+        </AppText>
+      ) : (
+        items.map((i) => (
+          <View key={i.key} style={styles.tlRow}>
+            <View style={[styles.tlDot, { backgroundColor: i.pending ? colors.border : brand }]} />
+            <AppText size={13} color={i.pending ? colors.secondary : colors.text}>
+              {`${dayMonth(i.day, s)} · ${i.label}`}
+            </AppText>
+          </View>
+        ))
+      )}
+      {lead.status === 'no_response' ? (
+        <AppText size={13} color={colors.secondary}>
+          {s.flow.noResponseNote}
+        </AppText>
+      ) : null}
+      {lead.status === 'no_response' ? (
+        <LeadFlowButtons id={lead.id} company={lead.company} status={lead.status} canEdit={canEdit} s={s} onAsk={onAsk} />
+      ) : null}
     </Card>
   );
 }
@@ -589,8 +649,8 @@ const styles = StyleSheet.create({
   mainHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 },
   mainChip: { borderRadius: 10, paddingVertical: 4, paddingHorizontal: 10, backgroundColor: 'rgba(255,255,255,0.2)' },
   mainButton: { flex: 1, height: 44, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  bottom: { paddingHorizontal: 16, paddingTop: 8 },
-  statusButton: { height: 52, borderRadius: 18, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  tlRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  tlDot: { width: 8, height: 8, borderRadius: 4 },
   // Lápiz y papelera de 18px con 14px entre ellos (muestra ronda 12, D-113).
   rowIcons: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   // Botón de texto rojo (D-201): mismo alto que los botones (40px), sin contorno.

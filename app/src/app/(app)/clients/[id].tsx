@@ -137,7 +137,14 @@ export default function ClientScreen() {
               title={client.name}
               subtitle={`${c.client.barTitle} · ${c.list.jobsitesCount(jobsites.length)}`}
               chip={client.accountProvider ? c.accountProvider : client.legacy ? c.legacy : undefined}
-              contact={{ phone: client.phone, email: client.email, callLabel: s.detail.call, mailLabel: s.detail.mail }}
+              contact={{
+                phone: client.phone,
+                email: client.email,
+                callLabel: s.detail.call,
+                mailLabel: s.detail.mail,
+                // Orden 132 (D-332 (5) por coherencia, D-200): Correo abre las plantillas del cliente.
+                onMail: () => router.push({ pathname: '/send-email', params: { kind: 'client', id: client.id } }),
+              }}
             />
             {form ? (
               <>

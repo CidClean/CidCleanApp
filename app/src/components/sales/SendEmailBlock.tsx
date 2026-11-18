@@ -1,8 +1,7 @@
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
-import { AppButton } from '../AppButton';
 import { AppText } from '../AppText';
 import { CardBlock } from '../bento/Card';
 import { ListRow } from '../ListRow';
@@ -14,11 +13,11 @@ import { formatDateTime } from '@/lib/leadRules';
 import { sample, useTheme } from '@/theme';
 
 /**
- * "Enviar correo" del lead o del cliente (D-321, D-323 (1)) y, debajo, la línea de tiempo de los correos con plantilla
+ * Lista "Correos enviados" del lead o del cliente: la línea de tiempo de los correos con plantilla
  * y los recordatorios automáticos del quote (fecha, plantilla y quién, D-321 (5)). D-200: lista compacta de 5.
+ * Orden 132 (D-332 (5)): el botón "Enviar correo" se eliminó; el correo se abre con "Correo" de la tarjeta principal.
  */
 export function SendEmailBlock({ kind, id }: { kind: TemplateEntity; id: string }) {
-  const router = useRouter();
   const t = useEmailTemplatesStrings();
   const s = useSalesStrings();
   const { colors } = useTheme();
@@ -38,10 +37,9 @@ export function SendEmailBlock({ kind, id }: { kind: TemplateEntity; id: string 
 
   return (
     <View style={{ marginTop: 12 }}>
-      <AppButton label={t.send} icon="mail" variant="outline" onPress={() => router.push({ pathname: '/send-email', params: { kind, id } })} />
       {log.length > 0 ? (
         <>
-          <AppText size={sample.labelSize} color={colors.secondary} style={{ marginTop: 14, marginBottom: 2 }}>
+          <AppText size={sample.labelSize} color={colors.secondary} style={{ marginTop: 2, marginBottom: 2 }}>
             {t.logTitle}
           </AppText>
           <CardBlock>
