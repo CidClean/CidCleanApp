@@ -9,7 +9,11 @@ import type { Locale } from './index';
 export const salesEs = {
   status: {
     new: 'Nuevo', // APROBADO (flujo, D-071)
-    contacted: 'Contactado', // APROBADO (flujo, D-071)
+    waiting: 'Esperando respuesta', // APROBADO (D-333, survey flujo-leads-aprobado)
+    follow_up: 'Follow up', // APROBADO (D-333)
+    follow_up_2: '2nd follow up', // APROBADO (D-333)
+    no_response: 'Sin respuesta', // APROBADO (D-333)
+    interested: 'Interesado', // APROBADO (D-333)
     walkthrough_scheduled: 'Walkthrough agendado', // APROBADO (flujo, D-071)
     walkthrough_done: 'Walkthrough hecho', // APROBADO (flujo, D-071)
     quote_sent: 'Quote enviado', // APROBADO (flujo, D-071)
@@ -196,7 +200,11 @@ export type SalesStrings = typeof salesEs;
 export const salesEn: SalesStrings = {
   status: {
     new: 'New', // lead status
-    contacted: 'Contacted',
+    waiting: 'Waiting for reply', // lead status: first email sent, no reply yet
+    follow_up: 'Follow up', // lead status: time to send the follow-up email
+    follow_up_2: '2nd follow up', // lead status: time to send the final follow-up
+    no_response: 'No response', // lead status: follow-ups finished without a reply
+    interested: 'Interested', // lead status: replied, now in the sale
     walkthrough_scheduled: 'Walkthrough scheduled',
     walkthrough_done: 'Walkthrough done',
     quote_sent: 'Quote sent',

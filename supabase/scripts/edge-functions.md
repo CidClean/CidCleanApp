@@ -196,3 +196,13 @@ Migraciones (sin aplicar, en este orden): `20261118000001_plantillas_correo.sql`
 ```
 npx supabase@latest functions deploy send-notifications --project-ref <ref> --use-api --no-verify-jwt
 ```
+
+## Orden 130: flujo de leads automático (D-332, D-333)
+
+Migraciones (sin aplicar, en este orden y cada una en su propia transacción): `20261119000001_lead_estados.sql` (valores nuevos del enum `lead_status`: `waiting`, `follow_up`, `follow_up_2`, `no_response`, `interested`) y `20261119000002_flujo_leads.sql`. Aplicarlas **antes** de publicar la app. Datos que cambian: los leads en `contacted` pasan a `waiting` con `first_contact_at = last_contact_at = status_changed_at` (D-334: Follow up el 2026-11-25); los leads `web` en `new` pasan a `interested`; sin historial (triggers apagados durante el cambio).
+
+- Columnas nuevas en `leads`: `first_contact_at`, `last_contact_at`, `followups_sent` (0-2), `followup_sent_at`, `responded_at`; campo calculado `next_step_on(leads)`.
+- `log_template_email` mueve el lead en frío (Nuevo/Follow up/2nd follow up → Esperando). `lead_mark_responded`, `lead_no_response_decide` (`lost` | `retry`) y `home_leads_followup` con `leads_editar`/`leads_ver`.
+- Plazos (7, 30 y 14 días, hora de Naples) en `lead_followups_advance` (solo service role), que llama `notifications_scan` en el cron `cidclean-avisos` que ya existe: **ningún cron cambia y no hay Edge Function que desplegar**. Sin respuesta avisa con el aviso `followup_due` a quien tiene `leads_ver`.
+- `schedule_walkthrough`, `close_walkthrough` y `confirm_send_quote` avanzan desde los estados nuevos (`lead_stage`); `site_submit` crea el lead web en `interested`.
+- Pruebas: `supabase/tests/flujo_leads.sql` (44, termina en rollback).

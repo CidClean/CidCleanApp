@@ -137,7 +137,7 @@ const lead: Lead = {
   email: 'ana@gulfcoastdental.com',
   source: 'web',
   notes: null,
-  status: 'contacted',
+  status: 'waiting',
   lostReason: null,
   lostNote: null,
   createdAt: new Date(2026, 9, 20),
@@ -225,7 +225,7 @@ describe('Detalle del lead (D-070, D-071)', () => {
     await render(<LeadDetailScreen />);
     expect(await screen.findByText('Gulf Coast Dental')).toBeTruthy();
     expect(screen.getByText('Lead · Fuente: web')).toBeTruthy();
-    expect(screen.getAllByText('Contactado').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Esperando respuesta').length).toBeGreaterThan(0);
     expect(screen.getByText('Ana Rivera')).toBeTruthy();
     expect(screen.getByText('ana@gulfcoastdental.com')).toBeTruthy();
   });

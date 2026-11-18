@@ -1,6 +1,8 @@
 import { salesEn, salesEs } from '@/i18n/sales';
 import {
   LEAD_STATUSES,
+  isColdStatus,
+  toLeadStatus,
   activeReasons,
   canDeleteLeads,
   nextReasonSort,
@@ -66,10 +68,14 @@ describe('quién ve y edita leads (current/permisos.md, D-169)', () => {
 });
 
 describe('estados del lead (flujo, D-071, D-079)', () => {
-  it('son los ocho del flujo, en su orden', () => {
+  it('son los del flujo automático (D-333), en su orden', () => {
     expect(LEAD_STATUSES.map((k) => salesEs.status[k])).toEqual([
       'Nuevo',
-      'Contactado',
+      'Esperando respuesta',
+      'Follow up',
+      '2nd follow up',
+      'Sin respuesta',
+      'Interesado',
       'Walkthrough agendado',
       'Walkthrough hecho',
       'Quote enviado',
@@ -80,9 +86,9 @@ describe('estados del lead (flujo, D-071, D-079)', () => {
   });
 
   it('elegir Perdido pide el motivo; el mismo estado no hace nada; los demás se guardan', () => {
-    expect(statusChangeAction('contacted', 'lost')).toBe('askLostReason');
+    expect(statusChangeAction('waiting', 'lost')).toBe('askLostReason');
     expect(statusChangeAction('lost', 'lost')).toBe('none');
-    expect(statusChangeAction('new', 'contacted')).toBe('save');
+    expect(statusChangeAction('new', 'waiting')).toBe('save');
     expect(statusChangeAction('lost', 'negotiation')).toBe('save');
   });
 
@@ -315,7 +321,7 @@ describe('Pipeline en mosaico (D-226)', () => {
   const leads = [
     { ...base, id: '1', company: 'Gulf Coast Dental', status: 'walkthrough_scheduled', nextWalkthrough: new Date(2026, 9, 30) },
     { ...base, id: '2', company: 'Marco Island Offices', status: 'quote_sent' },
-    { ...base, id: '3', company: 'Naples Bay', status: 'contacted', followUpOn: '2026-10-23' },
+    { ...base, id: '3', company: 'Naples Bay', status: 'waiting', followUpOn: '2026-10-23' },
     { ...base, id: '4', company: 'Break TAX', status: 'won', followUpOn: '2026-10-20' },
     { ...base, id: '5', company: 'Otro', status: 'lost' },
   ];
@@ -332,6 +338,14 @@ describe('Pipeline en mosaico (D-226)', () => {
     expect(leadTone('negotiation')).toBe('attention');
     expect(leadTone('won')).toBe('won');
     expect(leadTone('new')).toBe('neutral');
+    expect(leadTone('follow_up')).toBe('attention');
+    expect(leadTone('follow_up_2')).toBe('attention');
+    expect(leadTone('no_response')).toBe('alert');
+    expect(leadTone('waiting')).toBe('brand');
+    expect(toLeadStatus('contacted')).toBe('waiting');
+    expect(toLeadStatus('raro')).toBe('new');
+    expect(isColdStatus('no_response')).toBe(true);
+    expect(isColdStatus('interested')).toBe(false);
     expect(initialsOf('Gulf Coast Dental')).toBe('GC');
   });
 });

@@ -9,10 +9,17 @@ import { can, type Access } from './visibility';
 
 // --- Tipos ------------------------------------------------------------------------------------------
 
-/** Estados del flujo, en su orden (current/flujo.md, D-071). */
+/**
+ * Estados del flujo, en su orden (current/flujo.md, D-071, D-333): en frío (automáticos) y de venta. 'contacted'
+ * ya no se usa: la orden 130 lo pasó a 'waiting' en la base.
+ */
 export const LEAD_STATUSES = [
   'new',
-  'contacted',
+  'waiting',
+  'follow_up',
+  'follow_up_2',
+  'no_response',
+  'interested',
   'walkthrough_scheduled',
   'walkthrough_done',
   'quote_sent',
@@ -69,6 +76,19 @@ export type Lead = {
   /** Fecha del seguimiento abierto (AAAA-MM-DD), si hay. */
   followUpOn: string | null;
   sites: LeadSite[];
+} & FollowupData;
+
+/** Datos del seguimiento automático (D-333, orden 130). */
+export type FollowupData = {
+  firstContactAt?: Date | null;
+  lastContactAt?: Date | null;
+  /** Seguimientos enviados: 0, 1 o 2. */
+  followupsSent?: number;
+  /** Cuándo salió el Follow up (el primero). */
+  followupSentAt?: Date | null;
+  respondedAt?: Date | null;
+  /** Día (AAAA-MM-DD) del siguiente paso automático, o del paso vencido (Follow up, 2nd follow up, Sin respuesta). */
+  nextStepOn?: string | null;
 };
 
 /** Fila de la lista del Pipeline. */
@@ -84,7 +104,8 @@ export type LeadSummary = {
   nextWalkthrough: Date | null;
   /** Fuente (D-226: línea "contacto · fuente" de la tarjeta del Pipeline). */
   source?: LeadSource;
-};
+  email?: string | null;
+} & FollowupData;
 
 // --- Pipeline en mosaico (D-226) -------------------------------------------------------------------------
 
@@ -108,12 +129,21 @@ export function filterPipeline(leads: readonly LeadSummary[], filter: PipelineFi
   return [...leads];
 }
 
-/** Tono de la tarjeta según el estado: marca (walkthrough), ámbar (quote o negociación), neutro o ganado. */
-export function leadTone(status: LeadStatus): 'brand' | 'attention' | 'neutral' | 'won' {
+/**
+ * Tono de la ficha según el estado (survey flujo-leads-aprobado): ámbar lo que toca hacer (Follow up, 2nd follow up,
+ * quote o negociación), rojo Sin respuesta, marca Esperando, Interesado y walkthrough, verde-marca Ganado, neutro el resto.
+ */
+export function leadTone(status: LeadStatus): 'brand' | 'attention' | 'alert' | 'neutral' | 'won' {
   if (status === 'won') return 'won';
-  if (status === 'quote_sent' || status === 'negotiation') return 'attention';
-  if (status === 'walkthrough_scheduled' || status === 'walkthrough_done') return 'brand';
+  if (status === 'no_response') return 'alert';
+  if (status === 'follow_up' || status === 'follow_up_2' || status === 'quote_sent' || status === 'negotiation') return 'attention';
+  if (status === 'waiting' || status === 'interested' || status === 'walkthrough_scheduled' || status === 'walkthrough_done') return 'brand';
   return 'neutral';
+}
+
+/** Etapa en frío (D-333): Nuevo, Esperando, Follow up, 2nd follow up y Sin respuesta. Ahí sirven "Escribir" y "Respondió". */
+export function isColdStatus(status: LeadStatus): boolean {
+  return status === 'new' || status === 'waiting' || status === 'follow_up' || status === 'follow_up_2' || status === 'no_response';
 }
 
 /** Iniciales de la empresa: "Gulf Coast Dental" -> "GC". */
@@ -128,6 +158,12 @@ export function initialsOf(name: string): string {
 
 export function isLeadStatus(v: unknown): v is LeadStatus {
   return typeof v === 'string' && (LEAD_STATUSES as readonly string[]).includes(v);
+}
+
+/** Estado leído de la base: 'contacted' (anterior a la orden 130) se muestra como Esperando; desconocido, Nuevo. */
+export function toLeadStatus(v: unknown): LeadStatus {
+  if (v === 'contacted') return 'waiting';
+  return isLeadStatus(v) ? v : 'new';
 }
 
 export function isLeadSource(v: unknown): v is LeadSource {

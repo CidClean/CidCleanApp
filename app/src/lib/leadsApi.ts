@@ -2,7 +2,7 @@ import { addressBody, addressFromRow, type AddressParts, type AddressRow } from 
 import {
   dayKey,
   isLeadSource,
-  isLeadStatus,
+  toLeadStatus,
   leadColumns,
   leadDisplayName,
   nextScheduled,
@@ -69,7 +69,33 @@ type SummaryRow = {
   created_at: string;
   lead_followups: FollowUpRow[] | null;
   lead_sites: { walkthrough_appointments: AppointmentRow[] | null }[] | null;
+} & FollowupRow;
+
+/** Columnas del seguimiento automático (orden 130) y el campo calculado `next_step_on`. */
+type FollowupRow = {
+  email?: string | null;
+  first_contact_at?: string | null;
+  last_contact_at?: string | null;
+  followups_sent?: number | null;
+  followup_sent_at?: string | null;
+  responded_at?: string | null;
+  next_step_on?: string | null;
 };
+
+const FOLLOWUP_COLUMNS = 'first_contact_at, last_contact_at, followups_sent, followup_sent_at, responded_at, next_step_on';
+
+const dateOrNull = (v: string | null | undefined) => (v ? new Date(v) : null);
+
+export function followupFrom(r: FollowupRow) {
+  return {
+    firstContactAt: dateOrNull(r.first_contact_at),
+    lastContactAt: dateOrNull(r.last_contact_at),
+    followupsSent: r.followups_sent ?? 0,
+    followupSentAt: dateOrNull(r.followup_sent_at),
+    respondedAt: dateOrNull(r.responded_at),
+    nextStepOn: r.next_step_on ?? null,
+  };
+}
 
 export function rowToSummary(r: SummaryRow, now: Date): LeadSummary {
   const appointments = (r.lead_sites ?? []).flatMap((s) => (s.walkthrough_appointments ?? []).map(toAppointment));
@@ -78,11 +104,13 @@ export function rowToSummary(r: SummaryRow, now: Date): LeadSummary {
     company: leadDisplayName(r.company, r.contact_name),
     companyMissing: !(r.company ?? '').trim(),
     contactName: r.contact_name,
-    status: isLeadStatus(r.status) ? r.status : 'new',
+    status: toLeadStatus(r.status),
     createdAt: new Date(r.created_at),
     followUpOn: openFollowUp(r.lead_followups),
     nextWalkthrough: nextScheduled(appointments, now),
     source: isLeadSource(r.source) ? r.source : undefined,
+    email: r.email ?? null,
+    ...followupFrom(r),
   };
 }
 
@@ -91,7 +119,7 @@ export async function fetchLeads(now = new Date()): Promise<LeadsResult<LeadSumm
     const { data, error } = await supabase
       .from('leads')
       .select(
-        'id, company, contact_name, status, source, created_at, lead_followups(due_on, done_at), lead_sites(walkthrough_appointments(id, starts_at, status))',
+        `id, company, contact_name, email, status, source, created_at, ${FOLLOWUP_COLUMNS}, lead_followups(due_on, done_at), lead_sites(walkthrough_appointments(id, starts_at, status))`,
       )
       .order('created_at', { ascending: false });
     if (error) return { ok: false, reason: failureFrom(error.code) };
@@ -116,7 +144,7 @@ type LeadRow = {
   lost_reasons: ReasonRow | null;
   lead_followups: FollowUpRow[] | null;
   lead_sites: SiteRow[] | null;
-};
+} & FollowupRow;
 
 export function rowToLead(r: LeadRow): Lead {
   const sites = [...(r.lead_sites ?? [])]
@@ -147,13 +175,14 @@ export function rowToLead(r: LeadRow): Lead {
     email: r.email,
     source: isLeadSource(r.source) ? r.source : 'manual',
     notes: r.notes,
-    status: isLeadStatus(r.status) ? r.status : 'new',
+    status: toLeadStatus(r.status),
     lostReason: r.lost_reasons ? toReason(r.lost_reasons) : null,
     lostNote: r.lost_note,
     language: r.language === 'es' ? 'es' : 'en',
     createdAt: new Date(r.created_at),
     followUpOn: openFollowUp(r.lead_followups),
     sites,
+    ...followupFrom(r),
   };
 }
 
@@ -162,7 +191,7 @@ export async function fetchLead(id: string): Promise<LeadsResult<Lead>> {
     const { data, error } = await supabase
       .from('leads')
       .select(
-        'id, company, contact_name, phone, email, source, notes, status, lost_note, language, created_at, ' +
+        `id, company, contact_name, phone, email, source, notes, status, lost_note, language, created_at, ${FOLLOWUP_COLUMNS}, ` +
           'lost_reasons(id, label_es, label_en, sort, active), lead_followups(due_on, done_at), ' +
           'lead_sites(id, name, address, address_line1, address_line2, city, state, zip, address_needs_review, facility_type, sqft, web_frequency, created_at, walkthrough_appointments(id, starts_at, status), walkthroughs(current_version))',
       )
@@ -306,6 +335,42 @@ export async function fetchSalesPending(): Promise<LeadsResult<SalesPendingCount
       ok: true,
       data: { followUpsDue: row?.followups_due ?? 0, walkthroughsUpcoming: row?.walkthroughs_upcoming ?? 0 },
     };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/** "Respondió" (RPC lead_mark_responded, D-333): pasa a Interesado y detiene los seguimientos. Devuelve el estado. */
+export async function markLeadResponded(id: string): Promise<LeadsResult<LeadStatus>> {
+  try {
+    const { data, error } = await supabase.rpc('lead_mark_responded', { p_id: id });
+    if (error) return { ok: false, reason: failureFrom(error.code) };
+    return { ok: true, data: toLeadStatus(data) };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/** Sin respuesta (RPC lead_no_response_decide, D-333): "Marcar perdido (Sin respuesta)" o "Reintentar". */
+export async function decideNoResponse(id: string, action: 'lost' | 'retry'): Promise<LeadsResult<LeadStatus>> {
+  try {
+    const { data, error } = await supabase.rpc('lead_no_response_decide', { p_id: id, p_action: action });
+    if (error) return { ok: false, reason: failureFrom(error.code) };
+    return { ok: true, data: toLeadStatus(data) };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+export type LeadsFollowupCounts = { toWrite: number; waiting: number; noResponse: number };
+
+/** Inicio (RPC home_leads_followup, D-333 (4)): te toca escribir, esperando respuesta y sin respuesta. */
+export async function fetchLeadsFollowup(): Promise<LeadsResult<LeadsFollowupCounts>> {
+  try {
+    const { data, error } = await supabase.rpc('home_leads_followup');
+    if (error) return { ok: false, reason: failureFrom(error.code) };
+    const row = (data as { to_write: number; waiting: number; no_response: number }[] | null)?.[0];
+    return { ok: true, data: { toWrite: row?.to_write ?? 0, waiting: row?.waiting ?? 0, noResponse: row?.no_response ?? 0 } };
   } catch {
     return { ok: false, reason: 'network' };
   }

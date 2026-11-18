@@ -123,7 +123,7 @@ update estimator_settings set min_per_visit = 85, place_types = jsonb_set(place_
 select pg_temp.prueba('estimado crea lead', 'ok|true|1130|1520|false',
   (select r->>'status' || '|' || (r->>'new_lead') || '|' || (r->>'range_low') || '|' || (r->>'range_high') || '|' || (r->>'walkthrough_recommended')
    from pg_temp.envio('estimate', 'Ana@Prueba-Est.local', 'ip1') r));
-select pg_temp.prueba('lead web, nuevo, no residencial, sin empresa (D-319)', 'web|new|non_residential|∅|Ana Prueba|ana@prueba-est.local',
+select pg_temp.prueba('lead web, Interesado (D-333), no residencial, sin empresa (D-319)', 'web|interested|non_residential|∅|Ana Prueba|ana@prueba-est.local',
   (select source || '|' || status || '|' || cleaning_type || '|' || coalesce(company, '∅') || '|' || contact_name || '|' || email
      from leads where email = 'ana@prueba-est.local'));
 select pg_temp.prueba('nota con tipo, sq ft, frecuencia, ciudad, ZIP y rango', 'true',
