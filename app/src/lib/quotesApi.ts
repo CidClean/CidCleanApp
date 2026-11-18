@@ -144,13 +144,13 @@ export async function fetchQuotePending(): Promise<QuotePending[]> {
   try {
     const { data, error } = await supabase.rpc('home_quote_pending');
     if (error) return [];
-    return ((data ?? []) as { kind: QuotePending['kind']; version_id: string; lead_id: string | null; jobsite_id: string | null; company: string; site: string }[]).map((r) => ({
+    return ((data ?? []) as { kind: QuotePending['kind']; version_id: string; lead_id: string | null; jobsite_id: string | null; company: string | null; site: string | null }[]).map((r) => ({
       kind: r.kind,
       versionId: r.version_id,
       leadId: r.lead_id ?? null,
       jobsiteId: r.jobsite_id ?? null,
-      company: r.company,
-      site: r.site,
+      company: r.company ?? '',
+      site: r.site ?? '',
     }));
   } catch {
     return [];
@@ -246,5 +246,32 @@ export async function fetchJobsiteExtras(jobsiteId: string): Promise<ApiResult<E
     };
   } catch {
     return { ok: false, reason: 'network' };
+  }
+}
+
+// --- Actividad del Inicio (D-337, migración 20261120000001) ------------------------------------------------------
+
+export type HomeActivity = {
+  kind: 'accepted' | 'rejected' | 'changes_requested';
+  versionId: string;
+  leadId: string | null;
+  jobsiteId: string | null;
+  /** Nombre real: empresa, persona de contacto, correo, cliente o jobsite (nunca null). */
+  name: string;
+  site: string;
+  at: string;
+  seen: boolean;
+};
+
+/** El último hecho relevante (la última decisión de un cliente sobre un quote); null si no hay o sin permiso. */
+export async function fetchHomeActivity(): Promise<HomeActivity | null> {
+  try {
+    const { data, error } = await supabase.rpc('home_activity');
+    if (error) return null;
+    const r = ((data ?? []) as { kind: HomeActivity['kind']; version_id: string; lead_id: string | null; jobsite_id: string | null; name: string | null; site: string | null; at: string; seen: boolean }[])[0];
+    if (!r) return null;
+    return { kind: r.kind, versionId: r.version_id, leadId: r.lead_id ?? null, jobsiteId: r.jobsite_id ?? null, name: r.name ?? '', site: r.site ?? '', at: r.at, seen: r.seen };
+  } catch {
+    return null;
   }
 }

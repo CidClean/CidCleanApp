@@ -1,6 +1,6 @@
 import { documentsLibraryEn, documentsLibraryEs } from '@/i18n/documentsLibrary';
 import { canSeeDocuments, rowTitle, toLibraryDoc, viewerParams, LIBRARY_FILTERS } from './documentsLibrary';
-import { visibleMenuItems } from './visibility';
+import { homeShortcuts } from './visibility';
 
 jest.mock('./supabase', () => ({ supabase: {} }));
 
@@ -13,8 +13,8 @@ describe('Menú → Documentos (orden 115, D-317 4, D-320)', () => {
     expect(canSeeDocuments(acc(['quotes_ver', 'quotes_ver_precios']))).toBe(true);
     expect(canSeeDocuments(acc(['empleados_ver_pagos']))).toBe(true);
     expect(canSeeDocuments(acc([], true))).toBe(true);
-    expect(visibleMenuItems(acc([]))).not.toContain('documents');
-    expect(visibleMenuItems(acc(['clientes_ver']))).toContain('documents');
+    expect(homeShortcuts(acc([]))).not.toContain('documents');
+    expect(homeShortcuts(acc(['clientes_ver']))).toContain('documents');
   });
   it('filtros de la muestra y textos en los dos idiomas', () => {
     expect([...LIBRARY_FILTERS]).toEqual(['all', 'quotes', 'sow', 'contracts', 'walkthroughs', 'personal', 'reports']);

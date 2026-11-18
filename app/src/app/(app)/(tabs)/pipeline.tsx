@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppAlert } from '@/components/AppAlert';
 import { AppText } from '@/components/AppText';
+import { AccountButton } from '@/components/AccountButton';
 import { TitleHeader } from '@/components/bento/Header';
 import { LeadFlowButtons, LeadFlowDialog, LeadStatusChip, type FlowAsk } from '@/components/sales/LeadFlow';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
@@ -78,6 +79,7 @@ export default function LeadsScreen() {
       <TitleHeader
         title={s.flow.title}
         action={canEdit ? { icon: 'plus', label: s.form.newTitle, onPress: () => router.push('/leads/new') } : undefined}
+        right={<AccountButton />}
       />
       <ScrollView contentContainerStyle={styles.page}>
         {!allowed ? (

@@ -1,6 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { statisticsEs as s } from '@/i18n/statistics';
+import { getStrings } from '@/i18n';
+
+const hub = getStrings('es').hub;
 
 // --- Simulaciones --------------------------------------------------------------------------------------------
 const mockPush = jest.fn();
@@ -39,7 +42,7 @@ jest.mock('@/lib/scheduleApi', () => ({
   clockOut: jest.fn(),
 }));
 jest.mock('@/lib/workQueue', () => ({ syncWorkQueue: jest.fn(async () => 'synced'), loadShift: jest.fn(async () => null), saveShift: jest.fn(), enqueue: jest.fn() }));
-jest.mock('@/lib/quotesApi', () => ({ fetchQuotePending: jest.fn().mockResolvedValue([]) }));
+jest.mock('@/lib/quotesApi', () => ({ fetchQuotePending: jest.fn().mockResolvedValue([]), fetchHomeActivity: jest.fn().mockResolvedValue(null) }));
 jest.mock('@/lib/leadsApi', () => ({ fetchSalesPending: jest.fn(async () => ({ ok: false, reason: 'network' })), fetchLeadsFollowup: jest.fn(async () => ({ ok: false, reason: 'network' })) }));
 const mockStats = { report: jest.fn(), home: jest.fn() };
 jest.mock('@/lib/statisticsApi', () => ({
@@ -59,7 +62,6 @@ jest.mock('@/lib/sharePdf', () => ({
 }));
 
 import HomeScreen from '@/app/(app)/(tabs)/index';
-import MenuScreen from '@/app/(app)/(tabs)/menu';
 import StatisticsScreen from '@/app/(app)/statistics/index';
 import { toReport } from '@/lib/statisticsRules';
 
@@ -120,32 +122,32 @@ beforeEach(() => {
 });
 
 describe('Inicio del admin nuevo (D-253)', () => {
-  test('profit del mes con ingreso, personal, gastos y margen; por cobrar; hoy con quién marcó; horas contra 32 h; Pipeline y Cuentas', async () => {
+  test('profit del mes con ingreso, personal, gastos y margen; por cobrar y por aprobar en la fila de cifras (D-337); hoy con quién marcó; horas contra 32 h; sin Pipeline ni Cuentas', async () => {
     await render(<HomeScreen />);
     expect(await screen.findByText(s.home.profitOf('octubre'))).toBeTruthy();
     expect(screen.getByText('$2,940.00')).toBeTruthy();
     expect(screen.getByText(s.home.profitLine('$7,020.00', '$4,080.00', '$0.00'))).toBeTruthy();
     expect(screen.getByText(s.home.margin('41.9'))).toBeTruthy();
-    expect(screen.getByText(s.home.receivable)).toBeTruthy();
-    expect(screen.getByText(s.home.receivableSub('octubre'))).toBeTruthy();
-    expect(screen.getByText(s.home.toApprove)).toBeTruthy();
+    expect(screen.getByLabelText(`$7,020.00 ${hub.toCollect('oct')}`)).toBeTruthy();
+    expect(screen.getByLabelText(`0 ${hub.toApprove(0)}`)).toBeTruthy();
     expect(screen.getByText(s.home.today('11:00 PM'))).toBeTruthy();
     expect(screen.getByText(s.home.scheduledChip(2))).toBeTruthy();
     expect(screen.getByText(s.home.noClockIn)).toBeTruthy();
     expect(screen.getByText(s.home.clockedIn('11:02 PM'))).toBeTruthy();
     expect(screen.getByText(s.home.weekHours)).toBeTruthy();
     expect(screen.getByText(s.home.weekRow('8', '24'))).toBeTruthy();
-    expect(screen.getByText(s.home.pipelineSub(0))).toBeTruthy();
-    expect(screen.getByText(s.home.accountsSub(1, 0))).toBeTruthy();
+    // D-337: Pipeline y Cuentas ya no se repiten en Inicio (viven en Leads y Accounts).
+    expect(screen.queryByText(s.home.pipelineSub(0))).toBeNull();
+    expect(screen.queryByText(s.home.accountsSub(1, 0))).toBeNull();
   });
 
   test('cada tarjeta con su permiso: con solo Aprobar no hay profit, horas de la semana ni Pipeline aunque lleguen datos', async () => {
     mockAccess = { isSuperAdmin: false, permissions: new Set(['work_aprobar']) };
     await render(<HomeScreen />);
-    expect(await screen.findByText(s.home.toApprove)).toBeTruthy();
+    expect(await screen.findByLabelText(`0 ${hub.toApprove(0)}`)).toBeTruthy();
     expect(screen.queryByText(s.home.weekHours)).toBeNull();
     expect(screen.queryByText(s.home.profitOf('octubre'))).toBeNull();
-    expect(screen.queryByText(s.home.receivable)).toBeNull();
+    expect(screen.queryByText(hub.toCollect('oct'))).toBeNull();
     expect(screen.queryByText(s.home.pipeline)).toBeNull();
     expect(screen.queryByText(s.home.today('11:00 PM'))).toBeNull();
   });
@@ -159,15 +161,51 @@ describe('Inicio del admin nuevo (D-253)', () => {
 
   test('Por aprobar lleva a la pestaña de aprobación del Schedule', async () => {
     await render(<HomeScreen />);
-    await fireEvent.press(await screen.findByLabelText(`${s.home.toApprove}: 0 ${s.home.toApproveSub}`));
-    expect(mockPush).toHaveBeenCalledWith({ pathname: '/schedule', params: { tab: 'approve' } });
+    await fireEvent.press(await screen.findByLabelText(`0 ${hub.toApprove(0)}`));
+    expect(mockNavigate).toHaveBeenCalledWith({ pathname: '/schedule', params: { tab: 'approve' } });
   });
 
   test('D-299: cuenta las visitas por aprobar (también la de un 1099 sin marcar), no los turnos', async () => {
     mockStats.home.mockResolvedValue({ ok: true, data: { ...home, toApprove: { visits: 2, shifts: 0, urgent: 0 } } });
     await render(<HomeScreen />);
-    expect(await screen.findByLabelText(`${s.home.toApprove}: 2 ${s.home.toApproveSub}`)).toBeTruthy();
-    expect(s.home.toApproveSub).toBe('visitas esperando');
+    expect(await screen.findByLabelText(`2 ${hub.toApprove(2)}`)).toBeTruthy();
+    expect(hub.toApprove(2)).toBe('visitas por aprobar');
+  });
+});
+
+describe('Inicio unido (D-337)', () => {
+  test('campana abre Notificaciones y el avatar abre Mi cuenta', async () => {
+    await render(<HomeScreen />);
+    await fireEvent.press(await screen.findByLabelText(hub.notifications(0)));
+    expect(mockPush).toHaveBeenCalledWith('/notifications');
+    await fireEvent.press(screen.getByLabelText(getStrings('es').account.open));
+    expect(mockPush).toHaveBeenCalledWith('/account');
+  });
+
+  test('Actividad con el nombre real (ya no "Quote accepted: null") y abre el lead', async () => {
+    const { fetchHomeActivity } = require('@/lib/quotesApi');
+    fetchHomeActivity.mockResolvedValueOnce({
+      kind: 'accepted', versionId: 'v1', leadId: 'l1', jobsiteId: null, name: 'Superior Pool Products', site: 'Main', at: '2026-11-12T15:00:00Z', seen: false,
+    });
+    await render(<HomeScreen />);
+    expect(await screen.findByText(hub.activity)).toBeTruthy();
+    expect(screen.getByText('Superior Pool Products aceptó el quote')).toBeTruthy();
+    expect(screen.queryByText(/null/)).toBeNull();
+    await fireEvent.press(screen.getByText('Superior Pool Products aceptó el quote'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/leads/[id]', params: { id: 'l1' } });
+  });
+
+  test('accesos según permisos: el Super Admin ve los seis; solo estadisticas_ver ve solo Estadísticas', async () => {
+    const view = await render(<HomeScreen />);
+    for (const label of ['Schedule', 'Empleados', 'Accounting', 'Estadísticas', 'Documentos', 'Historial']) {
+      expect(await screen.findByLabelText(label)).toBeTruthy();
+    }
+    await view.unmount();
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['estadisticas_ver']) };
+    await render(<HomeScreen />);
+    expect(await screen.findByLabelText('Estadísticas')).toBeTruthy();
+    expect(screen.queryByLabelText('Empleados')).toBeNull();
+    expect(screen.queryByLabelText('Historial')).toBeNull();
   });
 });
 
@@ -250,15 +288,15 @@ describe('Estadísticas (D-252, D-253)', () => {
   });
 });
 
-describe('Menú: tile de Estadísticas (D-252)', () => {
+describe('Inicio: acceso de Estadísticas (D-252, D-337)', () => {
   test('sale con estadisticas_ver y abre la pantalla; sin el permiso no sale', async () => {
     mockAccess = { isSuperAdmin: false, permissions: new Set(['estadisticas_ver']) };
-    const view = await render(<MenuScreen />);
+    const view = await render(<HomeScreen />);
     await fireEvent.press(screen.getByLabelText(s.title));
     expect(mockPush).toHaveBeenCalledWith('/statistics');
     view.unmount();
     mockAccess = { isSuperAdmin: false, permissions: new Set(['dashboard_global']) };
-    await render(<MenuScreen />);
+    await render(<HomeScreen />);
     expect(screen.queryByLabelText(s.title)).toBeNull();
   });
 });

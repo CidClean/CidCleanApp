@@ -17,12 +17,15 @@ export function TitleHeader({
   title,
   action,
   left,
+  right,
 }: {
   kicker?: string;
   title: string;
   action?: { icon: IconName; label: string; onPress: () => void };
   /** Algo a la izquierda en lugar del texto (perfil del Menú). */
   left?: ReactNode;
+  /** Algo más a la derecha, después de la acción (D-337: el avatar de Mi cuenta en las pestañas). */
+  right?: ReactNode;
 }) {
   const insets = useSafeAreaInsets();
   const { colors, brand } = useTheme();
@@ -45,6 +48,7 @@ export function TitleHeader({
           <Icon name={action.icon} size={22} strokeWidth={2} color="#FFFFFF" />
         </Pressable>
       ) : null}
+      {right}
     </View>
   );
 }

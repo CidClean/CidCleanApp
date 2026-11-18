@@ -86,7 +86,9 @@ jest.mock('@/lib/leadsApi', () => ({
   fetchLeadsFollowup: async () => ({ ok: false, reason: 'network' }),
 }));
 // El Inicio también pide los pendientes de los quotes (hito 4).
-jest.mock('@/lib/quotesApi', () => ({ fetchQuotePending: async () => [] }));
+jest.mock('@/lib/quotesApi', () => ({ fetchQuotePending: async () => [], fetchHomeActivity: async () => null }));
+jest.mock('@/lib/employeesApi', () => ({ fetchEmployees: async () => ({ ok: true, data: [] }), failureFromCode: () => 'unknown' }));
+jest.mock('@/lib/notificationsApi', () => ({ fetchUnreadCount: async () => 0 }));
 jest.mock('@/i18n/useSalesStrings', () => ({ useSalesStrings: () => require('@/i18n/sales').salesEs }));
 jest.mock('@/lib/week', () => ({ ...jest.requireActual('@/lib/week'), fetchWeekVisits: () => Promise.resolve([]) }));
 const mockTakePhoto = jest.fn();

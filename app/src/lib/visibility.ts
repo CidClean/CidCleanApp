@@ -34,17 +34,12 @@ export const ACCOUNTING_KEYS = [
   'reportes_exportar',
 ] as const;
 
-export type TabKey = 'pipeline' | 'accounts' | 'home' | 'menu';
-export type MenuKey =
-  | 'employees'
-  | 'scheduleWork'
-  | 'accounting'
-  | 'statistics'
-  | 'settings'
-  | 'history'
-  | 'notifications'
-  | 'profile'
-  | 'documents';
+export type TabKey = 'home' | 'pipeline' | 'accounts' | 'schedule';
+/** Accesos del Inicio (D-337): los destinos que antes estaban en el Menú. */
+export type ShortcutKey = 'schedule' | 'employees' | 'accounting' | 'statistics' | 'documents' | 'history';
+
+/** Permisos que abren Schedule & Work (hito 6: el schedule o cualquier permiso de Work). */
+export const SCHEDULE_KEYS = ['schedule_ver_editar', 'work_registrar_por_otros', 'work_editar', 'work_aprobar', 'work_revisar_gps'] as const;
 
 export function can(access: Access, key: string): boolean {
   return access.isSuperAdmin || access.permissions.has(key);
@@ -54,12 +49,15 @@ export function canAny(access: Access, keys: readonly string[]): boolean {
   return access.isSuperAdmin || keys.some((k) => access.permissions.has(k));
 }
 
-/** Barra inferior, en el orden de D-132: Pipeline, Cuentas, Inicio y Menú. Inicio y Menú siempre. */
+/**
+ * Barra inferior (D-337): Home, Leads, Accounts y Schedule; ya no hay Menú. Inicio siempre; cada otra pestaña solo
+ * con su permiso. Quien no tiene ninguno (staff) ve solo Inicio, con su horario.
+ */
 export function visibleTabs(access: Access): TabKey[] {
-  const tabs: TabKey[] = [];
+  const tabs: TabKey[] = ['home'];
   if (canAny(access, SALES_KEYS)) tabs.push('pipeline');
   if (can(access, 'clientes_ver')) tabs.push('accounts');
-  tabs.push('home', 'menu');
+  if (canAny(access, SCHEDULE_KEYS)) tabs.push('schedule');
   return tabs;
 }
 
@@ -77,20 +75,25 @@ export function canSeeDocuments(access: Access): boolean {
   );
 }
 
-/** Filas del Menú, en el orden de D-134. Ajustes solo para el Super Admin (D-114). */
-export function visibleMenuItems(access: Access): MenuKey[] {
-  const items: MenuKey[] = [];
+/**
+ * Accesos del Inicio (D-337), en el orden de la muestra: Schedule, Employees, Accounting, Statistics, Documents e
+ * History, cada uno con su permiso. Notificaciones va en la campana; Mi perfil y Ajustes, en "Mi cuenta".
+ */
+export function homeShortcuts(access: Access): ShortcutKey[] {
+  const items: ShortcutKey[] = [];
+  if (canAny(access, SCHEDULE_KEYS)) items.push('schedule');
   if (can(access, 'empleados_ver')) items.push('employees');
-  // Hito 6: el schedule o cualquier permiso de Work (aprobar, editar, revisar GPS o registrar por otros).
-  if (canAny(access, ['schedule_ver_editar', 'work_registrar_por_otros', 'work_editar', 'work_aprobar', 'work_revisar_gps'])) items.push('scheduleWork');
   if (canAny(access, ACCOUNTING_KEYS)) items.push('accounting');
   // D-252: Estadísticas, con su propio permiso (no abre Accounting).
   if (can(access, 'estadisticas_ver')) items.push('statistics');
   if (canSeeDocuments(access)) items.push('documents');
-  if (access.isSuperAdmin) items.push('settings');
   if (can(access, 'historial_ver')) items.push('history');
-  items.push('notifications', 'profile');
   return items;
+}
+
+/** "Company settings" de Mi cuenta (D-337): solo el Super Admin (D-114). */
+export function showsCompanySettings(access: Access): boolean {
+  return access.isSuperAdmin;
 }
 
 /** Inicio del admin para el Super Admin y para quien tenga al menos un permiso; del staff para quien no tenga ninguno. */

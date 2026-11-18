@@ -46,10 +46,10 @@ export const en: Strings = {
   },
 
   nav: {
-    pipeline: 'Pipeline', // bottom bar destination (icon only) and title of its screen
+    pipeline: 'Leads', // bottom bar destination (icon only)
     accounts: 'Accounts',
     home: 'Home',
-    menu: 'Menu',
+    schedule: 'Schedule',
     employees: 'Employees',
     scheduleWork: 'Schedule and Work',
     accounting: 'Accounting',
@@ -86,6 +86,33 @@ export const en: Strings = {
     walkthroughStep: (company: string, step: number) => `${company} · Step ${step} of 5`,
     next: 'Next',
     yourWeek: 'Your week',
+  },
+
+  hub: {
+    toWrite: (n: number) => (n === 1 ? 'lead to write today' : 'leads to write today'),
+    toCollect: (month: string) => `to collect · ${month}`,
+    toApprove: (n: number) => (n === 1 ? 'visit to approve' : 'visits to approve'),
+    history: 'History',
+    activity: 'Activity',
+    activityLine: {
+      accepted: (name: string) => `${name} accepted the quote`,
+      rejected: (name: string) => `${name} rejected the quote`,
+      changes_requested: (name: string) => `${name} requested changes to the quote`,
+    },
+    notifications: (n: number) => (n > 0 ? `Notifications, ${n} unread` : 'Notifications'),
+  },
+
+  account: {
+    title: 'My account',
+    open: 'Open My account',
+    roleLine: (role: string, email: string) => (email ? `${role} · ${email}` : role),
+    me: 'Me',
+    editProfile: 'Edit my profile',
+    editProfileDetail: 'Name, email and account',
+    languageTheme: 'Language · Theme',
+    myNotifications: 'My notifications',
+    company: 'Company settings',
+    termsPrivacy: 'Terms & privacy',
   },
 
   menu: {

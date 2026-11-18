@@ -1,10 +1,11 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/AppText';
-import { Icon } from '@/components/Icon';
+import { AccountButton } from '@/components/AccountButton';
+import { Icon, type IconName } from '@/components/Icon';
 import { Bento, Card, CardBlock, useCardText } from '@/components/bento/Card';
 import { ApproveIcon, CalendarIcon, QuoteDueIcon, WalkthroughIcon } from '@/components/illustrations';
 import { SlideToMark } from '@/components/SlideToMark';
@@ -12,15 +13,17 @@ import { WeekStrip } from '@/components/WeekStrip';
 import { useSalesStrings } from '@/i18n/useSalesStrings';
 import type { SalesStrings } from '@/i18n/sales';
 import { useStrings } from '@/i18n/useStrings';
-import { salesPendingRows, showsSalesPending, sortPending, type SalesPendingCounts } from '@/lib/leadRules';
-import { fetchLeadsFollowup, fetchSalesPending, type LeadsFollowupCounts } from '@/lib/leadsApi';
-import { fetchQuotePending, type QuotePending } from '@/lib/quotesApi';
+import { showsSalesPending, sortPending } from '@/lib/leadRules';
+import { fetchLeadsFollowup, type LeadsFollowupCounts } from '@/lib/leadsApi';
+import { fetchHomeActivity, fetchQuotePending, type HomeActivity, type QuotePending } from '@/lib/quotesApi';
 import { useQuoteStrings } from '@/i18n/useQuoteStrings';
 import { useWalkthroughStrings } from '@/i18n/useWalkthroughStrings';
 import { canDoWalkthroughs, inProgress, type WalkthroughDoc } from '@/lib/walkthroughRules';
 import { listWalkthroughs } from '@/lib/walkthroughStore';
 import { usePermissions, useSession } from '@/lib/session';
-import { canAny, homeKind } from '@/lib/visibility';
+import { canAny, homeKind, homeShortcuts, type ShortcutKey } from '@/lib/visibility';
+import { fetchEmployees } from '@/lib/employeesApi';
+import { fetchUnreadCount } from '@/lib/notificationsApi';
 import { formatTime } from '@/lib/week';
 import { ClockCard } from '@/components/work/ClockCard';
 import { ServiceDayCard } from '@/components/work/ServiceDayCard';
@@ -49,11 +52,14 @@ export default function HomeScreen() {
 }
 
 /**
- * Inicio del admin (D-253, muestra surveys/dashboard-estadisticas-aprobado.html en el bento C1; D-111, D-164, D-223):
- * tarjeta de marca con el profit del mes sobre lo esperado (ingreso, personal, gastos y margen), Por cobrar en ámbar,
- * Por aprobar, las visitas de hoy con quién marcó entrada, las horas de la semana contra el tope de 32 h (solo con el
- * schedule, D-223), y Pipeline y Cuentas; cada tarjeta solo con el permiso de su área (admin_home). Debajo siguen los
- * pendientes por urgencia, los seguimientos, los walkthroughs y "Todo al día" sin pendientes.
+ * Inicio unido (D-337, muestra surveys/navegacion-aprobado.html (1); une Inicio y Menú): saludo con la campana de
+ * notificaciones (punto si hay sin leer) y el avatar de Mi cuenta; tres cifras tocables de lo que toca hoy (leads por
+ * escribir → Leads/Hoy, por cobrar del mes → Accounting, visitas por aprobar → Por aprobar), cada una solo con su
+ * permiso; la tarjeta de profit del mes (D-253); los avisos que piden acción (la visita propia de hoy, las visitas de
+ * hoy, horas de la semana, GPS y entradas, Sin respuesta · decide, quotes por vencer y walkthroughs en curso); los
+ * accesos que estaban en el Menú y la fila "Actividad" con el último hecho y su nombre real (reemplaza la tarjeta
+ * "Quote accepted: null"). Las tarjetas de Pipeline, Cuentas, Esperando respuesta y Seguimientos se quitaron: viven
+ * en Leads y Accounts (D-200).
  */
 function AdminHome() {
   const { colors, status } = useTheme();
@@ -62,24 +68,24 @@ function AdminHome() {
   const s = useSalesStrings();
   const router = useRouter();
   const { access } = usePermissions();
-  const [sales, setSales] = useState<SalesPendingCounts | null>(null);
-  // D-333 (4): Hoy te toca escribir, Esperando respuesta y Sin respuesta · decide (con leads_ver).
+  // D-333 (4): Hoy te toca escribir y Sin respuesta · decide (con leads_ver).
   const [flow, setFlow] = useState<LeadsFollowupCounts | null>(null);
   const salesVisible = showsSalesPending(access);
-  // Hito 4 (D-209, D-131): decisiones del cliente sin ver y quotes por vencer (Urgente).
+  // Hito 4 (D-131): quotes por vencer (Urgente). Las decisiones del cliente pasan a la fila Actividad (D-337).
   const q = useQuoteStrings();
   const [quotes, setQuotes] = useState<QuotePending[]>([]);
+  const [activity, setActivity] = useState<HomeActivity | null>(null);
   const quotesVisible = access.isSuperAdmin || ['quotes_ver', 'quotes_editar', 'quotes_enviar'].some((k) => access.permissions.has(k));
 
   useFocusEffect(
     useCallback(() => {
       if (!salesVisible && !quotesVisible) return;
       let cancelled = false;
-      if (quotesVisible) void fetchQuotePending().then((rows) => !cancelled && setQuotes(rows));
+      if (quotesVisible) {
+        void fetchQuotePending().then((rows) => !cancelled && setQuotes(rows));
+        void fetchHomeActivity().then((row) => !cancelled && setActivity(row));
+      }
       if (salesVisible) {
-        void fetchSalesPending().then((result) => {
-          if (!cancelled && result.ok) setSales(result.data);
-        });
         void fetchLeadsFollowup().then((result) => {
           if (!cancelled && result.ok) setFlow(result.data);
         });
@@ -108,22 +114,22 @@ function AdminHome() {
   );
   const ongoing = walkthroughsVisible ? local : [];
 
-  const quoteRows = quotes.map((r) => ({
-    key: `quote-${r.kind}-${r.versionId}`,
-    title: q.home[r.kind](r.company),
-    detail: q.home.detail(r.site),
-    urgent: r.kind === 'expiring',
-    leadId: r.leadId ?? undefined,
-    jobsiteId: r.jobsiteId ?? undefined,
-  }));
-  const pending = sortPending([...quoteRows, ...salesPendingRows(access, sales, s)]);
-  const salesRows = salesPendingRows(access, sales, s);
-  const otherRows = sortPending(quoteRows);
-  const followUps = salesRows.find((r) => r.key === 'followUps') ? (sales?.followUpsDue ?? 0) : 0;
-  const scheduled = salesRows.find((r) => r.key === 'walkthroughs') ? (sales?.walkthroughsUpcoming ?? 0) : 0;
-  // Hito 6: trabajos por aprobar, GPS fuera de rango, entradas sin marcar a los 30 min y turnos abiertos (D-214).
+  const expiring = sortPending(
+    quotes
+      .filter((r) => r.kind === 'expiring')
+      .map((r) => ({
+        key: `quote-${r.kind}-${r.versionId}`,
+        title: q.home[r.kind](r.company),
+        detail: q.home.detail(r.site),
+        urgent: true,
+        leadId: r.leadId ?? undefined,
+        jobsiteId: r.jobsiteId ?? undefined,
+      })),
+  );
+  // Hito 6: GPS fuera de rango, entradas sin marcar a los 30 min y turnos abiertos (D-214).
   const t = useWorkStrings();
   const st = useStatisticsStrings();
+  const a = useAccountingStrings();
   const seesWork = canAny(access, ['work_aprobar', 'work_editar', 'work_revisar_gps', 'work_registrar_por_otros', 'schedule_ver_editar']);
   const [work, setWork] = useState<WorkPending | null>(null);
   useFocusEffect(
@@ -141,12 +147,12 @@ function AdminHome() {
   const myToday = pickToday(mine.visits, new Date());
   const workCards = work
     ? ([
-        work.gpsOut > 0 ? { key: 'gps', text: t.homeGps(work.gpsOut), urgent: true, tab: 'approve' } : null,
-        work.forgotClockIn > 0 ? { key: 'forgot', text: t.homeForgot(work.forgotClockIn), urgent: true, tab: 'schedule' } : null,
-        work.openShifts > 0 ? { key: 'open', text: t.homeOpen(work.openShifts), urgent: true, tab: 'approve' } : null,
-      ].filter(Boolean) as { key: string; text: string; urgent: boolean; tab: string }[])
+        work.gpsOut > 0 ? { key: 'gps', text: t.homeGps(work.gpsOut), tab: 'approve' } : null,
+        work.forgotClockIn > 0 ? { key: 'forgot', text: t.homeForgot(work.forgotClockIn), tab: 'schedule' } : null,
+        work.openShifts > 0 ? { key: 'open', text: t.homeOpen(work.openShifts), tab: 'approve' } : null,
+      ].filter(Boolean) as { key: string; text: string; tab: string }[])
     : [];
-  // D-253: las tarjetas nuevas salen de admin_home, cada una con su permiso (sin permiso llega null).
+  // D-253: las tarjetas salen de admin_home, cada una con su permiso (sin permiso llega null).
   const cards = homeCards(access);
   const [home, setHome] = useState<AdminHomeData | null>(null);
   useFocusEffect(
@@ -158,99 +164,112 @@ function AdminHome() {
       };
     }, []),
   );
-  const approveCount = home?.toApprove?.visits ?? 0; // D-299: visitas, no turnos
-  const nothing = pending.length === 0 && ongoing.length === 0 && workCards.length === 0 && !myToday && approveCount === 0;
+  // Accesos del Inicio (D-337): Employees lleva "N activos".
+  const shortcuts = homeShortcuts(access);
+  const seesEmployees = shortcuts.includes('employees');
+  const [activeEmployees, setActiveEmployees] = useState<number | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      if (!seesEmployees) return;
+      let cancelled = false;
+      void fetchEmployees().then((r) => {
+        if (!cancelled && r.ok) setActiveEmployees(r.data.filter((e) => e.active).length);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [seesEmployees]),
+  );
+
+  // Tres cifras de lo que toca hoy, cada una solo con su permiso.
+  const figures: Figure[] = [];
+  if (salesVisible && flow)
+    figures.push({ key: 'write', tone: 'plain', value: String(flow.toWrite), label: strings.hub.toWrite(flow.toWrite), onPress: () => router.navigate({ pathname: '/pipeline', params: { tab: 'today' } }) });
+  if (cards.receivable && home?.receivable) {
+    const r = home.receivable;
+    const key = r.month.slice(0, 7);
+    const month = (a.months[Number(r.month.slice(5, 7)) - 1] ?? '').slice(0, 3);
+    figures.push({
+      key: 'collect',
+      tone: 'attention',
+      value: money(r.pending),
+      label: strings.hub.toCollect(month),
+      onPress: () => router.push({ pathname: '/accounting/income', params: { from: key, to: key } }),
+    });
+  }
+  if (cards.toApprove && home?.toApprove) {
+    const n = home.toApprove.visits; // D-299: visitas, no turnos
+    figures.push({ key: 'approve', tone: 'brand', value: String(n), label: strings.hub.toApprove(n), onPress: () => router.navigate({ pathname: '/schedule', params: { tab: 'approve' } }) });
+  }
+
+  const noResponse = salesVisible && flow ? flow.noResponse : 0;
+  const nothing = expiring.length === 0 && ongoing.length === 0 && workCards.length === 0 && !myToday && noResponse === 0 && (home?.toApprove?.visits ?? 0) === 0;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={styles.page}>
-        <Greeting name={profile?.fullName ?? ''} avatar />
-        {/* D-223 (estilo C): mosaico de 2 columnas; D-111 y D-131: pendientes por urgencia, solo de las áreas con permiso. */}
+        <Greeting name={profile?.fullName ?? ''} />
+        {figures.length > 0 ? <FigureRow figures={figures} /> : null}
         <Bento>
-          {salesVisible && flow ? (
-            <LeadsFollowupCards
-              counts={flow}
-              s={s}
-              onOpen={(tab) => router.navigate({ pathname: '/pipeline', params: { tab } })}
-            />
-          ) : null}
           {cards.profit && home?.month ? <ProfitCard m={home.month} /> : null}
-          {cards.receivable && home?.receivable ? <ReceivableCard r={home.receivable} /> : null}
-          {cards.toApprove && home?.toApprove ? (
-            <NumberCard
-              tone={home.toApprove.urgent > 0 ? 'attention' : 'plain'}
-              label={st.home.toApprove}
-              value={home.toApprove.visits}
-              sub={st.home.toApproveSub}
-              onPress={() => router.push({ pathname: '/schedule', params: { tab: 'approve' } })}
-            />
-          ) : null}
           {myToday ? <TodayWorkCard visit={myToday} onChanged={mine.reload} /> : null}
           {cards.today && home?.today ? home.today.map((v) => <TodayVisitCard key={v.id} v={v} />) : null}
           {cards.weekHours && home?.weekHours && home.weekHours.length > 0 ? <WeekHoursCard rows={home.weekHours} /> : null}
           {workCards.map((c) => (
             <Card
               key={c.key}
-              tone={c.urgent ? 'attention' : 'plain'}
+              tone="attention"
               accessibilityLabel={c.text}
-              onPress={() => router.push({ pathname: '/schedule', params: { tab: c.tab } })}
+              onPress={() => router.navigate({ pathname: '/schedule', params: { tab: c.tab } })}
               style={{ gap: 10 }}
             >
-              {c.urgent ? <QuoteDueIcon /> : <ApproveIcon />}
+              <QuoteDueIcon />
               <AppText weight="bold" size={15}>
                 {c.text}
               </AppText>
             </Card>
           ))}
-          {otherRows.map((row) => (
+          {noResponse > 0 ? (
+            <Card
+              tone="attention"
+              accessibilityLabel={`${s.flow.homeNoResponse}: ${noResponse}`}
+              onPress={() => router.navigate({ pathname: '/pipeline', params: { tab: 'today' } })}
+              style={{ gap: 10 }}
+            >
+              <QuoteDueIcon />
+              <AppText weight="bold" size={15}>
+                {`${s.flow.homeNoResponse}: ${noResponse}`}
+              </AppText>
+              <AppText size={12} color={colors.attentionText}>
+                {s.flow.homeNoResponseDetail}
+              </AppText>
+            </Card>
+          ) : null}
+          {expiring.map((row) => (
             <Card
               key={row.key}
-              tone={row.urgent ? 'attention' : 'plain'}
+              tone="attention"
               accessibilityLabel={row.title}
               onPress={() =>
-                'leadId' in row && row.leadId
+                row.leadId
                   ? router.push({ pathname: '/leads/[id]', params: { id: row.leadId } })
-                  : 'jobsiteId' in row && row.jobsiteId
+                  : row.jobsiteId
                     ? router.push({ pathname: '/jobsites/[id]', params: { id: row.jobsiteId } })
                     : router.navigate('/pipeline')
               }
               style={{ gap: 10 }}
             >
-              {row.urgent ? <QuoteDueIcon /> : <ApproveIcon />}
+              <QuoteDueIcon />
               <AppText weight="bold" size={15}>
                 {row.title}
               </AppText>
               {row.detail ? (
-                <AppText size={12} color={row.urgent ? colors.attentionText : colors.secondary}>
-                  {row.urgent ? `${s.home.urgent} · ${row.detail}` : row.detail}
+                <AppText size={12} color={colors.attentionText}>
+                  {`${s.home.urgent} · ${row.detail}`}
                 </AppText>
               ) : null}
             </Card>
           ))}
-          {followUps > 0 ? (
-            <NumberCard tone="plain" label={strings.home.followUps} value={followUps} sub={strings.home.followUpsSub} onPress={() => router.navigate('/pipeline')} />
-          ) : null}
-          {scheduled > 0 ? (
-            <NumberCard tone="dark" label={strings.home.walkthroughs} value={scheduled} sub={strings.home.walkthroughsSub} onPress={() => router.navigate('/pipeline')} />
-          ) : null}
-          {cards.pipeline && home?.pipeline ? (
-            <NumberCard
-              tone="plain"
-              label={st.home.pipeline}
-              value={home.pipeline.open}
-              sub={st.home.pipelineSub(home.pipeline.quoteSent)}
-              onPress={() => router.navigate('/pipeline')}
-            />
-          ) : null}
-          {cards.accounts && home?.accounts ? (
-            <NumberCard
-              tone="plain"
-              label={st.home.accounts}
-              value={home.accounts.active}
-              sub={st.home.accountsSub(home.accounts.active, home.accounts.atRisk)}
-              onPress={() => router.navigate('/accounts')}
-            />
-          ) : null}
           {ongoing.length > 0 ? (
             <Card
               wide
@@ -284,54 +303,122 @@ function AdminHome() {
             </Card>
           ) : null}
         </Bento>
+        {shortcuts.length > 0 ? <Shortcuts items={shortcuts} activeEmployees={activeEmployees} /> : null}
+        {activity ? <ActivityRow activity={activity} /> : null}
       </ScrollView>
     </View>
   );
 }
 
-/**
- * Inicio (D-333 (4), survey flujo-leads-aprobado, pantalla 1): "Hoy te toca escribir: N" con "Ver" (abre Leads en Hoy)
- * y las filas "Esperando respuesta" y "Sin respuesta · decide" con su número.
- */
-function LeadsFollowupCards({ counts, s, onOpen }: { counts: LeadsFollowupCounts; s: SalesStrings; onOpen: (tab: 'today' | 'waiting') => void }) {
-  const { colors, status } = useTheme();
+type Figure = { key: string; tone: 'plain' | 'attention' | 'brand'; value: string; label: string; onPress: () => void };
+
+/** Fila de tres cifras tocables (D-337, muestra: blanca, ámbar y de marca). */
+function FigureRow({ figures }: { figures: Figure[] }) {
   return (
-    <>
-      <Card tone="brand" wide accessibilityLabel={`${s.flow.homeToWrite}: ${counts.toWrite}`} onPress={() => onOpen('today')} style={styles.flowHero}>
-        <View style={{ flex: 1, gap: 2 }}>
-          <AppText size={13} color="#FFFFFF" style={{ opacity: 0.85 }}>
-            {s.flow.homeToWrite}
+    <View style={styles.figures}>
+      {figures.map((f) => (
+        <FigureTile key={f.key} f={f} />
+      ))}
+    </View>
+  );
+}
+
+function FigureTile({ f }: { f: Figure }) {
+  const tx = useCardText(f.tone);
+  const { colors, brand } = useTheme();
+  const bg = f.tone === 'brand' ? brand : f.tone === 'attention' ? colors.attention : colors.card;
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={`${f.value} ${f.label}`} onPress={f.onPress} style={[styles.figure, { backgroundColor: bg }]}>
+      <AppText weight="heavy" size={20} color={f.tone === 'attention' ? colors.attentionText : tx.main} numberOfLines={1} adjustsFontSizeToFit>
+        {f.value}
+      </AppText>
+      <AppText size={11} color={tx.soft} style={{ opacity: tx.softOpacity, lineHeight: 14 }}>
+        {f.label}
+      </AppText>
+    </Pressable>
+  );
+}
+
+const SHORTCUT_ICONS: Record<ShortcutKey, IconName> = {
+  schedule: 'calendar',
+  employees: 'users',
+  accounting: 'chart-bar',
+  statistics: 'chart-line',
+  documents: 'file-text',
+  history: 'history',
+};
+
+const SHORTCUT_ROUTES = {
+  schedule: '/schedule',
+  employees: '/employees',
+  accounting: '/accounting',
+  statistics: '/statistics',
+  documents: '/documents',
+  history: '/history',
+} as const;
+
+/** Accesos del Inicio (D-337): rejilla de 3 columnas con icono y nombre; Employees lleva "N activos". */
+function Shortcuts({ items, activeEmployees }: { items: ShortcutKey[]; activeEmployees: number | null }) {
+  const router = useRouter();
+  const { colors, brand } = useTheme();
+  const strings = useStrings();
+  const label = (k: ShortcutKey) =>
+    k === 'schedule' ? strings.nav.schedule : k === 'history' ? strings.hub.history : strings.nav[k];
+  return (
+    <View style={styles.tiles}>
+      {items.map((k) => (
+        <Pressable
+          key={k}
+          accessibilityRole="button"
+          accessibilityLabel={label(k)}
+          onPress={() => (k === 'schedule' ? router.navigate(SHORTCUT_ROUTES[k]) : router.push(SHORTCUT_ROUTES[k]))}
+          style={[styles.tile, { backgroundColor: colors.card }]}
+        >
+          <Icon name={SHORTCUT_ICONS[k]} size={22} strokeWidth={iconStrokeWidth} color={brand} />
+          <AppText weight="bold" size={12} style={{ textAlign: 'center' }}>
+            {label(k)}
           </AppText>
-          <AppText weight="heavy" size={26} color="#FFFFFF">
-            {s.flow.homeToWriteCount(counts.toWrite)}
-          </AppText>
-        </View>
-        <View style={styles.flowSee}>
-          <AppText weight="heavy" size={13} color={colors.brandText}>
-            {s.flow.homeSee}
-          </AppText>
-        </View>
-      </Card>
-      <CardBlock style={{ width: '100%' }}>
-        <ListRow
-          title={s.flow.homeWaiting}
-          detail={s.flow.homeWaitingDetail}
-          right={<AppText weight="heavy">{String(counts.waiting)}</AppText>}
-          onPress={() => onOpen('waiting')}
-        />
-        <ListRow
-          title={s.flow.homeNoResponse}
-          detail={s.flow.homeNoResponseDetail}
-          right={
-            <AppText weight="heavy" color={counts.noResponse > 0 ? status.error : colors.text}>
-              {String(counts.noResponse)}
+          {k === 'employees' && activeEmployees !== null ? (
+            <AppText size={11} color={colors.secondary}>
+              {strings.menu.activeEmployees(activeEmployees)}
             </AppText>
-          }
-          onPress={() => onOpen('today')}
+          ) : null}
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+/** Fila "Actividad" (D-337): el último hecho con su nombre real y la fecha; abre el lead o el jobsite. */
+function ActivityRow({ activity }: { activity: HomeActivity }) {
+  const router = useRouter();
+  const strings = useStrings();
+  const a = useAccountingStrings();
+  const { colors } = useTheme();
+  const at = new Date(activity.at);
+  const title = strings.hub.activityLine[activity.kind](activity.name);
+  const detail = [`${(a.months[at.getMonth()] ?? '').slice(0, 3)} ${at.getDate()}`, activity.site].filter(Boolean).join(' · ');
+  return (
+    <View style={{ marginTop: 12 }}>
+      <AppText size={13} color={colors.secondary} style={{ marginBottom: 6 }}>
+        {strings.hub.activity}
+      </AppText>
+      <CardBlock>
+        <ListRow
+          title={title}
+          detail={detail}
+          chevron
           last
+          onPress={() =>
+            activity.leadId
+              ? router.push({ pathname: '/leads/[id]', params: { id: activity.leadId } })
+              : activity.jobsiteId
+                ? router.push({ pathname: '/jobsites/[id]', params: { id: activity.jobsiteId } })
+                : router.navigate('/pipeline')
+          }
         />
       </CardBlock>
-    </>
+    </View>
   );
 }
 
@@ -360,34 +447,6 @@ function ProfitCard({ m }: { m: NonNullable<AdminHomeData['month']> }) {
           {st.home.margin(String(Math.round(m.margin * 10) / 10))}
         </AppText>
       ) : null}
-    </Card>
-  );
-}
-
-/** Por cobrar (D-253): lo pendiente del mes en ámbar. */
-function ReceivableCard({ r }: { r: NonNullable<AdminHomeData['receivable']> }) {
-  const router = useRouter();
-  const { colors } = useTheme();
-  const st = useStatisticsStrings();
-  const a = useAccountingStrings();
-  const month = a.months[Number(r.month.slice(5, 7)) - 1] ?? '';
-  const key = r.month.slice(0, 7);
-  return (
-    <Card
-      tone="attention"
-      accessibilityLabel={`${st.home.receivable}: ${money(r.pending)}`}
-      onPress={() => router.push({ pathname: '/accounting/income', params: { from: key, to: key } })}
-      style={{ gap: 6 }}
-    >
-      <AppText size={13} color={colors.attentionText}>
-        {st.home.receivable}
-      </AppText>
-      <AppText weight="heavy" size={26} color={colors.attentionText}>
-        {money(r.pending)}
-      </AppText>
-      <AppText size={12} color={colors.attentionText}>
-        {st.home.receivableSub(month)}
-      </AppText>
     </Card>
   );
 }
@@ -458,19 +517,27 @@ function WeekHoursCard({ rows }: { rows: NonNullable<AdminHomeData['weekHours']>
   );
 }
 
-/** Saludo del estilo C (D-223): fecha de hoy en 13px gris cálido, "Hola, {nombre}" en 24px/800 y, en el admin, iniciales. */
-function Greeting({ name, avatar = false }: { name: string; avatar?: boolean }) {
-  const { colors, brand } = useTheme();
+/**
+ * Saludo del estilo C (D-223): fecha de hoy en 13px gris cálido y "Hola, {nombre}" en 24px/800; a la derecha (D-337)
+ * la campana de notificaciones (cuadro blanco con punto si hay sin leer) y el avatar que abre Mi cuenta.
+ */
+function Greeting({ name }: { name: string }) {
+  const { colors } = useTheme();
   const strings = useStrings();
+  const router = useRouter();
   // Área segura de arriba: el saludo no queda bajo la barra de estado del teléfono.
   const insets = useSafeAreaInsets();
   const first = name.trim().split(/\s+/)[0] ?? '';
-  const initials = name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? '')
-    .join('');
+  const [unread, setUnread] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      void fetchUnreadCount().then((n) => !cancelled && setUnread(n ?? 0));
+      return () => {
+        cancelled = true;
+      };
+    }, []),
+  );
   return (
     <View style={[styles.greeting, { paddingTop: insets.top + 20 }]}>
       <View style={{ gap: 2, flex: 1 }}>
@@ -481,32 +548,17 @@ function Greeting({ name, avatar = false }: { name: string; avatar?: boolean }) 
           {first ? strings.home.greeting(first) : strings.nav.home}
         </AppText>
       </View>
-      {avatar && initials ? (
-        <View style={[styles.avatar, { backgroundColor: brand }]}>
-          <AppText weight="bold" color="#FFFFFF">
-            {initials}
-          </AppText>
-        </View>
-      ) : null}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={strings.hub.notifications(unread)}
+        onPress={() => router.push('/notifications')}
+        style={[styles.bell, { backgroundColor: colors.card }]}
+      >
+        <Icon name="bell" size={20} strokeWidth={iconStrokeWidth} color={colors.text} />
+        {unread > 0 ? <View style={styles.bellDot} /> : null}
+      </Pressable>
+      <AccountButton />
     </View>
-  );
-}
-
-/** Tarjeta de cifra (D-223): etiqueta 13px, cifra 26px/800 y línea 12px. */
-function NumberCard({ tone, label, value, sub, onPress }: { tone: 'plain' | 'dark' | 'attention'; label: string; value: number; sub: string; onPress: () => void }) {
-  const t = useCardText(tone);
-  return (
-    <Card tone={tone} onPress={onPress} accessibilityLabel={`${label}: ${value} ${sub}`} style={{ gap: 6 }}>
-      <AppText size={13} color={t.soft} style={{ opacity: t.softOpacity }}>
-        {label}
-      </AppText>
-      <AppText weight="heavy" size={26} color={t.main}>
-        {String(value)}
-      </AppText>
-      <AppText size={12} color={t.soft} style={{ opacity: t.softOpacity }}>
-        {sub}
-      </AppText>
-    </Card>
   );
 }
 
@@ -687,7 +739,13 @@ const styles = StyleSheet.create({
   flowSee: { backgroundColor: '#FFFFFF', borderRadius: 12, paddingVertical: 8, paddingHorizontal: 14 },
   page: { paddingHorizontal: 16, paddingBottom: 16 },
   greeting: { paddingBottom: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  avatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  bell: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  // Punto de la muestra D-337 (#C2410C).
+  bellDot: { position: 'absolute', top: 9, right: 10, width: 8, height: 8, borderRadius: 4, backgroundColor: '#C2410C' },
+  figures: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  figure: { flex: 1, borderRadius: 16, padding: 10, gap: 2 },
+  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  tile: { flexBasis: '30%', flexGrow: 1, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 8, alignItems: 'center', gap: 4 },
   mainCard: { padding: 18, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   // D-224 (C1): con ilustración la tarjeta mide 172px y el dibujo llega al borde derecho e inferior.
   mainCardArt: { height: 172, paddingRight: 0, paddingBottom: 0, alignItems: 'flex-end' },

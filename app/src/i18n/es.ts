@@ -45,10 +45,10 @@ export const es = {
   },
 
   nav: {
-    pipeline: 'Pipeline', // APROBADO (D-132): destino de la barra inferior (solo icono, sin texto) y título de su pantalla
+    pipeline: 'Leads', // APROBADO (D-335, D-337): destino de la barra inferior (solo icono, sin texto)
     accounts: 'Cuentas', // APROBADO (D-132)
     home: 'Inicio', // APROBADO (muestra ronda 14)
-    menu: 'Menú', // APROBADO (muestra deducida, D-134)
+    schedule: 'Schedule', // APROBADO (D-337): pestaña y acceso del Inicio
     employees: 'Empleados', // APROBADO (D-134)
     scheduleWork: 'Schedule y Work', // APROBADO (D-134)
     accounting: 'Accounting', // APROBADO (D-134)
@@ -89,6 +89,35 @@ export const es = {
   },
 
   // D-226 (muestra surveys/estilo-c1-pantallas/Menu.html).
+  // Inicio unido (D-337, surveys/navegacion-aprobado.html). Textos menores: D-200.
+  hub: {
+    toWrite: (n: number): string => (n === 1 ? 'lead por escribir hoy' : 'leads por escribir hoy'), // D-200 (muestra: "leads to write today")
+    toCollect: (month: string) => `por cobrar · ${month}`, // D-200 (muestra: "to collect · Nov")
+    toApprove: (n: number): string => (n === 1 ? 'visita por aprobar' : 'visitas por aprobar'), // D-200 (D-299: visitas)
+    history: 'Historial', // D-200 (muestra: "History")
+    activity: 'Actividad', // APROBADO (D-337)
+    activityLine: {
+      accepted: (name: string) => `${name} aceptó el quote`, // D-200 (muestra: "accepted the quote")
+      rejected: (name: string) => `${name} rechazó el quote`, // D-200
+      changes_requested: (name: string) => `${name} pidió cambios al quote`, // D-200
+    },
+    notifications: (n: number): string => (n > 0 ? `Notificaciones, ${n} sin leer` : 'Notificaciones'), // D-200 (lector de pantalla)
+  },
+
+  // Mi cuenta (D-337 (4)). Textos menores: D-200.
+  account: {
+    title: 'Mi cuenta', // D-200
+    open: 'Abrir Mi cuenta', // D-200 (lector de pantalla del avatar)
+    roleLine: (role: string, email: string) => (email ? `${role} · ${email}` : role), // D-200
+    me: 'Yo', // D-200 (muestra: "Me")
+    editProfile: 'Editar mi perfil', // D-200 (muestra: "Edit my profile")
+    editProfileDetail: 'Nombre, correo y cuenta', // D-200
+    languageTheme: 'Idioma · Tema', // D-200
+    myNotifications: 'Mis notificaciones', // D-200
+    company: 'Ajustes de la empresa', // D-200 (muestra: "Company settings")
+    termsPrivacy: 'Términos y privacidad', // D-200 (muestra: "Terms & privacy")
+  },
+
   menu: {
     profileLine: (role: string) => `${role} · Mi perfil`, // APROBADO (D-226)
     activeEmployees: (n: number) => (n === 1 ? '1 activo' : `${n} activos`), // APROBADO (D-226)

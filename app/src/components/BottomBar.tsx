@@ -10,10 +10,10 @@ import { iconStrokeWidth, radius, useTheme } from '@/theme';
 
 /** Iconos de la barra inferior (D-135, Tabler, trazo 1.5px). */
 const ICONS: Record<TabKey, IconName> = {
+  home: 'home',
   pipeline: 'layout-kanban',
   accounts: 'building',
-  home: 'home',
-  menu: 'menu-2',
+  schedule: 'calendar',
 };
 
 /** Nombre de cada ruta de la barra: coincide con TabKey. */
@@ -21,11 +21,11 @@ const ROUTE_TO_TAB: Record<string, TabKey> = {
   pipeline: 'pipeline',
   accounts: 'accounts',
   index: 'home',
-  menu: 'menu',
+  schedule: 'schedule',
 };
 
 /**
- * Barra inferior (D-029, D-132, D-169; D-223): solo iconos, flotante, blanca con esquinas de 24px y 64px de alto; el
+ * Barra inferior (D-029, D-132, D-169; D-223; D-337: Home, Leads, Accounts, Schedule): solo iconos, flotante, blanca con esquinas de 24px y 64px de alto; el
  * destino activo en un cuadro de marca de 48px con esquinas de 16px e icono blanco. Solo los destinos permitidos.
  */
 export function BottomBar({ state, emitter, navigateToTab }: BottomTabBarProps) {

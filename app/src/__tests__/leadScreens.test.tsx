@@ -98,7 +98,10 @@ const mockRemoveReason = jest.fn();
 jest.mock('@/lib/quotesApi', () => ({
   fetchLeadQuotes: jest.fn().mockResolvedValue({ ok: true, data: [] }),
   fetchQuotePending: jest.fn().mockResolvedValue([]),
+  fetchHomeActivity: jest.fn().mockResolvedValue(null),
 }));
+jest.mock('@/lib/employeesApi', () => ({ fetchEmployees: async () => ({ ok: true, data: [] }), failureFromCode: () => 'unknown' }));
+jest.mock('@/lib/notificationsApi', () => ({ fetchUnreadCount: async () => 0 }));
 jest.mock('@/lib/emailTemplatesApi', () => ({ fetchEmailLog: jest.fn().mockResolvedValue({ ok: true, data: [] }) }));
 jest.mock('@/lib/leadsApi', () => ({
   fetchLeads: (...a: unknown[]) => mockFetchLeads(...a),
@@ -489,44 +492,31 @@ describe('Agendar walkthrough (D-072, D-078, D-104)', () => {
   });
 });
 
-describe('Inicio del admin: pendientes de Ventas (D-111)', () => {
-  it('muestra seguimientos y walkthroughs agendados en tarjetas de cifra (D-223) y abre Pipeline', async () => {
-    mockPending.mockResolvedValue({ ok: true, data: { followUpsDue: 3, walkthroughsUpcoming: 2 } });
-    await render(<HomeScreen />);
-    expect(await screen.findByText('Seguimientos')).toBeTruthy();
-    expect(screen.getByText('3')).toBeTruthy();
-    expect(screen.getByText('leads para hoy')).toBeTruthy();
-    expect(screen.getByText('Walkthroughs')).toBeTruthy();
-    expect(screen.getByText('agendados')).toBeTruthy();
-    expect(screen.queryByText('Todo al día')).toBeNull();
-    await fireEvent.press(screen.getByText('Seguimientos'));
-    expect(mockNavigate).toHaveBeenCalledWith('/pipeline');
-  });
-
-  it('Hoy te toca escribir con Ver (Leads en Hoy), Esperando respuesta y Sin respuesta · decide (D-333 (4))', async () => {
+describe('Inicio unido: pendientes de Ventas (D-333 (4), D-337)', () => {
+  it('leads por escribir hoy en la fila de cifras y abre Leads en Hoy; Sin respuesta · decide con su número', async () => {
     mockFollowup.mockResolvedValue({ ok: true, data: { toWrite: 6, waiting: 12, noResponse: 2 } });
     await render(<HomeScreen />);
-    expect(await screen.findByText('Hoy te toca escribir')).toBeTruthy();
-    expect(screen.getByText('6 leads')).toBeTruthy();
-    expect(screen.getByText('Esperando respuesta')).toBeTruthy();
-    expect(screen.getByText('12')).toBeTruthy();
-    expect(screen.getByText('Sin respuesta · decide')).toBeTruthy();
-    await fireEvent.press(screen.getByText('Ver'));
+    expect(await screen.findByText('leads por escribir hoy')).toBeTruthy();
+    expect(screen.getByText('6')).toBeTruthy();
+    expect(screen.getByText('Sin respuesta · decide: 2')).toBeTruthy();
+    // D-337: Esperando respuesta, Seguimientos, Walkthroughs y Pipeline ya no se repiten en Inicio (viven en Leads).
+    expect(screen.queryByText('Esperando respuesta')).toBeNull();
+    expect(screen.queryByText('Seguimientos')).toBeNull();
+    await fireEvent.press(screen.getByLabelText('6 leads por escribir hoy'));
     expect(mockNavigate).toHaveBeenCalledWith({ pathname: '/pipeline', params: { tab: 'today' } });
-    await fireEvent.press(screen.getByText('Esperando respuesta'));
-    expect(mockNavigate).toHaveBeenCalledWith({ pathname: '/pipeline', params: { tab: 'waiting' } });
   });
 
   it('sin pendientes: Todo al día', async () => {
     await render(<HomeScreen />);
-    await waitFor(() => expect(mockPending).toHaveBeenCalled());
+    await waitFor(() => expect(mockFollowup).toHaveBeenCalled());
     expect(screen.getByText('Todo al día')).toBeTruthy();
   });
 
-  it('sin leads_ver no se consultan los pendientes de Ventas', async () => {
+  it('sin leads_ver no se consultan los pendientes de Ventas ni sale la cifra', async () => {
     mockAccess = { isSuperAdmin: false, permissions: new Set(['empleados_ver']) };
     await render(<HomeScreen />);
-    expect(mockPending).not.toHaveBeenCalled();
+    expect(mockFollowup).not.toHaveBeenCalled();
+    expect(screen.queryByText(/por escribir hoy/)).toBeNull();
     expect(screen.getByText('Todo al día')).toBeTruthy();
   });
 });

@@ -85,7 +85,7 @@ jest.mock('@/lib/sharePdf', () => ({ sharePdf: (...a: unknown[]) => mockShare(..
 
 import { ClockCard } from '@/components/work/ClockCard';
 import WorkScreen from '@/app/(app)/schedule/work/[id]';
-import ScheduleScreen from '@/app/(app)/schedule/index';
+import ScheduleScreen from '@/app/(app)/(tabs)/schedule';
 
 const visit = {
   id: 'v1',

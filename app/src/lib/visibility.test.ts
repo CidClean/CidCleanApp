@@ -1,7 +1,8 @@
 import {
   homeKind,
   showsMonthFigures,
-  visibleMenuItems,
+  homeShortcuts,
+  showsCompanySettings,
   visibleTabs,
   type Access,
 } from './visibility';
@@ -40,72 +41,72 @@ describe('plantillas de partida (D-152)', () => {
   });
 });
 
-describe('barra inferior (D-132, D-169)', () => {
+describe('barra inferior (D-337: Home, Leads, Accounts, Schedule; sin Menú)', () => {
   test('Super Admin: los cuatro destinos, en orden', () => {
-    expect(visibleTabs(superAdmin)).toEqual(['pipeline', 'accounts', 'home', 'menu']);
+    expect(visibleTabs(superAdmin)).toEqual(['home', 'pipeline', 'accounts', 'schedule']);
   });
   test('Admin de partida: los cuatro destinos', () => {
-    expect(visibleTabs(admin)).toEqual(['pipeline', 'accounts', 'home', 'menu']);
+    expect(visibleTabs(admin)).toEqual(['home', 'pipeline', 'accounts', 'schedule']);
   });
-  test('Supervisor: Pipeline (leads_ver), Cuentas (clientes_ver), Inicio y Menú', () => {
-    expect(visibleTabs(supervisor)).toEqual(['pipeline', 'accounts', 'home', 'menu']);
+  test('Supervisor: Inicio, Leads (leads_ver), Accounts (clientes_ver) y Schedule', () => {
+    expect(visibleTabs(supervisor)).toEqual(['home', 'pipeline', 'accounts', 'schedule']);
   });
-  test('Empleado sin permisos: solo Inicio y Menú', () => {
-    expect(visibleTabs(employee)).toEqual(['home', 'menu']);
+  test('Empleado sin permisos: solo Inicio', () => {
+    expect(visibleTabs(employee)).toEqual(['home']);
+  });
+  test('Schedule sale con el schedule o cualquier permiso de Work', () => {
+    for (const k of ['schedule_ver_editar', 'work_registrar_por_otros', 'work_editar', 'work_aprobar', 'work_revisar_gps']) {
+      expect(visibleTabs(access(false, [k]))).toEqual(['home', 'schedule']);
+    }
   });
   test('Pipeline sale con cualquier permiso de Ventas, uno por uno', () => {
     for (const k of ['leads_ver', 'leads_editar', 'leads_eliminar', 'walkthroughs_hacer', 'quotes_ver', 'quotes_editar',
       'quotes_enviar', 'quotes_ver_precios', 'sow_contratos_subir_ver']) {
-      expect(visibleTabs(access(false, [k]))).toEqual(['pipeline', 'home', 'menu']);
+      expect(visibleTabs(access(false, [k]))).toEqual(['home', 'pipeline']);
     }
   });
   test('Cuentas sale solo con clientes_ver; otros permisos de clientes no bastan', () => {
-    expect(visibleTabs(access(false, ['clientes_ver']))).toEqual(['accounts', 'home', 'menu']);
-    expect(visibleTabs(access(false, ['clientes_editar_datos', 'clientes_ver_tarifa']))).toEqual(['home', 'menu']);
+    expect(visibleTabs(access(false, ['clientes_ver']))).toEqual(['home', 'accounts']);
+    expect(visibleTabs(access(false, ['clientes_editar_datos', 'clientes_ver_tarifa']))).toEqual(['home']);
   });
   test('permisos que no son de Ventas ni clientes_ver no agregan destinos', () => {
-    expect(visibleTabs(access(false, ['gastos_ver', 'empleados_ver']))).toEqual(['home', 'menu']);
+    expect(visibleTabs(access(false, ['gastos_ver', 'empleados_ver']))).toEqual(['home']);
   });
 });
 
-describe('Menú (D-134, D-169)', () => {
-  test('Super Admin: todo, incluido Ajustes', () => {
-    expect(visibleMenuItems(superAdmin)).toEqual([
-      'employees', 'scheduleWork', 'accounting', 'statistics', 'documents', 'settings', 'history', 'notifications', 'profile',
-    ]);
+describe('accesos del Inicio (D-337)', () => {
+  test('Super Admin: los seis, en el orden de la muestra', () => {
+    expect(homeShortcuts(superAdmin)).toEqual(['schedule', 'employees', 'accounting', 'statistics', 'documents', 'history']);
   });
-  test('Admin de partida: todo menos Ajustes', () => {
-    expect(visibleMenuItems(admin)).toEqual([
-      'employees', 'scheduleWork', 'accounting', 'statistics', 'documents', 'history', 'notifications', 'profile',
-    ]);
+  test('Admin de partida: los seis', () => {
+    expect(homeShortcuts(admin)).toEqual(['schedule', 'employees', 'accounting', 'statistics', 'documents', 'history']);
   });
-  test('Supervisor: Empleados, Schedule y Work, Notificaciones y Mi perfil', () => {
-    // Orden 115: Documentos aparece con un permiso que da documentos (el supervisor de partida tiene uno).
-    expect(visibleMenuItems(supervisor)).toEqual(['employees', 'scheduleWork', 'documents', 'notifications', 'profile']);
+  test('Supervisor: Schedule, Employees y Documents', () => {
+    expect(homeShortcuts(supervisor)).toEqual(['schedule', 'employees', 'documents']);
   });
-  test('Empleado: solo Notificaciones y Mi perfil', () => {
-    expect(visibleMenuItems(employee)).toEqual(['notifications', 'profile']);
+  test('Empleado: ninguno', () => {
+    expect(homeShortcuts(employee)).toEqual([]);
   });
   test('Accounting sale con cualquiera de sus 9 permisos, uno por uno', () => {
     for (const k of ['ingresos_ver_registrar', 'ingresos_marcar_recibidos', 'personal_ver_costo', 'gastos_ver',
       'gastos_registrar_editar', 'gastos_recurrentes', 'dashboard_global', 'dashboard_cuenta', 'reportes_exportar']) {
-      expect(visibleMenuItems(access(false, [k]))).toContain('accounting');
+      expect(homeShortcuts(access(false, [k]))).toContain('accounting');
     }
-    expect(visibleMenuItems(access(false, ['historial_ver']))).not.toContain('accounting');
+    expect(homeShortcuts(access(false, ['historial_ver']))).not.toContain('accounting');
   });
   test('D-252: Estadísticas solo con estadisticas_ver, y ese permiso solo no abre Accounting', () => {
-    expect(visibleMenuItems(access(false, ['estadisticas_ver']))).toEqual(['statistics', 'notifications', 'profile']);
-    expect(visibleMenuItems(access(false, ['dashboard_global']))).not.toContain('statistics');
-    expect(visibleMenuItems(supervisor)).not.toContain('statistics');
-  });
-  test('Ajustes nunca sale por permisos, solo para el Super Admin', () => {
-    expect(visibleMenuItems(access(false, ALL_37))).not.toContain('settings');
+    expect(homeShortcuts(access(false, ['estadisticas_ver']))).toEqual(['statistics']);
+    expect(homeShortcuts(access(false, ['dashboard_global']))).not.toContain('statistics');
   });
   test('Historial con historial_ver; Empleados con empleados_ver; Schedule con schedule_ver_editar', () => {
-    expect(visibleMenuItems(access(false, ['historial_ver']))).toContain('history');
-    expect(visibleMenuItems(access(false, ['empleados_ver']))).toContain('employees');
-    expect(visibleMenuItems(access(false, ['schedule_ver_editar']))).toContain('scheduleWork');
-    expect(visibleMenuItems(access(false, ['empleados_invitar_crear']))).not.toContain('employees');
+    expect(homeShortcuts(access(false, ['historial_ver']))).toContain('history');
+    expect(homeShortcuts(access(false, ['empleados_ver']))).toContain('employees');
+    expect(homeShortcuts(access(false, ['schedule_ver_editar']))).toContain('schedule');
+    expect(homeShortcuts(access(false, ['empleados_invitar_crear']))).not.toContain('employees');
+  });
+  test('Company settings de Mi cuenta: nunca por permisos, solo el Super Admin', () => {
+    expect(showsCompanySettings(superAdmin)).toBe(true);
+    expect(showsCompanySettings(access(false, ALL_37))).toBe(false);
   });
 });
 
