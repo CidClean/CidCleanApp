@@ -19,7 +19,7 @@ jest.mock('@/lib/session', () => ({
 jest.mock('@/lib/navigation', () => ({ useGoBack: () => jest.fn() }));
 jest.mock('@/i18n/useStrings', () => ({ useStrings: () => require('@/i18n').getStrings('es') }));
 
-import MenuScreen from '@/app/(app)/(tabs)/menu';
+import AccountScreen from '@/app/(app)/account';
 import ProfileScreen from '@/app/(app)/profile';
 import { getThemePreference, resetThemePreferenceForTests } from '@/lib/themePreference';
 import { palettes, useTheme } from '@/theme';
@@ -35,8 +35,8 @@ beforeEach(() => {
 });
 
 describe('Cerrar sesión (D-222 a)', () => {
-  it('al final del Menú, con la ventana al centro; Cancelar no cierra la sesión', async () => {
-    await render(<MenuScreen />);
+  it('al final de Mi cuenta (D-337), con la ventana al centro; Cancelar no cierra la sesión', async () => {
+    await render(<AccountScreen />);
     await fireEvent.press(screen.getByText('Cerrar sesión'));
     expect(screen.getByText('¿Cerrar sesión?')).toBeTruthy();
     expect(screen.getByText('Tendrás que pedir un código para volver a entrar.')).toBeTruthy();
@@ -53,6 +53,26 @@ describe('Cerrar sesión (D-222 a)', () => {
     await fireEvent.press(screen.getByText('Cerrar sesión'));
     expect(screen.getByText('¿Cerrar sesión?')).toBeTruthy();
     expect(screen.getByText('Idioma')).toBeTruthy();
+  });
+});
+
+describe('Mi cuenta (D-337 (4))', () => {
+  it('cabecera con nombre, rol y correo; Me con sus filas; sin Company settings si no es Super Admin', async () => {
+    await render(<AccountScreen />);
+    expect(screen.getByText('Ana')).toBeTruthy();
+    expect(screen.getByText(/ana@x\.com/)).toBeTruthy();
+    expect(screen.getByText('Editar mi perfil')).toBeTruthy();
+    expect(screen.getByText('Idioma · Tema')).toBeTruthy();
+    expect(screen.getByText('Mis notificaciones')).toBeTruthy();
+    expect(screen.queryByText('AJUSTES DE LA EMPRESA')).toBeNull();
+    expect(screen.queryByText('Términos y privacidad')).toBeNull();
+  });
+
+  it('Idioma · Tema abre la ventana con el tema', async () => {
+    await render(<AccountScreen />);
+    await fireEvent.press(screen.getByText('Idioma · Tema'));
+    await fireEvent.press(screen.getByText('Oscuro'));
+    expect(getThemePreference()).toBe('dark');
   });
 });
 
