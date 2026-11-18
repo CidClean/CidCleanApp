@@ -193,6 +193,18 @@ export const en: Strings = {
     roleAdmin: 'Admin', // starting role
     roleSuperAdmin: 'Super Admin', // role of the owner's account
     errorLoad: "Couldn't load the employees. Try again.", // employee list: red notice
+    tabActive: (n: number) => `Active · ${n}`,
+    tabInactive: (n: number) => `Inactive · ${n}`,
+    search: 'Search employee',
+    sortLabel: 'Sort by',
+    sortName: 'Name',
+    sortType: 'Type',
+    sortRole: 'Role',
+    typeLabel: 'Type',
+    typeAll: 'All',
+    sortButton: (v: string) => `Sort: ${v}`,
+    typeButton: (v: string) => `Type: ${v}`,
+    noResults: 'No employees match that filter.',
   },
 
   newEmployee: {

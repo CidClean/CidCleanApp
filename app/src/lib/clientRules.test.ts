@@ -3,8 +3,11 @@ import {
   cityFrom,
   emptyJobsiteForm,
   emptyPayForm,
+  filterAccounts,
   frequencyLabel,
   groupByClient,
+  monthlyTotal,
+  splitAccounts,
   jobsiteData,
   payMonthlyCost,
   prorateFixed,
@@ -36,6 +39,38 @@ describe('Cuentas agrupadas por cliente (D-082)', () => {
     expect(g.map((x) => x.clientName)).toEqual(['Alfa', 'Beta', 'Cero']);
     expect(g[1].jobsites.map((j) => j.name)).toEqual(['Z', 'A']);
     expect(g[2].jobsites).toHaveLength(0);
+  });
+});
+
+describe('Accounts: activas y archivadas (D-337 (3))', () => {
+  const groups = groupByClient(
+    [
+      js({ id: '1', clientId: 'a', clientName: 'Alfa', name: 'Sede Activa' }),
+      js({ id: '2', clientId: 'a', clientName: 'Alfa', name: 'Sede Vieja', status: 'terminated' }),
+      js({ id: '3', clientId: 'b', clientName: 'Beta', name: 'Única', status: 'terminated' }),
+      js({ id: '4', clientId: 'c', clientName: 'Clínica Sol', name: 'Pausada', status: 'paused' }),
+    ],
+    [{ id: 'd', name: 'Delta', legacy: true, phone: null, email: null, address: null, notes: null }],
+  );
+  it('un cliente con uno activo y otro terminado sale en Activas con el activo y en Archivadas con el terminado', () => {
+    const { active, archived } = splitAccounts(groups);
+    expect(active.map((c) => [c.clientName, c.jobsites.map((j) => j.id)])).toEqual([['Alfa', ['1']], ['Clínica Sol', ['4']]]);
+    expect(archived.map((c) => [c.clientName, c.inactiveClient, c.jobsites.map((j) => j.id)])).toEqual([
+      ['Alfa', false, ['2']],
+      ['Beta', true, ['3']],
+      ['Delta', true, []],
+    ]);
+  });
+  it('busca por cliente o jobsite sin acentos ni mayúsculas', () => {
+    const { active } = splitAccounts(groups);
+    expect(filterAccounts(active, 'clinica').map((c) => c.clientName)).toEqual(['Clínica Sol']);
+    expect(filterAccounts(active, 'ACTIVA').map((c) => c.jobsites.map((j) => j.id))).toEqual([['1']]);
+    expect(filterAccounts(active, 'zzz')).toEqual([]);
+    expect(filterAccounts(active, '  ')).toHaveLength(2);
+  });
+  it('el total mensual suma solo los activos con tarifa', () => {
+    const rates = new Map([['1', 1000], ['4', 500], ['2', 300]]);
+    expect(monthlyTotal(groups.flatMap((g) => g.jobsites), rates)).toBe(1000);
   });
 });
 

@@ -150,6 +150,54 @@ export function groupByClient(jobsites: readonly Jobsite[], clients: readonly Cl
     .sort((a, b) => a.clientName.localeCompare(b.clientName));
 }
 
+// --- Accounts: activas y archivadas (D-337 (3)) ------------------------------------------------------------
+
+/** Tarjeta de la lista de Accounts: un cliente con los jobsites que tocan en esa pestaña. */
+export type AccountCard = {
+  clientId: string;
+  clientName: string;
+  accountProvider: boolean;
+  jobsites: Jobsite[];
+  /** Archivadas: "Cliente inactivo" si no le queda ningún jobsite sin terminar; si no, son sus jobsites terminados. */
+  inactiveClient: boolean;
+};
+
+/**
+ * Activas = clientes con algún jobsite sin terminar (activo o pausado), solo con esos jobsites. Archivadas = jobsites
+ * terminados (agrupados por cliente) y clientes sin ningún jobsite sin terminar. Un cliente con uno activo y otro
+ * terminado sale en Activas con el activo y en Archivadas con el terminado.
+ */
+export function splitAccounts(groups: readonly ClientGroup[]): { active: AccountCard[]; archived: AccountCard[] } {
+  const active: AccountCard[] = [];
+  const archived: AccountCard[] = [];
+  for (const g of groups) {
+    const base = { clientId: g.clientId, clientName: g.clientName, accountProvider: g.accountProvider ?? false };
+    const open = g.jobsites.filter((j) => j.status !== 'terminated');
+    const ended = g.jobsites.filter((j) => j.status === 'terminated');
+    if (open.length > 0) active.push({ ...base, jobsites: open, inactiveClient: false });
+    if (open.length === 0) archived.push({ ...base, jobsites: ended, inactiveClient: true });
+    else if (ended.length > 0) archived.push({ ...base, jobsites: ended, inactiveClient: false });
+  }
+  return { active, archived };
+}
+
+/** Búsqueda por cliente o jobsite, sin mayúsculas ni acentos. Si coincide el cliente quedan todos sus jobsites. */
+export function filterAccounts(cards: readonly AccountCard[], query: string): AccountCard[] {
+  const norm = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const q = norm(query.trim());
+  if (!q) return [...cards];
+  return cards.flatMap((c) => {
+    if (norm(c.clientName).includes(q)) return [c];
+    const js = c.jobsites.filter((j) => norm(j.name).includes(q) || norm(j.address).includes(q));
+    return js.length > 0 ? [{ ...c, jobsites: js }] : [];
+  });
+}
+
+/** Total mensual de los jobsites activos (no pausados ni terminados) con tarifa conocida. */
+export function monthlyTotal(jobsites: readonly Jobsite[], rates: ReadonlyMap<string, number>): number {
+  return jobsites.reduce((sum, j) => (j.status === 'active' ? sum + (rates.get(j.id) ?? 0) : sum), 0);
+}
+
 // --- Dinero y fechas -----------------------------------------------------------------------------------
 
 /** "$1,850.00" (muestras). */

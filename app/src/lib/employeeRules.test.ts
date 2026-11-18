@@ -1,4 +1,5 @@
 import {
+  listEmployees,
   assignableRoles,
   accessState,
   canCreateEmployees,
@@ -63,6 +64,35 @@ describe('iniciales y orden de la lista (D-083)', () => {
       (e) => e.fullName,
     );
     expect(names).toEqual(['Álvaro Gil', 'Ana Rivera', 'Carlos Torres', 'diego López']);
+  });
+});
+
+describe('Lista de Employees: pestañas, buscador, orden y filtro (D-337)', () => {
+  const e = (fullName: string, o: Record<string, unknown> = {}) => ({
+    fullName, active: true, workerType: 'w2' as const, role: 'employee' as const, isSuperAdmin: false, email: null, phone: null, ...o,
+  });
+  const list = [
+    e('Zoe Ruiz', { workerType: '1099' }),
+    e('Ana Pérez', { role: 'supervisor', email: 'ana@x.com', phone: '(239) 555-0142' }),
+    e('Bruno Díaz', { active: false }),
+    e('Carla Gómez', { role: 'admin', workerType: '1099' }),
+    e('Humberto Vega', { isSuperAdmin: true, role: 'admin', workerType: null }),
+  ];
+  const opts = { active: true, query: '', sort: 'name' as const, type: 'all' as const };
+  it('por defecto Activos por nombre; Inactivos aparte', () => {
+    expect(listEmployees(list, opts).map((x) => x.fullName)).toEqual(['Ana Pérez', 'Carla Gómez', 'Humberto Vega', 'Zoe Ruiz']);
+    expect(listEmployees(list, { ...opts, active: false }).map((x) => x.fullName)).toEqual(['Bruno Díaz']);
+  });
+  it('orden por Tipo (1099, W-2, sin tipo) y por Rol (Super Admin, Admin, Supervisor, Empleado)', () => {
+    expect(listEmployees(list, { ...opts, sort: 'type' }).map((x) => x.fullName)).toEqual(['Carla Gómez', 'Zoe Ruiz', 'Ana Pérez', 'Humberto Vega']);
+    expect(listEmployees(list, { ...opts, sort: 'role' }).map((x) => x.fullName)).toEqual(['Humberto Vega', 'Carla Gómez', 'Ana Pérez', 'Zoe Ruiz']);
+  });
+  it('filtro por tipo y búsqueda por nombre sin acentos, correo o teléfono', () => {
+    expect(listEmployees(list, { ...opts, type: '1099' }).map((x) => x.fullName)).toEqual(['Carla Gómez', 'Zoe Ruiz']);
+    expect(listEmployees(list, { ...opts, type: 'w2' }).map((x) => x.fullName)).toEqual(['Ana Pérez']);
+    expect(listEmployees(list, { ...opts, query: 'perez' }).map((x) => x.fullName)).toEqual(['Ana Pérez']);
+    expect(listEmployees(list, { ...opts, query: 'ana@' }).map((x) => x.fullName)).toEqual(['Ana Pérez']);
+    expect(listEmployees(list, { ...opts, query: '5550142' }).map((x) => x.fullName)).toEqual(['Ana Pérez']);
   });
 });
 

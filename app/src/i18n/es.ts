@@ -196,6 +196,19 @@ export const es = {
     roleAdmin: 'Admin', // APROBADO (D-152)
     roleSuperAdmin: 'Super Admin', // APROBADO (D-114)
     errorLoad: 'No se pudieron cargar los empleados. Inténtalo otra vez.', // SIN APROBAR (con el patrón de D-178)
+    // Lista con pestañas, buscador, orden y filtro (D-337). Textos menores: D-200.
+    tabActive: (n: number) => `Activos · ${n}`, // D-200
+    tabInactive: (n: number) => `Inactivos · ${n}`, // D-200
+    search: 'Buscar empleado', // D-200
+    sortLabel: 'Ordenar por', // D-200
+    sortName: 'Nombre', // D-200
+    sortType: 'Tipo', // D-200
+    sortRole: 'Rol', // D-200
+    typeLabel: 'Tipo', // D-200
+    typeAll: 'Todos', // D-200
+    sortButton: (v: string) => `Orden: ${v}`, // D-200
+    typeButton: (v: string) => `Tipo: ${v}`, // D-200
+    noResults: 'Ningún empleado con ese filtro.', // D-200
   },
 
   newEmployee: {

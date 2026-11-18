@@ -67,6 +67,36 @@ export function sortEmployees<T extends { fullName: string }>(list: readonly T[]
   return [...list].sort((a, b) => a.fullName.localeCompare(b.fullName, 'es', { sensitivity: 'base' }));
 }
 
+// --- Lista de Employees (D-337): pestañas, buscador, orden y filtro por tipo --------------------------------
+
+export type EmployeeSort = 'name' | 'type' | 'role';
+export type EmployeeTypeFilter = 'all' | WorkerType;
+export type EmployeeListOptions = { active: boolean; query: string; sort: EmployeeSort; type: EmployeeTypeFilter };
+
+type ListEmployee = Pick<Employee, 'fullName' | 'active' | 'workerType' | 'role' | 'isSuperAdmin' | 'email' | 'phone'>;
+
+/**
+ * Pestaña Activos o Inactivos, búsqueda por nombre, correo o teléfono (sin mayúsculas ni acentos), filtro por tipo y
+ * orden (D-200): Nombre; Tipo (1099, W-2 y sin tipo, luego nombre); Rol (Super Admin, Admin, Supervisor, Empleado,
+ * luego nombre).
+ */
+export function listEmployees<T extends ListEmployee>(list: readonly T[], o: EmployeeListOptions): T[] {
+  const norm = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const q = norm(o.query.trim());
+  const digits = o.query.replace(/\D/g, '');
+  const rows = list.filter(
+    (e) =>
+      e.active === o.active &&
+      (o.type === 'all' || e.workerType === o.type) &&
+      (!q || norm(e.fullName).includes(q) || norm(e.email ?? '').includes(q) || (digits.length >= 3 && (e.phone ?? '').replace(/\D/g, '').includes(digits))),
+  );
+  const byName = (a: T, b: T) => a.fullName.localeCompare(b.fullName, 'es', { sensitivity: 'base' });
+  const typeRank = (e: T) => (e.workerType === '1099' ? 0 : e.workerType === 'w2' ? 1 : 2);
+  const roleRank = (e: T) => (e.isSuperAdmin ? 0 : e.role === 'admin' ? 1 : e.role === 'supervisor' ? 2 : 3);
+  const rank = o.sort === 'type' ? typeRank : o.sort === 'role' ? roleRank : () => 0;
+  return [...rows].sort((a, b) => rank(a) - rank(b) || byName(a, b));
+}
+
 // ---------------------------------------------------------------------------------------------
 // Nuevo empleado (D-171, D-264): Nombre, Apellidos, Teléfono, Email, Dirección, Dirección 2, State, City y ZIP code.
 

@@ -23,6 +23,22 @@ export const clientsEs = {
     errorLoad: 'No se pudieron cargar las cuentas. Inténtalo otra vez.', // D-200 (mismo estilo de D-195)
     newClient: 'Nuevo cliente', // D-200: icono + de la barra (como D-185) y título del alta
     noJobsites: 'Sin jobsites.', // D-200
+    // Accounts con archivados (D-337 (3), muestra navegacion-aprobado (2) y (3)). Textos menores: D-200.
+    tabActive: (n: number) => `Activas · ${n}`, // D-200 (muestra: "Active · N")
+    tabArchived: (n: number) => `Archivadas · ${n}`, // D-200 (muestra: "Archived · N")
+    search: 'Buscar cliente o jobsite', // D-200 (muestra: "Search client or jobsite")
+    monthlyTotal: 'Total mensual', // D-200 (muestra: "Monthly total")
+    perMo: (m: string) => `${m} /mes`, // D-200 (muestra: "$8,615 /mo")
+    staff: (n: number) => (n === 1 ? '1 persona' : `${n} personas`), // D-200 (muestra: "2 staff")
+    since: (d: string) => `desde ${d}`, // D-200 (muestra: "since Sep 17")
+    terminated: 'Terminado', // D-200 (muestra: "Terminated")
+    inactiveClient: 'Cliente inactivo', // D-200 (muestra: "Inactive client")
+    range: (from: string, to: string) => `${from} – ${to}`, // D-200
+    ended: 'Terminó', // D-200 (muestra: "Ended")
+    was: (m: string) => `era ${m}/mes`, // D-200 (muestra: "was $X/mo")
+    noResults: 'Ninguna cuenta con esa búsqueda.', // D-200
+    emptyArchived: 'No hay cuentas archivadas.', // D-200
+    months: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'], // D-200
   },
 
   client: {
@@ -213,6 +229,21 @@ export const clientsEn: ClientsStrings = {
     errorLoad: "Couldn't load the accounts. Try again.",
     newClient: 'New client',
     noJobsites: 'No jobsites.',
+    tabActive: (n: number) => `Active · ${n}`,
+    tabArchived: (n: number) => `Archived · ${n}`,
+    search: 'Search client or jobsite',
+    monthlyTotal: 'Monthly total',
+    perMo: (m: string) => `${m} /mo`,
+    staff: (n: number) => (n === 1 ? '1 staff' : `${n} staff`),
+    since: (d: string) => `since ${d}`,
+    terminated: 'Terminated',
+    inactiveClient: 'Inactive client',
+    range: (from: string, to: string) => `${from} – ${to}`,
+    ended: 'Ended',
+    was: (m: string) => `was ${m}/mo`,
+    noResults: 'No accounts match that search.',
+    emptyArchived: 'No archived accounts.',
+    months: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
   },
   client: {
     barTitle: 'Client',

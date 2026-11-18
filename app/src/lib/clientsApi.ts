@@ -356,3 +356,10 @@ export const fetchJobsiteDocumentUrl = (documentId: string) =>
     if (typeof url !== 'string') return { ok: false, reason: 'server' };
     return { ok: true, data: { url, fileName: typeof data?.file_name === 'string' ? data.file_name : undefined } }; // D-296
   });
+
+/** Lista de Accounts (D-337, migración 20261120000001): personal asignado hoy y fecha de fin de cada jobsite. */
+export type AccountsOverview = Map<string, { staff: number; endedOn: string | null }>;
+export const fetchAccountsOverview = () =>
+  rpc('accounts_overview', {}, (d) =>
+    new Map((d as { jobsite_id: string; staff_count: number; ended_on: string | null }[]).map((r) => [r.jobsite_id, { staff: Number(r.staff_count), endedOn: r.ended_on }])) as AccountsOverview,
+  );
