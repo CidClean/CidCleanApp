@@ -40,6 +40,8 @@ export const emailTemplatesEs = {
   chipProspect: 'Prospecto', // APROBADO (D-323)
   chipClient: 'Cliente', // D-200
   continue: 'Continuar', // APROBADO (D-323)
+  changeTemplate: 'Cambiar plantilla', // APROBADO (D-333, survey flujo-leads-aprobado)
+  templateLine: (name: string) => `plantilla: ${name}`, // APROBADO (survey flujo-leads-aprobado)
   noTemplates: 'No hay plantillas activas para enviar. El Super Admin las crea en Ajustes → Plantillas de correo.', // D-200
   preview: 'Vista previa', // APROBADO (D-323)
   to: 'Para', // APROBADO (D-323)
@@ -105,6 +107,8 @@ export const emailTemplatesEn: EmailTemplatesStrings = {
   chipProspect: 'Prospect',
   chipClient: 'Client',
   continue: 'Continue',
+  changeTemplate: 'Change template', // preview opened from Write: go back to the template list
+  templateLine: (name: string) => `template: ${name}`,
   noTemplates: 'There are no active templates to send. The Super Admin creates them in Settings → Email templates.',
   preview: 'Preview',
   to: 'To',

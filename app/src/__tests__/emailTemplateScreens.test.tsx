@@ -111,6 +111,20 @@ describe('Enviar correo (lead)', () => {
     expect(mockLog).not.toHaveBeenCalled();
   });
 
+  it('con step (Escribir) abre directo la vista previa con la plantilla del paso y deja cambiarla (D-333)', async () => {
+    mockParams = { kind: 'lead', id: 'L1', step: 'follow_up' };
+    const seg = { ...primer, id: 't2', name: 'Seguimiento', subject: 'Re: Commercial cleaning for {empresa}', sort: 2 };
+    mockFetchTemplates.mockResolvedValue({ ok: true, data: [primer, seg] });
+    jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+    await render(<SendEmailScreen />);
+    expect(await screen.findByText('plantilla: Seguimiento')).toBeTruthy();
+    expect(screen.getByText(/Re: Commercial cleaning for Superior Pool Products/)).toBeTruthy();
+    await fireEvent.press(screen.getByText('Abrir en mi correo'));
+    await waitFor(() => expect(mockLog).toHaveBeenCalledWith('t2', 'lead', 'L1', 'open'));
+    await fireEvent.press(screen.getByText('Cambiar plantilla'));
+    expect(screen.getByText('Continuar')).toBeTruthy();
+  });
+
   it('en un cliente pide las plantillas de clientes', async () => {
     mockParams = { kind: 'client', id: 'C1' };
     mockPerms = new Set(['clientes_ver']);

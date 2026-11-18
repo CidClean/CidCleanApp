@@ -77,6 +77,9 @@ jest.mock('@/lib/week', () => ({
 }));
 
 const mockFetchLeads = jest.fn();
+const mockResponded = jest.fn();
+const mockDecide = jest.fn();
+const mockFollowup = jest.fn();
 const mockFetchLead = jest.fn();
 const mockSetStatus = jest.fn();
 const mockMarkLost = jest.fn();
@@ -116,6 +119,9 @@ jest.mock('@/lib/leadsApi', () => ({
   updateLostReason: (...a: unknown[]) => mockUpdateReason(...a),
   removeLostReason: (...a: unknown[]) => mockRemoveReason(...a),
   fetchSiteRequests: async () => ({ ok: true, data: [] }), // orden 101
+  markLeadResponded: (...a: unknown[]) => mockResponded(...a), // orden 131
+  decideNoResponse: (...a: unknown[]) => mockDecide(...a),
+  fetchLeadsFollowup: (...a: unknown[]) => mockFollowup(...a),
 }));
 
 import HomeScreen from '@/app/(app)/(tabs)/index';
@@ -167,16 +173,72 @@ beforeEach(() => {
 });
 
 describe('Pipeline', () => {
-  it('lista los leads con su ficha y abre el detalle', async () => {
-    mockFetchLeads.mockResolvedValue({
-      ok: true,
-      data: [{ id: 'l1', company: 'Gulf Coast Dental', contactName: 'Ana Rivera', status: 'walkthrough_scheduled', createdAt: new Date(), followUpOn: null, nextWalkthrough: null }],
-    });
+  const day = (n: number) => new Date(Date.now() - n * 86_400_000);
+  const rows = [
+    { id: 'l1', company: 'Gulf Coast Dental', contactName: 'Ana', status: 'walkthrough_scheduled', createdAt: day(40), followUpOn: null, nextWalkthrough: null },
+    { id: 'l2', company: 'Perez LLC', contactName: 'Pedro', status: 'follow_up', createdAt: day(30), followUpOn: null, nextWalkthrough: null, firstContactAt: day(8), followupsSent: 0, nextStepOn: '2026-01-02' },
+    { id: 'l3', company: 'Gulf Offices', contactName: 'Lia', status: 'follow_up_2', createdAt: day(60), followUpOn: null, nextWalkthrough: null, followupSentAt: day(22), followupsSent: 1, nextStepOn: '2026-01-01' },
+    { id: 'l4', company: 'Bay Offices', contactName: null, status: 'new', createdAt: day(1), followUpOn: null, nextWalkthrough: null },
+    { id: 'l5', company: 'Sin Resp', contactName: null, status: 'no_response', createdAt: day(90), followUpOn: null, nextWalkthrough: null, nextStepOn: '2026-01-03' },
+  ];
+
+  it('pestañas con contador; Hoy por defecto, lo más atrasado primero, con el paso y la fecha', async () => {
+    mockFetchLeads.mockResolvedValue({ ok: true, data: rows });
+    await render(<PipelineScreen />);
+    expect(await screen.findByText('Perez LLC')).toBeTruthy();
+    expect(screen.getByLabelText('Hoy 3')).toBeTruthy();
+    expect(screen.getByLabelText('Por contactar 1')).toBeTruthy();
+    expect(screen.getByLabelText('En venta 1')).toBeTruthy();
+    const names = screen.getAllByText(/^(Perez LLC|Gulf Offices|Sin Resp)$/).map((n) => String(n.props.children));
+    expect(names).toEqual(['Gulf Offices', 'Perez LLC', 'Sin Resp']);
+    expect(screen.getByText('Pedro · 1er contacto hace 8 días')).toBeTruthy();
+    expect(screen.getByText('Lia · follow up hace 22 días')).toBeTruthy();
+    expect(screen.getByText('2nd follow up')).toBeTruthy();
+    expect(screen.getByText('Reintentar')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Por contactar 1'));
+    expect(screen.getByText('Sin contacto todavía')).toBeTruthy();
+    expect(screen.getByText('Nuevo')).toBeTruthy();
+  });
+
+  it('la pestaña de la ruta (Inicio → Ver) y tocar la fila abre el detalle', async () => {
+    mockParams = { tab: 'sale' };
+    mockFetchLeads.mockResolvedValue({ ok: true, data: rows });
     await render(<PipelineScreen />);
     expect(await screen.findByText('Gulf Coast Dental')).toBeTruthy();
     expect(screen.getByText('Walkthrough agendado')).toBeTruthy();
+    expect(screen.queryByText('Escribir')).toBeNull();
     await fireEvent.press(screen.getByText('Gulf Coast Dental'));
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/leads/[id]', params: { id: 'l1' } });
+  });
+
+  it('Escribir abre la vista previa con la plantilla del paso', async () => {
+    mockFetchLeads.mockResolvedValue({ ok: true, data: rows });
+    await render(<PipelineScreen />);
+    await screen.findByText('Perez LLC');
+    await fireEvent.press(screen.getAllByText('Escribir')[1]);
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/send-email', params: { kind: 'lead', id: 'l2', step: 'follow_up' } });
+  });
+
+  it('Respondió pide confirmación en la pantalla y llama lead_mark_responded', async () => {
+    mockFetchLeads.mockResolvedValue({ ok: true, data: rows });
+    mockResponded.mockResolvedValue({ ok: true, data: 'interested' });
+    await render(<PipelineScreen />);
+    await screen.findByText('Perez LLC');
+    await fireEvent.press(screen.getAllByText('Respondió')[1]);
+    expect(screen.getByText('¿Perez LLC respondió?')).toBeTruthy();
+    expect(mockResponded).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByText('Sí, respondió'));
+    await waitFor(() => expect(mockResponded).toHaveBeenCalledWith('l2'));
+  });
+
+  it('quien solo ve escribe pero no marca Respondió', async () => {
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['leads_ver']) };
+    mockFetchLeads.mockResolvedValue({ ok: true, data: rows });
+    await render(<PipelineScreen />);
+    await screen.findByText('Perez LLC');
+    expect(screen.getAllByText('Escribir').length).toBe(2);
+    expect(screen.queryByText('Respondió')).toBeNull();
+    expect(screen.queryByText('Reintentar')).toBeNull();
   });
 
   it('el + solo con leads_ver y leads_editar', async () => {

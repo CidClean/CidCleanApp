@@ -182,3 +182,23 @@ export function validateTemplate(f: TemplateForm): TemplateFormErrors {
 export function sortTemplates(list: EmailTemplate[]): EmailTemplate[] {
   return [...list].sort((a, b) => a.sort - b.sort || a.name.localeCompare(b.name));
 }
+
+/** Paso del seguimiento en frío (D-333 (6)). */
+export type FollowupStep = 'first' | 'follow_up' | 'follow_up_2';
+
+/** Nombre de la plantilla sembrada de cada paso (D-323 (4)); se elige por nombre (D-200). */
+export const STEP_TEMPLATE: Record<FollowupStep, string> = {
+  first: 'Primer contacto',
+  follow_up: 'Seguimiento',
+  follow_up_2: 'Seguimiento final',
+};
+
+export function isFollowupStep(v: unknown): v is FollowupStep {
+  return v === 'first' || v === 'follow_up' || v === 'follow_up_2';
+}
+
+/** La plantilla activa del paso, por nombre (sin distinguir mayúsculas ni espacios de más), o null. */
+export function templateForStep<T extends { name: string }>(list: readonly T[], step: FollowupStep): T | null {
+  const want = STEP_TEMPLATE[step].toLowerCase();
+  return list.find((t) => t.name.trim().toLowerCase() === want) ?? null;
+}

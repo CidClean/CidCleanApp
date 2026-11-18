@@ -146,6 +146,111 @@ export function isColdStatus(status: LeadStatus): boolean {
   return status === 'new' || status === 'waiting' || status === 'follow_up' || status === 'follow_up_2' || status === 'no_response';
 }
 
+// --- Leads en pestañas (D-333 (5), orden 131) -----------------------------------------------------------
+
+export const LEAD_TABS = ['today', 'toContact', 'waiting', 'sale', 'closed'] as const;
+export type LeadTab = (typeof LEAD_TABS)[number];
+
+/** Pestaña de cada estado: Hoy (Follow up, 2nd follow up y Sin respuesta), Por contactar, Esperando, En venta y Cerrados. */
+export function tabOf(status: LeadStatus): LeadTab {
+  if (status === 'follow_up' || status === 'follow_up_2' || status === 'no_response') return 'today';
+  if (status === 'new') return 'toContact';
+  if (status === 'waiting') return 'waiting';
+  if (status === 'won' || status === 'lost') return 'closed';
+  return 'sale';
+}
+
+/** Contador de cada pestaña. */
+export function tabCounts(leads: readonly LeadSummary[]): Record<LeadTab, number> {
+  const c: Record<LeadTab, number> = { today: 0, toContact: 0, waiting: 0, sale: 0, closed: 0 };
+  for (const l of leads) c[tabOf(l.status)] += 1;
+  return c;
+}
+
+/**
+ * Leads de una pestaña, lo más atrasado primero (D-200): por el día del paso (vencido o siguiente) y, sin él, por
+ * antigüedad; en Cerrados, el más reciente arriba.
+ */
+export function leadsInTab(leads: readonly LeadSummary[], tab: LeadTab): LeadSummary[] {
+  const list = leads.filter((l) => tabOf(l.status) === tab);
+  if (tab === 'closed') return list.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  return list.sort((a, b) => {
+    const x = a.nextStepOn ?? '';
+    const y = b.nextStepOn ?? '';
+    if (x !== y) return x === '' ? 1 : y === '' ? -1 : x.localeCompare(y);
+    return a.createdAt.getTime() - b.createdAt.getTime();
+  });
+}
+
+/** Días enteros entre dos fechas locales. */
+export function daysBetween(from: Date, to: Date): number {
+  const a = new Date(from.getFullYear(), from.getMonth(), from.getDate()).getTime();
+  const b = new Date(to.getFullYear(), to.getMonth(), to.getDate()).getTime();
+  return Math.round((b - a) / 86_400_000);
+}
+
+/** Paso de seguimiento que toca escribir según el estado (plantilla del paso, D-333 (6)); null si no toca ninguno. */
+export function writeStep(status: LeadStatus): 'first' | 'follow_up' | 'follow_up_2' | null {
+  if (status === 'new') return 'first';
+  if (status === 'follow_up') return 'follow_up';
+  if (status === 'follow_up_2') return 'follow_up_2';
+  return null;
+}
+
+/**
+ * Línea gris de la fila (survey flujo-leads-aprobado): "Pedro · 1er contacto hace 8 días", "follow up hace 22 días",
+ * "Sin contacto todavía"; en venta, la cita del walkthrough o el contacto.
+ */
+export function leadStepLine(lead: LeadSummary, now: Date, s: SalesStrings): string {
+  const parts: string[] = [];
+  if (lead.contactName) parts.push(lead.contactName);
+  if (isColdStatus(lead.status)) {
+    const sent = lead.followupsSent ?? 0;
+    if (sent >= 2 && lead.lastContactAt) parts.push(s.flow.followUp2Ago(daysBetween(lead.lastContactAt, now)));
+    else if (sent === 1 && (lead.followupSentAt ?? lead.lastContactAt)) parts.push(s.flow.followUpAgo(daysBetween((lead.followupSentAt ?? lead.lastContactAt)!, now)));
+    else if (lead.firstContactAt) parts.push(s.flow.firstContactAgo(daysBetween(lead.firstContactAt, now)));
+    else parts.push(s.flow.noContact);
+  } else if (lead.status !== 'won' && lead.status !== 'lost' && lead.nextWalkthrough) {
+    parts.push(s.list.walkthroughOn(formatDateTime(lead.nextWalkthrough, s)));
+  }
+  return parts.join(' · ');
+}
+
+/** "10 nov" / "Nov 10" de un día. */
+export function dayMonth(d: Date, s: SalesStrings): string {
+  return s.flow.dayMonth(d.getDate(), s.monthShort[d.getMonth()]);
+}
+
+export type TimelineItem = { key: string; day: Date; label: string; pending: boolean };
+
+/**
+ * Línea de tiempo del seguimiento (D-333 (7)): primer contacto, follow up y 2nd follow up con su fecha, y el siguiente
+ * paso en gris con su fecha.
+ */
+export function followupTimeline(lead: Lead | LeadSummary, s: SalesStrings): TimelineItem[] {
+  const items: TimelineItem[] = [];
+  const sent = lead.followupsSent ?? 0;
+  if (lead.firstContactAt) items.push({ key: 'first', day: lead.firstContactAt, label: s.flow.tlFirst, pending: false });
+  if (sent >= 1 && lead.followupSentAt) items.push({ key: 'fu', day: lead.followupSentAt, label: s.flow.tlFollowUp, pending: false });
+  if (sent >= 2 && lead.lastContactAt) items.push({ key: 'fu2', day: lead.lastContactAt, label: s.flow.tlFollowUp2, pending: false });
+  if (lead.respondedAt) items.push({ key: 'resp', day: lead.respondedAt, label: s.flow.tlResponded, pending: false });
+  const next = lead.nextStepOn ? dateFromKey(lead.nextStepOn) : null;
+  if (next) {
+    const label =
+      lead.status === 'new'
+        ? null
+        : lead.status === 'no_response'
+          ? s.flow.tlNoResponse
+          : lead.status === 'follow_up' || (lead.status === 'waiting' && sent === 0)
+            ? s.flow.tlNextFollowUp
+            : lead.status === 'follow_up_2' || (lead.status === 'waiting' && sent === 1)
+              ? s.flow.tlNextFollowUp2
+              : s.flow.tlNextNoResponse;
+    if (label) items.push({ key: 'next', day: next, label, pending: true });
+  }
+  return items;
+}
+
 /** Iniciales de la empresa: "Gulf Coast Dental" -> "GC". */
 export function initialsOf(name: string): string {
   return name

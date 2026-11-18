@@ -6,6 +6,10 @@ import type { Locale } from './index';
  * APROBADO = sale literal de una decisión o muestra aprobada. D-200 = detalle menor decidido por el ejecutor
  * (listado en el reporte del hito 2 para registrarlo).
  */
+/** "hace 8 días" (D-200: hoy y 1 día). */
+const ago = (n: number) => (n <= 0 ? 'hoy' : n === 1 ? 'hace 1 día' : `hace ${n} días`);
+const agoEn = (n: number) => (n <= 0 ? 'today' : n === 1 ? '1 day ago' : `${n} days ago`);
+
 export const salesEs = {
   status: {
     new: 'Nuevo', // APROBADO (flujo, D-071)
@@ -178,6 +182,49 @@ export const salesEs = {
     deactivated: 'Algún lead ya usa este motivo: se quitó de la lista y esos leads lo conservan.', // D-200
     editLabel: (reason: string) => `Editar ${reason}`, // D-200: solo lo lee el lector de pantalla
     deleteLabel: (reason: string) => `Eliminar ${reason}`, // D-200: solo lo lee el lector de pantalla
+  },
+
+  // Flujo de leads automático (D-332, D-333; surveys/flujo-leads-aprobado.html).
+  flow: {
+    title: 'Leads', // APROBADO (survey flujo-leads-aprobado)
+    tabs: { today: 'Hoy', toContact: 'Por contactar', waiting: 'Esperando', sale: 'En venta', closed: 'Cerrados' }, // APROBADO (D-333 (5))
+    write: 'Escribir', // APROBADO (D-333)
+    responded: 'Respondió', // APROBADO (D-332 (3))
+    noContact: 'Sin contacto todavía', // APROBADO (survey)
+    firstContactAgo: (n: number) => `1er contacto ${ago(n)}`, // APROBADO (survey: "1er contacto hace 8 días")
+    followUpAgo: (n: number) => `follow up ${ago(n)}`, // APROBADO (survey: "follow up hace 22 días")
+    followUp2Ago: (n: number) => `2nd follow up ${ago(n)}`, // D-200 (mismo patrón)
+    emptyTab: 'Nada en esta pestaña.', // D-200
+    respondedTitle: (company: string) => `¿${company} respondió?`, // D-200
+    respondedBody: 'Pasa a Interesado y se detienen los seguimientos.', // D-200 (D-333 (2))
+    respondedYes: 'Sí, respondió', // D-200
+    errorAction: 'No se pudo guardar. Inténtalo otra vez.', // APROBADO (D-195)
+    markLost: 'Marcar perdido (Sin respuesta)', // APROBADO (orden 130, D-333 (1): Perdido o reintentar)
+    retry: 'Reintentar', // APROBADO (D-333 (1))
+    lostTitle: (company: string) => `¿Marcar ${company} como perdido?`, // D-200
+    lostBody: 'Queda en Perdido con el motivo Sin respuesta.', // D-200
+    retryTitle: (company: string) => `¿Reintentar con ${company}?`, // D-200
+    retryBody: 'Vuelve a Follow up: te toca escribir hoy.', // D-200
+    noResponseNote: 'Terminaron los seguimientos sin respuesta: decide.', // D-200
+    changeStatus: 'Cambiar estado', // APROBADO (D-333 (3))
+    timeline: 'Seguimiento', // APROBADO (survey)
+    dayMonth: (day: number, month: string) => `${day} ${month}`, // D-200 (como las fechas cortas, D-038)
+    tlFirst: 'Primer contacto (correo)', // APROBADO (survey)
+    tlFollowUp: 'Follow up (correo)', // APROBADO (survey)
+    tlFollowUp2: '2nd follow up (correo)', // D-200 (mismo patrón)
+    tlResponded: 'Respondió', // D-200
+    tlNextFollowUp: 'Toca follow up', // D-200 (survey: "Toca 2nd follow up")
+    tlNextFollowUp2: 'Toca 2nd follow up', // APROBADO (survey)
+    tlNextNoResponse: 'Sin respuesta si no contesta', // D-200
+    tlNoResponse: 'Sin respuesta', // APROBADO (D-333)
+    tlEmpty: 'Sin contacto todavía', // APROBADO (survey)
+    homeToWrite: 'Hoy te toca escribir', // APROBADO (D-333 (4))
+    homeToWriteCount: (n: number) => (n === 1 ? '1 lead' : `${n} leads`), // APROBADO (survey: "6 leads")
+    homeSee: 'Ver', // APROBADO (survey)
+    homeWaiting: 'Esperando respuesta', // APROBADO (D-333 (4))
+    homeWaitingDetail: 'Nadie te debe nada todavía', // APROBADO (survey)
+    homeNoResponse: 'Sin respuesta · decide', // APROBADO (D-333 (4))
+    homeNoResponseDetail: 'Terminaron los seguimientos', // APROBADO (survey)
   },
 
   home: {
@@ -365,6 +412,48 @@ export const salesEn: SalesStrings = {
     deactivated: 'A lead already uses this reason: it was removed from the list and those leads keep it.',
     editLabel: (reason: string) => `Edit ${reason}`,
     deleteLabel: (reason: string) => `Delete ${reason}`,
+  },
+
+  flow: {
+    title: 'Leads', // leads list title
+    tabs: { today: 'Today', toContact: 'To contact', waiting: 'Waiting', sale: 'In sale', closed: 'Closed' },
+    write: 'Write', // row button: opens the email preview with the step's template
+    responded: 'Replied', // row button: the lead answered, stops follow-ups
+    noContact: 'Not contacted yet',
+    firstContactAgo: (n: number) => `1st contact ${agoEn(n)}`,
+    followUpAgo: (n: number) => `follow up ${agoEn(n)}`,
+    followUp2Ago: (n: number) => `2nd follow up ${agoEn(n)}`,
+    emptyTab: 'Nothing in this tab.',
+    respondedTitle: (company: string) => `Did ${company} reply?`,
+    respondedBody: 'It moves to Interested and the follow-ups stop.',
+    respondedYes: 'Yes, they replied',
+    errorAction: "Couldn't save. Try again.",
+    markLost: 'Mark lost (No response)',
+    retry: 'Try again',
+    lostTitle: (company: string) => `Mark ${company} as lost?`,
+    lostBody: 'It goes to Lost with the reason No response.',
+    retryTitle: (company: string) => `Try again with ${company}?`,
+    retryBody: "It goes back to Follow up: it's your turn to write today.",
+    noResponseNote: 'Follow-ups ended without a reply: decide.',
+    changeStatus: 'Change status', // lead menu: manual correction only
+    timeline: 'Follow-up',
+    dayMonth: (day: number, month: string) => `${month} ${day}`,
+    tlFirst: 'First contact (email)',
+    tlFollowUp: 'Follow up (email)',
+    tlFollowUp2: '2nd follow up (email)',
+    tlResponded: 'Replied',
+    tlNextFollowUp: 'Follow up due',
+    tlNextFollowUp2: '2nd follow up due',
+    tlNextNoResponse: 'No response if no reply',
+    tlNoResponse: 'No response',
+    tlEmpty: 'Not contacted yet',
+    homeToWrite: 'Your turn to write today', // admin home card
+    homeToWriteCount: (n: number) => (n === 1 ? '1 lead' : `${n} leads`),
+    homeSee: 'View',
+    homeWaiting: 'Waiting for reply',
+    homeWaitingDetail: 'Nobody owes you a reply yet',
+    homeNoResponse: 'No response · decide',
+    homeNoResponseDetail: 'Follow-ups ended',
   },
 
   home: {

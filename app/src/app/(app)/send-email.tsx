@@ -21,8 +21,10 @@ import {
   buildEmailHtml,
   buildMailto,
   initialValues,
+  isFollowupStep,
   missingFields,
   sortTemplates,
+  templateForStep,
   usedPlaceholders,
   validEmail,
   type EmailTemplate,
@@ -70,8 +72,12 @@ async function copyRich(plain: string, html: string): Promise<boolean> {
   }
 }
 
+const isLeadKind = (k: string | undefined) => k !== 'client';
+
 export default function SendEmailScreen() {
-  const params = useLocalSearchParams<{ kind: string; id: string }>();
+  // D-333 (6): `step` (desde "Escribir" o "Correo") abre directo la vista previa con la plantilla del paso.
+  const params = useLocalSearchParams<{ kind: string; id: string; step?: string }>();
+  const presetStep = isLeadKind(params.kind) && isFollowupStep(params.step) ? params.step : null;
   const kind: TemplateEntity = params.kind === 'client' ? 'client' : 'lead';
   const id = params.id;
   const goBack = useGoBack();
@@ -86,6 +92,8 @@ export default function SendEmailScreen() {
   const [failed, setFailed] = useState<'load' | 'context' | null>(null);
   const [chosen, setChosen] = useState<string | null>(null);
   const [step, setStep] = useState<'pick' | 'preview'>('pick');
+  // Vista previa abierta directo con la plantilla del paso: Volver sale de la pantalla (D-200).
+  const [direct, setDirect] = useState(false);
   const [contactIndex, setContactIndex] = useState(0);
   const [to, setTo] = useState('');
   const [values, setValues] = useState<FillValues | null>(null);
@@ -102,12 +110,22 @@ export default function SendEmailScreen() {
       else {
         const list = sortTemplates(a.data);
         setTemplates(list);
-        setChosen(list[0]?.id ?? null);
+        const preset = presetStep ? templateForStep(list, presetStep) : null;
+        setChosen(preset?.id ?? list[0]?.id ?? null);
+        if (preset && b.ok) {
+          const contact = b.data.contacts[0] ?? null;
+          setAsked(missingFields(usedPlaceholders(preset.subject, preset.body), initialValues(b.data, contact)));
+          setDirect(true);
+          setStep('preview');
+        }
       }
       if (!b.ok) setFailed((f) => f ?? 'context');
       else {
         setCtx(b.data);
-        pickContact(b.data, 0);
+        const contact = b.data.contacts[0] ?? null;
+        setContactIndex(0);
+        setTo(contact?.email ?? '');
+        setValues(initialValues(b.data, contact));
       }
     });
     return () => {
@@ -183,7 +201,7 @@ export default function SendEmailScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TopBar
         title={step === 'pick' ? t.send : t.preview}
-        onBack={step === 'preview' ? () => setStep('pick') : goBack}
+        onBack={step === 'preview' && !direct ? () => setStep('pick') : goBack}
         backLabel={strings.common.back}
         subtitle={
           header ? (
@@ -306,6 +324,11 @@ export default function SendEmailScreen() {
                 ))}
               </>
             ) : null}
+            {direct ? (
+              <AppText size={sample.noteSize} color={colors.secondary} style={{ marginBottom: 4 }}>
+                {t.templateLine(template.name)}
+              </AppText>
+            ) : null}
             <CardBlock style={{ paddingVertical: 14, gap: 10 }}>
               <AppText selectable>
                 <AppText weight="medium">{`${t.subject}: `}</AppText>
@@ -327,6 +350,16 @@ export default function SendEmailScreen() {
             <View style={{ gap: 8 }}>
               <AppButton label={t.open} icon="mail" onPress={() => void open()} />
               <AppButton label={t.copy} variant="outline" onPress={() => void copy()} />
+              {direct ? (
+                <AppButton
+                  label={t.changeTemplate}
+                  variant="outline"
+                  onPress={() => {
+                    setDirect(false);
+                    setStep('pick');
+                  }}
+                />
+              ) : null}
             </View>
           </>
         ) : null}

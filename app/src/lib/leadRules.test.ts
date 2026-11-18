@@ -2,6 +2,12 @@ import { salesEn, salesEs } from '@/i18n/sales';
 import {
   LEAD_STATUSES,
   isColdStatus,
+  leadsInTab,
+  leadStepLine,
+  tabCounts,
+  tabOf,
+  writeStep,
+  followupTimeline,
   toLeadStatus,
   activeReasons,
   canDeleteLeads,
@@ -360,5 +366,36 @@ describe('D-319: lead web sin empresa y sitio sin nombre', () => {
     expect(siteLabel({ name: null, address: 'Bonita Springs, FL 34135' })).toBe('Bonita Springs, FL 34135');
     expect(siteLabel({ name: null, address: '' })).toBe('Naples, FL');
     expect(siteLabel({ name: 'Oficina', address: '' })).toBe('Oficina');
+  });
+});
+
+describe('Leads en pestañas (D-333, orden 131)', () => {
+  const base = { contactName: 'Pedro', createdAt: new Date(2026, 9, 1), followUpOn: null, nextWalkthrough: null };
+  it('pestaña de cada estado y contadores', () => {
+    expect(['follow_up', 'follow_up_2', 'no_response', 'new', 'waiting', 'interested', 'quote_sent', 'won', 'lost'].map((x) => tabOf(x as never))).toEqual([
+      'today', 'today', 'today', 'toContact', 'waiting', 'sale', 'sale', 'closed', 'closed',
+    ]);
+    const leads = [
+      { ...base, id: 'a', company: 'A', status: 'follow_up' as const, nextStepOn: '2026-11-20' },
+      { ...base, id: 'b', company: 'B', status: 'follow_up_2' as const, nextStepOn: '2026-11-10' },
+      { ...base, id: 'c', company: 'C', status: 'new' as const },
+    ];
+    expect(tabCounts(leads)).toEqual({ today: 2, toContact: 1, waiting: 0, sale: 0, closed: 0 });
+    expect(leadsInTab(leads, 'today').map((l) => l.id)).toEqual(['b', 'a']);
+  });
+  it('línea del paso y plantilla del paso', () => {
+    const now = new Date(2026, 10, 18, 12);
+    expect(leadStepLine({ ...base, id: 'x', company: 'X', status: 'new' }, now, salesEs)).toBe('Pedro · Sin contacto todavía');
+    expect(leadStepLine({ ...base, id: 'x', company: 'X', status: 'follow_up', firstContactAt: new Date(2026, 10, 10, 9) }, now, salesEs)).toBe('Pedro · 1er contacto hace 8 días');
+    expect(writeStep('new')).toBe('first');
+    expect(writeStep('follow_up_2')).toBe('follow_up_2');
+    expect(writeStep('waiting')).toBeNull();
+  });
+  it('línea de tiempo: pasos hechos y el siguiente en gris', () => {
+    const tl = followupTimeline(
+      { ...base, id: 'x', company: 'X', status: 'waiting', followupsSent: 1, firstContactAt: new Date(2026, 10, 10), followupSentAt: new Date(2026, 10, 18), nextStepOn: '2026-12-10' },
+      salesEs,
+    );
+    expect(tl.map((i) => `${i.label}|${i.pending}`)).toEqual(['Primer contacto (correo)|false', 'Follow up (correo)|false', 'Toca 2nd follow up|true']);
   });
 });
