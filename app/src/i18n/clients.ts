@@ -129,7 +129,7 @@ export const clientsEs = {
     extras: 'Extras', // muestra
     noExtras: 'Ninguno todavía', // muestra: "None yet"
     extraQuote: 'Quote de extra', // muestra: "+ Extra quote"
-    scheduleTitle: 'Horario y personal', // D-200: título del bloque de horario que se conserva sin cambios (D-340)
+    scheduleTitle: 'Personal', // D-342: solo el personal asignado; el horario está en Schedule and Work
     docsEmpty: 'Todavía no hay documentos.', // D-200
     docsError: 'No se pudieron cargar los documentos. Inténtalo otra vez.', // D-200
     open: 'Abrir', // D-200
@@ -407,7 +407,7 @@ export const clientsEn: ClientsStrings = {
     extras: 'Extras',
     noExtras: 'None yet',
     extraQuote: 'Extra quote',
-    scheduleTitle: 'Schedule and staff',
+    scheduleTitle: 'Staff',
     docsEmpty: 'No documents yet.',
     docsError: "Couldn't load the documents. Try again.",
     open: 'Open',

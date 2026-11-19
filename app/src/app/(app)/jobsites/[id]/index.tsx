@@ -18,10 +18,7 @@ import { Chip } from "@/components/Chip";
 import { DataRow } from "@/components/DataRow";
 import { Icon } from "@/components/Icon";
 import { ListRow } from "@/components/ListRow";
-import {
-  ScheduleWorkPanel,
-  WORK_KEYS,
-} from "@/components/work/ScheduleWorkPanel";
+import { WORK_KEYS } from "@/components/work/ScheduleWorkPanel";
 import { saveLocation } from "@/lib/jobsiteLocation";
 import { Sheet } from "@/components/Sheet";
 import { BackHeader } from "@/components/bento/Header";
@@ -531,7 +528,7 @@ function Summary({
         labels={{ title: c.detail.extras, empty: c.detail.noExtras, add: c.detail.extraQuote }}
       />
 
-      {/* D-340: el horario y el personal del jobsite, exactamente como estaban (mismos componentes). */}
+      {/* D-340: el personal del jobsite, como estaba (mismo componente). */}
       <AppText
         weight="bold"
         size={15}
@@ -539,12 +536,9 @@ function Summary({
       >
         {c.detail.scheduleTitle}
       </AppText>
+      {/* D-342: el horario (Schedule / To approve / Approved) ya está en Schedule and Work; aquí queda solo el personal
+          asignado con su pago por visita, que no existe en otro lugar. */}
       <Staff jobsite={jobsite} c={c} day={day} onChanged={onChanged} />
-      {seesSchedule ? (
-        <View style={{ marginTop: 12 }}>
-          <ScheduleWorkPanel jobsiteId={jobsite.id} />
-        </View>
-      ) : null}
 
       <Sheet visible={rateOpen} onClose={() => setRateOpen(false)}>
         <AppText

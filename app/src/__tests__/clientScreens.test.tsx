@@ -143,9 +143,9 @@ describe('Jobsite (orden 150, D-339, D-340)', () => {
     expect(screen.queryByText('Walkthrough')).toBeNull();
     expect(screen.queryByLabelText('Estado')).toBeNull();
     // El horario y el personal siguen en el Resumen (D-340).
-    expect(screen.getByText('Horario y personal')).toBeTruthy();
+    expect(screen.getByText('Personal')).toBeTruthy();
     expect(await screen.findByText('María López')).toBeTruthy();
-    expect(screen.getByText('PANEL DE HORARIO')).toBeTruthy();
+    expect(screen.queryByText('PANEL DE HORARIO')).toBeNull(); // D-342: el horario vive solo en Schedule and Work
   });
 
   it('Correo abre las plantillas del cliente', async () => {
