@@ -1,7 +1,8 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 
-import { BackHeader } from '@/components/bento/Header';
+import { AccountButton } from '@/components/AccountButton';
+import { TitleHeader } from '@/components/bento/Header';
 import { ScheduleWorkPanel, WORK_KEYS } from '@/components/work/ScheduleWorkPanel';
 import { useStrings } from '@/i18n/useStrings';
 import { useWorkStrings } from '@/i18n/useWorkStrings';
@@ -26,14 +27,13 @@ export function ScheduleScreenBody() {
 
   if (!seesSchedule && !seesWork) return <Redirect href="/" />;
   const initial = params.tab === 'approve' ? 'approve' : 'schedule';
-  const back = () => (router.canGoBack() ? router.back() : router.navigate('/'));
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <BackHeader
-        onBack={back}
-        backLabel={strings.common.back}
+      <TitleHeader
+        back={strings.common.back}
         title={t.title}
-        action={seesSchedule ? { label: t.newVisit, icon: 'plus', accessibilityLabel: t.newVisit, onPress: () => router.push('/schedule/new') } : undefined}
+        action={seesSchedule ? { icon: 'plus', label: t.newVisit, onPress: () => router.push('/schedule/new') } : undefined}
+        right={<AccountButton />}
       />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 16 }} keyboardShouldPersistTaps="handled">
         {/* Como pestaña la pantalla no se vuelve a montar: la clave hace que un ?tab nuevo abra esa sección. */}

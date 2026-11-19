@@ -540,6 +540,12 @@ function Greeting({ name }: { name: string }) {
   );
   return (
     <View style={[styles.greeting, { paddingTop: insets.top + 20 }]}>
+      {router.canGoBack() ? (
+        // D-346: flecha de volver a la pantalla anterior, solo si hay una.
+        <Pressable accessibilityRole="button" accessibilityLabel={strings.common.back} onPress={() => router.back()} style={[styles.bell, { backgroundColor: colors.card }]}>
+          <Icon name="chevron-left" size={22} strokeWidth={iconStrokeWidth} color={colors.text} />
+        </Pressable>
+      ) : null}
       <View style={{ gap: 2, flex: 1 }}>
         <AppText size={13} color={colors.secondary}>
           {strings.home.dateLine(new Date())}

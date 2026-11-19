@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +19,7 @@ export function TitleHeader({
   action,
   left,
   right,
+  back,
 }: {
   kicker?: string;
   title: string;
@@ -26,11 +28,20 @@ export function TitleHeader({
   left?: ReactNode;
   /** Algo más a la derecha, después de la acción (D-337: el avatar de Mi cuenta en las pestañas). */
   right?: ReactNode;
+  /** D-346: flecha de volver a la pantalla anterior (solo se ve si hay una pantalla anterior). Texto para el lector. */
+  back?: string;
 }) {
   const insets = useSafeAreaInsets();
   const { colors, brand } = useTheme();
+  const router = useRouter();
+  const showBack = !!back && router.canGoBack();
   return (
     <View style={[styles.title, { paddingTop: insets.top + 20 }]}>
+      {showBack ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={back} onPress={() => router.back()} style={[styles.whiteSquare, { backgroundColor: colors.card }]}>
+          <Icon name="chevron-left" size={22} strokeWidth={iconStrokeWidth} color={colors.text} />
+        </Pressable>
+      ) : null}
       {left ?? (
         <View style={{ gap: 2, flex: 1 }}>
           {kicker ? (

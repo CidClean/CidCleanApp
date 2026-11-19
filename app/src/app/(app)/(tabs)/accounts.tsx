@@ -89,6 +89,7 @@ export default function AccountsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TitleHeader
+        back={strings.common.back}
         kicker={c.list.kicker}
         title={strings.nav.accounts}
         action={canCreateLegacy(access) ? { icon: 'plus', label: c.list.newClient, onPress: () => router.push('/clients/new') } : undefined}

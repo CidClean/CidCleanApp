@@ -522,7 +522,7 @@ describe('Inicio unido: pendientes de Ventas (D-333 (4), D-337)', () => {
 });
 
 describe('Eliminar lead (D-201)', () => {
-  it('solo con leads_eliminar; la hoja confirma y vuelve al Pipeline', async () => {
+  it('solo con leads_eliminar; la hoja confirma y vuelve a la pantalla anterior', async () => {
     mockDeleteLead.mockResolvedValue({ ok: true, data: null });
     mockAccess = { isSuperAdmin: false, permissions: new Set(['leads_ver', 'leads_eliminar']) };
     await render(<LeadDetailScreen />);
@@ -531,7 +531,7 @@ describe('Eliminar lead (D-201)', () => {
     expect(screen.getByText('¿Eliminar Gulf Coast Dental?')).toBeTruthy();
     await fireEvent.press(screen.getByText('Eliminar'));
     await waitFor(() => expect(mockDeleteLead).toHaveBeenCalledWith('l1'));
-    expect(mockNavigate).toHaveBeenCalledWith('/pipeline');
+    expect(mockBack).toHaveBeenCalled(); // D-346: vuelve a la pantalla anterior
   });
 
   it('sin leads_eliminar no aparece', async () => {

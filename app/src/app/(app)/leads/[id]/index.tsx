@@ -177,8 +177,9 @@ export default function LeadDetailScreen() {
         setDeleteError('lead');
         return;
       }
-      // D-201: al eliminar vuelve al Pipeline.
-      router.navigate('/pipeline');
+      // D-346: al eliminar vuelve a la pantalla anterior (Leads si no hay).
+      if (router.canGoBack()) router.back();
+      else router.navigate('/pipeline');
       return;
     }
     const result = await deleteSite(confirm.site.id);

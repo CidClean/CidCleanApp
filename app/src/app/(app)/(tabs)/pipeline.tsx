@@ -77,6 +77,7 @@ export default function LeadsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <TitleHeader
+        back={strings.common.back}
         title={s.flow.title}
         action={canEdit ? { icon: 'plus', label: s.form.newTitle, onPress: () => router.push('/leads/new') } : undefined}
         right={<AccountButton />}

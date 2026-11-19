@@ -195,6 +195,7 @@ El inicio muestra solo los pendientes de las áreas donde la persona tiene permi
 - **Versionado:** walkthrough, SOW, quotes y términos y condiciones guardan sus versiones anteriores.
 - **Auditoría:** historial de cambios visible para quien tenga el permiso. Registra los cambios importantes (tarifas, permisos, estados y aprobaciones) y cada vez que alguien abre tarifas o documentos sensibles.
 - **Permisos:** todo acceso y toda notificación dependen de los permisos del perfil.
+- **Volver (D-345, D-346):** toda pantalla muestra la flecha de volver cuando hay una pantalla anterior; la flecha y el botón atrás del teléfono llevan siempre a la pantalla anterior, sin recorridos forzados. Las páginas públicas (quote, ICA, contrato, W-9) no llevan flecha.
 
 **Fuera de esta versión**
 
