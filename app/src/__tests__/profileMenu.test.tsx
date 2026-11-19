@@ -12,9 +12,17 @@ jest.mock('expo-router', () => ({
 jest.mock('@/lib/employeesApi', () => ({ fetchEmployees: async () => ({ ok: true, data: [] }) }));
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 const mockSignOut = jest.fn();
+const mockRefresh = jest.fn();
+const mockSave = jest.fn();
+// Orden 152: Editar mi perfil lee y guarda nombre, apellido y teléfono propios.
+jest.mock('@/lib/myProfileApi', () => ({
+  ...jest.requireActual('@/lib/myProfileApi'),
+  fetchMyProfile: async () => ({ firstName: 'Ana', lastName: 'Ruiz', phone: '(239) 555-0142' }),
+  saveMyProfile: (...a: unknown[]) => mockSave(...a),
+}));
 jest.mock('@/lib/session', () => ({
   usePermissions: () => ({ access: { isSuperAdmin: false, permissions: new Set() }, isSuperAdmin: false, can: () => false }),
-  useSession: () => ({ locale: 'es', profile: { id: 'yo', fullName: 'Ana', email: 'ana@x.com' }, setLanguage: jest.fn(), signOut: mockSignOut }),
+  useSession: () => ({ locale: 'es', profile: { id: 'yo', fullName: 'Ana', email: 'ana@x.com' }, setLanguage: jest.fn(), signOut: mockSignOut, refresh: mockRefresh }),
 }));
 jest.mock('@/lib/navigation', () => ({ useGoBack: () => jest.fn() }));
 jest.mock('@/i18n/useStrings', () => ({ useStrings: () => require('@/i18n').getStrings('es') }));
@@ -102,5 +110,39 @@ describe('Tema (D-222 b)', () => {
     await fireEvent.press(screen.getByText('Tema'));
     await fireEvent.press(screen.getByText('Oscuro'));
     await waitFor(async () => expect(await AsyncStorage.getItem('cidclean-theme')).toBe('dark'));
+  });
+});
+
+describe('Editar mi perfil (orden 152, D-340 (3))', () => {
+  beforeEach(() => {
+    mockSave.mockReset();
+    mockRefresh.mockReset();
+  });
+
+  it('nombre, apellido y teléfono editables; el correo de entrada solo se muestra; guarda y refresca la sesión', async () => {
+    mockSave.mockResolvedValue('ok');
+    await render(<ProfileScreen />);
+    expect(screen.getByText('Editar mi perfil')).toBeTruthy();
+    expect(await screen.findByDisplayValue('Ana')).toBeTruthy();
+    expect(screen.getByDisplayValue('Ruiz')).toBeTruthy();
+    expect(screen.getByText('ana@x.com · correo de entrada')).toBeTruthy();
+    expect(screen.queryByDisplayValue('ana@x.com')).toBeNull();
+    expect(screen.getByText('Tu nombre y teléfono van en la firma de los correos que envías con plantillas.')).toBeTruthy();
+    await fireEvent.changeText(screen.getByDisplayValue('(239) 555-0142'), '7862501324');
+    await fireEvent.press(screen.getByText('Guardar'));
+    await waitFor(() => expect(mockSave).toHaveBeenCalledWith({ firstName: 'Ana', lastName: 'Ruiz', phone: '(786) 250-1324' }));
+    await waitFor(() => expect(mockRefresh).toHaveBeenCalled());
+    expect(screen.getByText('Guardado.')).toBeTruthy();
+  });
+
+  it('teléfono inválido o sin apellido no guarda', async () => {
+    await render(<ProfileScreen />);
+    await fireEvent.changeText(await screen.findByDisplayValue('(239) 555-0142'), '1234567890');
+    await fireEvent.press(screen.getByText('Guardar'));
+    expect(screen.getByText(/Escribe un teléfono válido de EE\. UU\./)).toBeTruthy();
+    await fireEvent.changeText(screen.getByDisplayValue('Ruiz'), ' ');
+    await fireEvent.press(screen.getByText('Guardar'));
+    expect(screen.getAllByText('Escribe tu nombre y apellido.').length).toBeGreaterThan(0);
+    expect(mockSave).not.toHaveBeenCalled();
   });
 });

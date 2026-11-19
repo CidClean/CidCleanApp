@@ -111,7 +111,7 @@ export const es = {
     roleLine: (role: string, email: string) => (email ? `${role} · ${email}` : role), // D-200
     me: 'Yo', // D-200 (muestra: "Me")
     editProfile: 'Editar mi perfil', // D-200 (muestra: "Edit my profile")
-    editProfileDetail: 'Nombre, correo y cuenta', // D-200
+    editProfileDetail: 'Nombre, teléfono y cuenta', // D-200 (orden 152: el teléfono se edita aquí)
     languageTheme: 'Idioma · Tema', // D-200
     myNotifications: 'Mis notificaciones', // D-200
     company: 'Ajustes de la empresa', // D-200 (muestra: "Company settings")
@@ -127,6 +127,16 @@ export const es = {
 
   profile: {
     title: 'Mi perfil', // APROBADO (muestra ronda 14)
+    // Editar mi perfil (orden 152, D-340 (3), muestra pantalla 4). D-200 = detalle menor.
+    editTitle: 'Editar mi perfil', // muestra: "Edit my profile"
+    firstName: 'Nombre', // muestra: "First name"
+    lastName: 'Apellido', // muestra: "Last name"
+    phone: 'Teléfono', // muestra: "Phone"
+    signInEmail: (email: string) => `${email} · correo de entrada`, // muestra: "admin@cidclean.com · sign-in email"
+    signatureNote: 'Tu nombre y teléfono van en la firma de los correos que envías con plantillas.', // muestra
+    nameRequired: 'Escribe tu nombre y apellido.', // D-200
+    saveError: 'No se pudo guardar. Inténtalo otra vez.', // D-200
+    saved: 'Guardado.', // D-200
     name: 'Nombre', // APROBADO (D-166)
     email: 'Correo', // APROBADO (D-166)
     language: 'Idioma', // APROBADO (D-166)
