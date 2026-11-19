@@ -85,11 +85,71 @@ export const clientsEs = {
     pauseTitle: (n: string) => `¿Pausar ${n}?`, // D-200 (mismo patrón de D-173)
     pauseBody: 'Se detienen las visitas y los ingresos esperados. El personal se conserva.', // D-200 (texto de D-210)
     terminateTitle: (n: string) => `¿Terminar ${n}?`, // D-200
-    terminateBody: 'Se detienen las visitas y los ingresos esperados, y se cierra el personal asignado. No se puede reabrir.', // D-200 (D-210)
+    terminateBody: 'Se detienen las visitas y los ingresos esperados, y se cierra el personal asignado. Se puede reactivar después.', // D-200 (D-210; D-340: se puede reactivar)
     confirmPause: 'Pausar', // D-200
     confirmTerminate: 'Terminar', // D-200
     rateTitle: 'Tarifa mensual', // D-200: hoja para editar la tarifa de un cliente previo
     rateQuoteNote: 'La tarifa cambia con un quote nuevo.', // D-200 (D-210)
+  },
+
+  // Detalle del jobsite (orden 150, D-339, D-340, muestra surveys/jobsite-detalle-aprobado.html). D-200 = detalle menor.
+  detail: {
+    clientLine: (n: string) => `Cliente: ${n}`, // muestra: "Client: X"
+    call: 'Llamar', // muestra: "Call"
+    email: 'Correo', // muestra: "Email"
+    maps: 'Maps', // muestra: "Maps"
+    schedule: 'Schedule', // muestra: "Schedule"
+    tabSummary: 'Resumen', // D-339
+    tabDocuments: 'Documentos', // D-339
+    tabHistory: 'Historial', // D-339
+    menu: 'Más acciones', // D-200 (botón ⋯)
+    pause: 'Pausar', // D-339
+    resume: 'Reanudar', // D-200 (de Pausado a Activo, como el selector de antes)
+    terminate: 'Terminar', // D-339
+    rate: 'tarifa', // muestra: "rate"
+    received: 'cobrado', // muestra: "received"
+    staff: 'personal', // muestra: "staff"
+    margin: 'margen', // muestra: "margin"
+    staffShare: (p: number) => `El personal es el ${p}% de la tarifa`, // muestra: "Staff is 42% of the rate"
+    plusCode: 'Plus Code', // muestra
+    contactBoth: 'Contacto principal y de emergencia', // muestra: "Main and emergency contact"
+    contactMain: 'Contacto principal', // D-200
+    contactEmergency: 'Contacto de emergencia', // D-200
+    noContact: 'Sin contacto', // D-200
+    everyDay: 'Todos los días', // D-200
+    daysAWeek: (n: number) => `${n} días a la semana`, // muestra: "6 days a week"
+    except: (names: string) => `sin ${names}`, // muestra: "no Wednesday"
+    or: 'ni', // D-200 ("sin domingo ni miércoles")
+    daysLong: ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'], // D-200
+    hoursPerVisit: (h: string) => `${h} h por visita`, // muestra: "4 h per visit"
+    since: (d: string) => `desde ${d}`, // muestra: "since Sep 17, 2026"
+    noFrequency: 'Sin frecuencia', // D-200
+    contract: 'Contrato', // muestra: "Contract"
+    download: 'Descargar', // muestra: "Download"
+    extras: 'Extras', // muestra
+    noExtras: 'Ninguno todavía', // muestra: "None yet"
+    extraQuote: 'Quote de extra', // muestra: "+ Extra quote"
+    scheduleTitle: 'Horario y personal', // D-200: título del bloque de horario que se conserva sin cambios (D-340)
+    docsEmpty: 'Todavía no hay documentos.', // D-200
+    docsError: 'No se pudieron cargar los documentos. Inténtalo otra vez.', // D-200
+    open: 'Abrir', // D-200
+    historyEmpty: 'Todavía no hay cambios ni correos.', // D-200
+    historyError: 'No se pudo cargar el historial. Inténtalo otra vez.', // D-200
+    emailSent: (t: string) => `Correo enviado: ${t}`, // D-200
+    statusChanged: (s: string) => `Estado: ${s}`, // D-200
+    rateChanged: 'Tarifa cambiada', // D-200
+    staffAssigned: 'Personal asignado', // D-200
+    staffRemoved: 'Personal quitado', // D-200
+    payDefined: 'Pago definido', // D-200
+    scheduleChanged: 'Horario del jobsite cambiado', // D-200
+    incomeGenerated: 'Ingreso del mes generado', // D-200
+    incomeAdjusted: 'Ingreso ajustado', // D-200
+    incomeReceived: 'Ingreso marcado como recibido', // D-200
+    incomePending: 'Ingreso marcado como pendiente', // D-200
+    extraIncome: 'Extra agregado al ingreso', // D-200
+    cleaningType: 'Tipo de limpieza cambiado', // D-200
+    contractPending: 'Contrato pendiente', // D-200
+    reactivated: 'Jobsite reactivado', // D-200
   },
 
   margin: {
@@ -288,12 +348,71 @@ export const clientsEn: ClientsStrings = {
     pauseTitle: (n: string) => `Pause ${n}?`,
     pauseBody: 'Visits and expected income stop. The staff stays assigned.',
     terminateTitle: (n: string) => `End ${n}?`,
-    terminateBody: 'Visits and expected income stop and the assigned staff is closed. It cannot be reopened.',
+    terminateBody: 'Visits and expected income stop and the assigned staff is closed. It can be reactivated later.',
     confirmPause: 'Pause',
     confirmTerminate: 'End',
     rateTitle: 'Monthly rate',
     rateQuoteNote: 'The rate changes with a new quote.',
   },
+  detail: {
+    clientLine: (n: string) => `Client: ${n}`,
+    call: 'Call',
+    email: 'Email',
+    maps: 'Maps',
+    schedule: 'Schedule',
+    tabSummary: 'Summary',
+    tabDocuments: 'Documents',
+    tabHistory: 'History',
+    menu: 'More actions',
+    pause: 'Pause',
+    resume: 'Resume',
+    terminate: 'End',
+    rate: 'rate',
+    received: 'received',
+    staff: 'staff',
+    margin: 'margin',
+    staffShare: (p: number) => `Staff is ${p}% of the rate`,
+    plusCode: 'Plus Code',
+    contactBoth: 'Main and emergency contact',
+    contactMain: 'Main contact',
+    contactEmergency: 'Emergency contact',
+    noContact: 'No contact',
+    everyDay: 'Every day',
+    daysAWeek: (n: number) => `${n} days a week`,
+    except: (names: string) => `no ${names}`,
+    or: 'or',
+    daysLong: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    hoursPerVisit: (h: string) => `${h} h per visit`,
+    since: (d: string) => `since ${d}`,
+    noFrequency: 'No frequency',
+    contract: 'Contract',
+    download: 'Download',
+    extras: 'Extras',
+    noExtras: 'None yet',
+    extraQuote: 'Extra quote',
+    scheduleTitle: 'Schedule and staff',
+    docsEmpty: 'No documents yet.',
+    docsError: "Couldn't load the documents. Try again.",
+    open: 'Open',
+    historyEmpty: 'No changes or emails yet.',
+    historyError: "Couldn't load the history. Try again.",
+    emailSent: (t: string) => `Email sent: ${t}`,
+    statusChanged: (s: string) => `Status: ${s}`,
+    rateChanged: 'Rate changed',
+    staffAssigned: 'Staff assigned',
+    staffRemoved: 'Staff removed',
+    payDefined: 'Pay set',
+    scheduleChanged: 'Jobsite schedule changed',
+    incomeGenerated: 'Monthly income generated',
+    incomeAdjusted: 'Income adjusted',
+    incomeReceived: 'Income marked as received',
+    incomePending: 'Income marked as pending',
+    extraIncome: 'Extra added to income',
+    cleaningType: 'Cleaning type changed',
+    contractPending: 'Contract pending',
+    reactivated: 'Jobsite reactivated',
+  },
+
   margin: {
     cost: 'Staff cost',
     of: (cost: string, rate: string) => `${cost} of ${rate}`,

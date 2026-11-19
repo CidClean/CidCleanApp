@@ -507,3 +507,67 @@ export function jobsiteFormFrom(j: Jobsite, us: (key: string | null) => string):
     rate: '',
   };
 }
+
+// --- Detalle del jobsite (orden 150, D-339, D-340) ---------------------------------------------------------
+
+export type ReadableFrequencyStrings = {
+  daily: string;
+  other: string;
+  /** Nombres cortos, 0 = lunes (D-038). */
+  days: readonly string[];
+  /** Nombres largos, 0 = lunes. */
+  daysLong: readonly string[];
+  and: string;
+  everyDay: string;
+  daysAWeek: (n: number) => string;
+  /** "no Wednesday" / "no Wednesday or Sunday". */
+  except: (names: string) => string;
+  or: string;
+};
+
+const joinWith = (names: string[], word: string) =>
+  names.length <= 1 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} ${word} ${names[names.length - 1]}`;
+
+/**
+ * Frecuencia legible (D-340): 7 días "Every day"; de 4 a 6, "6 days a week · no Wednesday"; si son pocos días (1 a 3),
+ * la lista "Mon, Wed and Fri". Diaria y Otra como siempre. D-200: el corte entre lista y "N days a week" es 4 días.
+ */
+export function readableFrequency(f: Frequency | null, s: ReadableFrequencyStrings): string | null {
+  if (!f) return null;
+  if (f.kind === 'daily') return s.daily;
+  if (f.kind === 'other') return f.other?.trim() || s.other;
+  const days = [...new Set(f.days)].filter((d) => d >= 0 && d <= 6).sort(bySunday);
+  if (days.length === 0) return null;
+  if (days.length === 7) return s.everyDay;
+  if (days.length <= 3) return joinWith(days.map((d) => s.days[d]), s.and);
+  const missing = [0, 1, 2, 3, 4, 5, 6].filter((d) => !days.includes(d)).sort(bySunday);
+  return `${s.daysAWeek(days.length)} · ${s.except(joinWith(missing.map((d) => s.daysLong[d]), s.or))}`;
+}
+
+/** Principal y emergencia son la misma persona si coinciden nombre y teléfono (D-340), sin mayúsculas ni formato. */
+export function sameContact(j: Pick<Jobsite, 'contactName' | 'contactPhone' | 'emergencyName' | 'emergencyPhone'>): boolean {
+  const name = (x: string | null) => (x ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const digits = (x: string | null) => (x ?? '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '');
+  if (name(j.emergencyName) === '' && digits(j.emergencyPhone) === '') return true; // sin emergencia: una sola fila
+  return name(j.contactName) === name(j.emergencyName) && digits(j.contactPhone) === digits(j.emergencyPhone);
+}
+
+/** Enlace de Maps: las coordenadas del Plus Code si las hay, si no la dirección (D-340). */
+export function mapsUrl(address: string | null, coords: { latitude: number; longitude: number } | null): string | null {
+  if (coords) return `https://www.google.com/maps/search/?api=1&query=${coords.latitude},${coords.longitude}`;
+  const a = (address ?? '').trim();
+  return a ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a)}` : null;
+}
+
+/** Margen del mes sobre la tarifa: % de margen y % del personal (barra), o null sin tarifa (D-340). */
+export function monthMargin(rate: number | null, staff: number | null): { margin: number; staffShare: number } | null {
+  if (rate === null || staff === null || rate <= 0) return null;
+  const share = staff / rate;
+  return { margin: Math.round((1 - share) * 100), staffShare: Math.round(share * 100) };
+}
+
+/** Acciones del menú ⋯ con la misma lógica del selector de estado de antes (D-056): Activo ↔ Pausado, y Terminar. */
+export function statusMenuActions(current: JobsiteStatus): JobsiteStatus[] {
+  if (current === 'terminated') return [];
+  return statusOptions(current).filter((s) => s !== current);
+}

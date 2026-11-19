@@ -6,6 +6,7 @@ import { FormScroll } from '@/components/FormScroll';
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
 import { JobsiteFields } from '@/components/clients/JobsiteFields';
+import { CleaningTypeField } from '@/components/contract/CleaningTypeField';
 import { TopBar } from '@/components/TopBar';
 import { useClientsStrings } from '@/i18n/useClientsStrings';
 import { useStrings } from '@/i18n/useStrings';
@@ -18,7 +19,11 @@ import { usePermissions } from '@/lib/session';
 import { useTheme } from '@/theme';
 import { saveLocation } from '@/lib/jobsiteLocation';
 
-/** Editar datos y contactos del jobsite (clientes_editar_datos). La tarifa y el estado se cambian en el Resumen. */
+/**
+ * Editar datos y contactos del jobsite (clientes_editar_datos). La tarifa se cambia en el Resumen y el estado en el menú ⋯.
+ * Orden 150 (D-339, D-340): el tipo de limpieza (D-283, D-289) pasa aquí con la misma regla del impuesto; se guarda al
+ * elegirlo, como antes en el Resumen.
+ */
 export default function EditJobsiteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const goBack = useGoBack();
@@ -70,6 +75,8 @@ export default function EditJobsiteScreen() {
         {form ? (
           <>
             <JobsiteFields form={form} errors={errors} onChange={setForm} c={c} withRate={false} />
+            <CleaningTypeField kind="jobsite" id={id} canEdit={canEditClientData(access)} />
+            <View style={{ height: 8 }} />
             <View style={{ height: 4 }} />
             {failed === 'save' ? <AppAlert tone="error" text={c.form.errorSave} /> : null}
             <AppButton label={strings.common.save} onPress={() => void save()} disabled={saving} />

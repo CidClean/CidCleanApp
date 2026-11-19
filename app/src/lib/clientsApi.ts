@@ -3,6 +3,7 @@ import * as DocumentPicker from 'expo-document-picker';
 
 import type { Client, DocKind, Frequency, Jobsite, JobsiteStatus, Pay, PayForm, ProfileAssignment, StaffRow } from './clientRules';
 import { payParams } from './clientRules';
+import { toLibraryDoc } from './documentsLibrary';
 import { supabase } from './supabase';
 
 /**
@@ -362,4 +363,26 @@ export type AccountsOverview = Map<string, { staff: number; endedOn: string | nu
 export const fetchAccountsOverview = () =>
   rpc('accounts_overview', {}, (d) =>
     new Map((d as { jobsite_id: string; staff_count: number; ended_on: string | null }[]).map((r) => [r.jobsite_id, { staff: Number(r.staff_count), endedOn: r.ended_on }])) as AccountsOverview,
+  );
+
+// --- Detalle del jobsite (orden 150, D-340) -------------------------------------------------------------------
+
+/** Documents del jobsite: lo del jobsite y de su cliente, con las reglas de documents_library (migración 20261121000001). */
+export const fetchJobsiteLibrary = (jobsiteId: string) =>
+  rpc('jobsite_library', { p_jobsite: jobsiteId }, (d) => ((d ?? []) as Record<string, unknown>[]).map(toLibraryDoc));
+
+export type JobsiteHistoryEntry = { id: number; at: string; action: string; actor: string | null; info: Record<string, unknown> };
+
+/** History del jobsite: sus cambios (con historial_ver) y los correos enviados al cliente. */
+export const fetchJobsiteHistory = (jobsiteId: string) =>
+  rpc('jobsite_history', { p_jobsite: jobsiteId }, (d) =>
+    ((d ?? []) as Record<string, unknown>[]).map(
+      (r): JobsiteHistoryEntry => ({
+        id: Number(r.id),
+        at: String(r.at),
+        action: String(r.action),
+        actor: (r.actor as string | null) ?? null,
+        info: (r.info as Record<string, unknown>) ?? {},
+      }),
+    ),
   );

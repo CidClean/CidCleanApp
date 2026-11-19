@@ -48,7 +48,18 @@ export function clockTime(iso: string): string {
  * Admin, "Preparar contrato" (ventana con los campos que la app no conoce, "Ver PDF" y "Enviar para firma") y
  * "Contrafirmar". Va en el quote aceptado (por sitio) y en el jobsite.
  */
-export function ContractCard({ jobsiteId, siteId }: { jobsiteId?: string; siteId?: string }) {
+export function ContractCard({
+  jobsiteId,
+  siteId,
+  heading,
+  downloadLabel,
+}: {
+  jobsiteId?: string;
+  siteId?: string;
+  /** Orden 150 (D-340): en el jobsite el título es "Contrato" y el botón del firmado dice "Descargar". */
+  heading?: string;
+  downloadLabel?: string;
+}) {
   const router = useRouter();
   const { colors } = useTheme();
   const k = useContractStrings();
@@ -82,8 +93,8 @@ export function ContractCard({ jobsiteId, siteId }: { jobsiteId?: string; siteId
     k.steps[2],
     k.steps[3],
   ];
-  const title = `${info.company}${info.quoteNumber ? ` · ${info.quoteNumber} v${info.quoteVersion ?? ''}` : ''}`;
-  const titleCsa = `${info.company}${c ? ` · ${c.csa}` : ''}`;
+  const title = `${heading ?? info.company}${info.quoteNumber ? ` · ${info.quoteNumber} v${info.quoteVersion ?? ''}` : ''}`;
+  const titleCsa = heading ? `${heading}${c ? ` · ${c.csa}` : ''}` : `${info.company}${c ? ` · ${c.csa}` : ''}`;
 
   async function openPrepare() {
     if (busy || !info) return;
@@ -200,7 +211,7 @@ export function ContractCard({ jobsiteId, siteId }: { jobsiteId?: string; siteId
               ) : null}
               {c?.documentId ? (
                 <AppButton
-                  label={k.viewContract}
+                  label={downloadLabel ?? k.viewContract}
                   variant="outline"
                   onPress={() => router.push({ pathname: '/viewer', params: { source: 'jobsite', documentId: c.documentId as string, title: c.csa, download: '1' } })}
                 />

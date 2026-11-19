@@ -1,6 +1,6 @@
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppAlert } from '@/components/AppAlert';
 import { AppButton } from '@/components/AppButton';
@@ -10,29 +10,15 @@ import { Chip } from '@/components/Chip';
 import { TopBar } from '@/components/TopBar';
 import { getDocumentsLibraryStrings } from '@/i18n/documentsLibrary';
 import { useStrings } from '@/i18n/useStrings';
-import { fetchJobsiteDocumentUrl } from '@/lib/clientsApi';
-import { fetchDocumentUrl } from '@/lib/documents';
 import { LIBRARY_FILTERS, PAGE_SIZE, canSeeDocuments, fetchLibrary, rowTitle, viewerParams, type LibraryDoc, type LibraryFilter } from '@/lib/documentsLibrary';
-import { fetchIcaSignedUrl } from '@/lib/icaApi';
+import { downloadLibraryDoc } from '@/lib/libraryDownload';
 import { useGoBack } from '@/lib/navigation';
-import { fetchQuoteFileUrl } from '@/lib/quotesApi';
 import { usePermissions, useSession } from '@/lib/session';
-import { downloadOnWeb, downloadToCache, viewerFileName } from '@/lib/viewerFile';
-import { fetchWalkthroughPdfUrl } from '@/lib/walkthroughApi';
 import { radius, sample, useTheme } from '@/theme';
 
 function shortDate(iso: string | null, locale: 'es' | 'en'): string {
   if (!iso) return '';
   return new Intl.DateTimeFormat(locale === 'es' ? 'es-US' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' }).format(new Date(iso));
-}
-
-/** URL firmada para descargar, con las mismas funciones que usa el visor (permisos, historial). */
-async function urlFor(d: LibraryDoc, language: 'es' | 'en') {
-  if (d.source === 'quote-file') return fetchQuoteFileUrl(d.path ?? '');
-  if (d.source === 'walkthrough') return fetchWalkthroughPdfUrl(d.openId ?? '', d.version ?? 1, language);
-  if (d.source === 'document') return fetchDocumentUrl(d.openId ?? '', 'download');
-  if (d.source === 'ica-signed') return fetchIcaSignedUrl(d.openId ?? '');
-  return fetchJobsiteDocumentUrl(d.openId ?? '');
 }
 
 /**
@@ -84,25 +70,7 @@ export default function DocumentsScreen() {
 
   async function download(d: LibraryDoc) {
     setOpenError(false);
-    const r = await urlFor(d, lang);
-    if (!r.ok) {
-      setOpenError(true);
-      return;
-    }
-    const given = r.data as { fileName?: string; file_name?: string };
-    const name = viewerFileName(r.data.url, `${rowTitle(d, t)} - ${d.owner}`, given.fileName ?? given.file_name);
-    try {
-      if (Platform.OS === 'web') {
-        await downloadOnWeb(r.data.url, name);
-        return;
-      }
-      const file = await downloadToCache(r.data.url, name);
-      // Módulo nativo cargado al usarlo, como en el visor.
-      const Sharing = require('expo-sharing') as typeof import('expo-sharing');
-      await Sharing.shareAsync(file.uri, { dialogTitle: rowTitle(d, t) });
-    } catch {
-      setOpenError(true);
-    }
+    if (!(await downloadLibraryDoc(d, rowTitle(d, t), lang))) setOpenError(true);
   }
 
   return (

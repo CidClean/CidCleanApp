@@ -28,6 +28,14 @@ jest.mock('@/lib/scheduleApi', () => {
     checkDistance: jest.fn(),
   };
 });
+// D-340: el panel de horario se conserva sin cambios (sus pruebas están en workScreens); aquí solo se ve que sigue en el Resumen.
+jest.mock('@/components/work/ScheduleWorkPanel', () => ({
+  ...jest.requireActual('@/components/work/ScheduleWorkPanel'),
+  ScheduleWorkPanel: () => {
+    const { Text } = require('react-native');
+    return <Text>PANEL DE HORARIO</Text>;
+  },
+}));
 jest.mock('@/lib/workQueue', () => ({ syncWorkQueue: jest.fn(async () => 'synced'), loadShift: jest.fn(async () => null), saveShift: jest.fn(), enqueue: jest.fn() }));
 jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: jest.fn(), push: mockPush, back: mockBack, canGoBack: () => true }),
@@ -41,6 +49,7 @@ jest.mock('expo-router', () => ({
     return <Text>REDIRECT {href}</Text>;
   },
 }));
+jest.mock('@/lib/supabase', () => ({ supabase: { rpc: jest.fn(), from: jest.fn() } }));
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 jest.mock('@/lib/session', () => ({
   usePermissions: () => ({
@@ -77,6 +86,18 @@ jest.mock('@/lib/clientsApi', () => ({
   endAssignment: jest.fn(),
   choosePdf: jest.fn(),
   uploadJobsiteDocument: jest.fn(),
+  // Orden 150: Documents y History del jobsite.
+  fetchJobsiteLibrary: async () => ({
+    ok: true,
+    data: [{ kind: 'contract', id: 'd1', title: 'Contract v2', owner: 'Gulf Coast Dental · 5th Ave S', date: '2026-10-20T15:00:00Z', source: 'jobsite', openId: 'd1', path: null, version: null, superAdminOnly: false }],
+  }),
+  fetchJobsiteHistory: async () => ({
+    ok: true,
+    data: [
+      { id: 2, at: '2026-11-18T15:00:00Z', action: 'correo_plantilla', actor: 'Humberto', info: { plantilla: 'Seguimiento' } },
+      { id: 1, at: '2026-11-17T15:00:00Z', action: 'jobsite_estado_cambiado', actor: 'Humberto', info: { antes: 'active', despues: 'paused' } },
+    ],
+  }),
 }));
 
 import JobsiteScreen from '@/app/(app)/jobsites/[id]/index';
@@ -93,17 +114,53 @@ beforeEach(() => {
   });
 });
 
-describe('Jobsite (D-055, D-060, D-210)', () => {
-  it('encabezado con tarifa y Margen en riesgo; Resumen con contactos, Plus Code y teléfono formateado', async () => {
+describe('Jobsite (orden 150, D-339, D-340)', () => {
+  it('encabezado con cliente, estado y botones rápidos; tarjeta del mes y filas del Resumen', async () => {
     await render(<JobsiteScreen />);
-    expect((await screen.findAllByText('$1,850.00 al mes')).length).toBeGreaterThan(0);
+    expect(await screen.findByText('5th Ave S')).toBeTruthy();
+    expect(screen.getByText('Cliente: Gulf Coast Dental')).toBeTruthy();
     expect(screen.getAllByText('Margen en riesgo').length).toBeGreaterThan(0);
-    expect(screen.getByText('$1,910.00 de $1,850.00')).toBeTruthy();
-    expect(screen.getByText('Gulf Coast Dental · Naples, FL')).toBeTruthy();
-    expect(screen.getByText(/66G8\+4P Naples, Florida · 26\./)).toBeTruthy();
+    for (const l of ['Llamar', 'Correo', 'Maps', 'Schedule']) expect(screen.getAllByLabelText(l).length).toBeGreaterThan(0);
+    // Tarjeta del mes: tarifa, personal y margen (con ver pagos), barra del personal sobre la tarifa.
+    expect(await screen.findByText('$1,850')).toBeTruthy();
+    expect(screen.getByText('$1,910')).toBeTruthy();
+    expect(screen.getByText('-3%')).toBeTruthy();
+    expect(screen.getByText('El personal es el 103% de la tarifa')).toBeTruthy();
+    // Dirección con Plus Code plegado; dos contactos porque son personas distintas; frecuencia legible.
+    expect(screen.getByText('123 5th Ave S, Naples, FL 34102')).toBeTruthy();
+    expect(screen.queryByText(/66G8\+4P/)).toBeNull();
+    await fireEvent.press(screen.getByText('Plus Code'));
+    expect(screen.getByText('Plus Code: 66G8+4P Naples, Florida')).toBeTruthy();
     expect(screen.getByText('Ana · (239) 555-0142')).toBeTruthy();
-    expect(screen.getByText('Luis · Gerente · (239) 555-0100')).toBeTruthy();
+    expect(screen.getByText('Luis · (239) 555-0100 · Gerente')).toBeTruthy();
     expect(screen.getByText('Lun, Mié y Vie')).toBeTruthy();
+    expect(screen.getByText(/^3 h por visita · desde /)).toBeTruthy();
+    // Sin walkthrough no sale la fila; ya no hay selector de estado ni tipo de limpieza en el Resumen.
+    expect(screen.queryByText('Walkthrough')).toBeNull();
+    expect(screen.queryByLabelText('Estado')).toBeNull();
+    // El horario y el personal siguen en el Resumen (D-340).
+    expect(screen.getByText('Horario y personal')).toBeTruthy();
+    expect(await screen.findByText('María López')).toBeTruthy();
+    expect(screen.getByText('PANEL DE HORARIO')).toBeTruthy();
+  });
+
+  it('Correo abre las plantillas del cliente', async () => {
+    await render(<JobsiteScreen />);
+    await screen.findByText('5th Ave S');
+    await fireEvent.press(screen.getByLabelText('Correo'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/send-email', params: { kind: 'client', id: 'c1' } });
+  });
+
+  it('un solo contacto si principal y emergencia son la misma persona', async () => {
+    Object.assign(jobsite, { emergencyName: 'ana', emergencyPhone: '2395550142', emergencyRelation: null });
+    try {
+      await render(<JobsiteScreen />);
+      expect(await screen.findByText('Ana · (239) 555-0142')).toBeTruthy();
+      expect(screen.getByText('Contacto principal y de emergencia')).toBeTruthy();
+      expect(screen.queryByText('Contacto de emergencia')).toBeNull();
+    } finally {
+      Object.assign(jobsite, { emergencyName: 'Luis', emergencyPhone: '(239) 555-0100', emergencyRelation: 'Gerente' });
+    }
   });
 
   it('dirección vieja sin separar: aviso ámbar "Completa la dirección." con Editar (D-301)', async () => {
@@ -119,40 +176,42 @@ describe('Jobsite (D-055, D-060, D-210)', () => {
     }
   });
 
-  it('pausar pide confirmación', async () => {
+  it('pausar desde el menú ⋯ pide confirmación', async () => {
     mockSetStatus.mockResolvedValue({ ok: true, data: null });
     await render(<JobsiteScreen />);
-    await screen.findAllByText('$1,850.00 al mes');
-    await fireEvent.press(screen.getByLabelText('Estado'));
-    await fireEvent.press(screen.getByText('Pausado'));
-    expect(screen.getByText('¿Pausar 5th Ave S?')).toBeTruthy();
+    await screen.findByText('5th Ave S');
+    await fireEvent.press(screen.getByLabelText('Más acciones'));
+    expect(screen.getByText('Terminar')).toBeTruthy();
     await fireEvent.press(screen.getByText('Pausar'));
+    expect(screen.getByText('¿Pausar 5th Ave S?')).toBeTruthy();
+    const pause = screen.getAllByText('Pausar');
+    await fireEvent.press(pause[pause.length - 1]);
     await waitFor(() => expect(mockSetStatus).toHaveBeenCalledWith('j1', 'paused'));
   });
 
-  it('Documentos muestra el contrato y el SOW que falta; Personal el pago y abre el formulario', async () => {
+  it('Documentos abre y descarga; Historial muestra cambios y correos; Personal abre el pago', async () => {
     await render(<JobsiteScreen />);
-    await screen.findAllByText('$1,850.00 al mes');
-    await fireEvent.press(screen.getByLabelText('Documentos'));
-    expect(await screen.findByText('Contrato')).toBeTruthy();
-    expect(screen.getByText('Sin archivo')).toBeTruthy();
-    await fireEvent.press(screen.getByText('Contrato'));
-    expect(mockPush).toHaveBeenCalledWith({ pathname: '/viewer', params: { source: 'jobsite', documentId: 'd1', title: 'Contrato', download: '1' } });
-    // D-226: cada tarjeta del mosaico abre su sección y Volver regresa al resumen.
-    await fireEvent.press(screen.getByLabelText('Volver'));
-    await fireEvent.press(screen.getByLabelText('Personal'));
+    await screen.findByText('5th Ave S');
+    await fireEvent.press(screen.getByText('Documentos'));
+    expect(await screen.findByText('Contrato firmado · v2')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Abrir Contrato firmado · v2'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/viewer', params: { source: 'jobsite', title: 'Contrato firmado · v2', download: '1', documentId: 'd1' } });
+    expect(screen.getByLabelText('Descargar Contrato firmado · v2')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Historial'));
+    expect(await screen.findByText('Correo enviado: Seguimiento')).toBeTruthy();
+    expect(screen.getByText('Estado: Pausado')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Resumen'));
     expect(await screen.findByText(/\$18\.00\/h · 3 h garantizadas/)).toBeTruthy();
     await fireEvent.press(screen.getByText('María López'));
     expect(mockPush).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/pay/[assignment]' }));
   });
 
-  it('sin ver tarifa no hay cifras ni contrato', async () => {
+  it('sin ver tarifa no hay cifras', async () => {
     mockAccess = { isSuperAdmin: false, permissions: new Set(['clientes_ver']) };
     await render(<JobsiteScreen />);
     expect(await screen.findByText('5th Ave S')).toBeTruthy();
-    expect(screen.queryByText('$1,850.00 al mes')).toBeNull();
-    await fireEvent.press(screen.getByLabelText('Documentos'));
-    expect(screen.queryByText('Contrato')).toBeNull();
+    expect(screen.queryByText('$1,850')).toBeNull();
+    expect(screen.queryByLabelText('Más acciones')).toBeNull();
   });
 });
 

@@ -1,13 +1,13 @@
-import { AddressReviewNote } from '@/components/AddressFields';
-import { useAddressStrings } from '@/i18n/useAddressStrings';
+import { AddressReviewNote } from "@/components/AddressFields";
+import { useAddressStrings } from "@/i18n/useAddressStrings";
 import {
   Redirect,
   useFocusEffect,
   useLocalSearchParams,
   useRouter,
 } from "expo-router";
-import { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { CardBlock } from "@/components/bento/Card";
 import { AppAlert } from "@/components/AppAlert";
@@ -23,21 +23,19 @@ import {
   WORK_KEYS,
 } from "@/components/work/ScheduleWorkPanel";
 import { saveLocation } from "@/lib/jobsiteLocation";
-import { SelectField } from "@/components/SelectField";
 import { Sheet } from "@/components/Sheet";
-import { Bento, Card } from "@/components/bento/Card";
 import { BackHeader } from "@/components/bento/Header";
-import { MainCard } from "@/components/bento/MainCard";
 import {
-  DocIcon,
-  LeadCalendarIcon,
-  PeopleIcon,
-} from "@/components/illustrations";
-import { useSalesStrings } from "@/i18n/useSalesStrings";
+  AddressRow,
+  DetailTabs,
+  InfoRow,
+  JobsiteHistory,
+  JobsiteLibrary,
+  MonthCard,
+  QuickActions,
+} from "@/components/clients/JobsiteParts";
 import { JobsiteExtras } from "@/components/quotes/JobsiteExtras";
 import { ContractCard } from "@/components/contract/ContractCard";
-import { CleaningTypeField } from "@/components/contract/CleaningTypeField";
-import { AccountMonthCard } from "@/components/accounting/AccountMonthCard";
 import { UsDateField } from "@/components/UsDateField";
 import type { ClientsStrings } from "@/i18n/clients";
 import { useClientsStrings } from "@/i18n/useClientsStrings";
@@ -51,13 +49,14 @@ import {
   canSeePay,
   canSeeRate,
   canSetPay,
-  cityStateOf,
-  frequencyLabel,
+  mapsUrl,
   money,
   parseMoney,
   paySummary,
+  readableFrequency,
+  sameContact,
   statusChangeNeedsConfirm,
-  statusOptions,
+  statusMenuActions,
   statusTone,
   uploadableKinds,
   type DocKind,
@@ -71,7 +70,6 @@ import { canAny } from "@/lib/visibility";
 import {
   choosePdf,
   endAssignment,
-  fetchDocuments,
   fetchJobsite,
   fetchJobsiteStaff,
   fetchMargin,
@@ -80,7 +78,6 @@ import {
   setJobsiteRate,
   setJobsiteStatus,
   uploadJobsiteDocument,
-  type JobsiteDocument,
   type Margin,
   type PickedPdf,
 } from "@/lib/clientsApi";
@@ -92,17 +89,19 @@ import {
   parseUsDate,
 } from "@/lib/leadRules";
 import { useGoBack } from "@/lib/navigation";
-import { formatPhone } from "@/lib/phone";
-import { formatCoordinates, plusCodeToCoordinates } from "@/lib/plusCode";
+import { formatPhone, phoneDigits } from "@/lib/phone";
+import { plusCodeToCoordinates } from "@/lib/plusCode";
 import { usePermissions, useSession } from "@/lib/session";
 import { iconStrokeWidth, sample, useTheme } from "@/theme";
 
-type Tab = "summary" | "documents" | "staff" | "schedule";
+type Tab = "summary" | "documents" | "history";
 
 /**
- * Detalle del jobsite (D-055; diseño bajo D-208): encabezado con nombre, ciudad, tarifa mensual (con permiso) y ficha
- * de estado, y pestañas Resumen, Documentos, Personal y Horario con subrayado de 2px. Horario queda "Pendiente" hasta
- * el hito 6. Editar en la barra (D-174) abre el formulario de datos y contactos.
+ * Detalle del jobsite (orden 150, D-339, D-340, muestra surveys/jobsite-detalle-aprobado.html pantalla 1): encabezado
+ * con atrás, "Editar" y el menú ⋯ (Pausar / Reanudar / Terminar, la misma lógica del selector de estado de antes, D-056);
+ * nombre, "Cliente: X" con la ficha de proveedor de cuentas (D-291) y el estado como etiqueta; botones rápidos Llamar,
+ * Correo (plantillas del cliente), Maps y Schedule; pestañas Resumen / Documentos / Historial. El horario y el personal
+ * del jobsite se conservan SIN cambios, con los mismos componentes, al final del Resumen (D-340).
  */
 export default function JobsiteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -111,7 +110,6 @@ export default function JobsiteScreen() {
   const { colors } = useTheme();
   const strings = useStrings();
   const c = useClientsStrings();
-  const s = useSalesStrings();
   const { locale } = useSession();
   const { access } = usePermissions();
   const [jobsite, setJobsite] = useState<Jobsite | null>(null);
@@ -119,6 +117,10 @@ export default function JobsiteScreen() {
   const [margin, setMargin] = useState<Margin | null>(null);
   const [failed, setFailed] = useState(false);
   const [tab, setTab] = useState<Tab>("summary");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirm, setConfirm] = useState<JobsiteStatus | null>(null);
+  const [statusError, setStatusError] = useState(false);
+  const [busy, setBusy] = useState(false);
   const seesRate = canSeeRate(access);
   const seesSchedule = canAny(access, ["schedule_ver_editar", ...WORK_KEYS]);
 
@@ -146,26 +148,33 @@ export default function JobsiteScreen() {
   if (!canSeeAccounts(access)) return <Redirect href="/" />;
 
   const atRisk = jobsite?.status === "active" && margin?.atRisk;
-  const city = jobsite ? cityStateOf(jobsite) : "";
   const day = (key: string) =>
     formatDate(dateFromKey(key).toISOString(), locale);
-  const tabLabel = (t: Tab) =>
-    t === "documents"
-      ? c.jobsite.tabDocuments
-      : t === "staff"
-        ? c.jobsite.tabStaff
-        : t === "schedule"
-          ? c.jobsite.tabSchedule
-          : c.jobsite.tabSummary;
+  const menuActions = jobsite && canChangeStatus(access) ? statusMenuActions(jobsite.status) : [];
+  const actionLabel = (s: JobsiteStatus) =>
+    s === "terminated" ? c.detail.terminate : s === "paused" ? c.detail.pause : c.detail.resume;
+
+  async function applyStatus(next: JobsiteStatus) {
+    if (!jobsite) return;
+    setBusy(true);
+    setStatusError(false);
+    const r = await setJobsiteStatus(jobsite.id, next);
+    setBusy(false);
+    setConfirm(null);
+    if (!r.ok) setStatusError(true);
+    await load();
+  }
+
+  const phone = jobsite?.contactPhone ? phoneDigits(jobsite.contactPhone) : "";
+  const coords = jobsite?.plusCode ? plusCodeToCoordinates(jobsite.plusCode) : null;
+  const maps = jobsite ? mapsUrl(jobsite.address, coords) : null;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <BackHeader
-        onBack={tab === "summary" ? goBack : () => setTab("summary")}
+        onBack={goBack}
         backLabel={strings.common.back}
-        title={tab === "summary" ? undefined : tabLabel(tab)}
         action={
-          tab === "summary" &&
           jobsite &&
           canEditClientData(access) &&
           jobsite.status !== "terminated"
@@ -178,6 +187,18 @@ export default function JobsiteScreen() {
                   }),
               }
             : undefined
+        }
+        extra={
+          menuActions.length > 0 ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={c.detail.menu}
+              onPress={() => setMenuOpen(true)}
+              style={[styles.menuButton, { backgroundColor: colors.card }]}
+            >
+              <Icon name="dots" size={22} strokeWidth={iconStrokeWidth} color={colors.text} />
+            </Pressable>
+          ) : undefined
         }
       />
       <ScrollView
@@ -193,87 +214,68 @@ export default function JobsiteScreen() {
         ) : null}
         {jobsite ? (
           <>
-            {tab === "summary" ? (
-              <>
-                {/* D-226: tarjeta principal de marca y mosaico que abre Documentos, Personal y Horario (D-055). */}
-                <MainCard
-                  title={jobsite.name}
-                  subtitle={[jobsite.clientName, city]
-                    .filter(Boolean)
-                    .join(" · ")}
-                  figure={
-                    seesRate && rate !== null
-                      ? c.perMonth(money(rate))
-                      : undefined
-                  }
-                  chip={atRisk ? c.atRisk : c.status[jobsite.status]}
-                  contact={{
-                    phone: jobsite.contactPhone,
-                    email: jobsite.contactEmail,
-                    callLabel: s.detail.call,
-                    mailLabel: s.detail.mail,
-                  }}
-                />
-                {jobsite.clientAccountProvider ? (
-                  <View style={{ flexDirection: "row", marginTop: 8 }}>
-                    <Chip label={c.accountProvider} />
-                  </View>
-                ) : null}
-                <Bento>
-                  <Card
-                    onPress={() => setTab("documents")}
-                    accessibilityLabel={c.jobsite.tabDocuments}
-                    style={{ gap: 10 }}
-                  >
-                    <DocIcon />
-                    <AppText weight="heavy" size={15}>
-                      {c.jobsite.tabDocuments}
-                    </AppText>
-                  </Card>
-                  <Card
-                    onPress={() => setTab("staff")}
-                    accessibilityLabel={c.jobsite.tabStaff}
-                    style={{ gap: 10 }}
-                  >
-                    <PeopleIcon />
-                    <AppText weight="heavy" size={15}>
-                      {c.jobsite.tabStaff}
-                    </AppText>
-                  </Card>
-                  {seesSchedule ? (
-                    <Card
-                      tone="dark"
-                      wide
-                      onPress={() => {
-                        setTab("schedule");
-                        // Jobsites guardados antes del hito 6: su ubicación sale del Plus Code al abrir el Schedule (D-200).
-                        if (
-                          canAny(access, ["clientes_editar_datos"]) &&
-                          jobsite.plusCode
-                        )
-                          void saveLocation(jobsite.id, jobsite.plusCode);
-                      }}
-                      accessibilityLabel={c.jobsite.tabSchedule}
-                      style={styles.scheduleTile}
-                    >
-                      <LeadCalendarIcon />
-                      <View style={{ flex: 1 }}>
-                        <AppText
-                          weight="heavy"
-                          size={15}
-                          color={colors.darkCardText}
-                        >
-                          {c.jobsite.tabSchedule}
-                        </AppText>
-                      </View>
-                    </Card>
-                  ) : null}
-                </Bento>
-                <View style={{ height: 12 }} />
-                {/* Orden 27: lo del mes de la cuenta, si quien mira ve tarifas y el dashboard por cuenta. */}
-                <AccountMonthCard jobsiteId={jobsite.id} />
-              </>
+            {/* Encabezado (D-340): nombre, cliente con la ficha de proveedor (sin su participación, D-291) y estado. */}
+            <View style={styles.titleRow}>
+              <View style={{ flex: 1, gap: 4 }}>
+                <AppText weight="heavy" size={24} accessibilityRole="header">
+                  {jobsite.name}
+                </AppText>
+                <View style={styles.clientLine}>
+                  <AppText size={13} color={colors.secondary}>
+                    {c.detail.clientLine(jobsite.clientName)}
+                  </AppText>
+                  {jobsite.clientAccountProvider ? <Chip label={c.accountProvider} /> : null}
+                </View>
+              </View>
+              <Chip
+                label={atRisk ? c.atRisk : c.status[jobsite.status]}
+                tone={atRisk ? "warning" : statusTone(jobsite.status)}
+                medium
+              />
+            </View>
+            {statusError ? (
+              <AppAlert tone="error" text={c.jobsite.errorStatus} />
             ) : null}
+            <QuickActions
+              actions={[
+                {
+                  key: "call",
+                  icon: "phone",
+                  label: c.detail.call,
+                  onPress: phone ? () => void Linking.openURL(`tel:${phone}`) : undefined,
+                },
+                {
+                  key: "email",
+                  icon: "mail",
+                  label: c.detail.email,
+                  // Mismo flujo de plantillas del cliente (D-323, D-335).
+                  onPress: () =>
+                    router.push({ pathname: "/send-email", params: { kind: "client", id: jobsite.clientId } }),
+                },
+                {
+                  key: "maps",
+                  icon: "map-pin",
+                  label: c.detail.maps,
+                  onPress: maps ? () => void Linking.openURL(maps) : undefined,
+                },
+                {
+                  key: "schedule",
+                  icon: "calendar",
+                  label: c.detail.schedule,
+                  // Schedule no tiene filtro por jobsite: abre el Schedule actual (D-340).
+                  onPress: seesSchedule ? () => router.navigate("/schedule") : undefined,
+                },
+              ]}
+            />
+            <DetailTabs<Tab>
+              tabs={[
+                { value: "summary", label: c.detail.tabSummary },
+                { value: "documents", label: c.detail.tabDocuments },
+                { value: "history", label: c.detail.tabHistory },
+              ]}
+              value={tab}
+              onChange={setTab}
+            />
             {tab === "summary" ? (
               <Summary
                 jobsite={jobsite}
@@ -281,282 +283,45 @@ export default function JobsiteScreen() {
                 rate={rate}
                 margin={margin}
                 day={day}
+                mapsLink={maps}
+                seesSchedule={seesSchedule}
                 onChanged={load}
               />
             ) : null}
-            {/* D-289: contrato del cliente y tipo de limpieza. */}
-            {tab === "summary" ? (
-              <>
-                <ContractCard jobsiteId={jobsite.id} />
-                <CleaningTypeField kind="jobsite" id={jobsite.id} canEdit={canAny(access, ["clientes_editar_datos"])} />
-              </>
-            ) : null}
-            {/* D-238: quotes de extra de la cuenta y "Nuevo quote". */}
-            {tab === "summary" ? (
-              <JobsiteExtras
-                jobsiteId={jobsite.id}
-                terminated={jobsite.status === "terminated"}
-              />
-            ) : null}
-            {tab === "documents" ? (
-              <Documents jobsite={jobsite} c={c} day={day} />
-            ) : null}
-            {tab === "staff" ? (
-              <Staff jobsite={jobsite} c={c} day={day} onChanged={load} />
-            ) : null}
-            {/* D-235: Schedule & Work de este jobsite (reemplaza la pestaña Horario); la hora se pone en Semana (D-234). */}
-            {tab === "schedule" ? (
-              <ScheduleWorkPanel jobsiteId={jobsite.id} />
-            ) : null}
+            {tab === "documents" ? <Documents jobsite={jobsite} c={c} /> : null}
+            {tab === "history" ? <JobsiteHistory jobsiteId={jobsite.id} c={c} /> : null}
           </>
         ) : null}
       </ScrollView>
-    </View>
-  );
-}
 
-// --- Resumen ------------------------------------------------------------------------------------------------
-
-function Summary({
-  jobsite,
-  c,
-  rate,
-  margin,
-  day,
-  onChanged,
-}: {
-  jobsite: Jobsite;
-  c: ClientsStrings;
-  rate: number | null;
-  margin: Margin | null;
-  day: (key: string) => string;
-  onChanged: () => Promise<void>;
-}) {
-  const { colors, status: statusColors } = useTheme();
-  const strings = useStrings();
-  const { access } = usePermissions();
-  const addressT = useAddressStrings();
-  const router = useRouter();
-  const [confirm, setConfirm] = useState<JobsiteStatus | null>(null);
-  const [statusError, setStatusError] = useState(false);
-  const [rateOpen, setRateOpen] = useState(false);
-  const [rateText, setRateText] = useState("");
-  const [rateError, setRateError] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const none = c.jobsite.none;
-  const rateEditable =
-    isDirectJobsite(jobsite) &&
-    canCreateLegacy(access) &&
-    jobsite.status !== "terminated";
-  const v = (x: string | null | undefined) => (x && x.trim() !== "" ? x : none);
-  const coords = jobsite.plusCode
-    ? plusCodeToCoordinates(jobsite.plusCode)
-    : null;
-  const freq = frequencyLabel(jobsite.frequency, {
-    daily: c.form.daily,
-    other: c.form.other,
-    days: c.form.days,
-    and: c.form.and,
-  });
-
-  async function applyStatus(next: JobsiteStatus) {
-    setBusy(true);
-    setStatusError(false);
-    const r = await setJobsiteStatus(jobsite.id, next);
-    setBusy(false);
-    setConfirm(null);
-    if (!r.ok) setStatusError(true);
-    await onChanged();
-  }
-
-  async function saveRate() {
-    const n = parseMoney(rateText);
-    if (n === null) {
-      setRateError(true);
-      return;
-    }
-    setBusy(true);
-    const r = await setJobsiteRate(jobsite.id, n);
-    setBusy(false);
-    if (!r.ok) {
-      setRateError(true);
-      return;
-    }
-    setRateOpen(false);
-    await onChanged();
-  }
-
-  const contact = [
-    jobsite.contactName,
-    formatPhone(jobsite.contactPhone),
-    jobsite.contactEmail,
-  ]
-    .filter((x) => x && x.trim() !== "")
-    .join(" · ");
-  const emergency = [
-    jobsite.emergencyName,
-    jobsite.emergencyRelation,
-    formatPhone(jobsite.emergencyPhone),
-    jobsite.emergencyEmail,
-  ]
-    .filter((x) => x && x.trim() !== "")
-    .join(" · ");
-  // Alerta de margen (D-060): barra de 8px ámbar con las cifras de costo y tarifa, y ficha "Margen en riesgo".
-  const showMargin =
-    margin && margin.cost !== null && margin.rate !== null && margin.rate > 0;
-  const ratio = showMargin
-    ? Math.min(1, (margin.cost as number) / (margin.rate as number))
-    : 0;
-
-  return (
-    <View>
-      {canChangeStatus(access) ? (
-        <SelectField
-          label={c.jobsite.status}
-          options={statusOptions(jobsite.status).map((s) => ({
-            value: s,
-            label: c.status[s],
-          }))}
-          value={jobsite.status}
-          onChange={(next) => {
-            if (next === jobsite.status) return;
-            if (statusChangeNeedsConfirm(jobsite.status, next))
-              setConfirm(next);
-            else void applyStatus(next);
-          }}
-        />
-      ) : null}
-      {statusError ? (
-        <AppAlert tone="error" text={c.jobsite.errorStatus} />
-      ) : null}
-
-      {showMargin ? (
-        <View style={{ marginBottom: 10 }}>
-          <View style={styles.marginHead}>
-            <AppText size={sample.noteSize} color={colors.secondary}>
-              {c.margin.cost}
-            </AppText>
-            {margin.atRisk ? <Chip label={c.atRisk} tone="warning" /> : null}
-          </View>
-          <View style={[styles.bar, { backgroundColor: colors.surface }]}>
-            <View
-              style={{
-                width: `${Math.round(ratio * 100)}%`,
-                height: 8,
-                borderRadius: 4,
-                backgroundColor: margin.atRisk
-                  ? statusColors.warning
-                  : statusColors.success,
-              }}
-            />
-          </View>
-          <AppText
-            size={sample.noteSize}
-            color={colors.secondary}
-            style={{ marginTop: 4 }}
+      {/* Menú ⋯: Pausar / Reanudar / Terminar con la lógica del selector de antes (D-056, D-210). */}
+      <Sheet visible={menuOpen} onClose={() => setMenuOpen(false)}>
+        {menuActions.map((s, i) => (
+          <Pressable
+            key={s}
+            accessibilityRole="button"
+            disabled={busy}
+            onPress={() => {
+              setMenuOpen(false);
+              if (jobsite && statusChangeNeedsConfirm(jobsite.status, s)) setConfirm(s);
+              else void applyStatus(s);
+            }}
+            style={[
+              styles.option,
+              { borderBottomColor: colors.border, borderBottomWidth: i === menuActions.length - 1 ? 0 : 0.5 },
+            ]}
           >
-            {c.margin.of(
-              money(margin.cost as number),
-              money(margin.rate as number),
-            )}
-          </AppText>
-          {margin.incomplete ? (
-            <AppText
-              size={sample.noteSize}
-              color={colors.secondary}
-              style={{ marginTop: 2 }}
-            >
-              {c.margin.incomplete}
-            </AppText>
-          ) : null}
-        </View>
-      ) : null}
-
-      {/* La tarifa va en el encabezado (D-055); aquí solo la fila con lápiz para un cliente previo (D-210). */}
-      {rateEditable && rate !== null ? (
-        <DataRow
-          label={c.jobsite.rate}
-          value={c.perMonth(money(rate))}
-          right={
-            <Icon
-              name="pencil"
-              size={18}
-              strokeWidth={iconStrokeWidth}
-              color={colors.text}
-            />
-          }
-          onPress={() => {
-            setRateText(String(rate));
-            setRateError(false);
-            setRateOpen(true);
-          }}
-        />
-      ) : null}
-      {/* D-301: dirección vieja sin separar. */}
-      {jobsite.addressNeedsReview ? (
-        <AddressReviewNote
-          t={addressT}
-          onEdit={
-            canEditClientData(access) && jobsite.status !== "terminated"
-              ? () => router.push({ pathname: "/jobsites/[id]/edit", params: { id: jobsite.id } })
-              : undefined
-          }
-        />
-      ) : null}
-      <CardBlock>
-        <DataRow label={c.jobsite.address} value={v(jobsite.address)} />
-        <DataRow
-          label={c.jobsite.plusCode}
-          value={
-            jobsite.plusCode
-              ? coords
-                ? `${jobsite.plusCode} · ${formatCoordinates(coords)}`
-                : jobsite.plusCode
-              : none
-          }
-        />
-        <DataRow label={c.jobsite.contact} value={v(contact)} />
-        <DataRow label={c.jobsite.emergency} value={v(emergency)} />
-        <DataRow label={c.jobsite.frequency} value={v(freq)} />
-        <DataRow
-          label={c.jobsite.estHours}
-          value={
-            jobsite.estHoursPerVisit === null
-              ? none
-              : String(jobsite.estHoursPerVisit)
-          }
-        />
-        <DataRow
-          label={c.jobsite.startDate}
-          value={jobsite.startDate ? day(jobsite.startDate) : none}
-        />
-        <DataRow
-          label={c.jobsite.walkthrough}
-          value={
-            jobsite.walkthroughVersion
-              ? c.jobsite.walkthroughVersion(jobsite.walkthroughVersion)
-              : jobsite.clientLegacy
-                ? c.legacy
-                : none
-          }
-          last
-        />
-      </CardBlock>
-      {!isDirectJobsite(jobsite) && canSeeRate(access) ? (
-        <AppText
-          size={sample.noteSize}
-          color={colors.secondary}
-          style={{ marginTop: 6 }}
-        >
-          {c.jobsite.rateQuoteNote}
-        </AppText>
-      ) : null}
-
+            <AppText weight="medium">{actionLabel(s)}</AppText>
+          </Pressable>
+        ))}
+      </Sheet>
       <Sheet visible={confirm !== null} onClose={() => setConfirm(null)}>
         <AppText weight="medium" size={sample.headingSize} center>
-          {confirm === "terminated"
-            ? c.jobsite.terminateTitle(jobsite.name)
-            : c.jobsite.pauseTitle(jobsite.name)}
+          {jobsite
+            ? confirm === "terminated"
+              ? c.jobsite.terminateTitle(jobsite.name)
+              : c.jobsite.pauseTitle(jobsite.name)
+            : ""}
         </AppText>
         <AppText
           size={sample.noteSize}
@@ -589,6 +354,192 @@ function Summary({
           </View>
         </View>
       </Sheet>
+    </View>
+  );
+}
+
+// --- Resumen ------------------------------------------------------------------------------------------------
+
+function Summary({
+  jobsite,
+  c,
+  rate,
+  margin,
+  day,
+  mapsLink,
+  seesSchedule,
+  onChanged,
+}: {
+  jobsite: Jobsite;
+  c: ClientsStrings;
+  rate: number | null;
+  margin: Margin | null;
+  day: (key: string) => string;
+  mapsLink: string | null;
+  seesSchedule: boolean;
+  onChanged: () => Promise<void>;
+}) {
+  const { colors } = useTheme();
+  const strings = useStrings();
+  const { access } = usePermissions();
+  const addressT = useAddressStrings();
+  const router = useRouter();
+  const [rateOpen, setRateOpen] = useState(false);
+  const [rateText, setRateText] = useState("");
+  const [rateError, setRateError] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const none = c.jobsite.none;
+  const rateEditable =
+    isDirectJobsite(jobsite) &&
+    canCreateLegacy(access) &&
+    jobsite.status !== "terminated";
+  const freq = readableFrequency(jobsite.frequency, {
+    daily: c.form.daily,
+    other: c.form.other,
+    days: c.form.days,
+    daysLong: c.detail.daysLong,
+    and: c.form.and,
+    everyDay: c.detail.everyDay,
+    daysAWeek: c.detail.daysAWeek,
+    except: c.detail.except,
+    or: c.detail.or,
+  });
+  const freqDetail = [
+    jobsite.estHoursPerVisit !== null ? c.detail.hoursPerVisit(String(jobsite.estHoursPerVisit)) : null,
+    jobsite.startDate ? c.detail.since(day(jobsite.startDate)) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  // Jobsites guardados antes del hito 6: su ubicación sale del Plus Code al abrir su horario (D-200, como antes).
+  useEffect(() => {
+    if (seesSchedule && canAny(access, ["clientes_editar_datos"]) && jobsite.plusCode)
+      void saveLocation(jobsite.id, jobsite.plusCode);
+    // Solo al abrir el jobsite.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobsite.id]);
+
+  async function saveRate() {
+    const n = parseMoney(rateText);
+    if (n === null) {
+      setRateError(true);
+      return;
+    }
+    setBusy(true);
+    const r = await setJobsiteRate(jobsite.id, n);
+    setBusy(false);
+    if (!r.ok) {
+      setRateError(true);
+      return;
+    }
+    setRateOpen(false);
+    await onChanged();
+  }
+
+  const person = (name: string | null, phone: string | null, extra: (string | null)[] = []) =>
+    [name, formatPhone(phone), ...extra].filter((x) => x && x.trim() !== "").join(" · ");
+  const main = person(jobsite.contactName, jobsite.contactPhone);
+  const emergency = person(jobsite.emergencyName, jobsite.emergencyPhone, [jobsite.emergencyRelation]);
+  const oneContact = sameContact(jobsite);
+  const hasEmergency = Boolean(jobsite.emergencyName?.trim() || jobsite.emergencyPhone?.trim());
+
+  return (
+    <View>
+      {/* Tarjeta del mes (D-340); las cifras de pagos solo con permiso, igual que antes. */}
+      {canSeeRate(access) ? <MonthCard jobsiteId={jobsite.id} rate={rate} margin={margin} c={c} /> : null}
+
+      {/* Tarifa con lápiz para un cliente previo o proveedor (D-210). */}
+      {rateEditable && rate !== null ? (
+        <CardBlock style={{ marginBottom: 12 }}>
+          <DataRow
+            label={c.jobsite.rate}
+            value={c.perMonth(money(rate))}
+            right={
+              <Icon
+                name="pencil"
+                size={18}
+                strokeWidth={iconStrokeWidth}
+                color={colors.text}
+              />
+            }
+            onPress={() => {
+              setRateText(String(rate));
+              setRateError(false);
+              setRateOpen(true);
+            }}
+            last
+          />
+        </CardBlock>
+      ) : null}
+      {/* D-301: dirección vieja sin separar. */}
+      {jobsite.addressNeedsReview ? (
+        <AddressReviewNote
+          t={addressT}
+          onEdit={
+            canEditClientData(access) && jobsite.status !== "terminated"
+              ? () => router.push({ pathname: "/jobsites/[id]/edit", params: { id: jobsite.id } })
+              : undefined
+          }
+        />
+      ) : null}
+      <CardBlock>
+        <AddressRow address={jobsite.address} plusCode={jobsite.plusCode} mapsUrl={mapsLink} c={c} />
+        {oneContact ? (
+          <InfoRow title={main || c.detail.noContact} detail={hasEmergency ? c.detail.contactBoth : c.detail.contactMain} />
+        ) : (
+          <>
+            <InfoRow title={main || none} detail={c.detail.contactMain} />
+            <InfoRow title={emergency || none} detail={c.detail.contactEmergency} />
+          </>
+        )}
+        <InfoRow
+          title={freq ?? c.detail.noFrequency}
+          detail={freqDetail || undefined}
+          last={!jobsite.walkthroughVersion}
+        />
+        {/* Sin walkthrough no sale la fila (D-340). */}
+        {jobsite.walkthroughVersion ? (
+          <InfoRow
+            title={c.jobsite.walkthrough}
+            detail={c.jobsite.walkthroughVersion(jobsite.walkthroughVersion)}
+            last
+          />
+        ) : null}
+      </CardBlock>
+      {!isDirectJobsite(jobsite) && canSeeRate(access) ? (
+        <AppText
+          size={sample.noteSize}
+          color={colors.secondary}
+          style={{ marginTop: 6 }}
+        >
+          {c.jobsite.rateQuoteNote}
+        </AppText>
+      ) : null}
+
+      {/* D-289: contrato del cliente, como "Contrato · estado" con Descargar (D-340). */}
+      <ContractCard jobsiteId={jobsite.id} heading={c.detail.contract} downloadLabel={c.detail.download} />
+      {/* D-238: quotes de extra en la fila "Extras" con "+ Quote de extra" (D-340). */}
+      <JobsiteExtras
+        jobsiteId={jobsite.id}
+        terminated={jobsite.status === "terminated"}
+        labels={{ title: c.detail.extras, empty: c.detail.noExtras, add: c.detail.extraQuote }}
+      />
+
+      {/* D-340: el horario y el personal del jobsite, exactamente como estaban (mismos componentes). */}
+      <AppText
+        weight="bold"
+        size={15}
+        style={{ marginTop: 18, marginBottom: 8 }}
+      >
+        {c.detail.scheduleTitle}
+      </AppText>
+      <Staff jobsite={jobsite} c={c} day={day} onChanged={onChanged} />
+      {seesSchedule ? (
+        <View style={{ marginTop: 12 }}>
+          <ScheduleWorkPanel jobsiteId={jobsite.id} />
+        </View>
+      ) : null}
+
       <Sheet visible={rateOpen} onClose={() => setRateOpen(false)}>
         <AppText
           weight="medium"
@@ -633,49 +584,22 @@ function Summary({
 function Documents({
   jobsite,
   c,
-  day,
 }: {
   jobsite: Jobsite;
   c: ClientsStrings;
-  day: (key: string) => string;
 }) {
-  const router = useRouter();
   const { colors } = useTheme();
   const strings = useStrings();
   const { access } = usePermissions();
-  const [docs, setDocs] = useState<JobsiteDocument[] | null>(null);
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<DocKind>("contract");
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<PickedPdf | null>(null);
   const [error, setError] = useState<"title" | "upload" | null>(null);
   const [busy, setBusy] = useState(false);
+  const [reload, setReload] = useState(0);
   const kinds = uploadableKinds(access);
 
-  const load = useCallback(async () => {
-    const r = await fetchDocuments(jobsite.id);
-    if (r.ok) setDocs(r.data);
-  }, [jobsite.id]);
-
-  useFocusEffect(
-    useCallback(() => {
-      void load();
-    }, [load]),
-  );
-
-  const label = (d: JobsiteDocument) =>
-    d.kind === "other" ? (d.title ?? c.docs.other) : c.docs[d.kind];
-  const sow = docs?.find((d) => d.kind === "sow");
-  const contract = docs?.find((d) => d.kind === "contract");
-  const others = docs?.filter((d) => d.kind === "other") ?? [];
-  const seesContract = canSeeRate(access);
-  const openDoc = (d: JobsiteDocument) =>
-    router.push({
-      pathname: "/viewer",
-      params: { source: "jobsite", documentId: d.id, title: label(d), download: "1" }, // D-319 (7)
-    });
-  const detail = (d: JobsiteDocument) =>
-    c.docs.detail(d.version, day(dayKey(new Date(d.uploadedAt))));
 
   async function upload() {
     if (busy) return;
@@ -700,39 +624,13 @@ function Documents({
     setOpen(false);
     setFile(null);
     setTitle("");
-    await load();
+    setReload((n) => n + 1);
   }
 
   return (
     <View>
-      <CardBlock>
-        <ListRow
-          title={c.docs.sow}
-          detail={sow ? detail(sow) : c.docs.missing}
-          chevron={Boolean(sow)}
-          onPress={sow ? () => openDoc(sow) : undefined}
-        />
-        {/* D-210: el contrato exige ver tarifa; cada apertura queda en el historial. */}
-        {seesContract ? (
-          <ListRow
-            title={c.docs.contract}
-            detail={contract ? detail(contract) : c.docs.missing}
-            chevron={Boolean(contract)}
-            onPress={contract ? () => openDoc(contract) : undefined}
-            last={others.length === 0}
-          />
-        ) : null}
-        {others.map((d, i) => (
-          <ListRow
-            key={d.id}
-            title={label(d)}
-            detail={detail(d)}
-            chevron
-            last={i === others.length - 1}
-            onPress={() => openDoc(d)}
-          />
-        ))}
-      </CardBlock>
+      {/* Orden 150 (D-340): los documentos del jobsite y de su cliente, con abrir y descargar. */}
+      <JobsiteLibrary jobsiteId={jobsite.id} c={c} reloadKey={reload} />
       {kinds.length > 0 && jobsite.status !== "terminated" ? (
         <View style={{ marginTop: 12 }}>
           <AppButton
@@ -1036,19 +934,9 @@ function Staff({
 }
 
 const styles = StyleSheet.create({
-  scheduleTile: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 14,
-  },
-  marginHead: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  bar: { height: 8, borderRadius: 4, overflow: "hidden" },
+  menuButton: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", marginLeft: 8 },
+  titleRow: { flexDirection: "row", alignItems: "flex-start", gap: 8, marginBottom: 12 },
+  clientLine: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6 },
   sheetButtons: { flexDirection: "row", gap: 8, marginTop: 12 },
   flex: { flex: 1 },
   option: {

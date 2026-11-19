@@ -60,6 +60,7 @@ export function BackHeader({
   title,
   action,
   subtitle,
+  extra,
 }: {
   onBack: () => void;
   backLabel: string;
@@ -69,6 +70,8 @@ export function BackHeader({
   action?: { label: string; onPress: () => void; icon?: IconName; accessibilityLabel?: string };
   /** Línea bajo la barra (aviso de sincronización del walkthrough, D-091). */
   subtitle?: ReactNode;
+  /** Algo más a la derecha, después de la acción (orden 150: el menú ⋯ del jobsite). */
+  extra?: ReactNode;
 }) {
   const insets = useSafeAreaInsets();
   const { colors, brand } = useTheme();
@@ -95,9 +98,10 @@ export function BackHeader({
             {action.label}
           </AppText>
         </Pressable>
-      ) : (
+      ) : extra ? null : (
         <View style={{ width: 44 }} />
       )}
+      {extra}
     </View>
     {subtitle ? <View style={{ marginTop: 6, alignItems: 'center' }}>{subtitle}</View> : null}
     </View>

@@ -26,7 +26,16 @@ export function extraQuoteAccess(can: (k: string) => boolean): { see: boolean; c
  * Quotes de extra del jobsite (D-238): cada uno con su versión, fecha del servicio, total (con ver precios) y estado;
  * el botón "Nuevo quote" (con permiso de armar quotes) abre el borrador sin enviar o crea uno nuevo.
  */
-export function JobsiteExtras({ jobsiteId, terminated }: { jobsiteId: string; terminated: boolean }) {
+export function JobsiteExtras({
+  jobsiteId,
+  terminated,
+  labels,
+}: {
+  jobsiteId: string;
+  terminated: boolean;
+  /** Orden 150 (D-340): fila "Extras" con "Ninguno todavía" y "+ Quote de extra" en el detalle del jobsite. */
+  labels?: { title: string; empty: string; add: string };
+}) {
   const router = useRouter();
   const { colors } = useTheme();
   const q = useQuoteStrings();
@@ -69,13 +78,13 @@ export function JobsiteExtras({ jobsiteId, terminated }: { jobsiteId: string; te
   return (
     <View style={{ marginTop: 14 }}>
       <AppText size={sample.labelSize} color={colors.secondary} style={{ marginBottom: 2 }}>
-        {q.extrasTitle}
+        {labels?.title ?? q.extrasTitle}
       </AppText>
       {failed ? <AppAlert tone="error" text={q.errorNewExtra} /> : null}
       <CardBlock>
         {list.length === 0 ? (
           <AppText size={sample.noteSize} color={colors.secondary} style={{ paddingVertical: 12 }}>
-            {q.noExtras}
+            {labels?.empty ?? q.noExtras}
           </AppText>
         ) : (
           list.map((r, i) => (
@@ -93,7 +102,7 @@ export function JobsiteExtras({ jobsiteId, terminated }: { jobsiteId: string; te
           ))
         )}
       </CardBlock>
-      {access.create && !terminated ? <AppButton label={q.newExtra} variant="outline" icon="plus" onPress={() => void onNew()} disabled={busy} /> : null}
+      {access.create && !terminated ? <AppButton label={labels?.add ?? q.newExtra} variant="outline" icon="plus" onPress={() => void onNew()} disabled={busy} /> : null}
     </View>
   );
 }

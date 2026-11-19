@@ -146,3 +146,44 @@ describe('Jobsite: Plus Code, contactos y fechas (D-210, D-211, D-216)', () => {
     expect(frequencyLabel({ kind: 'weekly', days: [4, 0, 2] }, { daily: 'Diaria', other: 'Otra', days: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'], and: 'y' })).toBe('Lun, Mié y Vie');
   });
 });
+
+// --- Orden 150 (D-339, D-340) ---------------------------------------------------------------------------------
+import { mapsUrl, monthMargin, readableFrequency, sameContact, statusMenuActions } from './clientRules';
+import { clientsEn, clientsEs } from '@/i18n/clients';
+
+describe('detalle del jobsite (orden 150)', () => {
+  const fs = (c: typeof clientsEn) => ({
+    daily: c.form.daily, other: c.form.other, days: c.form.days, daysLong: c.detail.daysLong, and: c.form.and,
+    everyDay: c.detail.everyDay, daysAWeek: c.detail.daysAWeek, except: c.detail.except, or: c.detail.or,
+  });
+  it('frecuencia legible: pocos días en lista, muchos con los que faltan', () => {
+    expect(readableFrequency({ kind: 'weekly', days: [4, 0, 2] }, fs(clientsEn))).toBe('Mon, Wed and Fri');
+    expect(readableFrequency({ kind: 'weekly', days: [0, 1, 3, 4, 5, 6] }, fs(clientsEn))).toBe('6 days a week · no Wednesday');
+    expect(readableFrequency({ kind: 'weekly', days: [0, 1, 3, 4, 5] }, fs(clientsEn))).toBe('5 days a week · no Sunday or Wednesday');
+    expect(readableFrequency({ kind: 'weekly', days: [0, 1, 3, 4, 5] }, fs(clientsEs))).toBe('5 días a la semana · sin domingo ni miércoles');
+    expect(readableFrequency({ kind: 'weekly', days: [0, 1, 2, 3, 4, 5, 6] }, fs(clientsEn))).toBe('Every day');
+    expect(readableFrequency({ kind: 'daily', days: [] }, fs(clientsEn))).toBe(clientsEn.form.daily);
+    expect(readableFrequency({ kind: 'weekly', days: [] }, fs(clientsEn))).toBeNull();
+    expect(readableFrequency(null, fs(clientsEn))).toBeNull();
+  });
+  it('mismo contacto por nombre y teléfono', () => {
+    const base = { contactName: 'Wilson', contactPhone: '(941) 370-4611' };
+    expect(sameContact({ ...base, emergencyName: ' wilson ', emergencyPhone: '9413704611' })).toBe(true);
+    expect(sameContact({ ...base, emergencyName: 'Luis', emergencyPhone: '9413704611' })).toBe(false);
+    expect(sameContact({ ...base, emergencyName: 'Wilson', emergencyPhone: '2395550100' })).toBe(false);
+    expect(sameContact({ ...base, emergencyName: null, emergencyPhone: null })).toBe(true);
+  });
+  it('Maps usa coordenadas o la dirección', () => {
+    expect(mapsUrl('1 Main St', { latitude: 26.1, longitude: -81.8 })).toBe('https://www.google.com/maps/search/?api=1&query=26.1,-81.8');
+    expect(mapsUrl('1 Main St, Naples', null)).toBe('https://www.google.com/maps/search/?api=1&query=1%20Main%20St%2C%20Naples');
+    expect(mapsUrl('  ', null)).toBeNull();
+  });
+  it('margen del mes y menú de estado', () => {
+    expect(monthMargin(8615, 3640)).toEqual({ margin: 58, staffShare: 42 });
+    expect(monthMargin(null, 100)).toBeNull();
+    expect(monthMargin(100, null)).toBeNull();
+    expect(statusMenuActions('active')).toEqual(['paused', 'terminated']);
+    expect(statusMenuActions('paused')).toEqual(['active', 'terminated']);
+    expect(statusMenuActions('terminated')).toEqual([]);
+  });
+});
