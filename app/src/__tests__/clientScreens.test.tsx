@@ -142,10 +142,11 @@ describe('Jobsite (orden 150, D-339, D-340)', () => {
     // Sin walkthrough no sale la fila; ya no hay selector de estado ni tipo de limpieza en el Resumen.
     expect(screen.queryByText('Walkthrough')).toBeNull();
     expect(screen.queryByLabelText('Estado')).toBeNull();
-    // El horario y el personal siguen en el Resumen (D-340).
-    expect(screen.getByText('Personal')).toBeTruthy();
+    // D-343: el personal se abre con el botón rápido "Personal"; el horario vive solo en Schedule and Work (D-342).
+    expect(screen.queryByText('María López')).toBeNull();
+    expect(screen.queryByText('PANEL DE HORARIO')).toBeNull();
+    await fireEvent.press(screen.getByLabelText('Personal'));
     expect(await screen.findByText('María López')).toBeTruthy();
-    expect(screen.queryByText('PANEL DE HORARIO')).toBeNull(); // D-342: el horario vive solo en Schedule and Work
   });
 
   it('Correo abre las plantillas del cliente', async () => {
@@ -204,7 +205,7 @@ describe('Jobsite (orden 150, D-339, D-340)', () => {
     await fireEvent.press(screen.getByText('Historial'));
     expect(await screen.findByText('Correo enviado: Seguimiento')).toBeTruthy();
     expect(screen.getByText('Estado: Pausado')).toBeTruthy();
-    await fireEvent.press(screen.getByText('Resumen'));
+    await fireEvent.press(screen.getByLabelText('Personal'));
     expect(await screen.findByText(/\$18\.00\/h · 3 h garantizadas/)).toBeTruthy();
     await fireEvent.press(screen.getByText('María López'));
     expect(mockPush).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/pay/[assignment]' }));

@@ -92,7 +92,7 @@ import { plusCodeToCoordinates } from "@/lib/plusCode";
 import { usePermissions, useSession } from "@/lib/session";
 import { iconStrokeWidth, sample, useTheme } from "@/theme";
 
-type Tab = "summary" | "documents" | "history";
+type Tab = "summary" | "documents" | "history" | "staff"; // D-343: "staff" se abre con el botón rápido, no es pestaña
 
 /**
  * Detalle del jobsite (orden 150, D-339, D-340, muestra surveys/jobsite-detalle-aprobado.html pantalla 1): encabezado
@@ -261,6 +261,12 @@ export default function JobsiteScreen() {
                   onPress: maps ? () => void Linking.openURL(maps) : undefined,
                 },
                 {
+                  key: "staff",
+                  icon: "users",
+                  label: c.detail.scheduleTitle,
+                  onPress: () => setTab("staff"),
+                },
+                {
                   key: "schedule",
                   icon: "calendar",
                   label: c.detail.schedule,
@@ -293,6 +299,14 @@ export default function JobsiteScreen() {
             ) : null}
             {tab === "documents" ? <Documents jobsite={jobsite} c={c} /> : null}
             {tab === "history" ? <JobsiteHistory jobsiteId={jobsite.id} c={c} /> : null}
+            {tab === "staff" ? (
+              <View style={{ marginTop: 12 }}>
+                <AppText weight="bold" size={15} style={{ marginBottom: 8 }}>
+                  {c.detail.scheduleTitle}
+                </AppText>
+                <Staff jobsite={jobsite} c={c} day={day} onChanged={load} />
+              </View>
+            ) : null}
           </>
         ) : null}
       </ScrollView>
@@ -528,17 +542,7 @@ function Summary({
         labels={{ title: c.detail.extras, empty: c.detail.noExtras, add: c.detail.extraQuote }}
       />
 
-      {/* D-340: el personal del jobsite, como estaba (mismo componente). */}
-      <AppText
-        weight="bold"
-        size={15}
-        style={{ marginTop: 18, marginBottom: 8 }}
-      >
-        {c.detail.scheduleTitle}
-      </AppText>
-      {/* D-342: el horario (Schedule / To approve / Approved) ya está en Schedule and Work; aquí queda solo el personal
-          asignado con su pago por visita, que no existe en otro lugar. */}
-      <Staff jobsite={jobsite} c={c} day={day} onChanged={onChanged} />
+      {/* D-343: el personal se abre con el botón rápido "Staff"; ya no va en el Resumen. */}
 
       <Sheet visible={rateOpen} onClose={() => setRateOpen(false)}>
         <AppText
