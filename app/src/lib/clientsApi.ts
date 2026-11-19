@@ -386,3 +386,37 @@ export const fetchJobsiteHistory = (jobsiteId: string) =>
       }),
     ),
   );
+
+// --- Reactivar (orden 151, D-340 (2)) ---------------------------------------------------------------------------
+
+export type PeriodSummary = {
+  endedOn: string;
+  from: string;
+  to: string;
+  monthlyRate: number | null;
+  visits: number;
+  income: number | null;
+  staff: number | null;
+};
+
+const numOrNull = (v: unknown) => (v === null || v === undefined ? null : Number(v));
+
+/** Aviso y resumen del jobsite terminado (jobsite_period_summary); null si no está terminado. */
+export const fetchPeriodSummary = (jobsiteId: string) =>
+  rpc('jobsite_period_summary', { p_jobsite: jobsiteId }, (d) => {
+    const r = ((d ?? []) as Record<string, unknown>[])[0];
+    if (!r) return null;
+    return {
+      endedOn: String(r.ended_on),
+      from: String(r.period_from),
+      to: String(r.period_to),
+      monthlyRate: numOrNull(r.monthly_rate),
+      visits: Number(r.visits ?? 0),
+      income: numOrNull(r.income),
+      staff: numOrNull(r.staff),
+    } as PeriodSummary;
+  });
+
+/** De Terminado a Activo con fecha de inicio nueva y, con ver tarifas, la tarifa (null conserva la anterior). */
+export const reactivateJobsite = (jobsiteId: string, startOn: string, monthlyRate: number | null) =>
+  rpc('reactivate_jobsite', { p_jobsite: jobsiteId, p_start_on: startOn, p_monthly_rate: monthlyRate }, () => null);

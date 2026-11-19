@@ -34,6 +34,7 @@ import {
   MonthCard,
   QuickActions,
 } from "@/components/clients/JobsiteParts";
+import { TerminatedPanel } from "@/components/clients/TerminatedPanel";
 import { JobsiteExtras } from "@/components/quotes/JobsiteExtras";
 import { ContractCard } from "@/components/contract/ContractCard";
 import { UsDateField } from "@/components/UsDateField";
@@ -236,6 +237,10 @@ export default function JobsiteScreen() {
             {statusError ? (
               <AppAlert tone="error" text={c.jobsite.errorStatus} />
             ) : null}
+            {/* Orden 151 (D-340 (2)): terminado con aviso, resumen y "Reactivar jobsite". */}
+            {jobsite.status === "terminated" ? (
+              <TerminatedPanel jobsite={jobsite} c={c} onReactivated={load} />
+            ) : (
             <QuickActions
               actions={[
                 {
@@ -267,6 +272,7 @@ export default function JobsiteScreen() {
                 },
               ]}
             />
+            )}
             <DetailTabs<Tab>
               tabs={[
                 { value: "summary", label: c.detail.tabSummary },
@@ -446,7 +452,7 @@ function Summary({
   return (
     <View>
       {/* Tarjeta del mes (D-340); las cifras de pagos solo con permiso, igual que antes. */}
-      {canSeeRate(access) ? <MonthCard jobsiteId={jobsite.id} rate={rate} margin={margin} c={c} /> : null}
+      {canSeeRate(access) && jobsite.status !== "terminated" ? <MonthCard jobsiteId={jobsite.id} rate={rate} margin={margin} c={c} /> : null}
 
       {/* Tarifa con lápiz para un cliente previo o proveedor (D-210). */}
       {rateEditable && rate !== null ? (

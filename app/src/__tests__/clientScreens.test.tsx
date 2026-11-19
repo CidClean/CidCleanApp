@@ -70,6 +70,7 @@ const jobsite = {
   estHoursPerVisit: 3, visitsPerMonth: null, startDate: '2026-11-01', status: 'active', walkthroughVersion: null,
 };
 const mockSetStatus = jest.fn();
+const mockReactivate = jest.fn();
 const mockSetPay = jest.fn();
 const mockFetchPay = jest.fn();
 jest.mock('@/lib/clientsApi', () => ({
@@ -86,6 +87,9 @@ jest.mock('@/lib/clientsApi', () => ({
   endAssignment: jest.fn(),
   choosePdf: jest.fn(),
   uploadJobsiteDocument: jest.fn(),
+  // Orden 151: jobsite terminado y reactivar.
+  fetchPeriodSummary: async () => ({ ok: true, data: { endedOn: '2026-08-31', from: '2026-08-01', to: '2026-08-31', monthlyRate: 2038, visits: 15, income: 2038, staff: 1350 } }),
+  reactivateJobsite: (...a: unknown[]) => mockReactivate(...a),
   // Orden 150: Documents y History del jobsite.
   fetchJobsiteLibrary: async () => ({
     ok: true,
@@ -204,6 +208,37 @@ describe('Jobsite (orden 150, D-339, D-340)', () => {
     expect(await screen.findByText(/\$18\.00\/h · 3 h garantizadas/)).toBeTruthy();
     await fireEvent.press(screen.getByText('María López'));
     expect(mockPush).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/pay/[assignment]' }));
+  });
+
+  it('terminado: aviso, resumen del periodo y Reactivar con fecha y tarifa precargada (orden 151)', async () => {
+    mockReactivate.mockResolvedValue({ ok: true, data: null });
+    Object.assign(jobsite, { status: 'terminated' });
+    try {
+      await render(<JobsiteScreen />);
+      expect(await screen.findByText(/Terminó el .*2026\. Era \$2,038\.00 al mes\./)).toBeTruthy();
+      expect(screen.getByText('15 visitas aprobadas')).toBeTruthy();
+      expect(screen.getByText('Ingresos $2,038 · Personal $1,350')).toBeTruthy();
+      expect(screen.queryByLabelText('Más acciones')).toBeNull();
+      expect(screen.queryByLabelText('Llamar')).toBeNull();
+      await fireEvent.press(screen.getByText('Reactivar jobsite'));
+      expect(screen.getByDisplayValue('2038')).toBeTruthy();
+      await fireEvent.press(screen.getByText('Reactivar'));
+      await waitFor(() => expect(mockReactivate).toHaveBeenCalledWith('j1', expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), 2038));
+    } finally {
+      Object.assign(jobsite, { status: 'active' });
+    }
+  });
+
+  it('terminado sin cambiar estado: sin botón Reactivar ni cifras', async () => {
+    mockAccess = { isSuperAdmin: false, permissions: new Set(['clientes_ver']) };
+    Object.assign(jobsite, { status: 'terminated' });
+    try {
+      await render(<JobsiteScreen />);
+      expect(await screen.findByText('15 visitas aprobadas')).toBeTruthy();
+      expect(screen.queryByText('Reactivar jobsite')).toBeNull();
+    } finally {
+      Object.assign(jobsite, { status: 'active' });
+    }
   });
 
   it('sin ver tarifa no hay cifras', async () => {

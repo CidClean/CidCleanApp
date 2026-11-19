@@ -150,6 +150,23 @@ export const clientsEs = {
     cleaningType: 'Tipo de limpieza cambiado', // D-200
     contractPending: 'Contrato pendiente', // D-200
     reactivated: 'Jobsite reactivado', // D-200
+    // Jobsite terminado y reactivar (orden 151, D-340 (2), muestra pantalla 3). D-200 = detalle menor.
+    endedNote: (d: string, rate: string | null) =>
+      rate ? `Terminó el ${d}. Era ${rate} al mes.` : `Terminó el ${d}.`, // muestra: "Terminated on Aug 31, 2026. It was $2,038.00 per month."
+    approvedVisits: (n: number) => (n === 1 ? '1 visita aprobada' : `${n} visitas aprobadas`), // muestra: "15 approved visits"
+    periodRange: (a: string, b: string) => `${a} – ${b}`, // muestra: "Aug 1 – Aug 31, 2026"
+    periodMoney: (income: string | null, staff: string | null) =>
+      [income ? `Ingresos ${income}` : null, staff ? `Personal ${staff}` : null].filter(Boolean).join(' · '), // muestra: "Income $2,038 · Staff $1,350"
+    periodNote: 'Total de la cuenta', // muestra: "Total for the account"
+    reactivate: 'Reactivar jobsite', // muestra: "Reactivate jobsite"
+    reactivateNote: 'Pide la fecha de inicio nueva y la tarifa mensual, que empiezan con las anteriores.', // muestra
+    reactivateTitle: (n: string) => `Reactivar ${n}`, // D-200
+    newStart: 'Fecha de inicio', // D-200
+    newRate: 'Tarifa mensual', // D-200
+    reactivateBody: 'Vuelve a Activas con su fecha de inicio nueva. El historial anterior se conserva.', // muestra (texto del survey)
+    confirmReactivate: 'Reactivar', // D-200
+    errorStart: 'Elige hoy o una fecha posterior.', // D-200
+    errorReactivate: 'No se pudo reactivar. Inténtalo otra vez.', // D-200
   },
 
   margin: {
@@ -411,6 +428,21 @@ export const clientsEn: ClientsStrings = {
     cleaningType: 'Cleaning type changed',
     contractPending: 'Contract pending',
     reactivated: 'Jobsite reactivated',
+    endedNote: (d: string, rate: string | null) => (rate ? `Terminated on ${d}. It was ${rate} per month.` : `Terminated on ${d}.`),
+    approvedVisits: (n: number) => (n === 1 ? '1 approved visit' : `${n} approved visits`),
+    periodRange: (a: string, b: string) => `${a} – ${b}`,
+    periodMoney: (income: string | null, staff: string | null) =>
+      [income ? `Income ${income}` : null, staff ? `Staff ${staff}` : null].filter(Boolean).join(' · '),
+    periodNote: 'Total for the account',
+    reactivate: 'Reactivate jobsite',
+    reactivateNote: 'Asks for the new start date and the monthly rate, which start filled with the previous ones.',
+    reactivateTitle: (n: string) => `Reactivate ${n}`,
+    newStart: 'Start date',
+    newRate: 'Monthly rate',
+    reactivateBody: 'It goes back to Active with its new start date. The previous history is kept.',
+    confirmReactivate: 'Reactivate',
+    errorStart: 'Choose today or a later date.',
+    errorReactivate: "Couldn't reactivate. Try again.",
   },
 
   margin: {
