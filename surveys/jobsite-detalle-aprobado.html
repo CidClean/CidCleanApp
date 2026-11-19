@@ -1,0 +1,130 @@
+<title>Detalle del jobsite</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap">
+<!-- Propuesta para D-339. Colores C1 (D-226). Datos reales de Naples Yacht Club; personal y visitas de ejemplo. -->
+<style>
+/* Layout: cuatro pantallas de teléfono: Resumen, Equipo y horario, jobsite archivado con Reactivar, y Editar mi perfil. */
+:root{--bg:#EDE6DA;--ink:#1E2A28;--muted:#6B5F52;--brand:#0F766E;--f:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141A19;--ink:#ECE6DC;--muted:#A99E90;--brand:#2BB3A6;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141A19;--ink:#ECE6DC;--muted:#A99E90;--brand:#2BB3A6;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.5}
+.wrap{max-width:1360px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px;display:flex;flex-direction:column;gap:24px}
+h1{font-size:clamp(24px,3.6vw,32px);font-weight:800;margin:0;text-wrap:balance}
+.lead{color:var(--muted);max-width:76ch;margin:6px 0 0}
+.w{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:18px;align-items:start}
+.col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.step{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin:0}
+.cap{font-size:13px;color:var(--muted);margin:0}
+.ph{background:#FBF6EF;color:#1E2A28;border-radius:30px;padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.bar{display:flex;justify-content:space-between;align-items:center}
+.sq{width:36px;height:36px;border-radius:12px;background:#fff;display:grid;place-items:center;font-weight:800}
+.title b{font-size:21px;display:block;line-height:1.2}
+.title small{color:#6B5F52;font-size:12px}
+.chip{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.g{background:#DDEFEC;color:#0F766E}.n{background:#F1EBE2;color:#6B5F52}.a{background:#FBE3C7;color:#8A4B0F}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.quick span{background:#fff;border-radius:14px;padding:8px 4px;text-align:center;font-size:11px;font-weight:800;color:#0F766E}
+.quick span i{display:block;font-style:normal;font-size:15px}
+.tabs{display:flex;gap:6px;overflow-x:auto}
+.tabs span{flex:none;font-size:12px;font-weight:800;padding:8px 11px;border-radius:12px;background:#F6EFE6;white-space:nowrap}
+.tabs .on{background:#0F766E;color:#fff}
+.hero{background:#0F766E;color:#fff;border-radius:22px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.hero small{opacity:.85;font-size:12px}
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.nums b{display:block;font-size:15px;font-variant-numeric:tabular-nums}.nums span{font-size:10.5px;opacity:.85}
+.pb{height:6px;border-radius:9px;background:rgba(255,255,255,.25)}.pb i{display:block;height:6px;border-radius:9px;background:#fff;width:42%}
+.c{background:#fff;border-radius:20px;padding:10px 14px;display:flex;flex-direction:column}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #F1EBE2}
+.row:first-child{border-top:0}
+.row small{display:block;color:#6B5F52;font-size:12px}
+.lnk{color:#0F766E;font-weight:800;font-size:12px;white-space:nowrap}
+.k{font-size:12px;color:#6B5F52}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:11px}
+.week div{background:#F6EFE6;border-radius:10px;padding:6px 0;font-weight:800}
+.week div.on{background:#DDEFEC;color:#0F766E}
+.week div.off{color:#B9AC99}
+.av{width:30px;height:30px;border-radius:50%;background:#F1EBE2;display:inline-grid;place-items:center;font-size:11px;font-weight:800;margin-right:8px;vertical-align:middle}
+.btn{background:#0F766E;color:#fff;border-radius:16px;padding:12px;text-align:center;font-weight:800}
+.btn2{border:1px solid #0F766E;color:#0F766E;border-radius:16px;padding:11px;text-align:center;font-weight:800}
+.amber{background:#FBE3C7;color:#8A4B0F;border-radius:14px;padding:10px 12px;font-size:13px}
+.fl{display:flex;flex-direction:column;gap:3px}
+.fl span{font-size:12px;color:#6B5F52;font-weight:700}
+.in{background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #E8DCC9}
+.in.new{outline:2px solid #0F766E;outline-offset:-2px;border-color:transparent}
+</style>
+<div class="wrap">
+<header>
+  <h1>Detalle del jobsite, reactivar y teléfono en el perfil</h1>
+  <p class="lead"><b>Aprobado el 2026-11-19 (D-340) salvo la pantalla 2 "Team &amp; schedule", que NO se construye: lo de horario y trabajo queda como está hoy.</b> Menos scroll y lo importante arriba: el estado como etiqueta, botones rápidos, el mes en una tarjeta y el resto en pestañas. Lo que se edita poco (estado, tipo de limpieza) pasa al menú y a Edit.</p>
+</header>
+<div class="w">
+
+<div class="col"><p class="step">1 · Resumen</p>
+<div class="ph">
+  <div class="bar"><span class="sq">‹</span><span class="sq" style="width:auto;padding:0 12px;color:#0F766E">Edit ⋯</span></div>
+  <div class="title"><b>Naples Yacht Club</b><small>Client: Naples Yacht Club · Wilson Franquicia</small> <span class="chip g">Active</span></div>
+  <div class="quick"><span><i>📞</i>Call</span><span><i>✉️</i>Email</span><span><i>📍</i>Maps</span><span><i>📅</i>Schedule</span></div>
+  <div class="tabs"><span class="on">Summary</span><span>Team & schedule</span><span>Documents</span><span>History</span></div>
+  <div class="hero"><small>November</small>
+    <div class="nums"><div><b>$8,615</b><span>rate</span></div><div><b>$0</b><span>received</span></div><div><b>$3,640</b><span>staff</span></div><div><b>58%</b><span>margin</span></div></div>
+    <div class="pb"><i></i></div><small>Staff is 42% of the rate</small></div>
+  <div class="c">
+    <div class="row"><div>700 14th Ave S, Naples, FL 34102<small>Plus Code ▸</small></div><span class="lnk">Maps</span></div>
+    <div class="row"><div>Wilson · (941) 370-4611<small>Main and emergency contact</small></div></div>
+    <div class="row"><div>6 days a week · no Wednesday<small>4 h per visit · since Sep 17, 2026</small></div></div>
+  </div>
+  <div class="c">
+    <div class="row"><div><b>Contract</b><small>Signed by both parties</small></div><span class="lnk">Download</span></div>
+    <div class="row"><div><b>Extras</b><small>None yet</small></div><span class="lnk">+ Extra quote</span></div>
+  </div>
+</div>
+<p class="cap">El estado pasa a la etiqueta junto al nombre; "Pausar" y "Terminar" van en el menú ⋯. El tipo de limpieza se cambia dentro de Edit. Si no hay walkthrough, no sale la fila.</p></div>
+
+<div class="col"><p class="step">2 · Team &amp; schedule</p>
+<div class="ph">
+  <div class="title"><b>Naples Yacht Club</b> <span class="chip g">Active</span></div>
+  <div class="tabs"><span>Summary</span><span class="on">Team & schedule</span><span>Documents</span><span>History</span></div>
+  <div class="c"><div class="row"><b>This week</b><span class="lnk">Open schedule</span></div>
+    <div class="week"><div class="on">S</div><div class="on">M</div><div class="on">T</div><div class="off">W</div><div class="on">T</div><div class="on">F</div><div class="on">S</div></div>
+  </div>
+  <div class="c">
+    <div class="row"><div><span class="av">EM</span>Estela Medina<small style="margin-left:38px">1099 · fixed monthly</small></div><span class="k">$1,350/mo</span></div>
+    <div class="row"><div><span class="av">KS</span>Karina Sarmiento<small style="margin-left:38px">1099 · per service day</small></div><span class="k">$80/day</span></div>
+    <div class="row"><span class="lnk">Assign staff</span></div>
+  </div>
+  <div class="c"><div class="row"><b>Last approved visits</b></div>
+    <div class="row"><div>Mon, Nov 16<small>2 staff · approved</small></div></div>
+    <div class="row"><div>Sun, Nov 15<small>2 staff · approved</small></div></div>
+  </div>
+</div>
+<p class="cap">Quién trabaja aquí y su pago (solo para quien ve pagos), el horario de la semana y las últimas visitas aprobadas. Documents junta contrato, SOW, walkthrough y quotes; History los cambios y los correos enviados.</p></div>
+
+<div class="col"><p class="step">3 · Jobsite archivado</p>
+<div class="ph">
+  <div class="bar"><span class="sq">‹</span><span class="sq" style="width:auto;padding:0 12px;color:#0F766E">⋯</span></div>
+  <div class="title"><b>Clinica Quirúrgica</b><small>Wilson Franquicia</small> <span class="chip n">Terminated</span></div>
+  <div class="amber">Terminated on Aug 31, 2026. It was $2,038.00 per month.</div>
+  <div class="c">
+    <div class="row"><div>15 approved visits<small>Aug 1 – Aug 31, 2026</small></div></div>
+    <div class="row"><div>Income $2,038 · Staff $1,350<small>Total for the account</small></div></div>
+  </div>
+  <div class="btn">Reactivate jobsite</div>
+  <div class="cap" style="color:#6B5F52">Asks for the new start date and the monthly rate, which start filled with the previous ones.</div>
+</div>
+<p class="cap">Reactivar lo devuelve a Activas con una fecha de inicio nueva y su tarifa (precargada con la anterior). El historial anterior se conserva.</p></div>
+
+<div class="col"><p class="step">4 · Mi cuenta → Editar mi perfil</p>
+<div class="ph">
+  <div class="bar"><span class="sq">‹</span><b>Edit my profile</b><span style="width:36px"></span></div>
+  <div class="fl"><span>First name</span><div class="in">Humberto</div></div>
+  <div class="fl"><span>Last name</span><div class="in">Villiva</div></div>
+  <div class="fl"><span>Phone</span><div class="in new">(786) 250-1324</div></div>
+  <div class="fl"><span>Email</span><div class="in" style="color:#9A8F82">admin@cidclean.com · sign-in email</div></div>
+  <div class="amber">Your name and phone go in the signature of the emails you send from templates.</div>
+  <div class="btn">Save</div>
+</div>
+<p class="cap">El teléfono se puede cambiar desde tu propio perfil. El correo de entrada no se cambia aquí, porque es con el que inicias sesión.</p></div>
+
+</div>
+</div>
