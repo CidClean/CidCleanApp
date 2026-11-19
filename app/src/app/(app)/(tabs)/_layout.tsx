@@ -6,7 +6,7 @@ import { BottomBar } from '@/components/BottomBar';
 export default function TabsLayout() {
   return (
     <Tabs
-      backBehavior="initialRoute"
+      backBehavior="history" // D-345: el botón atrás vuelve a la pantalla anterior
       tabBar={(props) => <BottomBar {...props} />}
       screenOptions={{ headerShown: false }}
     >

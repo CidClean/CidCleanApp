@@ -271,7 +271,7 @@ export default function JobsiteScreen() {
                   icon: "calendar",
                   label: c.detail.schedule,
                   // Schedule no tiene filtro por jobsite: abre el Schedule actual (D-340).
-                  onPress: seesSchedule ? () => router.navigate({ pathname: "/schedule", params: { from: "jobsite", id: jobsite.id } }) : undefined, // D-344
+                  onPress: seesSchedule ? () => router.push("/schedule/all") : undefined, // D-345: se abre encima; volver regresa al jobsite
                 },
               ]}
             />
