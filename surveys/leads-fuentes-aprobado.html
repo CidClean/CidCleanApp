@@ -1,0 +1,147 @@
+<title>Leads por origen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap">
+<!-- APROBADO por el dueño 2026-11-20 ("Adelante"), D-350. Colores C1 (D-226). Datos de ejemplo. -->
+<style>
+:root{--bg:#EDE6DA;--ink:#1E2A28;--muted:#6B5F52;--brand:#0F766E;--f:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#141A19;--ink:#ECE6DC;--muted:#A99E90;--brand:#2BB3A6;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141A19;--ink:#ECE6DC;--muted:#A99E90;--brand:#2BB3A6;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.5}
+.wrap{max-width:1360px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px;display:flex;flex-direction:column;gap:24px}
+h1{font-size:clamp(24px,3.6vw,32px);font-weight:800;margin:0;text-wrap:balance}
+.lead{color:var(--muted);max-width:76ch;margin:6px 0 0}
+.w{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:18px;align-items:start}
+.col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.step{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin:0}
+.cap{font-size:13px;color:var(--muted);margin:0}
+.ph{background:#FBF6EF;color:#1E2A28;border-radius:30px;padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sq{width:36px;height:36px;border-radius:12px;background:#fff;display:grid;place-items:center;font-weight:800;flex:none}
+.sq.b{background:#0F766E;color:#fff}
+.t{font-size:21px;font-weight:800;flex:1}
+.tabs{display:flex;gap:6px;overflow-x:auto}
+.tabs span{flex:none;font-size:12px;font-weight:800;padding:8px 11px;border-radius:12px;background:#F6EFE6;white-space:nowrap}
+.tabs .on{background:#0F766E;color:#fff}
+.seg{display:grid;grid-template-columns:1fr 1fr 1fr;background:#F1EBE2;border-radius:12px;padding:3px;font-size:12px;font-weight:800;text-align:center}
+.seg span{padding:7px 0;border-radius:10px;color:#6B5F52}.seg .on{background:#fff;color:#1E2A28}
+.seg2{grid-template-columns:1fr 1fr}
+.c{background:#fff;border-radius:20px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;position:relative}
+.c.hot{box-shadow:inset 4px 0 0 #E08A1E}
+.c .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.c b{font-size:15px}
+.c small{color:#6B5F52;font-size:12px;display:block}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.pot{background:#FBE3C7;color:#8A4B0F}.cold{background:#E3ECEF;color:#2F5563}.src{background:#F1EBE2;color:#6B5F52}.g{background:#DDEFEC;color:#0F766E}
+.acts{display:flex;gap:6px}
+.acts span{flex:1;text-align:center;font-size:12px;font-weight:800;border-radius:12px;padding:8px 0;background:#F6EFE6;color:#0F766E}
+.acts span.p{background:#0F766E;color:#fff}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sum div{background:#fff;border-radius:16px;padding:10px 12px}
+.sum b{font-size:20px;display:block}.sum small{font-size:11.5px;color:#6B5F52}
+.fl{display:flex;flex-direction:column;gap:3px}
+.fl span{font-size:12px;color:#6B5F52;font-weight:700}
+.in{background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #E8DCC9}
+.in.dim{color:#9A8F82}
+.note{background:#DDEFEC;color:#0F5E57;border-radius:14px;padding:10px 12px;font-size:13px}
+.amber{background:#FBE3C7;color:#8A4B0F;border-radius:14px;padding:10px 12px;font-size:13px}
+.btn{background:#0F766E;color:#fff;border-radius:16px;padding:12px;text-align:center;font-weight:800}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #F1EBE2}
+.row:first-of-type{border-top:0}
+.lnk{color:#0F766E;font-weight:800;font-size:12px;white-space:nowrap}
+.sw{width:38px;height:22px;border-radius:99px;background:#0F766E;position:relative;flex:none}
+.sw::after{content:"";position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff}
+.sw.off{background:#D9CFC1}.sw.off::after{right:auto;left:3px}
+.big{font-size:26px;font-weight:800}
+.flow{background:var(--ph,#FBF6EF);color:#1E2A28;border-radius:22px;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px}
+.flow div{background:#fff;border-radius:14px;padding:10px 12px;font-size:13px}
+.flow b{display:block;color:#0F766E}
+</style>
+<div class="wrap">
+<header>
+  <h1>Leads de agentes de IA, anuncios y one-time</h1>
+  <p class="lead">Propuesta para aprobar. Lo ya decidido (D-347 a D-349): una sola entrada segura, Make para Meta, TikTok y el correo de los agentes; agentes entran en frío, anuncios y website como potenciales; one-time con precio único y residencial solo ahí. Aquí va cómo se ve.</p>
+</header>
+
+<div class="flow">
+  <div><b>Meta · Instagram · TikTok</b>Formulario del anuncio → Make → app. Entra como <b style="display:inline;color:#8A4B0F">Potencial</b>.</div>
+  <div><b>Muse · Grok · otro agente</b>Por dirección web (directo) o por correo de Make → app. Entra <b style="display:inline;color:#2F5563">En frío</b>.</div>
+  <div><b>Website</b>Como hoy. Potencial.</div>
+  <div><b>Seguridad</b>Una clave por fuente, se apaga sola si la desactivas; duplicados por email o teléfono se juntan con el lead que ya existe.</div>
+</div>
+
+<div class="w">
+
+<div class="col"><p class="step">1 · Lista de leads</p>
+<div class="ph">
+  <div class="bar"><span class="t">Leads</span><span class="sq b">+</span><span class="sq">HV</span></div>
+  <div class="tabs"><span class="on">Today · 5</span><span>To contact</span><span>Waiting</span><span>In sales</span><span>Closed</span></div>
+  <div class="seg"><span class="on">All</span><span>Potential · 2</span><span>Cold · 3</span></div>
+  <div class="c hot">
+    <div class="top"><div><b>Maria Gonzalez</b><small>Move-out clean · 3 bed · Naples</small></div><span class="chip pot">Potential</span></div>
+    <div class="chips"><span class="chip src">Instagram ad</span><span class="chip g">One-time · Residential</span><small>12 min ago</small></div>
+    <div class="acts"><span class="p">Call</span><span>Write</span></div>
+  </div>
+  <div class="c hot">
+    <div class="top"><div><b>Gulf Coast Dental</b><small>Dr. Patel · 4,200 sqft</small></div><span class="chip pot">Potential</span></div>
+    <div class="chips"><span class="chip src">Meta ad</span><span class="chip src">Recurring</span><small>1 h ago</small></div>
+    <div class="acts"><span class="p">Call</span><span>Write</span></div>
+  </div>
+  <div class="c">
+    <div class="top"><div><b>Estero Fitness Club</b><small>Front desk · info@…</small></div><span class="chip cold">Cold</span></div>
+    <div class="chips"><span class="chip src">Muse</span><span class="chip src">Recurring</span></div>
+    <div class="acts"><span>Write</span><span>Replied</span></div>
+  </div>
+</div>
+<p class="cap">Potencial: franja y etiqueta ámbar, va primero en la lista y su acción principal es Llamar (ya mostró interés). En frío: etiqueta azul gris y sigue el flujo de correos. Filtro rápido All / Potential / Cold. La fuente sale como chip.</p></div>
+
+<div class="col"><p class="step">2 · Aviso e Inicio</p>
+<div class="ph">
+  <div class="bar"><span class="t" style="font-size:18px">Good morning, Humberto</span><span class="sq">🔔</span></div>
+  <div class="sum"><div><b style="color:#8A4B0F">2</b><small>new potential leads · call today</small></div><div><b>3</b><small>leads to write today</small></div></div>
+  <div class="amber"><b>New potential lead · Instagram ad</b><br>Maria Gonzalez wants a one-time move-out clean in Naples. Tap to call.</div>
+  <div class="note">Agent leads do not send a notice one by one: "Muse added 12 cold leads" once per batch.</div>
+</div>
+<p class="cap">Cada potencial avisa al momento (como el website). Los fríos de un agente llegan en lote y avisan una sola vez, para no llenarte de notificaciones.</p></div>
+
+<div class="col"><p class="step">3 · Nuevo lead: tipo de servicio</p>
+<div class="ph">
+  <div class="bar"><span class="sq">‹</span><span class="t" style="font-size:18px">New lead</span></div>
+  <div class="fl"><span>Service</span><div class="seg seg2"><span>Recurring</span><span class="on">One-time</span></div></div>
+  <div class="fl"><span>Property</span><div class="seg seg2"><span>Commercial</span><span class="on">Residential</span></div></div>
+  <div class="fl"><span>Company <i style="font-style:normal;font-weight:500">(optional)</i></span><div class="in dim">—</div></div>
+  <div class="fl"><span>Contact name</span><div class="in">Maria Gonzalez</div></div>
+  <div class="fl"><span>Phone</span><div class="in">(239) 555-0142</div></div>
+  <div class="fl"><span>Job</span><div class="in">Move-out clean, 3 bed / 2 bath</div></div>
+  <div class="btn">Save lead</div>
+</div>
+<p class="cap">"Residential" solo aparece si eliges One-time. Con Residential la empresa es opcional y el lead se nombra por la persona. El impuesto de residencial sigue la regla que ya existe.</p></div>
+
+<div class="col"><p class="step">4 · Quote one-time</p>
+<div class="ph">
+  <div class="bar"><span class="sq">‹</span><span class="t" style="font-size:18px">One-time quote</span></div>
+  <div class="fl"><span>Price (total)</span><div class="in big">$480.00</div></div>
+  <div class="fl"><span>Service date</span><div class="in">Sat, Nov 28, 2026 · 9:00 AM</div></div>
+  <div class="fl"><span>Scope</span><div class="in">Full move-out clean: kitchen, 2 baths, floors, inside cabinets and appliances.</div></div>
+  <div class="note">No monthly rate and no monthly contract. The client accepts in the portal with the one-time terms.</div>
+  <div class="btn">Send quote</div>
+</div>
+<p class="cap">Al aceptar: se crea el cliente y un "proyecto one-time" con una sola visita en el Schedule en esa fecha; el ingreso se registra una vez en Accounting el mes del servicio. Walkthrough opcional (se puede cotizar con fotos).</p></div>
+
+<div class="col"><p class="step">5 · Mi cuenta → Fuentes de leads</p>
+<div class="ph">
+  <div class="bar"><span class="sq">‹</span><span class="t" style="font-size:18px">Lead sources</span></div>
+  <div class="c">
+    <div class="row"><div><b>Meta (Facebook + Instagram)</b><small>Enters as Potential · via Make</small></div><span class="sw"></span></div>
+    <div class="row"><div><b>TikTok</b><small>Enters as Potential · via Make</small></div><span class="sw"></span></div>
+    <div class="row"><div><b>Muse</b><small>Enters as Cold · 34 leads</small></div><span class="sw"></span></div>
+    <div class="row"><div><b>Grok</b><small>Enters as Cold · not used yet</small></div><span class="sw off"></span></div>
+    <div class="row"><span class="lnk">+ Add source</span></div>
+  </div>
+  <div class="c"><div class="row"><div><b>Muse · connection</b><small>Web address and key to paste in the agent or in Make</small></div><span class="lnk">Copy</span></div></div>
+</div>
+<p class="cap">Solo Super Admin. Cada fuente tiene su clave (se copia, no se ve completa) y se puede apagar o rehacer. "Entra como" viene puesto según D-348 y se puede cambiar por fuente.</p></div>
+
+</div>
+</div>
