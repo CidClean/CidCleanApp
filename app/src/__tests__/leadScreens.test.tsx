@@ -180,7 +180,7 @@ describe('Pipeline', () => {
   const day = (n: number) => new Date(Date.now() - n * 86_400_000);
   const rows = [
     { id: 'l1', company: 'Gulf Coast Dental', contactName: 'Ana', status: 'walkthrough_scheduled', createdAt: day(40), followUpOn: null, nextWalkthrough: null },
-    { id: 'l2', company: 'Perez LLC', contactName: 'Pedro', status: 'follow_up', createdAt: day(30), followUpOn: null, nextWalkthrough: null, firstContactAt: day(8), followupsSent: 0, nextStepOn: '2026-01-02' },
+    { id: 'l2', company: 'Perez LLC', contactName: 'Pedro', email: 'pedro@perez.test', status: 'follow_up', createdAt: day(30), followUpOn: null, nextWalkthrough: null, firstContactAt: day(8), followupsSent: 0, nextStepOn: '2026-01-02' },
     { id: 'l3', company: 'Gulf Offices', contactName: 'Lia', status: 'follow_up_2', createdAt: day(60), followUpOn: null, nextWalkthrough: null, followupSentAt: day(22), followupsSent: 1, nextStepOn: '2026-01-01' },
     { id: 'l4', company: 'Bay Offices', contactName: null, status: 'new', createdAt: day(1), followUpOn: null, nextWalkthrough: null },
     { id: 'l5', company: 'Sin Resp', contactName: null, status: 'no_response', createdAt: day(90), followUpOn: null, nextWalkthrough: null, nextStepOn: '2026-01-03' },
@@ -221,6 +221,16 @@ describe('Pipeline', () => {
     await screen.findByText('Perez LLC');
     await fireEvent.press(screen.getAllByText('Escribir')[1]);
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/send-email', params: { kind: 'lead', id: 'l2', step: 'follow_up' } });
+  });
+
+  it('D-353: sin email, Escribir está desactivado y no abre nada', async () => {
+    mockFetchLeads.mockResolvedValue({ ok: true, data: rows.map((r) => (r.id === 'l2' ? { ...r, email: null } : r)) });
+    await render(<PipelineScreen />);
+    await screen.findByText('Perez LLC');
+    const btn = screen.getAllByRole('button', { name: 'Escribir' }).find((b) => b.props.accessibilityState?.disabled);
+    expect(btn).toBeTruthy();
+    await fireEvent.press(screen.getAllByText('Escribir')[1]);
+    expect(mockPush).not.toHaveBeenCalledWith(expect.objectContaining({ pathname: '/send-email' }));
   });
 
   it('Respondió pide confirmación en la pantalla y llama lead_mark_responded', async () => {

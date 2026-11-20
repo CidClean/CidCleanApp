@@ -33,14 +33,17 @@ export function LeadStatusChip({ status, s }: { status: LeadStatus; s: SalesStri
 }
 
 /** Botón chico de la fila (survey: `.ab`): de marca o con borde de marca. */
-export function SmallButton({ label, primary, onPress }: { label: string; primary?: boolean; onPress: () => void }) {
+export function SmallButton({ label, primary, onPress, disabled }: { label: string; primary?: boolean; onPress: () => void; disabled?: boolean }) {
   const { brand, colors } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{ disabled: !!disabled }}
+      disabled={disabled}
       onPress={onPress}
       hitSlop={4}
-      style={[styles.small, primary ? { backgroundColor: brand } : { borderWidth: 1, borderColor: brand }]}
+      // D-353: desactivado (sin email) se ve apagado.
+      style={[styles.small, primary ? { backgroundColor: brand } : { borderWidth: 1, borderColor: brand }, disabled ? { opacity: 0.35 } : null]}
     >
       <AppText size={12} weight="heavy" color={primary ? '#FFFFFF' : colors.brandText}>
         {label}
@@ -69,11 +72,14 @@ export function LeadFlowButtons({
   canEdit,
   s,
   onAsk,
+  hasEmail = true,
 }: {
   id: string;
   company: string;
   status: LeadStatus;
   canEdit: boolean;
+  /** D-353: sin email, "Escribir" queda desactivado. */
+  hasEmail?: boolean;
   s: SalesStrings;
   onAsk: (ask: FlowAsk) => void;
 }) {
@@ -90,7 +96,7 @@ export function LeadFlowButtons({
   }
   return (
     <View style={styles.row}>
-      <SmallButton label={s.flow.write} primary onPress={() => write(id, status)} />
+      <SmallButton label={s.flow.write} primary disabled={!hasEmail} onPress={() => write(id, status)} />
       {canEdit ? <SmallButton label={s.flow.responded} onPress={() => onAsk({ kind: 'responded', id, company })} /> : null}
     </View>
   );

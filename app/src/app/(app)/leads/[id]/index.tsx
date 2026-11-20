@@ -218,7 +218,7 @@ export default function LeadDetailScreen() {
             <LeadMainCard
               lead={lead}
               s={s}
-              onMail={() => write(lead.id, lead.status)}
+              onMail={lead.email ? () => write(lead.id, lead.status) : undefined} // D-353
               onResponded={canEdit && isColdStatus(lead.status) ? () => setAsk({ kind: 'responded', id: lead.id, company: lead.company }) : undefined}
             />
             {isColdStatus(lead.status) || lead.firstContactAt ? (
@@ -521,7 +521,7 @@ function WalkthroughSection({
  * Tarjeta principal del lead (D-226, D-333 (7)): empresa, "Lead · Fuente", estado, Llamar (tel:), Correo (el único
  * botón de correo: abre las plantillas con la del paso, D-332 (5)) y Respondió (en frío, con `leads_editar`).
  */
-function LeadMainCard({ lead, s, onMail, onResponded }: { lead: Lead; s: SalesStrings; onMail: () => void; onResponded?: () => void }) {
+function LeadMainCard({ lead, s, onMail, onResponded }: { lead: Lead; s: SalesStrings; onMail?: () => void; onResponded?: () => void }) {
   const { brand } = useTheme();
   const phone = lead.phone ? phoneDigits(lead.phone) : '';
   return (
@@ -558,7 +558,7 @@ function LeadMainCard({ lead, s, onMail, onResponded }: { lead: Lead; s: SalesSt
             {s.detail.call}
           </AppText>
         </Pressable>
-        <Pressable accessibilityRole="button" onPress={onMail} style={[styles.mainButton, { backgroundColor: 'rgba(255,255,255,0.18)' }]}>
+        <Pressable accessibilityRole="button" accessibilityState={{ disabled: !onMail }} disabled={!onMail} onPress={onMail} style={[styles.mainButton, { backgroundColor: 'rgba(255,255,255,0.18)' }, !onMail ? { opacity: 0.4 } : null]}>
           <Icon name="mail" size={18} strokeWidth={1.8} color="#FFFFFF" />
           <AppText weight="bold" size={14} color="#FFFFFF">
             {s.detail.mail}
@@ -605,7 +605,7 @@ function FollowupCard({ lead, s, canEdit, onAsk }: { lead: Lead; s: SalesStrings
         </AppText>
       ) : null}
       {lead.status === 'no_response' ? (
-        <LeadFlowButtons id={lead.id} company={lead.company} status={lead.status} canEdit={canEdit} s={s} onAsk={onAsk} />
+        <LeadFlowButtons id={lead.id} company={lead.company} status={lead.status} canEdit={canEdit} s={s} onAsk={onAsk} hasEmail={!!lead.email} />
       ) : null}
     </Card>
   );

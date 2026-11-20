@@ -254,10 +254,10 @@ function LeadRow({
         // D-350: la acción principal del potencial es "Call" (ya mostró interés); luego "Write".
         <View style={styles.actions}>
           {lead.phone ? <SmallButton label={s.origin.call} primary onPress={() => void Linking.openURL(`tel:${lead.phone}`)} /> : null}
-          <SmallButton label={s.flow.write} primary={!lead.phone} onPress={() => write(lead.id, lead.status)} />
+          <SmallButton label={s.flow.write} primary={!lead.phone} disabled={!lead.email} onPress={() => write(lead.id, lead.status)} />
         </View>
       ) : (
-        <LeadFlowButtons id={lead.id} company={lead.company} status={lead.status} canEdit={canEdit} s={s} onAsk={onAsk} />
+        <LeadFlowButtons id={lead.id} company={lead.company} status={lead.status} canEdit={canEdit} s={s} onAsk={onAsk} hasEmail={!!lead.email} />
       )}
     </View>
   );
