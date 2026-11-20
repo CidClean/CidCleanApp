@@ -218,13 +218,20 @@ function SiteRow({ j, archived, rate, atRisk, info }: { j: Jobsite; archived: bo
   };
   let detail: string;
   if (archived) {
-    const range = j.startDate && info?.endedOn ? c.list.range(date(j.startDate), date(info.endedOn, true)) : info?.endedOn ? `${c.list.ended} ${date(info.endedOn, true)}` : c.list.ended;
+    const range = j.oneTime && j.oneTimeOn
+      ? `${c.list.oneTime} · ${date(j.oneTimeOn, true)}`
+      : j.startDate && info?.endedOn ? c.list.range(date(j.startDate), date(info.endedOn, true)) : info?.endedOn ? `${c.list.ended} ${date(info.endedOn, true)}` : c.list.ended;
     detail = [range, rate !== undefined ? c.list.was(money(rate)) : null].filter(Boolean).join(' · ');
   } else {
     const freq = frequencyLabel(j.frequency, { daily: c.form.daily, other: c.form.other, days: c.form.days, and: c.form.and });
-    detail = [freq, info ? c.list.staff(info.staff) : null, j.startDate ? c.list.since(date(j.startDate)) : null].filter(Boolean).join(' · ');
+    detail = j.oneTime
+      ? [j.oneTimeOn ? date(j.oneTimeOn) : null, info ? c.list.staff(info.staff) : null].filter(Boolean).join(' · ')
+      : [freq, info ? c.list.staff(info.staff) : null, j.startDate ? c.list.since(date(j.startDate)) : null].filter(Boolean).join(' · ');
   }
-  const chip = !archived && (j.status !== 'active' || atRisk) ? (
+  // Orden 162 (D-200): el proyecto one-time lleva la etiqueta One-time mientras no pasa su fecha.
+  const chip = !archived && j.oneTime ? (
+    <Chip label={c.list.oneTime} tone="brand" />
+  ) : !archived && (j.status !== 'active' || atRisk) ? (
     <Chip label={atRisk && j.status === 'active' ? c.atRisk : c.status[j.status]} tone={atRisk && j.status === 'active' ? 'warning' : statusTone(j.status)} />
   ) : null;
   return (

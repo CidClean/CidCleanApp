@@ -130,7 +130,7 @@ export function correoQuote(d: QuoteMail) {
   const head = first ? `Your quote is ready, ${first}` : 'Your quote is ready';
   const lugar = [d.site, d.address && d.address !== d.site ? d.address : null].filter(Boolean).join(' · ');
   const cuando = d.extra
-    ? d.serviceDate ? `Service date · ${fecha(`${d.serviceDate}T12:00:00Z`, 'en')}` : '' // D-238
+    ? d.serviceDate ? [`Service date · ${fecha(`${d.serviceDate}T12:00:00Z`, 'en')}`, horaCorreo(d.visitTime)].filter(Boolean).join(' · ') : '' // D-238; one-time con su hora (orden 162)
     : [diasCorreo(d.frequency), horaCorreo(d.visitTime)].filter(Boolean).join(' · ');
   const items = d.lines ? [...d.lines.services, ...d.lines.addons].map((l) => ({ title: l.label, detail: l.description ?? null })) : [];
   const totalLabel = d.extra ? 'Total' : 'Monthly total';
@@ -345,7 +345,8 @@ export async function pdfQuote(d: PdfData): Promise<Uint8Array> {
       ? [t.serviceDate, d.service_date ? fecha(`${d.service_date}T12:00:00Z`, l) : '—']
       : [t.frequency, frecuenciaPdf(d.frequency, l) || '—'],
   ];
-  if (!d.extra && d.visit_time) det.push([p.visitTime, horaCorreo(d.visit_time)]);
+  // Un extra no trae hora; el one-time (orden 162) sí, y se muestra.
+  if (d.visit_time) det.push([p.visitTime, horaCorreo(d.visit_time)]);
   const dtW = Math.max(...det.map(([k]) => f.regular.widthOfTextAtSize(k, 8.25))) + 9;
   yy = top - 7 - 6;
   for (const [k, v] of det) {

@@ -124,6 +124,8 @@ Deno.serve(async (req) => {
     const snapshot = {
       language: l, company: p.company, site: p.site, address: p.address, frequency: p.frequency,
       extra: p.extra === true, service_date: p.service_date ?? null,
+      // Orden 162: hora del one-time, para el reenvío.
+      ...(p.one_time === true ? { one_time: true, visit_time: p.visit_time ?? null } : {}),
     };
     const { data: c, error: e2 } = await servicio.rpc('confirm_send_quote', {
       p_version: p.version_id, p_actor: actor, p_pdf_path: ruta, p_snapshot: snapshot,

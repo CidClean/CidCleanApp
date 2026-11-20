@@ -534,7 +534,8 @@ function Summary({
       ) : null}
 
       {/* D-289: contrato del cliente, como "Contrato · estado" con Descargar (D-340). */}
-      <ContractCard jobsiteId={jobsite.id} heading={c.detail.contract} downloadLabel={c.detail.download} />
+      {/* Orden 162: el one-time no tiene contrato mensual (D-349). */}
+      {jobsite.oneTime ? null : <ContractCard jobsiteId={jobsite.id} heading={c.detail.contract} downloadLabel={c.detail.download} />}
       {/* D-238: quotes de extra en la fila "Extras" con "+ Quote de extra" (D-340). */}
       <JobsiteExtras
         jobsiteId={jobsite.id}

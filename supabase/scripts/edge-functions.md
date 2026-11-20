@@ -220,3 +220,18 @@ Migraciones (sin aplicar, en este orden y cada una en su propia transacción): `
 ```
 npx supabase@latest functions deploy lead-intake --project-ref <ref> --use-api --no-verify-jwt
 ```
+
+## Orden 162: quote one-time (D-349, D-350 (4))
+
+Migración (sin aplicar): `20261122000003_quote_one_time.sql`. Aplicarla **antes** de publicar la app.
+
+- `quotes.kind = 'one_time'` (sitio del lead, walkthrough opcional); `quote_versions.service_time` y `scope`; `jobsites.one_time` y `one_time_on`. Funciones nuevas `ensure_one_time_quote`, `save_one_time_quote` y `get_one_time_quote` (permisos de quotes como hoy).
+- `send_quote_data` trata el one-time como un extra (sin SOW, total de una vez, fecha) con hora y alcance; `portal_quote` los devuelve; `portal_decide` al aceptar crea el cliente (nombre de la persona si es residencial), el jobsite one-time (sin tarifa mensual, sin contrato mensual), una visita de 120 min en la fecha y hora del servicio (el personal se asigna en el Schedule) y el ingreso único (`income_extras`) del mes del servicio.
+- `quote_decisions_accept` ya no exige `sow_read_at`: un quote sin SOW (extra o one-time) no se podía aceptar; `portal_decide` sigue exigiendo abrir el SOW cuando la versión lo tiene.
+- **Pendiente del abogado:** no hay términos propios del one-time en `legal/`; el portal usa la misma casilla que ya muestra el quote de un extra.
+- `send-quote` (redesplegar): el PDF y el correo muestran la hora del one-time. `quote-portal` no cambia.
+- Pruebas: `supabase/tests/quote_one_time.sql` (21, termina en rollback).
+
+```
+npx supabase@latest functions deploy send-quote --project-ref <ref> --use-api
+```

@@ -17,7 +17,7 @@ import { sample, useTheme } from '@/theme';
  * Pestaña Sitios del lead (D-208): una fila "Quote · {sitio}" por sitio con su estado y versión; abre el quote.
  * Solo con permiso de ver, armar o enviar quotes.
  */
-export function LeadQuotes({ leadId, sites }: { leadId: string; sites: readonly LeadSite[] }) {
+export function LeadQuotes({ leadId, sites, oneTime = false }: { leadId: string; sites: readonly LeadSite[]; oneTime?: boolean }) {
   const router = useRouter();
   const { colors } = useTheme();
   const q = useQuoteStrings();
@@ -48,16 +48,25 @@ export function LeadQuotes({ leadId, sites }: { leadId: string; sites: readonly 
       <CardBlock>
       {sites.map((site, i) => {
         const r = rows.find((x) => x.siteId === site.id);
-        const open = r?.walkthroughClosed || r?.status;
+        // Orden 162: el one-time no necesita walkthrough (D-350 (4)); abre su propio editor.
+        const open = oneTime || r?.walkthroughClosed || r?.status;
         return (
           <ListRow
             key={site.id}
             title={q.siteQuote(label(site))}
-            detail={r?.status && r.version ? q.version(r.version) : r?.walkthroughClosed ? q.noQuoteYet : q.needWalkthrough}
+            detail={r?.status && r.version ? q.version(r.version) : oneTime ? q.oneTime.rowDetail : r?.walkthroughClosed ? q.noQuoteYet : q.needWalkthrough}
             right={r?.status ? <Chip label={q.status[r.status]} tone={statusTone(r.status)} /> : undefined}
             chevron={Boolean(open)}
             last={i === sites.length - 1}
-            onPress={open ? () => router.push({ pathname: '/leads/[id]/quote/[siteId]', params: { id: leadId, siteId: site.id } }) : undefined}
+            onPress={
+              open
+                ? () =>
+                    router.push({
+                      pathname: oneTime ? '/leads/[id]/one-time-quote/[siteId]' : '/leads/[id]/quote/[siteId]',
+                      params: { id: leadId, siteId: site.id },
+                    })
+                : undefined
+            }
           />
         );
       })}

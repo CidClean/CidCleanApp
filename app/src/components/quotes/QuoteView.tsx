@@ -24,8 +24,16 @@ export type QuoteViewData = {
   expiresAt: string | null;
   validDays: number;
   /** Quote de extra (D-238): total de una vez y fecha del servicio (AAAA-MM-DD) en vez de cuota mensual. */
-  extra?: { serviceDate: string | null };
+  extra?: { serviceDate: string | null; serviceTime?: string | null; scope?: string | null };
 };
+
+/** "9:00 AM" de "09:00" (hora del one-time, orden 162). */
+export function clock12(t: string | null | undefined): string {
+  const m = /^(\d{1,2}):(\d{2})/.exec(t ?? '');
+  if (!m) return '';
+  const h = Number(m[1]);
+  return `${h % 12 === 0 ? 12 : h % 12}:${m[2]} ${h < 12 ? 'AM' : 'PM'}`;
+}
 
 /**
  * Lo que ve el cliente (muestra ronda 4, D-043): cuota mensual de 26px arriba, vigencia debajo, la frecuencia y el
@@ -91,8 +99,19 @@ export function QuoteView({ data, t, language }: { data: QuoteViewData; t: Porta
       </AppText>
       {data.extra?.serviceDate ? (
         <AppText size={sample.noteSize} style={{ marginBottom: 10 }}>
-          {t.serviceDate(shortDate(`${data.extra.serviceDate}T12:00:00`, language))}
+          {t.serviceDate(
+            [shortDate(`${data.extra.serviceDate}T12:00:00`, language), clock12(data.extra.serviceTime)].filter(Boolean).join(' · '),
+          )}
         </AppText>
+      ) : null}
+      {/* Orden 162: el alcance del one-time completo (el renglón solo lleva los primeros 200 caracteres). */}
+      {data.extra?.scope ? (
+        <View style={{ marginBottom: 10 }}>
+          <AppText size={sample.labelSize} color={colors.secondary}>
+            {t.scope}
+          </AppText>
+          <AppText size={14}>{data.extra.scope}</AppText>
+        </View>
       ) : null}
       {!data.extra && data.frequency ? (
         <AppText size={sample.noteSize} style={{ marginBottom: 10 }}>

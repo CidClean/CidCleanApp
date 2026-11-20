@@ -341,7 +341,7 @@ export default function PortalScreen() {
     expiresAt: quote.expires_at,
     validDays: 0,
     extra: quote.extra
-      ? { serviceDate: quote.service_date ?? null }
+      ? { serviceDate: quote.service_date ?? null, serviceTime: quote.service_time ?? null, scope: quote.scope ?? null }
       : undefined,
   };
 

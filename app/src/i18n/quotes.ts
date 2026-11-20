@@ -91,6 +91,24 @@ export const quotesEs = {
   previousVersions: 'Versiones anteriores', // D-208
   noPrices: 'Sin permiso para ver precios', // D-208
   errorLoad: 'No se pudo cargar el quote. Inténtalo otra vez.', // D-200 (patrón D-178)
+  // Quote one-time (orden 162, D-350 (4); el survey está en inglés, aquí su traducción, D-200).
+  oneTime: {
+    title: 'Quote one-time', // D-200 ("One-time quote")
+    row: 'One-time', // D-200
+    price: 'Precio (total)', // D-200 ("Price (total)")
+    date: 'Fecha del servicio', // D-200 ("Service date")
+    time: 'Hora del servicio', // D-200
+    scope: 'Alcance', // D-200 ("Scope")
+    note: 'Sin tarifa mensual ni contrato mensual.', // D-200 (survey: "No monthly rate and no monthly contract.")
+    residentialTax: 'Residencial: sin impuesto de Florida.', // D-200 (regla existente, D-290)
+    send: 'Enviar quote', // D-200 ("Send quote")
+    errorPrice: 'Escribe el precio total.', // D-200
+    errorDate: 'Elige la fecha del servicio.', // D-200
+    errorTime: 'Elige la hora.', // D-200 (D-219)
+    errorScope: 'Escribe el alcance.', // D-200
+    noEmail: 'El lead no tiene correo: agrégalo en sus datos para enviar el quote.', // D-200
+    rowDetail: 'Precio total, fecha y alcance', // D-200
+  },
   errorSave: 'No se pudo guardar. Inténtalo otra vez.', // D-200 (mismo texto que el formulario del empleado)
   errorSend: 'No se pudo enviar. Inténtalo otra vez.', // D-200 (patrón D-178)
   errorUpload: 'No se pudo subir el SOW. Inténtalo otra vez.', // D-200 (patrón D-178)
@@ -191,6 +209,23 @@ export const quotesEn: QuoteStrings = {
   previousVersions: 'Previous versions',
   noPrices: 'No permission to see prices',
   errorLoad: "Couldn't load the quote. Try again.",
+  oneTime: {
+    title: 'One-time quote', // D-350 (4)
+    row: 'One-time',
+    price: 'Price (total)', // D-350 (4)
+    date: 'Service date', // D-350 (4)
+    time: 'Service time',
+    scope: 'Scope', // D-350 (4)
+    note: 'No monthly rate and no monthly contract.', // D-350 (4)
+    residentialTax: 'Residential: no Florida sales tax.',
+    send: 'Send quote', // D-350 (4)
+    errorPrice: 'Enter the total price.',
+    errorDate: 'Choose the service date.',
+    errorTime: 'Choose the time.',
+    errorScope: 'Enter the scope.',
+    noEmail: "The lead has no email: add it in the lead's details to send the quote.",
+    rowDetail: 'Total price, date and scope',
+  },
   errorSave: "Couldn't save. Try again.",
   errorSend: "Couldn't send. Try again.",
   errorUpload: "Couldn't upload the SOW. Try again.",
@@ -237,6 +272,7 @@ export const portalEs = {
   extraFee: 'Total del servicio', // D-200
   totalOnce: 'Total', // D-200
   serviceDate: (d: string) => `Fecha del servicio: ${d}`, // D-200
+  scope: 'Alcance', // D-200 (D-350 (4): "Scope")
   frequency: 'Frecuencia', // D-208
   site: 'Sitio', // APROBADO (muestra ronda 4)
   version: 'Versión', // APROBADO (muestra ronda 4)
@@ -315,6 +351,7 @@ export const portalEn: PortalStrings = {
   extraFee: 'Service total',
   totalOnce: 'Total',
   serviceDate: (d: string) => `Service date: ${d}`,
+  scope: 'Scope', // one-time quote: what the service includes
   frequency: 'Frequency',
   site: 'Site',
   version: 'Version',

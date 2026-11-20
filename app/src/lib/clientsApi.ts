@@ -34,6 +34,8 @@ async function run<T>(fn: () => Promise<ClientsResult<T>>): Promise<ClientsResul
 type ClientRow = AddressRow & { id: string; name: string; legacy: boolean; account_provider?: boolean; phone: string | null; email: string | null; address: string | null; notes: string | null };
 type JobsiteRow = AddressRow & {
   id: string;
+  one_time?: boolean | null;
+  one_time_on?: string | null;
   client_id: string;
   name: string;
   address: string;
@@ -56,7 +58,7 @@ type JobsiteRow = AddressRow & {
 
 const JOBSITE_COLUMNS =
   'id, client_id, name, address, address_line1, address_line2, city, state, zip, address_needs_review, plus_code, contact_name, contact_phone, contact_email, emergency_name, emergency_phone, ' +
-  'emergency_relation, emergency_email, frequency, est_hours_per_visit, visits_per_month, start_date, status, walkthrough_version, ' +
+  'emergency_relation, emergency_email, frequency, est_hours_per_visit, visits_per_month, start_date, status, walkthrough_version, one_time, one_time_on, ' +
   'clients(name, legacy, account_provider)';
 
 const num = (v: number | string | null) => (v === null ? null : Number(v));
@@ -97,6 +99,8 @@ export function rowToJobsite(r: JobsiteRow): Jobsite {
     startDate: r.start_date,
     status: r.status,
     walkthroughVersion: r.walkthrough_version,
+    oneTime: r.one_time === true,
+    oneTimeOn: r.one_time_on ?? null,
   };
 }
 

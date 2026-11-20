@@ -51,6 +51,9 @@ export type QuoteVersion = {
   decision: QuoteDecision | null;
   /** Quote de extra (D-238): fecha del servicio, AAAA-MM-DD. */
   serviceDate: string | null;
+  /** Quote one-time (orden 162): hora del servicio "HH:MM" y alcance. */
+  serviceTime?: string | null;
+  scope?: string | null;
 };
 
 export type SiteQuote = {
@@ -261,6 +264,8 @@ export function toVersion(r: Record<string, unknown>): QuoteVersion {
     sentAt: (r.sent_at as string | null) ?? null,
     sentBy: (r.sent_by as string | null) ?? null,
     serviceDate: (r.service_date as string | null) ?? null,
+    serviceTime: (r.service_time as string | null) ?? null,
+    scope: (r.scope as string | null) ?? null,
     expiresAt: (r.expires_at as string | null) ?? null,
     viewedAt: (r.viewed_at as string | null) ?? null,
     decidedAt: (r.decided_at as string | null) ?? null,
@@ -276,5 +281,33 @@ export function toVersion(r: Record<string, unknown>): QuoteVersion {
           email: String(d.email ?? ''),
         }
       : null,
+  };
+}
+
+// --- Quote one-time (orden 162, D-350 (4)) -------------------------------------------------------------------
+
+export type OneTimeForm = { price: string; date: string | null; time: string | null; scope: string; validDays: number };
+export type OneTimeErrors = { price?: true; date?: true; time?: true; scope?: true };
+export const SCOPE_MAX = 2000;
+
+/** Para enviar: precio mayor que 0, fecha, hora y alcance (para guardar el borrador basta con lo que haya). */
+export function validateOneTime(f: OneTimeForm): OneTimeErrors {
+  const e: OneTimeErrors = {};
+  const p = parseAmount(f.price);
+  if (p === null || p <= 0) e.price = true;
+  if (!f.date) e.date = true;
+  if (!f.time) e.time = true;
+  if (!f.scope.trim() || f.scope.trim().length > SCOPE_MAX) e.scope = true;
+  return e;
+}
+
+export function oneTimeFormFrom(v: QuoteVersion | null): OneTimeForm {
+  const amount = v?.lines.services[0]?.amount ?? null;
+  return {
+    price: formatAmountInput(amount),
+    date: v?.serviceDate ?? null,
+    time: v?.serviceTime ?? null,
+    scope: v?.scope ?? '',
+    validDays: v?.validDays ?? 30,
   };
 }

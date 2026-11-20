@@ -56,7 +56,23 @@ export type Jobsite = {
   startDate: string | null; // AAAA-MM-DD
   status: JobsiteStatus;
   walkthroughVersion: number | null;
+  /** Proyecto one-time (orden 162): una sola visita, sin tarifa mensual; fecha del servicio AAAA-MM-DD. */
+  oneTime?: boolean;
+  oneTimeOn?: string | null;
 };
+
+/**
+ * D-200 (orden 162): un one-time se ve en Accounts con la etiqueta One-time hasta que pasa la fecha del servicio;
+ * después, en Archived (como un jobsite terminado).
+ */
+export function isArchivedJobsite(j: Pick<Jobsite, 'status' | 'oneTime' | 'oneTimeOn'>, today: string): boolean {
+  if (j.status === 'terminated') return true;
+  return Boolean(j.oneTime && j.oneTimeOn && j.oneTimeOn < today);
+}
+
+function todayKey(d = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 export type PayKind = 'hourly' | 'fixed';
 export type FixedPeriod = 'visit' | 'week' | 'month';
@@ -167,13 +183,13 @@ export type AccountCard = {
  * terminados (agrupados por cliente) y clientes sin ningún jobsite sin terminar. Un cliente con uno activo y otro
  * terminado sale en Activas con el activo y en Archivadas con el terminado.
  */
-export function splitAccounts(groups: readonly ClientGroup[]): { active: AccountCard[]; archived: AccountCard[] } {
+export function splitAccounts(groups: readonly ClientGroup[], today = todayKey()): { active: AccountCard[]; archived: AccountCard[] } {
   const active: AccountCard[] = [];
   const archived: AccountCard[] = [];
   for (const g of groups) {
     const base = { clientId: g.clientId, clientName: g.clientName, accountProvider: g.accountProvider ?? false };
-    const open = g.jobsites.filter((j) => j.status !== 'terminated');
-    const ended = g.jobsites.filter((j) => j.status === 'terminated');
+    const open = g.jobsites.filter((j) => !isArchivedJobsite(j, today));
+    const ended = g.jobsites.filter((j) => isArchivedJobsite(j, today));
     if (open.length > 0) active.push({ ...base, jobsites: open, inactiveClient: false });
     if (open.length === 0) archived.push({ ...base, jobsites: ended, inactiveClient: true });
     else if (ended.length > 0) archived.push({ ...base, jobsites: ended, inactiveClient: false });
@@ -195,7 +211,7 @@ export function filterAccounts(cards: readonly AccountCard[], query: string): Ac
 
 /** Total mensual de los jobsites activos (no pausados ni terminados) con tarifa conocida. */
 export function monthlyTotal(jobsites: readonly Jobsite[], rates: ReadonlyMap<string, number>): number {
-  return jobsites.reduce((sum, j) => (j.status === 'active' ? sum + (rates.get(j.id) ?? 0) : sum), 0);
+  return jobsites.reduce((sum, j) => (j.status === 'active' && !j.oneTime ? sum + (rates.get(j.id) ?? 0) : sum), 0);
 }
 
 // --- Dinero y fechas -----------------------------------------------------------------------------------

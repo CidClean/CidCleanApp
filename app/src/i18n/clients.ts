@@ -32,6 +32,7 @@ export const clientsEs = {
     staff: (n: number) => (n === 1 ? '1 persona' : `${n} personas`), // D-200 (muestra: "2 staff")
     since: (d: string) => `desde ${d}`, // D-200 (muestra: "since Sep 17")
     terminated: 'Terminado', // D-200 (muestra: "Terminated")
+    oneTime: 'One-time', // D-200 (orden 162: proyecto one-time, D-349)
     inactiveClient: 'Cliente inactivo', // D-200 (muestra: "Inactive client")
     range: (from: string, to: string) => `${from} – ${to}`, // D-200
     ended: 'Terminó', // D-200 (muestra: "Ended")
@@ -314,6 +315,7 @@ export const clientsEn: ClientsStrings = {
     staff: (n: number) => (n === 1 ? '1 staff' : `${n} staff`),
     since: (d: string) => `since ${d}`,
     terminated: 'Terminated',
+    oneTime: 'One-time', // one-time project chip in Accounts
     inactiveClient: 'Inactive client',
     range: (from: string, to: string) => `${from} – ${to}`,
     ended: 'Ended',

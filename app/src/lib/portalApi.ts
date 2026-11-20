@@ -39,6 +39,10 @@ export type PortalQuote = {
   /** Quote de extra de una cuenta (D-238) y su fecha del servicio (AAAA-MM-DD). */
   extra?: boolean;
   service_date?: string | null;
+  /** Quote one-time (orden 162): hora del servicio ("09:00") y alcance. */
+  one_time?: boolean;
+  service_time?: string | null;
+  scope?: string | null;
   reasons: { id: string; label: string }[];
   decision: { kind: 'accepted' | 'rejected' | 'changes_requested'; name: string | null; at: string } | null;
 };

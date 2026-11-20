@@ -2,7 +2,7 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 
 import type { ApiResult } from './employeesApi';
 import { failureFromCode, functionFailure } from './employeesApi';
-import { linesForSave, toVersion, type QuoteLines, type QuoteStatus, type SiteQuote } from './quoteRules';
+import { linesForSave, toVersion, type QuoteLines, type QuoteStatus, type QuoteVersion, type SiteQuote } from './quoteRules';
 import { supabase } from './supabase';
 import type { PickedPdf } from './termsApi';
 
@@ -273,5 +273,69 @@ export async function fetchHomeActivity(): Promise<HomeActivity | null> {
     return { kind: r.kind, versionId: r.version_id, leadId: r.lead_id ?? null, jobsiteId: r.jobsite_id ?? null, name: r.name ?? '', site: r.site ?? '', at: r.at, seen: r.seen };
   } catch {
     return null;
+  }
+}
+
+// --- Quote one-time (orden 162, D-350 (4)) -------------------------------------------------------------------
+
+export type OneTimeQuote = {
+  quoteId: string | null;
+  quoteNumber: string | null;
+  company: string;
+  site: string;
+  residential: boolean;
+  versions: QuoteVersion[];
+};
+
+export async function fetchOneTimeQuote(siteId: string): Promise<ApiResult<OneTimeQuote>> {
+  try {
+    const { data, error } = await supabase.rpc('get_one_time_quote', { p_site: siteId });
+    if (error) return { ok: false, reason: failureFromCode(error.code) };
+    const d = (data ?? {}) as Record<string, unknown>;
+    return {
+      ok: true,
+      data: {
+        quoteId: (d.quote_id as string | null) ?? null,
+        quoteNumber: (d.quote_number as string | null) ?? null,
+        company: String(d.company ?? ''),
+        site: String(d.site ?? ''),
+        residential: d.cleaning_type === 'residential',
+        versions: ((d.versions as Record<string, unknown>[] | null) ?? []).map(toVersion),
+      },
+    };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+/** Crea el quote one-time del sitio (walkthrough opcional) o devuelve el que ya existe. */
+export async function ensureOneTimeQuote(siteId: string): Promise<ApiResult<string>> {
+  try {
+    const { data, error } = await supabase.rpc('ensure_one_time_quote', { p_site: siteId });
+    if (error) return { ok: false, reason: failureFromCode(error.code) };
+    return { ok: true, data: String(data) };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
+export async function saveOneTimeQuote(
+  versionId: string,
+  f: { price: number | null; date: string | null; time: string | null; scope: string; validDays: number; recipients: string[] },
+): Promise<ApiResult<null>> {
+  try {
+    const { error } = await supabase.rpc('save_one_time_quote', {
+      p_version: versionId,
+      p_price: f.price,
+      p_date: f.date,
+      p_time: f.time,
+      p_scope: f.scope.trim() || null,
+      p_valid_days: f.validDays,
+      p_recipients: f.recipients,
+    });
+    if (error) return { ok: false, reason: failureFromCode(error.code) };
+    return { ok: true, data: null };
+  } catch {
+    return { ok: false, reason: 'network' };
   }
 }

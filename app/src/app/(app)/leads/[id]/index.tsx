@@ -317,7 +317,7 @@ export default function LeadDetailScreen() {
         {/* La lista de quotes de cada sitio (D-208). */}
         {/* D-289: tipo de limpieza del lead (Residencial no lleva el 6 %). */}
         {lead && section === 'quote' ? <CleaningTypeField kind="lead" id={lead.id} canEdit={canEdit} /> : null}
-        {lead && section === 'quote' ? <LeadQuotes leadId={lead.id} sites={lead.sites} /> : null}
+        {lead && section === 'quote' ? <LeadQuotes leadId={lead.id} sites={lead.sites} oneTime={lead.service === 'one_time'} /> : null}
 
         {lead && section === 'notes' && !editing ? (
           <>
