@@ -233,7 +233,7 @@ begin
   perform pg_temp.prueba('ningún lead queda en Contactado', '0', (select count(*)::text from leads where status = 'contacted'));
   perform pg_temp.prueba('un lead con primer contacto el 2026-11-18 tiene Follow up el 2026-11-25', '2026-11-25',
     (select next_step_on(row('00000000-0000-0000-0000-000000000000'::uuid, 'X', null, null, null, 'manual', null, 'waiting', null, null,
-       dia, null, dia, dia, 'en', null, dia, dia, 0, null, null)::leads)::text));
+       dia, null, dia, dia, 'en', null, dia, dia, 0, null, null, null, 'cold', 'recurring', null)::leads)::text));
 end $$;
 
 select n, prueba, ok, detalle from resultados order by n;

@@ -206,3 +206,17 @@ Migraciones (sin aplicar, en este orden y cada una en su propia transacción): `
 - Plazos (7, 30 y 14 días, hora de Naples) en `lead_followups_advance` (solo service role), que llama `notifications_scan` en el cron `cidclean-avisos` que ya existe: **ningún cron cambia y no hay Edge Function que desplegar**. Sin respuesta avisa con el aviso `followup_due` a quien tiene `leads_ver`.
 - `schedule_walkthrough`, `close_walkthrough` y `confirm_send_quote` avanzan desde los estados nuevos (`lead_stage`); `site_submit` crea el lead web en `interested`.
 - Pruebas: `supabase/tests/flujo_leads.sql` (44, termina en rollback).
+
+## Orden 160: fuentes de leads y entrada segura `lead-intake` (D-347, D-348, D-350)
+
+Migraciones (sin aplicar, en este orden y cada una en su propia transacción): `20261122000001_lead_source_valores.sql` (valores `ads` y `agent` del enum `lead_source`) y `20261122000002_lead_fuentes.sql`. Aplicarlas **antes** de publicar la app.
+
+- `lead_sources` (RLS: solo el Super Admin con aal2 lee y edita nombre, tipo, "Enters as" y el interruptor; el hash de la clave no se puede leer desde la app; no se borra). Semillas sin clave: Meta (Facebook + Instagram) y TikTok potential, Muse cold, Grok cold apagada. La clave (`ccl_` + 48 hex) la generan `lead_source_create` y `lead_source_rotate_key` y se devuelve **una sola vez**; se guardan su SHA-256 y sus últimos 4.
+- `leads`: `source_id`, `temperature` (potential / cold; website → potential, el resto de los existentes → cold), `service` (recurring / one_time) y `source_detail`; campo calculado `source_label`. Residencial solo con one-time; la empresa es obligatoria en un lead manual comercial (los que entran solos pueden llegar sin empresa, D-319).
+- `lead_intake` (solo service role): clave por hash, fuente activa, 60 peticiones por hora y 2,000 leads por día por fuente (D-200), lote de 200. potential → Interesado con aviso `lead_potential` al momento; cold → Nuevo (flujo D-332) con un solo aviso `leads_cold_batch` por lote. Duplicado por email o teléfono en un lead abierto: se junta (nota con fuente y fecha, `lead_juntado` en el historial). `home_leads_potential()` para el Inicio.
+- Edge Function `lead-intake` (nueva, **sin** `verify_jwt`): POST JSON con la clave en `x-cidclean-key`; un lead, una lista o `{ "leads": [...] }`; campos `company`, `contact_name`, `phone`, `email`, `city`, `zip`, `service`, `property`, `notes`, `source_detail` y los de Meta/TikTok (`full_name`, `phone_number`, `email`, `company_name`). 401 sin detalles, 429 por límite, 200 con `created`, `merged`, `rejected`, `errors`. Usa los secretos que ya existen (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`).
+- Pruebas: `supabase/tests/lead_fuentes.sql` (54, termina en rollback) y `node --test supabase/tests/lead-intake.test.mjs`.
+
+```
+npx supabase@latest functions deploy lead-intake --project-ref <ref> --use-api --no-verify-jwt
+```

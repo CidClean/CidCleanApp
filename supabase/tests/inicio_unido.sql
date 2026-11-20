@@ -68,7 +68,7 @@ declare
   emp uuid := (select profile_id from actores where nombre = 'sin');
 begin
   -- Lead del sitio web sin empresa (20261117000001): antes salía "Quote accepted: null".
-  insert into leads (company, contact_name, email) values (null, 'Rosa Pérez', 'rosa@prueba-iu.local') returning id into lead;
+  insert into leads (company, contact_name, email, source) values (null, 'Rosa Pérez', 'rosa@prueba-iu.local', 'web') returning id into lead;
   insert into lead_sites (lead_id, name, address) values (lead, null, '10 Palm St, Naples') returning id into s;
   insert into walkthroughs (id, site_id, status, current_version, closed_at) values (w, s, 'closed', 1, now());
   insert into quotes (site_id, lead_id, walkthrough_id) values (s, lead, w) returning id into q;
