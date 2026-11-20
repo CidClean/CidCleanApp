@@ -223,8 +223,39 @@ begin
   perform pg_temp.prueba('un lead anterior sin empresa se puede cambiar de estado', 'ok',
     case when pg_temp.valor('editor', format($q$update leads set status = 'waiting' where contact_name = 'Ana Res' returning id$q$)) like 'ERR%' then 'fallo' else 'ok' end);
 
+  -- D-352: lo orgánico (website, anuncios) tiene prioridad sobre lo frío
+  delete from lead_intake_log; -- las pruebas de arriba llenaron el límite por hora
+  r := pg_temp.valor('servicio', format($q$select lead_intake(%L, '[{"contact_name":"Org Uno","email":"org1@prueba.co","phone":"239-555-0181"},{"contact_name":"Org Dos","email":"org2@prueba.co"}]')$q$, pg_temp.hash(k_muse)))::jsonb;
+  perform pg_temp.prueba('D-352: agente crea dos fríos', 'cold|new|cold|new',
+    (select string_agg(temperature || '|' || status, '|' order by contact_name) from leads where email in ('org1@prueba.co','org2@prueba.co')));
+  update leads set status = 'follow_up' where email = 'org1@prueba.co';
+  r := pg_temp.valor('servicio', format($q$select lead_intake(%L, '[{"contact_name":"Org Uno","phone":"(239) 555-0181"}]')$q$, pg_temp.hash(k_meta)))::jsonb;
+  perform pg_temp.prueba('D-352: anuncio con el mismo teléfono junta (no crea otro)', '0|1',
+    (r->>'created') || '|' || (r->>'merged'));
+  perform pg_temp.prueba('D-352: el frío sube a potencial e Interesado', 'potential|interested',
+    (select temperature || '|' || status from leads where email = 'org1@prueba.co'));
+  perform pg_temp.prueba('D-352: queda en el historial', '1',
+    (select count(*)::text from change_log where action = 'lead_a_potencial' and entity_id = (select id from leads where email = 'org1@prueba.co')));
+  perform pg_temp.prueba('D-352: avisa como potencial', '1',
+    (select count(*)::text from notifications where kind = 'lead_potential' and data->>'name' = 'Org Uno'
+       and profile_id = (select profile_id from actores where nombre = 'ver')));
+  r := pg_temp.valor('servicio', format($q$select lead_intake(%L, '[{"contact_name":"Org Uno","email":"ORG1@prueba.co"}]')$q$, pg_temp.hash(k_muse)))::jsonb;
+  perform pg_temp.prueba('D-352: un frío después no lo baja', 'potential|interested|1',
+    (select temperature || '|' || status from leads where email = 'org1@prueba.co') || '|' || (r->>'merged'));
+  update leads set status = 'quote_sent' where email = 'org2@prueba.co';
+  perform lead_promote_potential((select id from leads where email = 'org2@prueba.co'), 'Website');
+  perform pg_temp.prueba('D-352: en venta no cambia de estado, solo de temperatura', 'potential|quote_sent',
+    (select temperature || '|' || status from leads where email = 'org2@prueba.co'));
+  insert into leads (company, contact_name, email, source, status) values ('Web Fria SA', 'Web Fria', 'webfria@prueba.co', 'manual', 'waiting');
+  insert into site_submissions (kind, email, email_key, lead_id, attached, city)
+  values ('contact', 'webfria@prueba.co', 'webfria@prueba.co', (select id from leads where email = 'webfria@prueba.co'), true, 'Naples');
+  perform pg_temp.prueba('D-352: el website junta y sube a potencial', 'potential|interested',
+    (select temperature || '|' || status from leads where email = 'webfria@prueba.co'));
+  perform pg_temp.prueba('D-352: la función interna no es de la app', 'ERR:42501',
+    pg_temp.valor('editor', format('select lead_promote_potential(%L, %L)', (select id from leads where email = 'org2@prueba.co'), 'x')));
+
   -- Inicio
-  perform pg_temp.prueba('Inicio: potenciales nuevos por llamar', '1', pg_temp.valor('ver', 'select home_leads_potential()'));
+  perform pg_temp.prueba('Inicio: potenciales nuevos por llamar (1 + 2 subidos por D-352)', '3', pg_temp.valor('ver', 'select home_leads_potential()'));
   perform pg_temp.prueba('Inicio: sin leads_ver no', 'ERR:42501', pg_temp.valor('sin', 'select home_leads_potential()'));
 end $$;
 
