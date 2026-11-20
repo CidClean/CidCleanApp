@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -15,6 +15,7 @@ import { EmailTemplatesSettingsRow } from '@/components/sales/EmailTemplatesSett
 import { EstimatorSettingsRow } from '@/components/sales/EstimatorSettingsRow';
 import { LostReasonsSettingsRow } from '@/components/sales/LostReasonsSettingsRow';
 import type { Locale } from '@/i18n';
+import { useLeadSourcesStrings } from '@/i18n/useLeadSourcesStrings';
 import { useLegalStrings } from '@/i18n/useLegalStrings';
 import { useServiceDaysStrings } from '@/i18n/useServiceDaysStrings';
 import { useStrings } from '@/i18n/useStrings';
@@ -39,6 +40,7 @@ export default function AccountScreen() {
   const { colors, brand, status } = useTheme();
   const strings = useStrings();
   const legal = useLegalStrings();
+  const sources = useLeadSourcesStrings();
   const sd = useServiceDaysStrings();
   const { profile, locale, setLanguage } = useSession();
   const { access } = usePermissions();
@@ -103,6 +105,8 @@ export default function AccountScreen() {
             <CardBlock>
               <EmailTemplatesSettingsRow />
               <EstimatorSettingsRow />
+              {/* Orden 163 (D-350 (5)): fuentes de leads, solo el Super Admin. */}
+              {access.isSuperAdmin ? <ListRow title={sources.row} chevron onPress={() => router.push('/settings/lead-sources' as Href)} /> : null}
               {/* Términos del staff, del portal y Política de Privacidad: la pantalla de Ajustes de siempre. */}
               <ListRow title={strings.account.termsPrivacy} chevron onPress={() => router.push('/settings')} />
               <ExpenseCategoriesSettingsRow />
