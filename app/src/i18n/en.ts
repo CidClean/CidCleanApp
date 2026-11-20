@@ -89,6 +89,7 @@ export const en: Strings = {
   },
 
   hub: {
+    potential: (n: number) => (n === 1 ? 'new potential lead · call today' : 'new potential leads · call today'), // D-350 (2)
     toWrite: (n: number) => (n === 1 ? 'lead to write today' : 'leads to write today'),
     toCollect: (month: string) => `to collect · ${month}`,
     toApprove: (n: number) => (n === 1 ? 'visit to approve' : 'visits to approve'),
@@ -393,6 +394,10 @@ export const en: Strings = {
     w9Signed: 'W-9 signed by the employee',
     termsPublished: (version: string) => `Terms published: version ${version}`,
     termsAccepted: (version: string) => `Terms accepted: version ${version}`,
+    leadMerged: 'Lead merged',
+    leadSourceCreated: 'Lead source created',
+    leadSourceEdited: 'Lead source edited',
+    leadSourceKey: 'Lead source key remade',
     leadCreated: 'Lead created',
     leadStatusChanged: 'Lead status changed',
     leadDeleted: 'Lead deleted',

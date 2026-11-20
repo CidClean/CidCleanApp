@@ -30,7 +30,7 @@ export const LEAD_STATUSES = [
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 
 /** Fuentes (flujo): web, campañas de marketing y registro manual. */
-export const LEAD_SOURCES = ['web', 'campaign', 'manual'] as const;
+export const LEAD_SOURCES = ['web', 'campaign', 'manual', 'ads', 'agent'] as const;
 export type LeadSource = (typeof LEAD_SOURCES)[number];
 
 export type Appointment = { id: string; startsAt: Date; status: 'scheduled' | 'done' | 'canceled' };
@@ -72,6 +72,11 @@ export type Lead = {
   lostNote: string | null;
   /** Idioma del correo y del portal del quote (D-209). */
   language: 'en' | 'es';
+  /** Origen, servicio y propiedad (D-348 a D-350); opcionales para los datos de prueba anteriores. */
+  temperature?: LeadTemperature;
+  service?: LeadService;
+  cleaningType?: CleaningType;
+  sourceLabel?: string | null;
   createdAt: Date;
   /** Fecha del seguimiento abierto (AAAA-MM-DD), si hay. */
   followUpOn: string | null;
@@ -91,8 +96,21 @@ export type FollowupData = {
   nextStepOn?: string | null;
 };
 
+/** Origen del lead (D-348, D-350): potencial (anuncios y website) o en frío (agentes y registro manual). */
+export type LeadTemperature = 'potential' | 'cold';
+/** Servicio (D-349): recurrente o one-time. */
+export type LeadService = 'recurring' | 'one_time';
+export type CleaningType = 'non_residential' | 'residential';
+
 /** Fila de la lista del Pipeline. */
 export type LeadSummary = {
+  /** Origen (D-350); sin dato se trata como en frío. */
+  temperature?: LeadTemperature;
+  service?: LeadService;
+  cleaningType?: CleaningType;
+  /** Chip de la fuente: detalle ("Instagram ad") o nombre de la fuente (Meta, Muse); null en website y manual. */
+  sourceLabel?: string | null;
+  phone?: string | null;
   id: string;
   company: string;
   companyMissing?: boolean;
@@ -152,7 +170,9 @@ export const LEAD_TABS = ['today', 'toContact', 'waiting', 'sale', 'closed'] as 
 export type LeadTab = (typeof LEAD_TABS)[number];
 
 /** Pestaña de cada estado: Hoy (Follow up, 2nd follow up y Sin respuesta), Por contactar, Esperando, En venta y Cerrados. */
-export function tabOf(status: LeadStatus): LeadTab {
+export function tabOf(status: LeadStatus, temperature?: LeadTemperature): LeadTab {
+  // D-200 (D-350: "call today"): el potencial nuevo (Interesado sin cita) va en Hoy hasta que se agenda el walkthrough.
+  if (temperature === 'potential' && status === 'interested') return 'today';
   if (status === 'follow_up' || status === 'follow_up_2' || status === 'no_response') return 'today';
   if (status === 'new') return 'toContact';
   if (status === 'waiting') return 'waiting';
@@ -163,7 +183,7 @@ export function tabOf(status: LeadStatus): LeadTab {
 /** Contador de cada pestaña. */
 export function tabCounts(leads: readonly LeadSummary[]): Record<LeadTab, number> {
   const c: Record<LeadTab, number> = { today: 0, toContact: 0, waiting: 0, sale: 0, closed: 0 };
-  for (const l of leads) c[tabOf(l.status)] += 1;
+  for (const l of leads) c[tabOf(l.status, l.temperature)] += 1;
   return c;
 }
 
@@ -172,14 +192,66 @@ export function tabCounts(leads: readonly LeadSummary[]): Record<LeadTab, number
  * antigüedad; en Cerrados, el más reciente arriba.
  */
 export function leadsInTab(leads: readonly LeadSummary[], tab: LeadTab): LeadSummary[] {
-  const list = leads.filter((l) => tabOf(l.status) === tab);
+  const list = leads.filter((l) => tabOf(l.status, l.temperature) === tab);
   if (tab === 'closed') return list.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   return list.sort((a, b) => {
+    // D-350: los potenciales van primero; entre ellos, el más reciente arriba (D-200).
+    const pa = isPotential(a);
+    const pb = isPotential(b);
+    if (pa !== pb) return pa ? -1 : 1;
+    if (pa && pb) return b.createdAt.getTime() - a.createdAt.getTime();
     const x = a.nextStepOn ?? '';
     const y = b.nextStepOn ?? '';
     if (x !== y) return x === '' ? 1 : y === '' ? -1 : x.localeCompare(y);
     return a.createdAt.getTime() - b.createdAt.getTime();
   });
+}
+
+// --- Origen: potencial / en frío (D-348, D-350) -----------------------------------------------------------
+
+/** Colores exactos de D-350 (survey leads-fuentes-aprobado). */
+export const ORIGIN_COLORS = {
+  potentialStripe: '#E08A1E',
+  potentialBg: '#FBE3C7',
+  potentialText: '#8A4B0F',
+  coldBg: '#E3ECEF',
+  coldText: '#2F5563',
+  chipBg: '#F1EBE2',
+  chipText: '#6B5F52',
+} as const;
+
+export const ORIGIN_FILTERS = ['all', 'potential', 'cold'] as const;
+export type OriginFilter = (typeof ORIGIN_FILTERS)[number];
+
+/** Potencial abierto (D-350: franja y etiqueta ámbar, acción principal "Call"). */
+export function isPotential(l: Pick<LeadSummary, 'temperature'>): boolean {
+  return l.temperature === 'potential';
+}
+
+/** Cuántos potenciales y fríos hay en una lista (filtro "All / Potential · N / Cold · N"). */
+export function originCounts(leads: readonly LeadSummary[]): { potential: number; cold: number } {
+  let potential = 0;
+  for (const l of leads) if (isPotential(l)) potential += 1;
+  return { potential, cold: leads.length - potential };
+}
+
+export function filterByOrigin(leads: readonly LeadSummary[], filter: OriginFilter): LeadSummary[] {
+  if (filter === 'all') return [...leads];
+  return leads.filter((l) => (filter === 'potential') === isPotential(l));
+}
+
+/** Texto del chip de la fuente: el que trae la entrada o el de website / manual / campaña. */
+export function sourceChip(l: Pick<LeadSummary, 'sourceLabel' | 'source'>, s: SalesStrings): string | null {
+  if (l.sourceLabel && l.sourceLabel.trim()) return l.sourceLabel.trim();
+  if (l.source === 'web') return s.origin.website;
+  if (l.source && l.source in s.source) return s.source[l.source as keyof SalesStrings['source']];
+  return null;
+}
+
+/** Chip del tipo (D-350): "One-time · Residential", "One-time" o "Recurring". */
+export function serviceChip(l: Pick<LeadSummary, 'service' | 'cleaningType'>, s: SalesStrings): string {
+  if (l.service === 'one_time') return l.cleaningType === 'residential' ? s.origin.oneTimeResidential : s.origin.oneTime;
+  return s.origin.recurring;
 }
 
 /** Días enteros entre dos fechas locales. */
@@ -412,6 +484,10 @@ export type LeadForm = {
   notes: string;
   /** Idioma del correo y del portal del quote (D-209): inglés por defecto. */
   language: 'en' | 'es';
+  /** Servicio (D-349, D-350 (3)): Recurring por defecto (D-200). */
+  service: LeadService;
+  /** Propiedad: Residential solo con One-time (D-349). */
+  cleaningType: CleaningType;
 };
 
 /** Un lead registrado a mano parte con fuente Manual (D-200). */
@@ -424,15 +500,30 @@ export const emptyLeadForm: LeadForm = {
   followUp: '',
   notes: '',
   language: 'en',
+  service: 'recurring',
+  cleaningType: 'non_residential',
 };
 
-export type LeadFormErrors = { company?: true; email?: true; followUp?: true; phone?: true };
+/** Residencial solo con One-time (D-349): al volver a Recurring, la propiedad vuelve a Commercial. */
+export function withService(f: LeadForm, service: LeadService): LeadForm {
+  return { ...f, service, cleaningType: service === 'recurring' ? 'non_residential' : f.cleaningType };
+}
+
+/** Con Residential la empresa es opcional y el lead se nombra por la persona (D-350 (3)). */
+export function isResidentialForm(f: Pick<LeadForm, 'service' | 'cleaningType'>): boolean {
+  return f.service === 'one_time' && f.cleaningType === 'residential';
+}
+
+export type LeadFormErrors = { company?: true; contactName?: true; email?: true; followUp?: true; phone?: true };
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function validateLeadForm(f: LeadForm): LeadFormErrors {
   const errors: LeadFormErrors = {};
-  if (f.company.trim() === '') errors.company = true;
+  if (isResidentialForm(f)) {
+    // Sin empresa, el lead se nombra por la persona: hace falta su nombre (D-200).
+    if (f.company.trim() === '' && f.contactName.trim() === '') errors.contactName = true;
+  } else if (f.company.trim() === '') errors.company = true;
   if (f.email.trim() !== '' && !EMAIL.test(f.email.trim())) errors.email = true;
   if (parseUsDate(f.followUp) === 'invalid') errors.followUp = true;
   if (!isValidPhone(f.phone)) errors.phone = true;
@@ -440,7 +531,7 @@ export function validateLeadForm(f: LeadForm): LeadFormErrors {
 }
 
 export function hasLeadErrors(e: LeadFormErrors): boolean {
-  return Boolean(e.company || e.email || e.followUp || e.phone);
+  return Boolean(e.company || e.contactName || e.email || e.followUp || e.phone);
 }
 
 export function leadFormFrom(lead: Lead): LeadForm {
@@ -453,20 +544,26 @@ export function leadFormFrom(lead: Lead): LeadForm {
     followUp: formatUsDate(lead.followUpOn),
     notes: lead.notes ?? '',
     language: lead.language,
+    service: lead.service ?? 'recurring',
+    cleaningType: lead.cleaningType ?? 'non_residential',
   };
 }
 
 /** Columnas de la tabla `leads` desde el formulario: textos sin espacios de más y vacío = null. */
 export function leadColumns(f: LeadForm) {
   const clean = (v: string) => (v.trim() === '' ? null : v.trim());
+  const residential = isResidentialForm(f);
   return {
-    company: f.company.trim(),
+    // Residencial sin empresa: null (la base nombra el lead por la persona); comercial siempre con empresa.
+    company: residential ? clean(f.company) : f.company.trim(),
     contact_name: clean(f.contactName),
     phone: clean(normalizePhone(f.phone)),
     email: clean(f.email)?.toLowerCase() ?? null,
     source: f.source,
     notes: clean(f.notes),
     language: f.language,
+    service: f.service,
+    cleaning_type: residential ? 'residential' : 'non_residential',
   };
 }
 

@@ -651,3 +651,69 @@ describe('Ajustes: motivos de lead perdido (D-113, D-203)', () => {
     await waitFor(() => expect(mockUpdateReason).toHaveBeenCalledWith('r1', 'Precio', 'Pricing'));
   });
 });
+
+describe('Leads por origen (D-350)', () => {
+  const day = (n: number) => new Date(Date.now() - n * 86_400_000);
+  const rows = [
+    { id: 'c1', company: 'Estero Fitness Club', contactName: 'Front desk', status: 'follow_up', createdAt: day(20), followUpOn: null, nextWalkthrough: null, temperature: 'cold', sourceLabel: 'Muse', source: 'agent', service: 'recurring', nextStepOn: '2026-01-01' },
+    { id: 'p1', company: 'Maria Gonzalez', contactName: 'Maria', status: 'interested', createdAt: day(0), followUpOn: null, nextWalkthrough: null, temperature: 'potential', sourceLabel: 'Instagram ad', source: 'ads', service: 'one_time', cleaningType: 'residential', phone: '(239) 555-0142' },
+    { id: 'p2', company: 'Gulf Coast Dental', contactName: 'Dr. Patel', status: 'interested', createdAt: day(1), followUpOn: null, nextWalkthrough: null, temperature: 'potential', sourceLabel: null, source: 'web', service: 'recurring' },
+  ];
+
+  it('potenciales primero en Hoy con etiqueta, chips de fuente y tipo, y Call como acción principal', async () => {
+    mockFetchLeads.mockResolvedValue({ ok: true, data: rows });
+    await render(<PipelineScreen />);
+    expect(await screen.findByText('Maria Gonzalez')).toBeTruthy();
+    const names = screen.getAllByText(/^(Maria Gonzalez|Gulf Coast Dental|Estero Fitness Club)$/).map((n) => String(n.props.children));
+    expect(names).toEqual(['Maria Gonzalez', 'Gulf Coast Dental', 'Estero Fitness Club']);
+    expect(screen.getAllByText('Potencial').length).toBe(2);
+    expect(screen.getByText('En frío')).toBeTruthy();
+    expect(screen.getByText('Instagram ad')).toBeTruthy();
+    expect(screen.getByText('Website')).toBeTruthy();
+    expect(screen.getByText('Muse')).toBeTruthy();
+    expect(screen.getByText('One-time · Residencial')).toBeTruthy();
+    expect(screen.getAllByText('Recurrente').length).toBe(2);
+    expect(screen.getAllByText('Llamar').length).toBe(1); // sin teléfono no hay Llamar
+    expect(screen.getByLabelText('Potencial · 2')).toBeTruthy();
+    expect(screen.getByLabelText('En frío · 1')).toBeTruthy();
+  });
+
+  it('filtro Potential / Cold y el filtro de la ruta (Inicio → Potential)', async () => {
+    mockFetchLeads.mockResolvedValue({ ok: true, data: rows });
+    await render(<PipelineScreen />);
+    await screen.findByText('Maria Gonzalez');
+    await fireEvent.press(screen.getByLabelText('En frío · 1'));
+    expect(screen.queryByText('Maria Gonzalez')).toBeNull();
+    expect(screen.getByText('Estero Fitness Club')).toBeTruthy();
+    mockParams = { tab: 'today', filter: 'potential' };
+    await render(<PipelineScreen />);
+    expect(await screen.findAllByText('Gulf Coast Dental')).toBeTruthy();
+  });
+
+  it('Inicio: cifra de potenciales nuevos que abre Leads en Potential', async () => {
+    mockFollowup.mockResolvedValue({ ok: true, data: { toWrite: 3, waiting: 0, noResponse: 0, potential: 2 } });
+    await render(<HomeScreen />);
+    expect(await screen.findByText('leads potenciales nuevos · llama hoy')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('2 leads potenciales nuevos · llama hoy'));
+    expect(mockNavigate).toHaveBeenCalledWith({ pathname: '/pipeline', params: { tab: 'today', filter: 'potential' } });
+  });
+
+  it('Nuevo lead: Property solo con One-time; con Residential la empresa es opcional', async () => {
+    mockCreate.mockResolvedValue({ ok: true, data: 'nuevo' });
+    await render(<NewLeadScreen />);
+    expect(screen.queryByText('Propiedad')).toBeNull();
+    await fireEvent.press(screen.getByText('One-time'));
+    expect(screen.getByText('Propiedad')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Residencial'));
+    expect(screen.getByLabelText('Empresa (opcional)')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Crear lead'));
+    expect(screen.getByText('Escribe el nombre de la persona.')).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText('Persona de contacto'), 'Maria Gonzalez');
+    await fireEvent.press(screen.getByText('Crear lead'));
+    await waitFor(() => expect(mockCreate).toHaveBeenCalled());
+    expect(mockCreate.mock.calls[0][0]).toMatchObject({ company: '', contactName: 'Maria Gonzalez', service: 'one_time', cleaningType: 'residential' });
+    // Volver a Recurring quita Residential.
+    await fireEvent.press(screen.getByText('Recurrente'));
+    expect(screen.queryByText('Propiedad')).toBeNull();
+  });
+});

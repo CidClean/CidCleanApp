@@ -29,6 +29,27 @@ export const salesEs = {
     web: 'Web', // APROBADO (flujo: fuentes web, campañas y registro manual)
     campaign: 'Campaña', // APROBADO (flujo)
     manual: 'Manual', // APROBADO (flujo)
+    ads: 'Anuncio', // D-200 (D-347: anuncios de Meta y TikTok)
+    agent: 'Agente de IA', // D-200 (D-347: Muse, Grok u otro agente)
+  },
+
+  // Origen y tipo del lead (D-348 a D-350, survey leads-fuentes-aprobado; el survey está en inglés, aquí su traducción).
+  origin: {
+    all: 'Todos', // D-200 (D-350: "All")
+    potential: 'Potencial', // D-200 (D-350: "Potential")
+    cold: 'En frío', // D-200 (D-350: "Cold")
+    filterCount: (label: string, n: number) => `${label} · ${n}`, // APROBADO (D-350: "Potential · N")
+    call: 'Llamar', // D-200 (D-350: "Call")
+    website: 'Website', // D-200 (D-348)
+    recurring: 'Recurrente', // D-200 (D-350: "Recurring")
+    oneTime: 'One-time', // APROBADO (D-349)
+    oneTimeResidential: 'One-time · Residencial', // D-200 (D-350: "One-time · Residential")
+    service: 'Servicio', // D-200 (D-350: "Service")
+    property: 'Propiedad', // D-200 (D-350: "Property")
+    commercial: 'Comercial', // D-200 (D-350: "Commercial")
+    residential: 'Residencial', // D-200 (D-350: "Residential")
+    companyOptional: 'Empresa (opcional)', // D-200 (D-350: "Company (optional)")
+    errorContact: 'Escribe el nombre de la persona.', // D-200 (sin empresa, el lead se nombra por la persona)
   },
 
   list: {
@@ -263,6 +284,26 @@ export const salesEn: SalesStrings = {
     web: 'Web', // lead source: website form
     campaign: 'Campaign', // lead source: marketing campaign
     manual: 'Manual', // lead source: entered by hand
+    ads: 'Ad', // lead source: Meta or TikTok lead ads
+    agent: 'AI agent', // lead source: Muse, Grok or another agent
+  },
+
+  origin: {
+    all: 'All', // D-350 leads filter
+    potential: 'Potential', // D-350 label
+    cold: 'Cold', // D-350 label
+    filterCount: (label: string, n: number) => `${label} · ${n}`,
+    call: 'Call', // D-350 main action of a potential lead
+    website: 'Website', // source chip for website leads
+    recurring: 'Recurring', // D-350 chip
+    oneTime: 'One-time',
+    oneTimeResidential: 'One-time · Residential', // D-350 chip
+    service: 'Service',
+    property: 'Property',
+    commercial: 'Commercial',
+    residential: 'Residential',
+    companyOptional: 'Company (optional)',
+    errorContact: "Enter the person's name.",
   },
 
   list: {

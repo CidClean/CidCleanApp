@@ -91,6 +91,7 @@ export const es = {
   // D-226 (muestra surveys/estilo-c1-pantallas/Menu.html).
   // Inicio unido (D-337, surveys/navegacion-aprobado.html). Textos menores: D-200.
   hub: {
+    potential: (n: number): string => (n === 1 ? 'lead potencial nuevo · llama hoy' : 'leads potenciales nuevos · llama hoy'), // D-200 (traducción de D-350)
     toWrite: (n: number): string => (n === 1 ? 'lead por escribir hoy' : 'leads por escribir hoy'), // D-200 (muestra: "leads to write today")
     toCollect: (month: string) => `por cobrar · ${month}`, // D-200 (muestra: "to collect · Nov")
     toApprove: (n: number): string => (n === 1 ? 'visita por aprobar' : 'visitas por aprobar'), // D-200 (D-299: visitas)
@@ -399,6 +400,10 @@ export const es = {
     w9Signed: 'W-9 firmado por el empleado', // D-200 (D-256)
     termsPublished: (version: string) => `Términos publicados: versión ${version}`, // APROBADO (D-198)
     termsAccepted: (version: string) => `Términos aceptados: versión ${version}`, // APROBADO (D-198)
+    leadMerged: 'Lead juntado', // D-200 (orden 160: duplicado de una fuente)
+    leadSourceCreated: 'Fuente de leads creada', // D-200
+    leadSourceEdited: 'Fuente de leads editada', // D-200
+    leadSourceKey: 'Clave de la fuente rehecha', // D-200
     leadCreated: 'Lead creado', // SIN APROBAR
     leadStatusChanged: 'Estado del lead cambiado', // SIN APROBAR
     leadDeleted: 'Lead eliminado', // SIN APROBAR

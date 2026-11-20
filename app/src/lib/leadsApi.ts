@@ -60,8 +60,28 @@ function toReason(r: ReasonRow): LostReason {
   return { id: r.id, labelEs: r.label_es, labelEn: r.label_en, sort: r.sort, active: r.active };
 }
 
+/** Origen, servicio y propiedad (orden 160) y el campo calculado `source_label`. */
+type OriginRow = {
+  temperature?: string | null;
+  service?: string | null;
+  cleaning_type?: string | null;
+  source_label?: string | null;
+};
+
+const ORIGIN_COLUMNS = 'temperature, service, cleaning_type, source_label';
+
+export function originFrom(r: OriginRow) {
+  return {
+    temperature: r.temperature === 'potential' ? ('potential' as const) : ('cold' as const),
+    service: r.service === 'one_time' ? ('one_time' as const) : ('recurring' as const),
+    cleaningType: r.cleaning_type === 'residential' ? ('residential' as const) : ('non_residential' as const),
+    sourceLabel: r.source_label ?? null,
+  };
+}
+
 type SummaryRow = {
   id: string;
+  phone?: string | null;
   company: string | null;
   contact_name: string | null;
   status: string;
@@ -69,7 +89,8 @@ type SummaryRow = {
   created_at: string;
   lead_followups: FollowUpRow[] | null;
   lead_sites: { walkthrough_appointments: AppointmentRow[] | null }[] | null;
-} & FollowupRow;
+} & FollowupRow &
+  OriginRow;
 
 /** Columnas del seguimiento automático (orden 130) y el campo calculado `next_step_on`. */
 type FollowupRow = {
@@ -110,7 +131,9 @@ export function rowToSummary(r: SummaryRow, now: Date): LeadSummary {
     nextWalkthrough: nextScheduled(appointments, now),
     source: isLeadSource(r.source) ? r.source : undefined,
     email: r.email ?? null,
+    phone: r.phone ?? null,
     ...followupFrom(r),
+    ...originFrom(r),
   };
 }
 
@@ -119,7 +142,7 @@ export async function fetchLeads(now = new Date()): Promise<LeadsResult<LeadSumm
     const { data, error } = await supabase
       .from('leads')
       .select(
-        `id, company, contact_name, email, status, source, created_at, ${FOLLOWUP_COLUMNS}, lead_followups(due_on, done_at), lead_sites(walkthrough_appointments(id, starts_at, status))`,
+        `id, company, contact_name, email, phone, status, source, created_at, ${FOLLOWUP_COLUMNS}, ${ORIGIN_COLUMNS}, lead_followups(due_on, done_at), lead_sites(walkthrough_appointments(id, starts_at, status))`,
       )
       .order('created_at', { ascending: false });
     if (error) return { ok: false, reason: failureFrom(error.code) };
@@ -144,7 +167,8 @@ type LeadRow = {
   lost_reasons: ReasonRow | null;
   lead_followups: FollowUpRow[] | null;
   lead_sites: SiteRow[] | null;
-} & FollowupRow;
+} & FollowupRow &
+  OriginRow;
 
 export function rowToLead(r: LeadRow): Lead {
   const sites = [...(r.lead_sites ?? [])]
@@ -183,6 +207,7 @@ export function rowToLead(r: LeadRow): Lead {
     followUpOn: openFollowUp(r.lead_followups),
     sites,
     ...followupFrom(r),
+    ...originFrom(r),
   };
 }
 
@@ -191,7 +216,7 @@ export async function fetchLead(id: string): Promise<LeadsResult<Lead>> {
     const { data, error } = await supabase
       .from('leads')
       .select(
-        `id, company, contact_name, phone, email, source, notes, status, lost_note, language, created_at, ${FOLLOWUP_COLUMNS}, ` +
+        `id, company, contact_name, phone, email, source, notes, status, lost_note, language, created_at, ${FOLLOWUP_COLUMNS}, ${ORIGIN_COLUMNS}, ` +
           'lost_reasons(id, label_es, label_en, sort, active), lead_followups(due_on, done_at), ' +
           'lead_sites(id, name, address, address_line1, address_line2, city, state, zip, address_needs_review, facility_type, sqft, web_frequency, created_at, walkthrough_appointments(id, starts_at, status), walkthroughs(current_version))',
       )
@@ -233,7 +258,14 @@ export async function createLead(form: LeadForm): Promise<LeadsResult<string>> {
 /** Guarda los datos del lead y la fecha de seguimiento si cambió. */
 export async function updateLead(lead: Lead, form: LeadForm): Promise<LeadsResult<null>> {
   try {
-    const { error } = await supabase.from('leads').update(leadColumns(form)).eq('id', lead.id);
+    const { cleaning_type: type, ...columns } = leadColumns(form);
+    // El tipo de limpieza cambia con su función (recalcula el impuesto de los borradores y lo deja en el historial);
+    // pasar a residencial deja el lead en one-time (D-349).
+    if (type !== (lead.cleaningType ?? 'non_residential')) {
+      const { error: typeError } = await supabase.rpc('set_lead_cleaning_type', { p_lead: lead.id, p_type: type });
+      if (typeError) return { ok: false, reason: failureFrom(typeError.code) };
+    }
+    const { error } = await supabase.from('leads').update(columns).eq('id', lead.id);
     if (error) return { ok: false, reason: failureFrom(error.code) };
     const due = parseUsDate(form.followUp);
     if (due !== lead.followUpOn) return await saveFollowUp(lead.id, form.followUp);
@@ -362,15 +394,24 @@ export async function decideNoResponse(id: string, action: 'lost' | 'retry'): Pr
   }
 }
 
-export type LeadsFollowupCounts = { toWrite: number; waiting: number; noResponse: number };
+export type LeadsFollowupCounts = { toWrite: number; waiting: number; noResponse: number; potential: number };
 
 /** Inicio (RPC home_leads_followup, D-333 (4)): te toca escribir, esperando respuesta y sin respuesta. */
 export async function fetchLeadsFollowup(): Promise<LeadsResult<LeadsFollowupCounts>> {
   try {
-    const { data, error } = await supabase.rpc('home_leads_followup');
+    const [{ data, error }, potential] = await Promise.all([supabase.rpc('home_leads_followup'), supabase.rpc('home_leads_potential')]);
     if (error) return { ok: false, reason: failureFrom(error.code) };
     const row = (data as { to_write: number; waiting: number; no_response: number }[] | null)?.[0];
-    return { ok: true, data: { toWrite: row?.to_write ?? 0, waiting: row?.waiting ?? 0, noResponse: row?.no_response ?? 0 } };
+    return {
+      ok: true,
+      data: {
+        toWrite: row?.to_write ?? 0,
+        waiting: row?.waiting ?? 0,
+        noResponse: row?.no_response ?? 0,
+        // D-350 (2): potenciales nuevos por llamar; si la función aún no está en la base, 0 (D-200).
+        potential: potential.error ? 0 : Number(potential.data ?? 0),
+      },
+    };
   } catch {
     return { ok: false, reason: 'network' };
   }

@@ -1,10 +1,28 @@
+import { View } from 'react-native';
+
 import { AppField } from '../AppField';
+import { AppText } from '../AppText';
+import { Segmented } from '../Segmented';
 import { PhoneField } from '../PhoneField';
 import { DateField } from '../PickerField';
 import { SelectField } from '../SelectField';
 import type { SalesStrings } from '@/i18n/sales';
 import { useStrings } from '@/i18n/useStrings';
-import { LEAD_SOURCES, dateFromKey, formatShortDate, formatUsDate, parseUsDate, type LeadForm, type LeadFormErrors } from '@/lib/leadRules';
+import {
+  dateFromKey,
+  formatShortDate,
+  formatUsDate,
+  isResidentialForm,
+  parseUsDate,
+  withService,
+  type LeadForm,
+  type LeadFormErrors,
+  type LeadSource,
+} from '@/lib/leadRules';
+import { useTheme } from '@/theme';
+
+/** Fuentes que se eligen a mano; anuncios y agentes solo llegan por la entrada segura (orden 160). */
+const MANUAL_SOURCES: readonly LeadSource[] = ['manual', 'web', 'campaign'];
 
 type Props = {
   form: LeadForm;
@@ -18,6 +36,9 @@ type Props = {
 /** Campos del lead (flujo, "Ventas 1: Lead"): empresa, persona de contacto, teléfono, email, fuente, seguimiento y notas. */
 export function LeadFormFields({ form, errors, onChange, s, part = 'all' }: Props) {
   const strings = useStrings();
+  const { colors } = useTheme();
+  const residential = isResidentialForm(form);
+  const sources = MANUAL_SOURCES.includes(form.source) ? MANUAL_SOURCES : [...MANUAL_SOURCES, form.source];
   const set = <K extends keyof LeadForm>(key: K, value: LeadForm[K]) => onChange({ ...form, [key]: value });
   const data = part !== 'notes';
   const notes = part !== 'data';
@@ -25,8 +46,37 @@ export function LeadFormFields({ form, errors, onChange, s, part = 'all' }: Prop
     <>
       {data ? (
         <>
+          {/* D-350 (3): Service Recurring / One-time; Property solo con One-time. */}
+          <View>
+            <AppText size={13} weight="medium" color={colors.secondary} style={{ marginBottom: 6 }}>
+              {s.origin.service}
+            </AppText>
+            <Segmented
+              options={[
+                { value: 'recurring', label: s.origin.recurring },
+                { value: 'one_time', label: s.origin.oneTime },
+              ]}
+              value={form.service}
+              onChange={(v) => onChange(withService(form, v))}
+            />
+          </View>
+          {form.service === 'one_time' ? (
+            <View>
+              <AppText size={13} weight="medium" color={colors.secondary} style={{ marginBottom: 6 }}>
+                {s.origin.property}
+              </AppText>
+              <Segmented
+                options={[
+                  { value: 'non_residential', label: s.origin.commercial },
+                  { value: 'residential', label: s.origin.residential },
+                ]}
+                value={form.cleaningType}
+                onChange={(v) => set('cleaningType', v)}
+              />
+            </View>
+          ) : null}
           <AppField
-            label={s.form.company}
+            label={residential ? s.origin.companyOptional : s.form.company}
             value={form.company}
             onChangeText={(v) => set('company', v)}
             autoCapitalize="words"
@@ -38,6 +88,7 @@ export function LeadFormFields({ form, errors, onChange, s, part = 'all' }: Prop
             onChangeText={(v) => set('contactName', v)}
             autoCapitalize="words"
             autoComplete="name"
+            error={errors.contactName ? s.origin.errorContact : null}
           />
           <PhoneField
             label={s.form.phone}
@@ -57,7 +108,7 @@ export function LeadFormFields({ form, errors, onChange, s, part = 'all' }: Prop
           />
           <SelectField
             label={s.form.source}
-            options={LEAD_SOURCES.map((v) => ({ value: v, label: s.source[v] }))}
+            options={sources.map((v) => ({ value: v, label: s.source[v] }))}
             value={form.source}
             onChange={(v) => set('source', v)}
           />

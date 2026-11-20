@@ -106,6 +106,14 @@ export function historyTitle(strings: Strings, e: HistoryEntry): string {
       return h.leadStatusChanged;
     case 'lead_eliminado':
       return h.leadDeleted;
+    case 'lead_juntado':
+      return h.leadMerged;
+    case 'fuente_lead_creada':
+      return h.leadSourceCreated;
+    case 'fuente_lead_editada':
+      return h.leadSourceEdited;
+    case 'fuente_lead_clave':
+      return h.leadSourceKey;
     case 'walkthrough_agendado':
       return h.walkthroughScheduled;
     case 'walkthrough_reagendado':

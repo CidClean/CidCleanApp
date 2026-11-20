@@ -183,6 +183,15 @@ function AdminHome() {
 
   // Tres cifras de lo que toca hoy, cada una solo con su permiso.
   const figures: Figure[] = [];
+  // D-350 (2): "new potential leads · call today" en #8A4B0F, junto a "leads to write today"; abre Leads en Potential.
+  if (salesVisible && flow)
+    figures.push({
+      key: 'potential',
+      tone: 'potential',
+      value: String(flow.potential),
+      label: strings.hub.potential(flow.potential),
+      onPress: () => router.navigate({ pathname: '/pipeline', params: { tab: 'today', filter: 'potential' } }),
+    });
   if (salesVisible && flow)
     figures.push({ key: 'write', tone: 'plain', value: String(flow.toWrite), label: strings.hub.toWrite(flow.toWrite), onPress: () => router.navigate({ pathname: '/pipeline', params: { tab: 'today' } }) });
   if (cards.receivable && home?.receivable) {
@@ -310,7 +319,7 @@ function AdminHome() {
   );
 }
 
-type Figure = { key: string; tone: 'plain' | 'attention' | 'brand'; value: string; label: string; onPress: () => void };
+type Figure = { key: string; tone: 'plain' | 'attention' | 'brand' | 'potential'; value: string; label: string; onPress: () => void };
 
 /** Fila de tres cifras tocables (D-337, muestra: blanca, ámbar y de marca). */
 function FigureRow({ figures }: { figures: Figure[] }) {
@@ -323,16 +332,19 @@ function FigureRow({ figures }: { figures: Figure[] }) {
   );
 }
 
+/** Cifra de potenciales (D-350): el número y la etiqueta en #8A4B0F sobre la tarjeta normal. */
+const POTENTIAL_TEXT = '#8A4B0F';
+
 function FigureTile({ f }: { f: Figure }) {
-  const tx = useCardText(f.tone);
+  const tx = useCardText(f.tone === 'potential' ? 'plain' : f.tone);
   const { colors, brand } = useTheme();
   const bg = f.tone === 'brand' ? brand : f.tone === 'attention' ? colors.attention : colors.card;
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${f.value} ${f.label}`} onPress={f.onPress} style={[styles.figure, { backgroundColor: bg }]}>
-      <AppText weight="heavy" size={20} color={f.tone === 'attention' ? colors.attentionText : tx.main} numberOfLines={1} adjustsFontSizeToFit>
+      <AppText weight="heavy" size={20} color={f.tone === 'attention' ? colors.attentionText : f.tone === 'potential' ? POTENTIAL_TEXT : tx.main} numberOfLines={1} adjustsFontSizeToFit>
         {f.value}
       </AppText>
-      <AppText size={11} color={tx.soft} style={{ opacity: tx.softOpacity, lineHeight: 14 }}>
+      <AppText size={11} color={f.tone === 'potential' ? POTENTIAL_TEXT : tx.soft} style={{ opacity: f.tone === 'potential' ? 1 : tx.softOpacity, lineHeight: 14 }}>
         {f.label}
       </AppText>
     </Pressable>

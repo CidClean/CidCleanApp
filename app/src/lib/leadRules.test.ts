@@ -1,6 +1,11 @@
 import { salesEn, salesEs } from '@/i18n/sales';
 import {
   LEAD_STATUSES,
+  filterByOrigin,
+  originCounts,
+  serviceChip,
+  sourceChip,
+  withService,
   isColdStatus,
   leadsInTab,
   leadStepLine,
@@ -122,7 +127,7 @@ describe('formulario del lead', () => {
     expect(emptyLeadForm.source).toBe('manual');
     expect(
       leadColumns({ ...emptyLeadForm, company: '  Gulf  ', email: ' Ana@X.com ', phone: ' ', notes: 'n' }),
-    ).toEqual({ company: 'Gulf', contact_name: null, phone: null, email: 'ana@x.com', source: 'manual', notes: 'n', language: 'en' });
+    ).toEqual({ company: 'Gulf', contact_name: null, phone: null, email: 'ana@x.com', source: 'manual', notes: 'n', language: 'en', service: 'recurring', cleaning_type: 'non_residential' });
   });
 
   it('idioma del cliente: inglés por defecto y se guarda el elegido (D-209)', () => {
@@ -397,5 +402,39 @@ describe('Leads en pestañas (D-333, orden 131)', () => {
       salesEs,
     );
     expect(tl.map((i) => `${i.label}|${i.pending}`)).toEqual(['Primer contacto (correo)|false', 'Follow up (correo)|false', 'Toca 2nd follow up|true']);
+  });
+});
+
+describe('Origen y tipo del lead (D-348 a D-350)', () => {
+  const base = { id: 'x', company: 'X', contactName: null, status: 'interested' as const, createdAt: new Date(2026, 10, 1), followUpOn: null, nextWalkthrough: null };
+  it('potencial Interesado va en Hoy; frío Interesado en venta', () => {
+    expect(tabOf('interested', 'potential')).toBe('today');
+    expect(tabOf('interested', 'cold')).toBe('sale');
+    expect(tabOf('walkthrough_scheduled', 'potential')).toBe('sale');
+  });
+  it('conteo y filtro por origen; potenciales primero', () => {
+    const list = [
+      { ...base, id: 'c', status: 'follow_up' as const, temperature: 'cold' as const, nextStepOn: '2026-01-01' },
+      { ...base, id: 'p', temperature: 'potential' as const },
+    ];
+    expect(originCounts(list)).toEqual({ potential: 1, cold: 1 });
+    expect(filterByOrigin(list, 'cold').map((l) => l.id)).toEqual(['c']);
+    expect(leadsInTab(list, 'today').map((l) => l.id)).toEqual(['p', 'c']);
+  });
+  it('chips de fuente y de tipo', () => {
+    expect(sourceChip({ sourceLabel: 'Meta ad', source: 'ads' }, salesEs)).toBe('Meta ad');
+    expect(sourceChip({ sourceLabel: null, source: 'web' }, salesEs)).toBe('Website');
+    expect(sourceChip({ sourceLabel: null, source: 'manual' }, salesEs)).toBe('Manual');
+    expect(serviceChip({ service: 'one_time', cleaningType: 'residential' }, salesEs)).toBe('One-time · Residencial');
+    expect(serviceChip({ service: 'one_time', cleaningType: 'non_residential' }, salesEs)).toBe('One-time');
+    expect(serviceChip({}, salesEs)).toBe('Recurrente');
+  });
+  it('formulario: residencial sin empresa con persona; recurrente vuelve a comercial', () => {
+    const f = { ...emptyLeadForm, service: 'one_time' as const, cleaningType: 'residential' as const };
+    expect(validateLeadForm(f)).toEqual({ contactName: true });
+    expect(validateLeadForm({ ...f, contactName: 'Maria' })).toEqual({});
+    expect(leadColumns({ ...f, contactName: 'Maria' })).toMatchObject({ company: null, cleaning_type: 'residential', service: 'one_time' });
+    expect(withService(f, 'recurring').cleaningType).toBe('non_residential');
+    expect(validateLeadForm({ ...emptyLeadForm, contactName: 'Maria' })).toEqual({ company: true });
   });
 });
